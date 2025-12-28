@@ -66,7 +66,7 @@ fun ThemeSettings(
             modifier = Modifier.padding(horizontal = 16.dp)
                 .height(IntrinsicSize.Max)
         ) {
-            listOf(ThemeType.Light, ThemeType.Dark, ThemeType.System).forEach { theme ->
+            listOf(ThemeType.Light, ThemeType.Dark, ThemeType.Amoled, ThemeType.System).forEach { theme ->
                 ThemeRadioItem(
                     titleRes = theme.label(),
                     imageRes = theme.image(),
@@ -84,6 +84,7 @@ private fun ThemeType.image(): Int = when(this) {
     ThemeType.System -> R.drawable.theme_auto
     ThemeType.Light -> R.drawable.theme_light
     ThemeType.Dark -> R.drawable.theme_dark
+    ThemeType.Amoled -> R.drawable.theme_dark
 }
 
 @Composable

@@ -190,6 +190,10 @@ fun SettingsRoute(
                 onVpnAcceleratorUpgrade = {
                     CarouselUpgradeDialogActivity.launch<UpgradeVpnAcceleratorHighlightsFragment>(context)
                 },
+                // Added Proxy click handler
+                onProxyClick = {
+                    onNavigateToSubSetting(SubSettingsScreen.Type.Proxy)
+                },
                 onAdvancedSettingsClick = {
                     onNavigateToSubSetting(SubSettingsScreen.Type.Advanced)
                 },
@@ -259,6 +263,7 @@ fun SettingsView(
     onProtocolClick: () -> Unit,
     onVpnAcceleratorClick: () -> Unit,
     onVpnAcceleratorUpgrade: () -> Unit,
+    onProxyClick: () -> Unit, // Added param
     onAdvancedSettingsClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onIconChangeClick: () -> Unit,
@@ -348,36 +353,12 @@ fun SettingsView(
                     settingValue = viewState.vpnAccelerator.settingValueView
                 )
 
-                var isProxyEnabled by remember { mutableStateOf(Storage.getBoolean("proxy_enabled", false)) }
-                SettingRow(
-                    title = stringResource(id = R.string.settings_proxy_title),
-                    subtitleComposable = {
-                        Text(
-                            text = stringResource(id = R.string.settings_proxy_summary),
-                            style = ProtonTheme.typography.defaultWeak
-                        )
-                    },
-                    leadingComposable = {
-                        Icon(
-                            painter = painterResource(id = CoreR.drawable.ic_proton_shield),
-                            contentDescription = null,
-                            tint = ProtonTheme.colors.iconNorm
-                        )
-                    },
-                    trailingComposable = {
-                        Switch(
-                            checked = isProxyEnabled,
-                            onCheckedChange = {
-                                isProxyEnabled = it
-                                Storage.saveBoolean("proxy_enabled", it)
-                            }
-                        )
-                    },
-                    onClick = {
-                        val newState = !isProxyEnabled
-                        isProxyEnabled = newState
-                        Storage.saveBoolean("proxy_enabled", newState)
-                    }
+                // Replaced the old Switch implementation with SettingRowWithIcon navigating to sub-setting
+                SettingRowWithIcon(
+                    icon = viewState.proxy.iconRes,
+                    title = stringResource(id = viewState.proxy.titleRes),
+                    settingValue = viewState.proxy.settingValueView,
+                    onClick = onProxyClick
                 )
 
                 SettingRowWithIcon(

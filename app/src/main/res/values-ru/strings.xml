@@ -63,8 +63,6 @@
     <string name="listItemMaintenance">Техническое обслуживание</string>
     <string name="proxy_toggle_off">Использовать прокси</string>
     <string name="proxy_toggle_on">Прокси включен</string>
-    <string name="settings_proxy_title">Использовать прокси</string>
-    <string name="settings_proxy_summary">Перенаправлять трафик через прокси, когда VPN отключен</string>
     <string name="insufficientPermissionsTitle">Требуется действие</string>
     <string name="insufficientPermissionsDetails">Не удалось установить VPN-подключение автоматически. Пожалуйста, подключитесь вручную один раз, чтобы предоставить разрешения.</string>
     <string name="log_title">Журнал</string>
@@ -1660,4 +1658,15 @@
     <string name="settings_protocol_openvpn_deprecation_dialog_description_tv">Этот протокол скоро будет удален, так как мы сосредоточены на более быстрых и безопасных технологиях. Мы рекомендуем переключиться на Smart Protocol.</string>
     <string name="settings_protocol_openvpn_change_dialog_continue_openvpn">Продолжить с OpenVPN</string>
     <string name="settings_protocol_openvpn_change_dialog_enable_smart">Включить Smart Protocol</string>
+    <string name="settings_split_tunneling_backup_restore">Бэкап &amp; Восстановление</string>
+    <string name="settings_split_tunneling_import">Импорт настроек</string>
+    <string name="settings_split_tunneling_import_desc">Загрузить из файла JSON</string>
+    <string name="settings_split_tunneling_export">Экспорт настроек</string>
+    <string name="settings_split_tunneling_export_desc">Сохранить в JSON файл</string>
+    <string name="settings_split_tunneling_export_filename">split_tunneling_config.json</string>
+    <string name="proxy_toggle_title">Использовать прокси</string>
+    <string name="proxy_toggle_description">Перенаправлять трафик через прокси, когда VPN отключен</string>
+    <string name="settings_proxy_toggle_on">Включено</string>
+    <string name="settings_proxy_toggle_off">Отключено</string>
+    <string name="settings_theme_amoled">Amoled (Pitch Black)</string>
 </resources>
