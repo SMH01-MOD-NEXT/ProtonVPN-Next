@@ -20,6 +20,10 @@ package com.protonvpn.android.redesign.settings.ui
 
 import android.annotation.TargetApi
 import android.app.Activity
+import android.content.Context
+import android.content.SharedPreferences
+import android.net.Uri
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
@@ -33,6 +37,7 @@ import com.protonvpn.android.components.InstalledAppsProvider
 import com.protonvpn.android.managed.ManagedConfig
 import com.protonvpn.android.netshield.NetShieldProtocol
 import com.protonvpn.android.netshield.getNetShieldAvailability
+import com.protonvpn.android.proxy.VlessManager
 import com.protonvpn.android.redesign.recents.data.DefaultConnection
 import com.protonvpn.android.redesign.recents.data.getRecentIdOrNull
 import com.protonvpn.android.redesign.recents.usecases.ObserveDefaultConnection
@@ -41,6 +46,7 @@ import com.protonvpn.android.redesign.reports.IsRedesignedBugReportFeatureFlagEn
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
 import com.protonvpn.android.redesign.vpn.ui.GetConnectIntentViewState
 import com.protonvpn.android.redesign.vpn.usecases.SettingsForConnection
+import com.protonvpn.android.settings.data.CurrentUserLocalSettingsManager
 import com.protonvpn.android.settings.data.SplitTunnelingMode
 import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.theme.label
@@ -53,6 +59,7 @@ import com.protonvpn.android.update.AppUpdateBannerStateFlow
 import com.protonvpn.android.update.AppUpdateInfo
 import com.protonvpn.android.update.AppUpdateManager
 import com.protonvpn.android.utils.BuildConfigUtils
+import com.protonvpn.android.utils.Storage
 import com.protonvpn.android.utils.combine
 import com.protonvpn.android.vpn.DnsOverride
 import com.protonvpn.android.vpn.IsPrivateDnsActiveFlow
@@ -62,6 +69,8 @@ import com.protonvpn.android.vpn.usecases.IsDirectLanConnectionsFeatureFlagEnabl
 import com.protonvpn.android.vpn.usecases.IsIPv6FeatureFlagEnabled
 import com.protonvpn.android.widget.WidgetManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -69,11 +78,13 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.proton.core.auth.domain.feature.IsFido2Enabled
 import me.proton.core.auth.fido.domain.entity.Fido2RegisteredKey
 import me.proton.core.domain.entity.UserId
@@ -81,6 +92,10 @@ import me.proton.core.user.domain.entity.UserRecovery
 import me.proton.core.user.domain.extension.isCredentialLess
 import me.proton.core.usersettings.domain.usecase.ObserveRegisteredSecurityKeys
 import me.proton.core.usersettings.domain.usecase.ObserveUserSettings
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import javax.inject.Inject
 import me.proton.core.accountmanager.presentation.R as AccountManagerR
 import me.proton.core.presentation.R as CoreR
@@ -88,10 +103,11 @@ import me.proton.core.presentation.R as CoreR
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     currentUser: CurrentUser,
     accountUserSettings: ObserveUserSettings,
     buildConfigInfo: BuildConfigInfo,
-    settingsForConnection: SettingsForConnection,
+    private val settingsForConnection: SettingsForConnection,
     observeDefaultConnection: ObserveDefaultConnection,
     private val uiStateStorage: UiStateStorage,
     private val recentsManager: RecentsManager,
@@ -109,6 +125,7 @@ class SettingsViewModel @Inject constructor(
     appUpdateBannerStateFlow: AppUpdateBannerStateFlow,
     private val isDirectLanConnectionsFeatureFlagEnabled: IsDirectLanConnectionsFeatureFlagEnabled,
     private val isRedesignedBugReportFeatureFlagEnabled: IsRedesignedBugReportFeatureFlagEnabled,
+    private val settingsManager: CurrentUserLocalSettingsManager,
 ) : ViewModel() {
 
     sealed class SettingViewState<T>(
@@ -181,6 +198,18 @@ class SettingsViewModel @Inject constructor(
             settingValueView = SettingValue.SettingStringRes(if (vpnAcceleratorSettingValue) R.string.vpn_accelerator_state_on else R.string.vpn_accelerator_state_off),
             descriptionRes = R.string.settings_vpn_accelerator_description,
             annotationRes = R.string.learn_more
+        )
+
+        class Proxy(
+            isEnabled: Boolean,
+            override val iconRes: Int = CoreR.drawable.ic_proton_globe
+        ) : SettingViewState<Boolean>(
+            value = isEnabled,
+            isRestricted = false,
+            titleRes = R.string.proxy_toggle_title,
+            settingValueView = SettingValue.SettingStringRes(if (isEnabled) R.string.settings_proxy_toggle_on else R.string.settings_proxy_toggle_off),
+            descriptionRes = R.string.proxy_toggle_description,
+            annotationRes = null
         )
 
         data class DefaultConnectionSettingState(
@@ -318,6 +347,7 @@ class SettingsViewModel @Inject constructor(
         val netShield: SettingViewState.NetShield?,
         val splitTunneling: SettingViewState.SplitTunneling,
         val vpnAccelerator: SettingViewState.VpnAccelerator,
+        val proxy: SettingViewState.Proxy,
         val defaultConnection: SettingViewState.DefaultConnectionSettingState? = null,
         val protocol: SettingViewState.Protocol,
         val altRouting: SettingViewState.AltRouting,
@@ -341,110 +371,163 @@ class SettingsViewModel @Inject constructor(
         NavigateToWidgetInstructions
     }
 
-    // The configuration doesn't change during runtime.
     private val displayDebugUi = BuildConfigUtils.displayDebugUi()
     private val buildConfigText = if (displayDebugUi) buildConfigInfo() else null
 
     val event = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+
+    private val proxyEnabledFlow = MutableSharedFlow<Boolean>(replay = 1).apply {
+        tryEmit(Storage.getBoolean("proxy_enabled", false))
+    }
+
+    // --- State Synchronization Fix ---
+    // We register a listener to the SharedPreferences to ensure that if the proxy setting
+    // is changed in another instance of the ViewModel (e.g. inside SubSettings),
+    // this instance (e.g. Main Settings) updates its state immediately.
+    private val sharedPreferences = context.getSharedPreferences("Storage", Context.MODE_PRIVATE)
+    private val preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == "proxy_enabled") {
+            proxyEnabledFlow.tryEmit(sharedPreferences.getBoolean("proxy_enabled", false))
+        }
+    }
+
+    init {
+        sharedPreferences.registerOnSharedPreferenceChangeListener(preferenceChangeListener)
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        sharedPreferences.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener)
+    }
+    // ---------------------------------
+
     val acknowledgingAppUpdateBannerStateFlow = appUpdateBannerStateFlow
         .onEach { state ->
             if (state is AppUpdateBannerState.Shown) {
-                // Hides the dot on the Settings button in bottom bar.
                 uiStateStorage.update {
                     it.copy(lastAppUpdatePromptAckedVersion = state.appUpdateInfo.availableVersionCode)
                 }
             }
         }
 
-    val viewState =
-        combine(
-            currentUser.jointUserFlow,
-            observeDefaultConnection(),
-            // Will return override settings if connected else global
-            settingsForConnection.getFlowForCurrentConnection(),
-            appFeaturePrefs.isWidgetDiscoveredFlow,
-            isIPv6FeatureFlagEnabled.observe(),
-            isPrivateDnsActiveFlow,
-            isRedesignedBugReportFeatureFlagEnabled.observe(),
-            acknowledgingAppUpdateBannerStateFlow,
-        ) { user, defaultConnection, connectionSettings, isWidgetDiscovered, isIPv6FeatureFlagEnabled, isPrivateDnsActive, isRedesignedBugReportFeatureFlagEnabled, appUpdateBannerState ->
-            val isFree = false
-            val isCredentialLess = user?.user?.isCredentialLess() == true
-            val settings = connectionSettings.connectionSettings
-            val profileOverrideInfo = connectionSettings.associatedProfile?.let { profile ->
-                val intentView = getConnectIntentViewState.forProfile(profile)
-                ProfileOverrideInfo(
-                    primaryLabel = intentView.primaryLabel,
-                    profileName = profile.info.name,
-                )
-            }
+    // --- Grouping Flows to avoid "combine" argument limit ---
 
-            val netShieldSetting = user?.vpnUser.getNetShieldAvailability().let { netShieldAvailability ->
-                SettingViewState.NetShield(
-                    settings.netShield != NetShieldProtocol.DISABLED,
-                    profileOverrideInfo = profileOverrideInfo,
-                    isRestricted = true,
-                    dnsOverride = getDnsOverride(isPrivateDnsActive, settings),
-                )
-            }
+    // Group 1: Core User & Connection Data
+    private val coreDataFlow = combine(
+        currentUser.jointUserFlow,
+        observeDefaultConnection(),
+        settingsForConnection.getFlowForCurrentConnection()
+    ) { user, defaultConn, connSettings ->
+        Triple(user, defaultConn, connSettings)
+    }
 
-            val currentModeAppNames =
-                installedAppsProvider.getNamesOfInstalledApps(settings.splitTunneling.currentModeApps())
+    // Group 2: Feature Flags & States
+    data class FeatureState(val widget: Boolean, val ipv6: Boolean, val privateDns: Boolean, val bugReport: Boolean)
 
-            val defaultRecent = defaultConnection.getRecentIdOrNull()?.let { recentsManager.getRecentById(it) }
-            val recent = defaultRecent?.let { getConnectIntentViewState.forRecent(it, false) }
-            val defaultConnectionSetting = SettingViewState. DefaultConnectionSettingState(
-                predefinedTitle = when (defaultConnection) {
-                    DefaultConnection.LastConnection -> R.string.settings_last_connection_title
-                    DefaultConnection.FastestConnection -> R.string.fastest_country
-                    else -> null
-                },
-                recentLabel = recent?.primaryLabel,
+    private val featureStateFlow = combine(
+        appFeaturePrefs.isWidgetDiscoveredFlow,
+        isIPv6FeatureFlagEnabled.observe(),
+        isPrivateDnsActiveFlow,
+        isRedesignedBugReportFeatureFlagEnabled.observe()
+    ) { widget, ipv6, privateDns, bugReport ->
+        FeatureState(widget, ipv6, privateDns, bugReport)
+    }
+
+    // Group 3: UI States
+    private val uiStateFlow = combine(
+        acknowledgingAppUpdateBannerStateFlow,
+        proxyEnabledFlow
+    ) { banner, proxy ->
+        Pair(banner, proxy)
+    }
+
+    // Main Combine
+    val viewState = combine(
+        coreDataFlow,
+        featureStateFlow,
+        uiStateFlow
+    ) { (user, defaultConnection, connectionSettings),
+        (isWidgetDiscovered, isIPv6FeatureFlagEnabled, isPrivateDnsActive, isRedesignedBugReportFeatureFlagEnabled),
+        (appUpdateBannerState, isProxyEnabled) ->
+
+        val isFree = false
+        val isCredentialLess = user?.user?.isCredentialLess() == true
+        val settings = connectionSettings.connectionSettings
+        val profileOverrideInfo = connectionSettings.associatedProfile?.let { profile ->
+            val intentView = getConnectIntentViewState.forProfile(profile)
+            ProfileOverrideInfo(
+                primaryLabel = intentView.primaryLabel,
+                profileName = profile.info.name,
             )
+        }
 
-            SettingsViewState(
+        val netShieldSetting = user?.vpnUser.getNetShieldAvailability().let { netShieldAvailability ->
+            SettingViewState.NetShield(
+                settings.netShield != NetShieldProtocol.DISABLED,
                 profileOverrideInfo = profileOverrideInfo,
-                netShield = netShieldSetting,
-                vpnAccelerator = SettingViewState.VpnAccelerator(settings.vpnAccelerator),
-                splitTunneling = SettingViewState.SplitTunneling(
-                    isEnabled = settings.splitTunneling.isEnabled,
-                    mode = settings.splitTunneling.mode,
-                    currentModeAppNames = currentModeAppNames,
-                    currentModeIps = settings.splitTunneling.currentModeIps(),
-                    isFreeUser = isFree,
-                ),
-                protocol = SettingViewState.Protocol(settings.protocol, profileOverrideInfo?.primaryLabel),
-                defaultConnection = defaultConnectionSetting,
-                altRouting = SettingViewState.AltRouting(settings.apiUseDoh),
-                lanConnections = SettingViewState.LanConnections(
-                    settings.lanConnections,
-                    allowDirectConnections = settings.lanConnectionsAllowDirect.takeIf { isDirectLanConnectionsFeatureFlagEnabled() },
-                    profileOverrideInfo?.primaryLabel
-                ),
-                natType = SettingViewState.Nat(NatType.fromRandomizedNat(settings.randomizedNat), isFree, profileOverrideInfo?.primaryLabel),
-                buildInfo = buildConfigText,
-                showDebugTools = displayDebugUi,
-                showSignOut = !isCredentialLess && !managedConfig.isManaged,
-                accountScreenEnabled = !managedConfig.isManaged,
-                isWidgetDiscovered = isWidgetDiscovered,
-                customDns =
-                    SettingViewState.CustomDns(
-                        enabled = settings.customDns.effectiveEnabled,
-                        customDns = settings.customDns.rawDnsList,
-                        overrideProfilePrimaryLabel = profileOverrideInfo?.primaryLabel,
-                        isFreeUser = isFree,
-                        isPrivateDnsActive = isPrivateDnsActive,
-                    ),
-                versionName = BuildConfig.VERSION_NAME,
-                ipV6 = if (isIPv6FeatureFlagEnabled) SettingViewState.IPv6(enabled = settings.ipV6Enabled) else null,
-                theme = SettingViewState.Theme(settings.theme),
-                isRedesignedBugReportFeatureFlagEnabled = isRedesignedBugReportFeatureFlagEnabled,
-                appUpdateBannerState = appUpdateBannerState,
-                showSingInOnAnotherDeviceQr = !managedConfig.isManaged,
+                isRestricted = true,
+                dnsOverride = getDnsOverride(isPrivateDnsActive, settings),
             )
-        }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(1_000), replay = 1)
+        }
+
+        val currentModeAppNames =
+            installedAppsProvider.getNamesOfInstalledApps(settings.splitTunneling.currentModeApps())
+
+        val defaultRecent = defaultConnection.getRecentIdOrNull()?.let { recentsManager.getRecentById(it) }
+        val recent = defaultRecent?.let { getConnectIntentViewState.forRecent(it, false) }
+        val defaultConnectionSetting = SettingViewState.DefaultConnectionSettingState(
+            predefinedTitle = when (defaultConnection) {
+                DefaultConnection.LastConnection -> R.string.settings_last_connection_title
+                DefaultConnection.FastestConnection -> R.string.fastest_country
+                else -> null
+            },
+            recentLabel = recent?.primaryLabel,
+        )
+
+        SettingsViewState(
+            profileOverrideInfo = profileOverrideInfo,
+            netShield = netShieldSetting,
+            vpnAccelerator = SettingViewState.VpnAccelerator(settings.vpnAccelerator),
+            proxy = SettingViewState.Proxy(isProxyEnabled),
+            splitTunneling = SettingViewState.SplitTunneling(
+                isEnabled = settings.splitTunneling.isEnabled,
+                mode = settings.splitTunneling.mode,
+                currentModeAppNames = currentModeAppNames,
+                currentModeIps = settings.splitTunneling.currentModeIps(),
+                isFreeUser = isFree,
+            ),
+            protocol = SettingViewState.Protocol(settings.protocol, profileOverrideInfo?.primaryLabel),
+            defaultConnection = defaultConnectionSetting,
+            altRouting = SettingViewState.AltRouting(settings.apiUseDoh),
+            lanConnections = SettingViewState.LanConnections(
+                settings.lanConnections,
+                allowDirectConnections = settings.lanConnectionsAllowDirect.takeIf { isDirectLanConnectionsFeatureFlagEnabled() },
+                profileOverrideInfo?.primaryLabel
+            ),
+            natType = SettingViewState.Nat(NatType.fromRandomizedNat(settings.randomizedNat), isFree, profileOverrideInfo?.primaryLabel),
+            buildInfo = buildConfigText,
+            showDebugTools = displayDebugUi,
+            showSignOut = !isCredentialLess && !managedConfig.isManaged,
+            accountScreenEnabled = !managedConfig.isManaged,
+            isWidgetDiscovered = isWidgetDiscovered,
+            customDns = SettingViewState.CustomDns(
+                enabled = settings.customDns.effectiveEnabled,
+                customDns = settings.customDns.rawDnsList,
+                overrideProfilePrimaryLabel = profileOverrideInfo?.primaryLabel,
+                isFreeUser = isFree,
+                isPrivateDnsActive = isPrivateDnsActive,
+            ),
+            versionName = BuildConfig.VERSION_NAME,
+            ipV6 = if (isIPv6FeatureFlagEnabled) SettingViewState.IPv6(enabled = settings.ipV6Enabled) else null,
+            theme = SettingViewState.Theme(settings.theme),
+            isRedesignedBugReportFeatureFlagEnabled = isRedesignedBugReportFeatureFlagEnabled,
+            appUpdateBannerState = appUpdateBannerState,
+            showSingInOnAnotherDeviceQr = !managedConfig.isManaged,
+        )
+    }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(1_000), replay = 1)
 
     val vpnAccelerator = viewState.map { it.vpnAccelerator }.distinctUntilChanged()
+    val proxy = viewState.map { it.proxy }.distinctUntilChanged()
     val netShield = viewState.map { it.netShield }.distinctUntilChanged()
     val lan = viewState.map { it.lanConnections }.distinctUntilChanged()
     private val profileOverrideInfo = viewState.map { it.profileOverrideInfo }.distinctUntilChanged()
@@ -491,7 +574,7 @@ class SettingsViewModel @Inject constructor(
     }.distinctUntilChanged()
 
     data class AccountSettingsViewState(
-        val userId: UserId, // Needed for navigating to activities
+        val userId: UserId,
         val displayName: String,
         val planDisplayName: String?,
         val recoveryEmail: String?,
@@ -538,6 +621,126 @@ class SettingsViewModel @Inject constructor(
                 event.tryEmit(UiEvent.NavigateToWidgetInstructions)
             }
             appFeaturePrefs.isWidgetDiscovered = true
+        }
+    }
+
+    // Toggle Proxy
+    fun toggleProxy() {
+        val currentState = Storage.getBoolean("proxy_enabled", false)
+        val newState = !currentState
+        Storage.saveBoolean("proxy_enabled", newState)
+        // No need to manually emit to flow here if listener is working,
+        // but keeping it for immediate feedback within same instance doesn't hurt.
+        // The listener will also fire and re-emit (distinctUntilChanged downstream handles dedupe usually,
+        // though SharedFlow doesn't deduce unless we use distinctUntilChanged on collector)
+
+        try {
+            VlessManager.getInstance(context.applicationContext as android.app.Application)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // --- JSON Export Logic ---
+    fun exportSplitTunnelingSettings(uri: Uri, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val currentSettings = settingsForConnection.getFlowForCurrentConnection().first().connectionSettings.splitTunneling
+                val jsonObject = JSONObject().apply {
+                    put("mode", currentSettings.mode.name)
+                    val appsArray = JSONArray()
+                    currentSettings.currentModeApps().forEach { appsArray.put(it) }
+                    put("apps", appsArray)
+                    val ipsArray = JSONArray()
+                    currentSettings.currentModeIps().forEach { ipsArray.put(it) }
+                    put("ips", ipsArray)
+                }
+
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(jsonObject.toString(2).toByteArray())
+                }
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Export successful", Toast.LENGTH_SHORT).show()
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Export failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    // --- JSON Import Logic ---
+    fun importSplitTunnelingSettings(uri: Uri, context: Context, onImportSuccess: () -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val stringBuilder = StringBuilder()
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    BufferedReader(InputStreamReader(inputStream)).use { reader ->
+                        var line: String? = reader.readLine()
+                        while (line != null) {
+                            stringBuilder.append(line)
+                            line = reader.readLine()
+                        }
+                    }
+                }
+
+                val jsonObject = JSONObject(stringBuilder.toString())
+                val modeString = jsonObject.optString("mode", SplitTunnelingMode.EXCLUDE_ONLY.name)
+                val newMode = try {
+                    SplitTunnelingMode.valueOf(modeString)
+                } catch (e: IllegalArgumentException) {
+                    SplitTunnelingMode.EXCLUDE_ONLY
+                }
+
+                val appsList = ArrayList<String>()
+                val appsArray = jsonObject.optJSONArray("apps")
+                if (appsArray != null) {
+                    for (i in 0 until appsArray.length()) {
+                        appsList.add(appsArray.getString(i))
+                    }
+                }
+
+                val ipsList = ArrayList<String>()
+                val ipsArray = jsonObject.optJSONArray("ips")
+                if (ipsArray != null) {
+                    for (i in 0 until ipsArray.length()) {
+                        ipsList.add(ipsArray.getString(i))
+                    }
+                }
+
+                settingsManager.update { currentSettings ->
+                    val currentSplitSettings = currentSettings.splitTunneling
+                    val updatedSplitSettings = if (newMode == SplitTunnelingMode.EXCLUDE_ONLY) {
+                        currentSplitSettings.copy(
+                            mode = newMode,
+                            excludedApps = appsList.toList(),
+                            excludedIps = ipsList.toList()
+                        )
+                    } else {
+                        currentSplitSettings.copy(
+                            mode = newMode,
+                            includedApps = appsList.toList(),
+                            includedIps = ipsList.toList()
+                        )
+                    }
+                    currentSettings.copy(splitTunneling = updatedSplitSettings)
+                }
+
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Import applied. Mode: $newMode. Apps: ${appsList.size}, IPs: ${ipsList.size}", Toast.LENGTH_LONG).show()
+                    onImportSuccess()
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(context, "Import failed: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 }

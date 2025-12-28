@@ -56,8 +56,6 @@
     <string name="drawerReportProblem">Report an issue</string>
     <string name="proxy_toggle_off">Use proxy</string>
     <string name="proxy_toggle_on">Proxy enabled</string>
-    <string name="settings_proxy_title">Enable Proxy</string>
-    <string name="settings_proxy_summary">Redirect all traffic through the proxy when the VPN is disconnected</string>
     <string name="drawerSignOut">@string/menuActionSignOut</string>
     <string name="action_done">Done</string>
     <string name="action_share">Share</string>
@@ -1614,4 +1612,15 @@
     <string name="settings_protocol_openvpn_deprecation_dialog_description_tv">This protocol will be removed soon as we focus on faster and more secure technologies. We recommend switching to Smart Protocol.</string>
     <string name="settings_protocol_openvpn_change_dialog_continue_openvpn">Continue with OpenVPN</string>
     <string name="settings_protocol_openvpn_change_dialog_enable_smart">Enable Smart protocol</string>
+    <string name="settings_split_tunneling_backup_restore">Backup &amp; Restore</string>
+    <string name="settings_split_tunneling_import">Import Settings</string>
+    <string name="settings_split_tunneling_import_desc">Load from JSON file</string>
+    <string name="settings_split_tunneling_export">Export Settings</string>
+    <string name="settings_split_tunneling_export_desc">Save to JSON file</string>
+    <string name="settings_split_tunneling_export_filename">split_tunneling_config.json</string>
+    <string name="proxy_toggle_title">Use Proxy</string>
+    <string name="proxy_toggle_description">Redirect all traffic through proxy when VPN is disconnected</string>
+    <string name="settings_proxy_toggle_on">On</string>
+    <string name="settings_proxy_toggle_off">Off</string>
+    <string name="settings_theme_amoled">Amoled (Pitch Black)</string>
 </resources>

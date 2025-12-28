@@ -116,6 +116,17 @@ fun SubSettingsRoute(
                 }
             }
 
+            SubSettingsScreen.Type.Proxy -> {
+                val proxySetting = viewModel.proxy.collectAsStateWithLifecycle(initialValue = null).value
+                if (proxySetting != null) {
+                    ProxySubSetting(
+                        onClose = onClose,
+                        setting = proxySetting,
+                        onToggle = viewModel::toggleProxy
+                    )
+                }
+            }
+
             SubSettingsScreen.Type.NetShield -> {
                 val netShield = viewModel.netShield.collectAsStateWithLifecycle(initialValue = null).value
                 if (netShield != null) {
@@ -314,7 +325,13 @@ fun SubSettingsRoute(
                         onSplitTunnelToggle = { settingsChangeViewModel.toggleSplitTunneling(vpnUiDelegate) },
                         onSplitTunnelModeSelected = onModeSet,
                         onAppsClick = { mode -> splitTunnelAppsLauncher.launch(mode) },
-                        onIpsClick = { mode -> splitTunnelIpLauncher.launch(mode) }
+                        onIpsClick = { mode -> splitTunnelIpLauncher.launch(mode) },
+                        onExportSettings = viewModel::exportSplitTunnelingSettings,
+                        onImportSettings = { uri, context ->
+                            viewModel.importSplitTunnelingSettings(uri, context) {
+                                settingsChangeViewModel.onSplitTunnelingUpdated(vpnUiDelegate)
+                            }
+                        }
                     )
                 }
             }

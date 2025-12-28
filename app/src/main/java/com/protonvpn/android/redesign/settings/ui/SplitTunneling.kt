@@ -18,6 +18,9 @@
  */
 package com.protonvpn.android.redesign.settings.ui
 
+import android.content.Context
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -34,9 +37,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -47,6 +52,7 @@ import com.protonvpn.android.redesign.base.ui.SettingsRadioItemSmall
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.settings.data.SplitTunnelingMode
 import com.protonvpn.android.ui.settings.formatSplitTunnelingItems
+import kotlinx.coroutines.launch
 import me.proton.core.compose.theme.ProtonTheme
 import me.proton.core.compose.theme.defaultWeak
 import me.proton.core.presentation.R as CoreR
@@ -60,9 +66,30 @@ fun SplitTunnelingSubSetting(
     onSplitTunnelModeSelected: (SplitTunnelingMode) -> Unit,
     onAppsClick: (SplitTunnelingMode) -> Unit,
     onIpsClick: (SplitTunnelingMode) -> Unit,
+    onExportSettings: (android.net.Uri, Context) -> Unit,
+    onImportSettings: (android.net.Uri, Context) -> Unit
 ) {
     var changeModeDialogShown by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val context = LocalContext.current
+
+    // Launcher for creating a file (Export)
+    val exportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        uri?.let { onExportSettings(it, context) }
+    }
+
+    // Launcher for opening a file (Import)
+    val importLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { onImportSettings(it, context) }
+    }
+
+    // Default export filename from resources
+    val exportFilename = stringResource(R.string.settings_split_tunneling_export_filename)
+
     FeatureSubSettingScaffold(
         title = stringResource(id = splitTunneling.titleRes),
         onClose = onClose,
@@ -123,6 +150,34 @@ fun SplitTunnelingSubSetting(
                         settingValue =
                             SettingValue.SettingText(formatSplitTunnelingItems(splitTunneling.currentModeIps)),
                         onClick = { onIpsClick(splitTunnelingMode) },
+                        modifier = Modifier.largeScreenContentPadding().animateItem()
+                    )
+                }
+
+                // --- Import / Export Section ---
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(R.string.settings_split_tunneling_backup_restore),
+                        style = ProtonTheme.typography.body1Bold,
+                        modifier = horizontalItemPaddingModifier.padding(vertical = 8.dp)
+                    )
+                }
+                item {
+                    SettingRowWithIcon(
+                        icon = CoreR.drawable.ic_proton_arrow_down,
+                        title = stringResource(R.string.settings_split_tunneling_import),
+                        settingValue = SettingValue.SettingText(stringResource(R.string.settings_split_tunneling_import_desc)),
+                        onClick = { importLauncher.launch(arrayOf("application/json")) },
+                        modifier = Modifier.largeScreenContentPadding().animateItem()
+                    )
+                }
+                item {
+                    SettingRowWithIcon(
+                        icon = CoreR.drawable.ic_proton_arrow_up,
+                        title = stringResource(R.string.settings_split_tunneling_export),
+                        settingValue = SettingValue.SettingText(stringResource(R.string.settings_split_tunneling_export_desc)),
+                        onClick = { exportLauncher.launch(exportFilename) },
                         modifier = Modifier.largeScreenContentPadding().animateItem()
                     )
                 }
