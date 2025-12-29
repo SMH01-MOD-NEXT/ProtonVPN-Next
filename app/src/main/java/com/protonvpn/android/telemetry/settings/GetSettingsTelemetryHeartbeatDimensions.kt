@@ -194,6 +194,9 @@ class GetSettingsTelemetryHeartbeatDimensions @Inject constructor(
         ThemeType.Light -> "light"
         ThemeType.Dark -> "dark"
         ThemeType.Amoled -> "amoled"
+        ThemeType.Gold -> "gold"
+        ThemeType.NewYearLight -> "nylite"
+        ThemeType.NewYearAmoled -> "nyamoled"
     }
 
     private fun Int.toCustomDnsCountBucketString() = when {

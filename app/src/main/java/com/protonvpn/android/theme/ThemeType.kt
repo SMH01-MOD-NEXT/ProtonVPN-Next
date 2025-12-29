@@ -22,7 +22,7 @@ package com.protonvpn.android.theme
 import com.protonvpn.android.R
 
 enum class ThemeType {
-    System, Light, Dark, Amoled;
+    System, Light, Dark, Amoled, Gold, NewYearLight, NewYearAmoled;
 }
 
 fun ThemeType.label() = when(this) {
@@ -30,4 +30,7 @@ fun ThemeType.label() = when(this) {
     ThemeType.Light -> R.string.settings_theme_value_light
     ThemeType.Dark -> R.string.settings_theme_value_dark
     ThemeType.Amoled -> R.string.settings_theme_amoled
+    ThemeType.Gold -> R.string.settings_theme_value_gold
+    ThemeType.NewYearLight -> R.string.settings_theme_value_nylight
+    ThemeType.NewYearAmoled -> R.string.settings_theme_value_nyamoled
 }

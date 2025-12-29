@@ -27,7 +27,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
@@ -62,18 +64,46 @@ fun ThemeSettings(
         title = stringResource(R.string.settings_theme_title),
         onClose = onClose
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 16.dp)
-                .height(IntrinsicSize.Max)
+        val themes = listOf(
+            ThemeType.Light,
+            ThemeType.Dark,
+            ThemeType.Amoled,
+            ThemeType.Gold,
+            ThemeType.NewYearLight,
+            ThemeType.NewYearAmoled,
+            ThemeType.System
+        )
+
+        // Группируем темы по 3 в ряд
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp) // Отступ между рядами
         ) {
-            listOf(ThemeType.Light, ThemeType.Dark, ThemeType.Amoled, ThemeType.System).forEach { theme ->
-                ThemeRadioItem(
-                    titleRes = theme.label(),
-                    imageRes = theme.image(),
-                    selected = theme == selectedTheme,
-                    onSelected = { onSelected(theme) },
-                    modifier =  Modifier.weight(1f)
-                )
+            themes.chunked(3).forEach { rowThemes ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Max)
+                ) {
+                    rowThemes.forEach { theme ->
+                        ThemeRadioItem(
+                            titleRes = theme.label(),
+                            imageRes = theme.image(),
+                            selected = theme == selectedTheme,
+                            onSelected = { onSelected(theme) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    // Заполняем пустое пространство, если в ряду меньше 3 элементов
+                    // Это предотвращает растягивание элементов
+                    val emptySlots = 3 - rowThemes.size
+                    if (emptySlots > 0) {
+                        repeat(emptySlots) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
             }
         }
     }
@@ -84,7 +114,10 @@ private fun ThemeType.image(): Int = when(this) {
     ThemeType.System -> R.drawable.theme_auto
     ThemeType.Light -> R.drawable.theme_light
     ThemeType.Dark -> R.drawable.theme_dark
-    ThemeType.Amoled -> R.drawable.theme_dark
+    ThemeType.Amoled -> R.drawable.theme_amoled
+    ThemeType.Gold -> R.drawable.theme_gold
+    ThemeType.NewYearLight -> R.drawable.theme_nylight
+    ThemeType.NewYearAmoled -> R.drawable.theme_nyamoled
 }
 
 @Composable

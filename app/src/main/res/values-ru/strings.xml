@@ -1669,4 +1669,7 @@
     <string name="settings_proxy_toggle_on">Включено</string>
     <string name="settings_proxy_toggle_off">Отключено</string>
     <string name="settings_theme_amoled">Amoled (Pitch Black)</string>
+    <string name="settings_theme_value_gold">Золото</string>
+    <string name="settings_theme_value_nylight">Новый Год (Светлая)</string>
+    <string name="settings_theme_value_nyamoled">Новый Год (Amoled)</string>
 </resources>

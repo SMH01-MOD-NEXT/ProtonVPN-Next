@@ -22,7 +22,6 @@ package com.protonvpn.android.theme
 import android.app.UiModeManager
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
 import com.protonvpn.android.settings.data.EffectiveCurrentUserSettings
@@ -53,8 +52,6 @@ class UpdateAndroidAppTheme @Inject constructor(
 
     fun start() {
         val delegate = if (Build.VERSION.SDK_INT < 31) {
-            // Use cached settings to apply the theme as early as possible during start to avoid wrong theme showing for
-            // a moment.
             DelegateImplCompat(effectiveCurrentUserSettingsCached.get())
         } else {
             DelegateImpl31(appContext, effectiveCurrentUserSettings.get())
@@ -64,9 +61,7 @@ class UpdateAndroidAppTheme @Inject constructor(
             .map { it.theme }
             .distinctUntilChanged()
             .onEach { theme ->
-                // 1. Применяем системный ночной режим
                 delegate.setAndroidNightMode(theme)
-                // 2. ДУБЛИРУЕМ тему в SharedPreferences для UI компонентов (VpnTheme)
                 saveThemeToStorage(theme)
             }
             .launchIn(mainScope)
@@ -74,13 +69,9 @@ class UpdateAndroidAppTheme @Inject constructor(
 
     private fun saveThemeToStorage(theme: ThemeType) {
         try {
-            // Используем имя файла "Storage", так как VpnTheme слушает именно его
             val prefs = appContext.getSharedPreferences("Storage", Context.MODE_PRIVATE)
             prefs.edit().putString("theme", theme.name).apply()
-            Log.d("UpdateAndroidAppTheme", "Synced theme to Storage: ${theme.name}")
-        } catch (e: Exception) {
-            Log.e("UpdateAndroidAppTheme", "Failed to sync theme", e)
-        }
+        } catch (e: Exception) { }
     }
 
     private class DelegateImplCompat(
@@ -91,9 +82,16 @@ class UpdateAndroidAppTheme @Inject constructor(
         override fun setAndroidNightMode(theme: ThemeType) {
             val nightMode = when(theme) {
                 ThemeType.System -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
-                ThemeType.Light -> AppCompatDelegate.MODE_NIGHT_NO
-                // Для Amoled тоже включаем ночной режим
-                ThemeType.Dark, ThemeType.Amoled -> AppCompatDelegate.MODE_NIGHT_YES
+
+                // Светлые темы
+                ThemeType.Light, -> AppCompatDelegate.MODE_NIGHT_NO
+                ThemeType.NewYearLight -> AppCompatDelegate.MODE_NIGHT_NO
+
+                // Темные темы
+                ThemeType.Dark, -> AppCompatDelegate.MODE_NIGHT_YES
+                ThemeType.Amoled, -> AppCompatDelegate.MODE_NIGHT_YES
+                ThemeType.Gold, -> AppCompatDelegate.MODE_NIGHT_YES
+                ThemeType.NewYearAmoled -> AppCompatDelegate.MODE_NIGHT_YES
             }
             AppCompatDelegate.setDefaultNightMode(nightMode)
         }
@@ -109,9 +107,16 @@ class UpdateAndroidAppTheme @Inject constructor(
         override fun setAndroidNightMode(theme: ThemeType) {
             val nightMode = when(theme) {
                 ThemeType.System -> UiModeManager.MODE_NIGHT_AUTO
-                ThemeType.Light -> UiModeManager.MODE_NIGHT_NO
-                // Для Amoled тоже включаем ночной режим
-                ThemeType.Dark, ThemeType.Amoled -> UiModeManager.MODE_NIGHT_YES
+
+                // Светлые темы
+                ThemeType.Light, -> AppCompatDelegate.MODE_NIGHT_NO
+                ThemeType.NewYearLight -> UiModeManager.MODE_NIGHT_NO
+
+                // Темные темы
+                ThemeType.Dark, -> AppCompatDelegate.MODE_NIGHT_YES
+                ThemeType.Amoled, -> AppCompatDelegate.MODE_NIGHT_YES
+                ThemeType.Gold, -> AppCompatDelegate.MODE_NIGHT_YES
+                ThemeType.NewYearAmoled -> UiModeManager.MODE_NIGHT_YES
             }
             val uiModeManager = appContext.getSystemService<UiModeManager>(UiModeManager::class.java)
             uiModeManager.setApplicationNightMode(nightMode)

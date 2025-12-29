@@ -1623,4 +1623,7 @@
     <string name="settings_proxy_toggle_on">On</string>
     <string name="settings_proxy_toggle_off">Off</string>
     <string name="settings_theme_amoled">Amoled (Pitch Black)</string>
+    <string name="settings_theme_value_gold">Gold</string>
+    <string name="settings_theme_value_nylight">New Year (Light)</string>
+    <string name="settings_theme_value_nyamoled">New Year (Amoled)</string>
 </resources>
