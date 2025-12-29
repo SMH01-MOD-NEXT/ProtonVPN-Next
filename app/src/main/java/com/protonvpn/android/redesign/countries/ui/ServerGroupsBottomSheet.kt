@@ -26,6 +26,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.SheetValue
@@ -54,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -62,6 +65,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.protonvpn.android.R
 import com.protonvpn.android.redesign.CountryId
 import com.protonvpn.android.redesign.base.ui.Flag
@@ -69,7 +74,9 @@ import com.protonvpn.android.redesign.base.ui.GatewayIndicator
 import com.protonvpn.android.redesign.base.ui.InfoButton
 import com.protonvpn.android.redesign.base.ui.InfoSheetState
 import com.protonvpn.android.redesign.base.ui.InfoType
+import com.protonvpn.android.redesign.settings.ui.SettingsViewModel
 import com.protonvpn.android.redesign.vpn.ui.label
+import com.protonvpn.android.theme.ThemeType
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.proton.core.compose.theme.ProtonTheme
@@ -89,6 +96,10 @@ fun ServerGroupsBottomSheet(
     onClose: () -> Unit,
     infoSheetState: InfoSheetState,
 ) {
+    // Получаем тему для AMOLED обводки
+    val settingsViewModel = hiltViewModel<SettingsViewModel>()
+    val themeType by settingsViewModel.theme.collectAsStateWithLifecycle(initialValue = ThemeType.System)
+
     val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
     val headerAreaColor by animateColorAsState(
@@ -108,8 +119,22 @@ fun ServerGroupsBottomSheet(
         listStatesMap.remove(screen.rememberStateKey)
         onNavigateBack(onBack)
     }
+
+    // Логика обводки для AMOLED (как в примере)
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+
+    // Применяем обводку к контенту, а не к самому ModalBottomSheet, чтобы избежать полноэкранной рамки
+    val contentBorderModifier = if (isAmoled) {
+        Modifier
+            .border(1.dp, Color.White, sheetShape)
+            .clip(sheetShape)
+    } else {
+        Modifier
+    }
+
     ModalBottomSheetWithBackNavigation(
-        modifier = modifier,
+        modifier = modifier, // Убираем потенциальную обводку отсюда
         containerColor = headerAreaColor,
         // The content needs extend under the navigation bar to cover headerAreaColor.
         contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
@@ -126,6 +151,8 @@ fun ServerGroupsBottomSheet(
             onNavigateBack = { scope.launch { onNavigateBackWithClearState {} } },
             navigateToUpsell = navigateToUpsell,
             infoSheetState = infoSheetState,
+            themeType = themeType,
+            modifier = contentBorderModifier // Применяем здесь
         )
     }
 }
@@ -146,6 +173,7 @@ private fun BottomSheetScreen(
     onItemClick: (ServerGroupUiItem.ServerGroup) -> Unit,
     navigateToUpsell: (ServerGroupUiItem.BannerType) -> Unit,
     onNavigateBack: () -> Unit,
+    themeType: ThemeType = ThemeType.System
 ) {
     val onOpenInfo = { infoType: InfoType -> infoSheetState.show(infoType) }
     Column(modifier) {
@@ -164,7 +192,8 @@ private fun BottomSheetScreen(
             modifier = Modifier
                 .semantics { traversalIndex = -1f }
                 .fillMaxHeight()
-                .background(ProtonTheme.colors.backgroundNorm)
+                .background(ProtonTheme.colors.backgroundNorm),
+            themeType = themeType
         )
     }
 }
@@ -234,7 +263,6 @@ private fun AnimatedBottomSheetHeader(
                     modifier = Modifier
                         .heightIn(32.dp)
                         .onGloballyPositioned {
-                            // Get width of a row with Icon and flag and set it for city padding
                             rowWidth = it.size.width
                         }
                 ) {

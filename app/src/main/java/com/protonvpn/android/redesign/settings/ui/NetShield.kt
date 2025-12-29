@@ -18,17 +18,26 @@
  */
 package com.protonvpn.android.redesign.settings.ui
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.protonvpn.android.R
 import com.protonvpn.android.base.ui.SettingsFeatureToggle
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.vpn.DnsOverride
 import me.proton.core.compose.theme.ProtonTheme
 
@@ -44,6 +53,18 @@ fun NetShieldSetting(
     onOpenPrivateDnsSettings: () -> Unit,
 ) {
     val listState = rememberLazyListState()
+
+    // Получаем тему из LocalThemeType (определено в SubSettingsRoute.kt)
+    val themeType = LocalThemeType.current
+
+    // Логика стилизации карточки
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
     FeatureSubSettingScaffold(
         title = stringResource(id = netShield.titleRes),
         onClose = onClose,
@@ -53,6 +74,7 @@ fun NetShieldSetting(
         val horizontalItemPaddingModifier = Modifier
             .padding(horizontal = 16.dp)
             .largeScreenContentPadding()
+
         LazyColumn(
             state = listState,
             modifier = Modifier.padding(contentPadding)
@@ -64,31 +86,46 @@ fun NetShieldSetting(
                 itemModifier = horizontalItemPaddingModifier,
             )
             item {
-                when (netShield.dnsOverride) {
-                    DnsOverride.None -> SettingsFeatureToggle(
-                        label = stringResource(netShield.titleRes),
-                        checked = netShield.value,
-                        onCheckedChange = { _ -> onNetShieldToggle() },
-                        modifier = horizontalItemPaddingModifier.padding(top = 16.dp)
-                    )
+                // Оборачиваем элементы управления в карточку
+                Card(
+                    modifier = horizontalItemPaddingModifier.padding(top = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor),
+                    border = border,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp) // Внутренний отступ карточки
+                    ) {
+                        when (netShield.dnsOverride) {
+                            DnsOverride.None -> SettingsFeatureToggle(
+                                label = stringResource(netShield.titleRes),
+                                checked = netShield.value,
+                                onCheckedChange = { _ -> onNetShieldToggle() },
+                                modifier = Modifier.fillMaxWidth()
+                            )
 
-                    DnsOverride.CustomDns -> DnsConflictBanner(
-                        titleRes = R.string.custom_dns_conflict_banner_netshield_title,
-                        descriptionRes = R.string.custom_dns_conflict_banner_netshield_description,
-                        buttonRes = R.string.custom_dns_conflict_banner_disable_custom_dns_button,
-                        onLearnMore = onCustomDnsLearnMore,
-                        onButtonClicked = onDisableCustomDns,
-                        modifier = horizontalItemPaddingModifier.padding(top = 24.dp),
-                    )
+                            DnsOverride.CustomDns -> DnsConflictBanner(
+                                titleRes = R.string.custom_dns_conflict_banner_netshield_title,
+                                descriptionRes = R.string.custom_dns_conflict_banner_netshield_description,
+                                buttonRes = R.string.custom_dns_conflict_banner_disable_custom_dns_button,
+                                onLearnMore = onCustomDnsLearnMore,
+                                onButtonClicked = onDisableCustomDns,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
 
-                    DnsOverride.SystemPrivateDns -> DnsConflictBanner(
-                        titleRes = R.string.private_dns_conflict_banner_netshield_title,
-                        descriptionRes = R.string.private_dns_conflict_banner_netshield_description,
-                        buttonRes = R.string.private_dns_conflict_banner_network_settings_button,
-                        onLearnMore = onPrivateDnsLearnMore,
-                        onButtonClicked = onOpenPrivateDnsSettings,
-                        modifier = horizontalItemPaddingModifier.padding(top = 24.dp),
-                    )
+                            DnsOverride.SystemPrivateDns -> DnsConflictBanner(
+                                titleRes = R.string.private_dns_conflict_banner_netshield_title,
+                                descriptionRes = R.string.private_dns_conflict_banner_netshield_description,
+                                buttonRes = R.string.private_dns_conflict_banner_network_settings_button,
+                                onLearnMore = onPrivateDnsLearnMore,
+                                onButtonClicked = onOpenPrivateDnsSettings,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
                 }
             }
             item {
@@ -96,7 +133,7 @@ fun NetShieldSetting(
                     text = stringResource(id = R.string.netshield_setting_warning),
                     style = ProtonTheme.typography.body2Regular,
                     color =  ProtonTheme.colors.textWeak,
-                    modifier = horizontalItemPaddingModifier.padding(top = 16.dp),
+                    modifier = horizontalItemPaddingModifier.padding(top = 16.dp, bottom = 16.dp),
                 )
             }
         }

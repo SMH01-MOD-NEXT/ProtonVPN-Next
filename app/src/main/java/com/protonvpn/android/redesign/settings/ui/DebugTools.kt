@@ -24,7 +24,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +34,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.protonvpn.android.base.ui.VpnSolidButton
 import com.protonvpn.android.redesign.base.ui.ProtonOutlinedTextField
-import com.protonvpn.android.redesign.base.ui.SettingsItem
+import me.proton.core.compose.theme.ProtonTheme
+import me.proton.core.compose.theme.defaultWeak
 import me.proton.core.presentation.R as CoreR
 
 @Composable
@@ -50,13 +53,25 @@ fun DebugTools(
         title = "Debug tools",
         onClose = onClose
     ) {
-        SettingsItem(
-            modifier = Modifier.clickable(onClick = onConnectGuestHole),
-            name = "Connect Guest Hole",
-            description = "Simulates a 10s API call that triggers Guest Hole.",
+        // Используем SettingRow для единообразия с остальными настройками
+        SettingRow(
+            title = "Connect Guest Hole",
+            subtitleComposable = {
+                Text(
+                    text = "Simulates a 10s API call that triggers Guest Hole.",
+                    style = ProtonTheme.typography.defaultWeak,
+                )
+            },
+            onClick = onConnectGuestHole
+        )
+
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 8.dp),
+            color = ProtonTheme.colors.separatorNorm
         )
 
         val paddingModifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp).fillMaxWidth()
+
         DebugTextInputRow(
             value = netzone,
             onValueChange = setNetzone,
@@ -74,7 +89,7 @@ fun DebugTools(
         VpnSolidButton(
             onClick = onRefreshConfig,
             text = "Refresh config and servers",
-            modifier = paddingModifier,
+            modifier = paddingModifier.padding(top = 8.dp),
         )
     }
 }

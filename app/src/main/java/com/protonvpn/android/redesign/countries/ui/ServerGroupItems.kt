@@ -20,10 +20,12 @@
 package com.protonvpn.android.redesign.countries.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -35,6 +37,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -78,6 +83,7 @@ import com.protonvpn.android.redesign.vpn.ServerFeature
 import com.protonvpn.android.redesign.vpn.ui.iconRes
 import com.protonvpn.android.redesign.vpn.ui.label
 import com.protonvpn.android.redesign.vpn.ui.viaCountry
+import com.protonvpn.android.theme.ThemeType
 import me.proton.core.compose.theme.ProtonTheme
 import me.proton.core.compose.theme.captionNorm
 import me.proton.core.compose.theme.defaultNorm
@@ -88,14 +94,13 @@ import me.proton.core.presentation.R as CoreR
  * Its main role is to provide layout and accessibility for actions:
  * - the main action on the whole row
  * - optional "open" button at the end. Its click area covers the entire area at the end of the row to prevent
- *   misclicks, however its ripple is smaller to preserve visual layout.
+ * misclicks, however its ripple is smaller to preserve visual layout.
  */
 @Composable
 private fun ServerGroupItemRow(
     @StringRes rowClickLabel: Int,
     onRowClick: (() -> Unit)?,
     onOpen: (() -> Unit)?,
-    isUnavailable: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
@@ -119,7 +124,6 @@ private fun ServerGroupItemRow(
                 customActions = customAccessibilityActions
             }
             .thenNotNull(clickable)
-            .unavailableServerAlpha(isUnavailable)
             .padding(start = edgePadding, end = edgePadding.takeIf { onOpen == null } ?: 0.dp)
     ) {
         content()
@@ -160,62 +164,82 @@ fun ServerGroupItem(
     onItemOpen: (ServerGroupUiItem.ServerGroup) -> Unit,
     onItemClick: (ServerGroupUiItem.ServerGroup) -> Unit,
     modifier: Modifier = Modifier,
+    themeType: ThemeType = ThemeType.System,
 ) {
-    ServerGroupItemRow(
-        rowClickLabel = item.clickLabel(),
-        onRowClick = { onItemClick(item) },
-        onOpen = { onItemOpen(item) }.takeIf { item.canOpen },
-        isUnavailable = !item.available || item.data.inMaintenance,
-        modifier = modifier.heightIn(min = 64.dp),
+    val isUnavailable = !item.available || item.data.inMaintenance
+
+    // Logic from user example for Amoled theme and Light mode
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    Card(
+        modifier = modifier
+            .padding(vertical = 4.dp, horizontal = 16.dp)
+            .unavailableServerAlpha(isUnavailable),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        border = border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        item.Icon(Modifier.padding(end = 12.dp))
-        Column(
-            Modifier
-                .weight(1f)
-                // The row will maintain min height but if text is very large it will expand to accommodate the
-                // contents with this padding.
-                .padding(vertical = 12.dp)
+        ServerGroupItemRow(
+            rowClickLabel = item.clickLabel(),
+            onRowClick = { onItemClick(item) },
+            onOpen = { onItemOpen(item) }.takeIf { item.canOpen },
+            modifier = Modifier.heightIn(min = 64.dp),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                val textMatch = item.data.textMatch
-                if (textMatch != null) {
-                    MatchedText(
-                        textMatch,
-                        style = ProtonTheme.typography.defaultNorm
-                    )
-                } else {
+            item.Icon(Modifier.padding(end = 12.dp))
+            Column(
+                Modifier
+                    .weight(1f)
+                    // The row will maintain min height but if text is very large it will expand to accommodate the
+                    // contents with this padding.
+                    .padding(vertical = 12.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    val textMatch = item.data.textMatch
+                    if (textMatch != null) {
+                        MatchedText(
+                            textMatch,
+                            style = ProtonTheme.typography.defaultNorm
+                        )
+                    } else {
+                        Text(
+                            text = item.label(),
+                            style = ProtonTheme.typography.defaultNorm
+                        )
+                    }
+                    if (item.connected) {
+                        ActiveDot(modifier = Modifier.padding(start = 8.dp))
+                    }
+                }
+                item.subLabel()?.let { subLabel ->
                     Text(
-                        text = item.label(),
-                        style = ProtonTheme.typography.defaultNorm
+                        text = subLabel,
+                        style = ProtonTheme.typography.captionNorm
                     )
                 }
-                if (item.connected) {
-                    ActiveDot(modifier = Modifier.padding(start = 8.dp))
+            }
+            Box(
+                contentAlignment = Alignment.CenterEnd,
+            ) {
+                if (item.data is ServerGroupItemData.Server) {
+                    FeaturesAndLoad(
+                        item.data,
+                        invisibleLoad = item.data.inMaintenance // Lay out invisible load for alignment.
+                    )
                 }
-            }
-            item.subLabel()?.let { subLabel ->
-                Text(
-                    text = subLabel,
-                    style = ProtonTheme.typography.captionNorm
-                )
-            }
-        }
-        Box(
-            contentAlignment = Alignment.CenterEnd,
-        ) {
-            if (item.data is ServerGroupItemData.Server) {
-                FeaturesAndLoad(
-                    item.data,
-                    invisibleLoad = item.data.inMaintenance // Lay out invisible load for alignment.
-                )
-            }
-            if (item.data.inMaintenance) {
-                Icon(
-                    painterResource(id = CoreR.drawable.ic_proton_wrench),
-                    contentDescription = stringResource(R.string.accessibility_item_in_maintenance),
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                )
+                if (item.data.inMaintenance) {
+                    Icon(
+                        painterResource(id = CoreR.drawable.ic_proton_wrench),
+                        contentDescription = stringResource(R.string.accessibility_item_in_maintenance),
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                    )
+                }
             }
         }
     }
@@ -380,55 +404,6 @@ private fun ServerGroupUiItem.ServerGroup.clickLabel() = when {
 }
 
 @Composable
-fun CountryItemPreview(
-    entry: CountryId? = null,
-    inMaintenance: Boolean = false,
-    available: Boolean = true,
-    connected: Boolean = false,
-    match: TextMatch? = null
-) {
-    ServerGroupItem(
-        modifier = Modifier.padding(6.dp),
-        item = ServerGroupUiItem.ServerGroup(
-            data = ServerGroupItemData.Country(
-                countryId = CountryId("us"),
-                entryCountryId = entry,
-                inMaintenance = inMaintenance,
-                tier = 0,
-                textMatch = match
-            ),
-            available = available,
-            connected = connected,
-        ),
-        onItemOpen = {},
-        onItemClick = {}
-    )
-}
-
-@Composable
-fun CityItemPreview(
-    inMaintenance: Boolean = false,
-    available: Boolean = true,
-    connected: Boolean = false,
-) {
-    ServerGroupItem(
-        item = ServerGroupUiItem.ServerGroup(
-            data = ServerGroupItemData.City(
-                countryId = CountryId("us"),
-                cityStateId = CityStateId("Arizona", isState = true),
-                name = "Arizona",
-                inMaintenance = inMaintenance,
-                tier = 0
-            ),
-            available = available,
-            connected = connected,
-        ),
-        onItemOpen = {},
-        onItemClick = {}
-    )
-}
-
-@Composable
 fun ServerGroupHeader(
     item: ServerGroupUiItem.Header,
     onOpenInfo: (InfoType) -> Unit,
@@ -448,153 +423,6 @@ fun ServerGroupHeader(
         )
         if (item.info != null) {
             InfoButton(item.info, onOpenInfo)
-        }
-    }
-}
-
-@ProtonVpnPreview
-@Composable
-private fun ServerGroupItemRowWithOpenPreview() {
-    ProtonVpnPreview {
-        Surface(
-            color = ProtonTheme.colors.backgroundNorm
-        ) {
-            ServerGroupItemRow(
-                rowClickLabel = R.string.accessibility_action_connect,
-                onRowClick = {},
-                onOpen = {},
-                isUnavailable = false,
-                modifier = Modifier
-                    .heightIn(64.dp)
-                    .fillMaxWidth(),
-            ) {
-                Text("Some content", modifier = Modifier.weight(1f))
-            }
-        }
-    }
-}
-
-@ProtonVpnPreview
-@Composable
-fun SectionHeaderPreview() {
-    ProtonVpnPreview {
-        ServerGroupHeader(
-            item = ServerGroupUiItem.Header(
-                labelRes = R.string.country_filter_all_list_header,
-                count = 10,
-                info = InfoType.SecureCore,
-            ),
-            onOpenInfo = {},
-            modifier = Modifier.background(ProtonTheme.colors.backgroundSecondary),
-        )
-    }
-}
-
-@Composable
-fun ServerItemPreview(
-    inMaintenance: Boolean = false,
-    available: Boolean = true,
-    load: Int = 50
-) {
-    ServerGroupItem(
-        item = ServerGroupUiItem.ServerGroup(
-            data = ServerGroupItemData.Server(
-                countryId = CountryId("us"),
-                serverId = ServerId("us-ny-01"),
-                name = "US-NY#1",
-                loadPercent = load,
-                serverFeatures = setOf(ServerFeature.P2P, ServerFeature.Tor),
-                isVirtualLocation = true,
-                inMaintenance = inMaintenance,
-                tier = 0,
-                entryCountryId = null,
-                gatewayName = null
-            ),
-            available = available,
-            connected = true,
-        ),
-        onItemOpen = {},
-        onItemClick = {}
-    )
-}
-
-@ProtonVpnPreview
-@Composable
-fun CountryItemPreviews() {
-    ProtonVpnPreview {
-        Column {
-            CountryItemPreview()
-            CountryItemPreview(entry = CountryId("is"), connected = true)
-            CountryItemPreview(entry = CountryId("se"), inMaintenance = true)
-            CountryItemPreview(available = false)
-            CountryItemPreview(match = TextMatch(0, 5, "United States"))
-        }
-    }
-}
-
-@ProtonVpnPreview
-@Composable
-fun CityItemPreviews() {
-    ProtonVpnPreview {
-        Column {
-            CityItemPreview(connected = true)
-            CityItemPreview(inMaintenance = true)
-            CityItemPreview(available = false)
-        }
-    }
-}
-
-@ProtonVpnPreview
-@Composable
-fun ServerItemPreviews() {
-    ProtonVpnPreview {
-        Column {
-            ServerItemPreview(load = 80)
-            ServerItemPreview(load = 100)
-            ServerItemPreview(inMaintenance = true)
-            ServerItemPreview(available = false)
-        }
-    }
-}
-
-@ProtonVpnPreview
-@Composable
-fun GatewayItemPreviews() {
-    ProtonVpnPreview {
-        Column {
-            ServerGroupItem(
-                item = ServerGroupUiItem.ServerGroup(
-                    data = ServerGroupItemData.Gateway(
-                        gatewayName = "MyCompany",
-                        inMaintenance = false,
-                        tier = 0
-                    ),
-                    available = true,
-                    connected = true,
-                ),
-                onItemOpen = {},
-                onItemClick = {}
-            )
-            ServerGroupItem(
-                item = ServerGroupUiItem.ServerGroup(
-                    data = ServerGroupItemData.Server(
-                        countryId = CountryId("us"),
-                        serverId = ServerId("gateway-us-01"),
-                        name = "MyCompany#1",
-                        loadPercent = 50,
-                        serverFeatures = setOf(),
-                        isVirtualLocation = false,
-                        inMaintenance = false,
-                        tier = 0,
-                        entryCountryId = null,
-                        gatewayName = "MyCompany"
-                    ),
-                    available = true,
-                    connected = true,
-                ),
-                onItemOpen = {},
-                onItemClick = {}
-            )
         }
     }
 }

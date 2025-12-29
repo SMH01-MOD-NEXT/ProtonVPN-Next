@@ -22,21 +22,33 @@ package com.protonvpn.android.redesign.settings.ui
 import android.content.Intent
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.protonvpn.android.R
@@ -55,6 +67,7 @@ import com.protonvpn.android.redesign.settings.ui.customdns.DnsSettingsScreen
 import com.protonvpn.android.redesign.settings.ui.nav.SubSettingsScreen
 import com.protonvpn.android.settings.data.SplitTunnelingMode
 import com.protonvpn.android.telemetry.UpgradeSource
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.ui.planupgrade.CarouselUpgradeDialogActivity
 import com.protonvpn.android.ui.planupgrade.UpgradeAdvancedCustomizationHighlightsFragment
 import com.protonvpn.android.ui.settings.SettingsSplitTunnelAppsActivity
@@ -72,6 +85,9 @@ import me.proton.core.usersettings.presentation.ui.StartPasswordManagement
 import me.proton.core.usersettings.presentation.ui.StartSecurityKeys
 import me.proton.core.usersettings.presentation.ui.StartUpdateRecoveryEmail
 
+// Создаем локальную переменную для передачи темы вниз по дереву
+val LocalThemeType = compositionLocalOf { ThemeType.System }
+
 @Composable
 fun SubSettingsRoute(
     viewModel: SettingsViewModel,
@@ -84,6 +100,9 @@ fun SubSettingsRoute(
     val context = LocalContext.current
     val vpnUiDelegate = LocalVpnUiDelegate.current
 
+    // Получаем текущую тему
+    val themeType by viewModel.theme.collectAsStateWithLifecycle(initialValue = ThemeType.System)
+
     val onSplitTunnelUpdated = { savedChange: Boolean? ->
         if (savedChange == true)
             settingsChangeViewModel.onSplitTunnelingUpdated(vpnUiDelegate)
@@ -94,278 +113,282 @@ fun SubSettingsRoute(
         SettingsSplitTunnelAppsActivity.createContract(), onSplitTunnelUpdated)
 
     val infoSheetState = rememberInfoSheetState()
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = ProtonTheme.colors.backgroundNorm)
-            .navigationBarsPadding()
-    ) {
-        when (type) {
-            SubSettingsScreen.Type.VpnAccelerator -> {
-                val vpnAccelerator =
-                    viewModel.vpnAccelerator.collectAsStateWithLifecycle(initialValue = null).value
-                DebugUtils.debugAssert { vpnAccelerator?.isRestricted != true }
-                if (vpnAccelerator != null) {
-                    FeatureSubSetting(
-                        imageRes = R.drawable.setting_vpn_accelerator,
-                        setting = vpnAccelerator,
-                        onClose = onClose,
-                        onLearnMore = { context.openUrl(Constants.VPN_ACCELERATOR_INFO_URL) },
-                        onToggle = settingsChangeViewModel::toggleVpnAccelerator,
-                    )
-                }
-            }
 
-            SubSettingsScreen.Type.Proxy -> {
-                val proxySetting = viewModel.proxy.collectAsStateWithLifecycle(initialValue = null).value
-                if (proxySetting != null) {
-                    ProxySubSetting(
-                        onClose = onClose,
-                        setting = proxySetting,
-                        onToggle = viewModel::toggleProxy
-                    )
-                }
-            }
-
-            SubSettingsScreen.Type.NetShield -> {
-                val netShield = viewModel.netShield.collectAsStateWithLifecycle(initialValue = null).value
-                if (netShield != null) {
-                    NetShieldSetting(
-                        onClose = onClose,
-                        netShield = netShield,
-                        onLearnMore = { context.openUrl(Constants.URL_NETSHIELD_LEARN_MORE) },
-                        onDisableCustomDns = { settingsChangeViewModel.disableCustomDns(vpnUiDelegate) },
-                        onCustomDnsLearnMore = { context.openUrl(Constants.URL_NETSHIELD_CUSTOM_DNS_LEARN_MORE) },
-                        onOpenPrivateDnsSettings = { context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) },
-                        onPrivateDnsLearnMore = { context.openUrl(Constants.URL_NETSHIELD_PRIVATE_DNS_LEARN_MORE) },
-                        onNetShieldToggle = settingsChangeViewModel::toggleNetShield
-                    )
-                }
-            }
-
-            SubSettingsScreen.Type.Account -> {
-                val accountViewState = viewModel.accountSettings.collectAsStateWithLifecycle(initialValue = null).value
-                val changePasswordContract = rememberLauncherForActivityResult(StartPasswordManagement()) {}
-                val changeRecoveryEmailContract = rememberLauncherForActivityResult(StartUpdateRecoveryEmail()) {}
-                val securityKeysContract = rememberLauncherForActivityResult(StartSecurityKeys()) {}
-                if (accountViewState != null) {
-                    AccountSettings(
-                        viewState = accountViewState,
-                        onClose = onClose,
-                        onChangePassword = { changePasswordContract.launch(accountViewState.userId.toInput()) },
-                        onChangeRecoveryEmail = { changeRecoveryEmailContract.launch(accountViewState.userId.toInput()) },
-                        onSecurityKeysClicked = { securityKeysContract.launch(accountViewState.userId.toInput()) },
-                        onOpenMyAccount = { context.openUrl(Constants.URL_ACCOUNT_LOGIN) },
-                        onDeleteAccount = { context.openUrl(Constants.URL_ACCOUNT_DELETE) },
-                        onUpgrade = {
-                            CarouselUpgradeDialogActivity.launch(
-                                context,
-                                UpgradeSource.ACCOUNT,
-                                focusedFragmentClass = null
-                            )
-                        }
-                    )
-                }
-            }
-
-            SubSettingsScreen.Type.Advanced -> {
-                val advancedViewState = viewModel.advancedSettings.collectAsStateWithLifecycle(initialValue = null).value
-                if (advancedViewState != null) {
-                    SettingOverrideDialogHandler(onNavigateToEditProfile) { onOverrideSettingClick ->
-                        AdvancedSettings(
+    // Оборачиваем контент в провайдер темы
+    CompositionLocalProvider(LocalThemeType provides themeType) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = ProtonTheme.colors.backgroundNorm)
+                .statusBarsPadding()
+                .navigationBarsPadding()
+        ) {
+            when (type) {
+                SubSettingsScreen.Type.VpnAccelerator -> {
+                    val vpnAccelerator =
+                        viewModel.vpnAccelerator.collectAsStateWithLifecycle(initialValue = null).value
+                    DebugUtils.debugAssert { vpnAccelerator?.isRestricted != true }
+                    if (vpnAccelerator != null) {
+                        VpnAcceleratorSubSetting(
                             onClose = onClose,
-                            profileOverrideInfo = advancedViewState.profileOverrideInfo,
-                            altRouting = advancedViewState.altRouting,
-                            allowLan = advancedViewState.lanConnections,
-                            natType = advancedViewState.natType,
-                            customDns = advancedViewState.customDns,
-                            onAltRoutingChange = settingsChangeViewModel::toggleAltRouting,
-                            onNavigateToLan = {
-                                onOverrideSettingClick(OverrideType.LAN) {
-                                    onNavigateToSubSetting(SubSettingsScreen.Type.Lan)
-                                }
-                            },
-                            onNatTypeLearnMore = { context.openUrl(Constants.MODERATE_NAT_INFO_URL) },
-                            onNavigateToNatType = {
-                                onOverrideSettingClick(OverrideType.NatType) {
-                                    onNavigateToSubSetting(SubSettingsScreen.Type.NatType)
-                                }
-                            },
-                            onNavigateToCustomDns = {
-                                val overrideType = if (advancedViewState.customDns?.isPrivateDnsActive == true)
-                                    OverrideType.CustomDnsPrivateDnsConflict else OverrideType.CustomDns
-                                onOverrideSettingClick(overrideType) {
-                                    onNavigateToSubSetting(SubSettingsScreen.Type.CustomDns)
-                                }
-                            },
-                            onAllowLanRestricted = {
-                                onOverrideSettingClick(OverrideType.LAN) {
-                                    CarouselUpgradeDialogActivity.launch<UpgradeAdvancedCustomizationHighlightsFragment>(
-                                        context
-                                    )
-                                }
-                            },
-                            onNatTypeRestricted = {
-                                CarouselUpgradeDialogActivity.launch<UpgradeAdvancedCustomizationHighlightsFragment>(
-                                    context
-                                )
-                            },
-                            ipV6 = advancedViewState.ipV6,
-                            onIPv6Toggle = { settingsChangeViewModel.toggleIPv6(vpnUiDelegate) },
-                            onIPv6InfoClick = { infoSheetState.show(InfoType.IPv6Traffic) },
-                            onCustomDnsLearnMore = {
-                                context.openUrl(Constants.URL_CUSTOM_DNS_LEARN_MORE)
-                            },
-                            onCustomDnsRestricted = {
-                                CarouselUpgradeDialogActivity.launch<UpgradeAdvancedCustomizationHighlightsFragment>(
-                                    context
+                            vpnAccelerator = vpnAccelerator,
+                            onLearnMore = { context.openUrl(Constants.VPN_ACCELERATOR_INFO_URL) },
+                            onToggle = settingsChangeViewModel::toggleVpnAccelerator,
+                        )
+                    }
+                }
+
+                SubSettingsScreen.Type.Proxy -> {
+                    val proxySetting = viewModel.proxy.collectAsStateWithLifecycle(initialValue = null).value
+                    if (proxySetting != null) {
+                        ProxySubSetting(
+                            onClose = onClose,
+                            setting = proxySetting,
+                            onToggle = viewModel::toggleProxy
+                        )
+                    }
+                }
+
+                SubSettingsScreen.Type.NetShield -> {
+                    val netShield = viewModel.netShield.collectAsStateWithLifecycle(initialValue = null).value
+                    if (netShield != null) {
+                        NetShieldSetting(
+                            onClose = onClose,
+                            netShield = netShield,
+                            onLearnMore = { context.openUrl(Constants.URL_NETSHIELD_LEARN_MORE) },
+                            onDisableCustomDns = { settingsChangeViewModel.disableCustomDns(vpnUiDelegate) },
+                            onCustomDnsLearnMore = { context.openUrl(Constants.URL_NETSHIELD_CUSTOM_DNS_LEARN_MORE) },
+                            onOpenPrivateDnsSettings = { context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) },
+                            onPrivateDnsLearnMore = { context.openUrl(Constants.URL_NETSHIELD_PRIVATE_DNS_LEARN_MORE) },
+                            onNetShieldToggle = settingsChangeViewModel::toggleNetShield
+                        )
+                    }
+                }
+
+                SubSettingsScreen.Type.Account -> {
+                    val accountViewState = viewModel.accountSettings.collectAsStateWithLifecycle(initialValue = null).value
+                    val changePasswordContract = rememberLauncherForActivityResult(StartPasswordManagement()) {}
+                    val changeRecoveryEmailContract = rememberLauncherForActivityResult(StartUpdateRecoveryEmail()) {}
+                    val securityKeysContract = rememberLauncherForActivityResult(StartSecurityKeys()) {}
+                    if (accountViewState != null) {
+                        AccountSettings(
+                            viewState = accountViewState,
+                            onClose = onClose,
+                            onChangePassword = { changePasswordContract.launch(accountViewState.userId.toInput()) },
+                            onChangeRecoveryEmail = { changeRecoveryEmailContract.launch(accountViewState.userId.toInput()) },
+                            onSecurityKeysClicked = { securityKeysContract.launch(accountViewState.userId.toInput()) },
+                            onOpenMyAccount = { context.openUrl(Constants.URL_ACCOUNT_LOGIN) },
+                            onDeleteAccount = { context.openUrl(Constants.URL_ACCOUNT_DELETE) },
+                            onUpgrade = {
+                                CarouselUpgradeDialogActivity.launch(
+                                    context,
+                                    UpgradeSource.ACCOUNT,
+                                    focusedFragmentClass = null
                                 )
                             }
                         )
                     }
                 }
-            }
-            SubSettingsScreen.Type.CustomDns -> {
-                val customDnsViewModel = hiltViewModel<CustomDnsViewModel>()
-                val dataSource = customDnsViewModel.customDnsHelper
-                val viewState = dataSource.customDnsSettingState.collectAsStateWithLifecycle(null).value
-                if (viewState != null) {
-                    DnsSettingsScreen(
-                        viewState = viewState,
-                        events = dataSource.events.receiveAsFlow(),
-                        actions = CustomDnsActions(
-                            onClose = onClose,
-                            onAddDns = customDnsViewModel::validateAndAddDnsAddress,
-                            onAddDnsTextChanged = dataSource::onAddDnsTextChanged,
-                            removeDns = customDnsViewModel::removeDnsItem,
-                            toggleSetting = customDnsViewModel::toggleCustomDns,
-                            updateDnsList = customDnsViewModel::updateCustomDnsList,
-                            openAddDnsScreen = dataSource::openAddDnsScreen,
-                            closeAddDnsScreen = dataSource::closeAddDnsScreen,
-                            showReconnectDialog = { settingsChangeViewModel.showDnsReconnectionDialog(vpnUiDelegate) },
-                        ),
-                    )
-                }
-            }
-            SubSettingsScreen.Type.Lan -> {
-                val lan = viewModel.lan.collectAsStateWithLifecycle(initialValue = null).value
-                if (lan != null) {
-                    LanSetting(
-                        onClose = onClose,
-                        lan = lan,
-                        onToggleLan = { settingsChangeViewModel.toggleLanConnections(vpnUiDelegate) },
-                        onToggleAllowDirectConnection = {
-                            settingsChangeViewModel.toggleLanAllowDirectConnections(vpnUiDelegate)
-                        },
-                    )
-                }
-            }
 
-            SubSettingsScreen.Type.DebugTools -> {
-                val debugToolsViewModel = hiltViewModel<DebugToolsViewModel>()
-                val state = debugToolsViewModel.state.collectAsStateWithLifecycle(initialValue = null).value
-                DebugTools(
-                    onClose = onClose,
-                    onConnectGuestHole = debugToolsViewModel::connectGuestHole,
-                    onRefreshConfig = debugToolsViewModel::refreshConfig,
-                    netzone = state?.netzone ?: "",
-                    country = state?.country ?: "",
-                    setNetzone = debugToolsViewModel::setNetzone,
-                    setCountry = debugToolsViewModel::setCountry,
-                )
-            }
-
-            SubSettingsScreen.Type.NatType -> {
-                val nat = viewModel.natType.collectAsStateWithLifecycle(initialValue = null).value
-                if (nat != null) {
-                    NatTypeSettings(
-                        onClose = onClose,
-                        nat = nat,
-                        onNatTypeChange = { newValue ->
-                            settingsChangeViewModel.setNatType(newValue)
-                            onClose()
-                        },
-                    )
-                }
-            }
-
-            SubSettingsScreen.Type.KillSwitch -> {
-                KillSwitchInfo(
-                    onOpenVpnSettings = { context.openVpnSettings() },
-                    onLearnMore = { context.openUrl(Constants.KILL_SWITCH_INFO_URL) },
-                    onClose = onClose,
-                )
-            }
-
-            SubSettingsScreen.Type.Protocol -> {
-                val protocolSettings = viewModel.protocol.collectAsStateWithLifecycle(initialValue = null).value
-                if (protocolSettings != null) {
-                    ProtocolSettings(
-                        onClose = onClose,
-                        protocolViewState = protocolSettings,
-                        onLearnMore = { context.openUrl(Constants.PROTOCOL_INFO_URL) },
-                        onProtocolSelected = { newProtocol ->
-                            settingsChangeViewModel.updateProtocol(vpnUiDelegate, newProtocol)
-                            onClose()
+                SubSettingsScreen.Type.Advanced -> {
+                    val advancedViewState = viewModel.advancedSettings.collectAsStateWithLifecycle(initialValue = null).value
+                    if (advancedViewState != null) {
+                        SettingOverrideDialogHandler(onNavigateToEditProfile) { onOverrideSettingClick ->
+                            AdvancedSettings(
+                                onClose = onClose,
+                                profileOverrideInfo = advancedViewState.profileOverrideInfo,
+                                altRouting = advancedViewState.altRouting,
+                                allowLan = advancedViewState.lanConnections,
+                                natType = advancedViewState.natType,
+                                customDns = advancedViewState.customDns,
+                                onAltRoutingChange = settingsChangeViewModel::toggleAltRouting,
+                                onNavigateToLan = {
+                                    onOverrideSettingClick(OverrideType.LAN) {
+                                        onNavigateToSubSetting(SubSettingsScreen.Type.Lan)
+                                    }
+                                },
+                                onNatTypeLearnMore = { context.openUrl(Constants.MODERATE_NAT_INFO_URL) },
+                                onNavigateToNatType = {
+                                    onOverrideSettingClick(OverrideType.NatType) {
+                                        onNavigateToSubSetting(SubSettingsScreen.Type.NatType)
+                                    }
+                                },
+                                onNavigateToCustomDns = {
+                                    val overrideType = if (advancedViewState.customDns?.isPrivateDnsActive == true)
+                                        OverrideType.CustomDnsPrivateDnsConflict else OverrideType.CustomDns
+                                    onOverrideSettingClick(overrideType) {
+                                        onNavigateToSubSetting(SubSettingsScreen.Type.CustomDns)
+                                    }
+                                },
+                                onAllowLanRestricted = {
+                                    onOverrideSettingClick(OverrideType.LAN) {
+                                        CarouselUpgradeDialogActivity.launch<UpgradeAdvancedCustomizationHighlightsFragment>(
+                                            context
+                                        )
+                                    }
+                                },
+                                onNatTypeRestricted = {
+                                    CarouselUpgradeDialogActivity.launch<UpgradeAdvancedCustomizationHighlightsFragment>(
+                                        context
+                                    )
+                                },
+                                ipV6 = advancedViewState.ipV6,
+                                onIPv6Toggle = { settingsChangeViewModel.toggleIPv6(vpnUiDelegate) },
+                                onIPv6InfoClick = { infoSheetState.show(InfoType.IPv6Traffic) },
+                                onCustomDnsLearnMore = {
+                                    context.openUrl(Constants.URL_CUSTOM_DNS_LEARN_MORE)
+                                },
+                                onCustomDnsRestricted = {
+                                    CarouselUpgradeDialogActivity.launch<UpgradeAdvancedCustomizationHighlightsFragment>(
+                                        context
+                                    )
+                                }
+                            )
                         }
-                    )
-                }
-            }
-
-            SubSettingsScreen.Type.SplitTunneling -> {
-                val splitTunnelingSettings = viewModel.splitTunneling.collectAsStateWithLifecycle(initialValue = null).value
-                if (splitTunnelingSettings != null) {
-                    val onModeSet = { mode: SplitTunnelingMode ->
-                        settingsChangeViewModel.setSplitTunnelingMode(vpnUiDelegate, mode)
                     }
-                    SplitTunnelingSubSetting(
+                }
+                SubSettingsScreen.Type.CustomDns -> {
+                    val customDnsViewModel = hiltViewModel<CustomDnsViewModel>()
+                    val dataSource = customDnsViewModel.customDnsHelper
+                    val viewState = dataSource.customDnsSettingState.collectAsStateWithLifecycle(null).value
+                    if (viewState != null) {
+                        DnsSettingsScreen(
+                            viewState = viewState,
+                            events = dataSource.events.receiveAsFlow(),
+                            actions = CustomDnsActions(
+                                onClose = onClose,
+                                onAddDns = customDnsViewModel::validateAndAddDnsAddress,
+                                onAddDnsTextChanged = dataSource::onAddDnsTextChanged,
+                                removeDns = customDnsViewModel::removeDnsItem,
+                                toggleSetting = customDnsViewModel::toggleCustomDns,
+                                updateDnsList = customDnsViewModel::updateCustomDnsList,
+                                openAddDnsScreen = dataSource::openAddDnsScreen,
+                                closeAddDnsScreen = dataSource::closeAddDnsScreen,
+                                showReconnectDialog = { settingsChangeViewModel.showDnsReconnectionDialog(vpnUiDelegate) },
+                            ),
+                        )
+                    }
+                }
+                SubSettingsScreen.Type.Lan -> {
+                    val lan = viewModel.lan.collectAsStateWithLifecycle(initialValue = null).value
+                    if (lan != null) {
+                        LanSetting(
+                            onClose = onClose,
+                            lan = lan,
+                            onToggleLan = { settingsChangeViewModel.toggleLanConnections(vpnUiDelegate) },
+                            onToggleAllowDirectConnection = {
+                                settingsChangeViewModel.toggleLanAllowDirectConnections(vpnUiDelegate)
+                            },
+                        )
+                    }
+                }
+
+                SubSettingsScreen.Type.DebugTools -> {
+                    val debugToolsViewModel = hiltViewModel<DebugToolsViewModel>()
+                    val state = debugToolsViewModel.state.collectAsStateWithLifecycle(initialValue = null).value
+                    DebugTools(
                         onClose = onClose,
-                        splitTunneling = splitTunnelingSettings,
-                        onLearnMore = { context.openUrl(Constants.SPLIT_TUNNELING_INFO_URL) },
-                        onSplitTunnelToggle = { settingsChangeViewModel.toggleSplitTunneling(vpnUiDelegate) },
-                        onSplitTunnelModeSelected = onModeSet,
-                        onAppsClick = { mode -> splitTunnelAppsLauncher.launch(mode) },
-                        onIpsClick = { mode -> splitTunnelIpLauncher.launch(mode) },
-                        onExportSettings = viewModel::exportSplitTunnelingSettings,
-                        onImportSettings = { uri, context ->
-                            viewModel.importSplitTunnelingSettings(uri, context) {
-                                settingsChangeViewModel.onSplitTunnelingUpdated(vpnUiDelegate)
-                            }
-                        }
+                        onConnectGuestHole = debugToolsViewModel::connectGuestHole,
+                        onRefreshConfig = debugToolsViewModel::refreshConfig,
+                        netzone = state?.netzone ?: "",
+                        country = state?.country ?: "",
+                        setNetzone = debugToolsViewModel::setNetzone,
+                        setCountry = debugToolsViewModel::setCountry,
                     )
                 }
-            }
 
-            SubSettingsScreen.Type.DefaultConnection -> {
-                DefaultConnectionSetting(onClose)
-            }
+                SubSettingsScreen.Type.NatType -> {
+                    val nat = viewModel.natType.collectAsStateWithLifecycle(initialValue = null).value
+                    if (nat != null) {
+                        NatTypeSettings(
+                            onClose = onClose,
+                            nat = nat,
+                            onNatTypeChange = { newValue ->
+                                settingsChangeViewModel.setNatType(newValue)
+                                onClose()
+                            },
+                        )
+                    }
+                }
 
-            SubSettingsScreen.Type.Theme -> {
-                val selectedTheme = viewModel.theme.collectAsStateWithLifecycle(initialValue = null).value
+                SubSettingsScreen.Type.KillSwitch -> {
+                    KillSwitchInfo(
+                        onOpenVpnSettings = { context.openVpnSettings() },
+                        onLearnMore = { context.openUrl(Constants.KILL_SWITCH_INFO_URL) },
+                        onClose = onClose,
+                    )
+                }
 
-                if(selectedTheme != null) {
-                    ThemeSettings(
-                        selectedTheme = selectedTheme,
-                        onSelected = settingsChangeViewModel::onThemeUpdated,
+                SubSettingsScreen.Type.Protocol -> {
+                    val protocolSettings = viewModel.protocol.collectAsStateWithLifecycle(initialValue = null).value
+                    if (protocolSettings != null) {
+                        ProtocolSettings(
+                            onClose = onClose,
+                            protocolViewState = protocolSettings,
+                            onLearnMore = { context.openUrl(Constants.PROTOCOL_INFO_URL) },
+                            onProtocolSelected = { newProtocol ->
+                                settingsChangeViewModel.updateProtocol(vpnUiDelegate, newProtocol)
+                                onClose()
+                            }
+                        )
+                    }
+                }
+
+                SubSettingsScreen.Type.SplitTunneling -> {
+                    val splitTunnelingSettings = viewModel.splitTunneling.collectAsStateWithLifecycle(initialValue = null).value
+                    if (splitTunnelingSettings != null) {
+                        val onModeSet = { mode: SplitTunnelingMode ->
+                            settingsChangeViewModel.setSplitTunnelingMode(vpnUiDelegate, mode)
+                        }
+                        SplitTunnelingSubSetting(
+                            onClose = onClose,
+                            splitTunneling = splitTunnelingSettings,
+                            onLearnMore = { context.openUrl(Constants.SPLIT_TUNNELING_INFO_URL) },
+                            onSplitTunnelToggle = { settingsChangeViewModel.toggleSplitTunneling(vpnUiDelegate) },
+                            onSplitTunnelModeSelected = onModeSet,
+                            onAppsClick = { mode -> splitTunnelAppsLauncher.launch(mode) },
+                            onIpsClick = { mode -> splitTunnelIpLauncher.launch(mode) },
+                            onExportSettings = viewModel::exportSplitTunnelingSettings,
+                            onImportSettings = { uri, context ->
+                                viewModel.importSplitTunnelingSettings(uri, context) {
+                                    settingsChangeViewModel.onSplitTunnelingUpdated(vpnUiDelegate)
+                                }
+                            }
+                        )
+                    }
+                }
+
+                SubSettingsScreen.Type.DefaultConnection -> {
+                    DefaultConnectionSetting(onClose)
+                }
+
+                SubSettingsScreen.Type.Theme -> {
+                    val selectedTheme = viewModel.theme.collectAsStateWithLifecycle(initialValue = null).value
+
+                    if(selectedTheme != null) {
+                        ThemeSettings(
+                            selectedTheme = selectedTheme,
+                            onSelected = settingsChangeViewModel::onThemeUpdated,
+                            onClose = onClose
+                        )
+                    }
+                }
+
+                SubSettingsScreen.Type.IconChange -> {
+                    IconSelectionSetting(
+                        activeIcon = viewModel.getCurrentAppIcon(),
+                        onIconChange = { viewModel.setNewAppIcon(it) },
                         onClose = onClose
                     )
                 }
-            }
 
-            SubSettingsScreen.Type.IconChange -> {
-                IconSelectionSetting(
-                    activeIcon = viewModel.getCurrentAppIcon(),
-                    onIconChange = { viewModel.setNewAppIcon(it) },
-                    onClose = onClose
-                )
-            }
-
-            SubSettingsScreen.Type.Widget -> {
-                WidgetAddScreen(onClose = onClose)
+                SubSettingsScreen.Type.Widget -> {
+                    WidgetAddScreen(onClose = onClose)
+                }
             }
         }
+        InfoSheet(infoSheetState, onOpenUrl = { context.openUrl(it) })
     }
-    InfoSheet(infoSheetState, onOpenUrl = { context.openUrl(it) })
 }
 
 private fun UserId.toInput() = SettingsInput(this.id)
@@ -398,6 +421,17 @@ fun SubSetting(
     onClose: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
+    // Получаем тему из LocalThemeType
+    val themeType = LocalThemeType.current
+
+    // Логика стилизации (обводка и фон)
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
     BasicSubSetting(
         modifier = modifier,
         title = title,
@@ -406,9 +440,25 @@ fun SubSetting(
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .largeScreenContentPadding(),
+                .largeScreenContentPadding()
+                .padding(horizontal = 16.dp), // External padding for the card
         ) {
-            content()
+            // New Design: Wrap content in a Card
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = cardColor
+                ),
+                border = border,
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(vertical = 16.dp) // Internal padding
+                ) {
+                    content()
+                }
+            }
         }
     }
 }
@@ -420,6 +470,7 @@ fun SubSettingWithLazyContent(
     onClose: () -> Unit,
     content: @Composable () -> Unit,
 ) {
+
     BasicSubSetting(
         modifier = modifier,
         title = title,
@@ -428,6 +479,7 @@ fun SubSettingWithLazyContent(
         Box(
             modifier = Modifier
                 .largeScreenContentPadding()
+                .padding(horizontal = 16.dp)
         ) {
             content()
         }

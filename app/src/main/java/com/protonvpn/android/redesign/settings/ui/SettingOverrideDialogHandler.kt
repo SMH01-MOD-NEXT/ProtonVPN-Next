@@ -22,7 +22,9 @@ package com.protonvpn.android.redesign.settings.ui
 import android.content.Intent
 import android.provider.Settings
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,6 +33,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -60,6 +64,7 @@ import com.protonvpn.android.redesign.base.ui.ProfileConnectIntentIcon
 import com.protonvpn.android.redesign.base.ui.ProtonAlert
 import com.protonvpn.android.redesign.base.ui.ProtonBasicAlert
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.utils.Constants
 import com.protonvpn.android.utils.openUrl
 import me.proton.core.compose.theme.ProtonTheme
@@ -151,29 +156,45 @@ fun ProfileOverrideView(
     profileOverrideInfo: SettingsViewModel.ProfileOverrideInfo,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .background(ProtonTheme.colors.backgroundSecondary)
-            .padding(12.dp)
+    // Получаем тему из LocalThemeType (определено в SubSettingsRoute.kt)
+    // Если используется вне SubSettingsRoute, LocalThemeType.current вернет значение по умолчанию (System)
+    val themeType = LocalThemeType.current
+
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        border = border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        ProfileConnectIntentIcon(
-            profileOverrideInfo.primaryLabel,
-            profileConnectIntentIconSize = ConnectIntentIconSize.MEDIUM
-        )
-        Spacer(Modifier.size(12.dp))
-        val parts = stringResource(id = R.string.profile_overrides_setting).split("%1\$s")
-        Text(
-            text = buildAnnotatedString {
-                append(parts[0])
-                withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append(profileOverrideInfo.profileName)
-                }
-                append(parts[1])
-            },
-            style = ProtonTheme.typography.body2Regular,
-            color = ProtonTheme.colors.textWeak
-        )
+        Row(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            ProfileConnectIntentIcon(
+                profileOverrideInfo.primaryLabel,
+                profileConnectIntentIconSize = ConnectIntentIconSize.MEDIUM
+            )
+            Spacer(Modifier.size(12.dp))
+            val parts = stringResource(id = R.string.profile_overrides_setting).split("%1\$s")
+            Text(
+                text = buildAnnotatedString {
+                    if (parts.isNotEmpty()) append(parts[0])
+                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(profileOverrideInfo.profileName)
+                    }
+                    if (parts.size > 1) append(parts[1])
+                },
+                style = ProtonTheme.typography.body2Regular,
+                color = ProtonTheme.colors.textWeak
+            )
+        }
     }
 }
 
@@ -182,11 +203,12 @@ fun OverrideSettingLabel(
     settingValue: SettingValue.SettingOverrideValue,
     modifier: Modifier = Modifier,
 ) {
+    // Используем backgroundNorm для контраста, так как этот лейбл часто находится внутри карточки secondary
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(ProtonTheme.colors.backgroundSecondary)
+            .clip(RoundedCornerShape(8.dp))
+            .background(ProtonTheme.colors.backgroundNorm)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         ProfileConnectIntentIcon(

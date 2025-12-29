@@ -21,8 +21,10 @@ package com.protonvpn.android.redesign.countries.ui
 
 import android.content.Context
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -43,13 +45,17 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -62,25 +68,24 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.protonvpn.android.R
 import com.protonvpn.android.base.ui.protonElevation
+import com.protonvpn.android.redesign.base.ui.CollapsibleToolbarScaffold
 import com.protonvpn.android.redesign.base.ui.InfoSheet
 import com.protonvpn.android.redesign.base.ui.InfoSheetState
 import com.protonvpn.android.redesign.base.ui.InfoType
 import com.protonvpn.android.redesign.base.ui.LocalVpnUiDelegate
 import com.protonvpn.android.redesign.base.ui.UpsellBanner
-import com.protonvpn.android.redesign.base.ui.VpnDivider
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.redesign.base.ui.rememberInfoSheetState
 import com.protonvpn.android.redesign.home_screen.ui.ShowcaseRecents
-import com.protonvpn.android.redesign.base.ui.CollapsibleToolbarScaffold
-import com.protonvpn.android.ui.planupgrade.CarouselUpgradeDialogActivity
+import com.protonvpn.android.redesign.settings.ui.SettingsViewModel
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.ui.planupgrade.PlusOnlyUpgradeDialogActivity
 import com.protonvpn.android.ui.planupgrade.UpgradeCountryHighlightsFragment
-import com.protonvpn.android.ui.planupgrade.UpgradeP2PHighlightsFragment
 import com.protonvpn.android.ui.planupgrade.UpgradePlusCountriesHighlightsFragment
-import com.protonvpn.android.ui.planupgrade.UpgradeSecureCoreHighlightsFragment
-import com.protonvpn.android.ui.planupgrade.UpgradeTorHighlightsFragment
 import com.protonvpn.android.utils.openUrl
 import com.protonvpn.android.vpn.VpnUiDelegate
 import me.proton.core.compose.theme.ProtonTheme
@@ -115,6 +120,10 @@ fun ServerGroupsWithToolbar(
     actions: ServerGroupsActions,
     @StringRes titleRes: Int,
 ) {
+    // Получаем тему для стилизации (для Amoled Stroke)
+    val settingsViewModel = hiltViewModel<SettingsViewModel>()
+    val themeType by settingsViewModel.theme.collectAsStateWithLifecycle(initialValue = ThemeType.System)
+
     ServerGroups(
         mainState,
         subScreenState,
@@ -126,7 +135,14 @@ fun ServerGroupsWithToolbar(
             toolbarFilters = mainState.filterButtons,
             titleRes = titleRes,
             content = { paddingValues ->
-                ServerGroupItemsList(actions, mainState, onNavigateToHomeOnConnect, infoSheetState, paddingValues)
+                ServerGroupItemsList(
+                    actions = actions,
+                    state = mainState,
+                    onNavigateToHomeOnConnect = onNavigateToHomeOnConnect,
+                    infoSheetState = infoSheetState,
+                    paddingValues = paddingValues,
+                    themeType = themeType
+                )
             }
         )
     }
@@ -330,6 +346,7 @@ fun ServerGroupItemsList(
     state: ServerGroupsMainScreenState,
     onNavigateToHomeOnConnect: (ShowcaseRecents) -> Unit,
     infoSheetState: InfoSheetState,
+    themeType: ThemeType,
     paddingValues: PaddingValues = PaddingValues(0.dp),
 ) {
     val context = LocalContext.current
@@ -341,7 +358,8 @@ fun ServerGroupItemsList(
         onOpenInfo = { infoType -> infoSheetState.show(infoType) },
         navigateToUpsell = {},
         horizontalContentPadding = largeScreenContentPadding(),
-        modifier = Modifier.padding(paddingValues)
+        modifier = Modifier.padding(paddingValues),
+        themeType = themeType
     )
 }
 
@@ -355,6 +373,7 @@ fun ServerGroupItemsList(
     onOpenInfo: (InfoType) -> Unit,
     navigateToUpsell: (ServerGroupUiItem.BannerType) -> Unit,
     horizontalContentPadding: Dp = 0.dp,
+    themeType: ThemeType = ThemeType.System,
 ) {
     LazyColumn(
         modifier = modifier,
@@ -367,12 +386,13 @@ fun ServerGroupItemsList(
                     is ServerGroupUiItem.Header ->
                         ServerGroupHeader(item, onOpenInfo = onOpenInfo)
 
-                    is ServerGroupUiItem.Banner -> {}
+                    is ServerGroupUiItem.Banner -> {
+                        // Баннер удален по запросу
+                    }
 
                     is ServerGroupUiItem.ServerGroup -> {
-                        ServerGroupItem(item, onItemOpen = onItemOpen, onItemClick = onItemClick)
-                        if (index < items.lastIndex && items[index + 1] is ServerGroupUiItem.ServerGroup)
-                            VpnDivider()
+                        // VpnDivider убран, так как теперь используются карточки
+                        ServerGroupItem(item, onItemOpen = onItemOpen, onItemClick = onItemClick, themeType = themeType)
                     }
                 }
             }
@@ -389,52 +409,69 @@ fun ServerGroupItemsList(
 @Composable
 private fun ServerGroupBanner(
     item: ServerGroupUiItem.Banner,
-    navigateToUpsell: (ServerGroupUiItem.BannerType) -> Unit
+    navigateToUpsell: (ServerGroupUiItem.BannerType) -> Unit,
+    themeType: ThemeType
 ) {
-    val modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
-    val onClick = { navigateToUpsell(item.type) }
+    // Обводка для AMOLED
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 
-    when (item.type) {
-        ServerGroupUiItem.BannerType.Countries ->
-            UpsellBanner(
-                titleRes = null,
-                descriptionRes = R.string.countries_upsell_banner_description,
-                iconRes = R.drawable.banner_icon_worldwide_coverage,
-                onClick = onClick,
-                modifier = modifier,
-            )
-        ServerGroupUiItem.BannerType.SecureCore ->
-            UpsellBanner(
-                titleRes = null,
-                descriptionRes = R.string.secure_core_upsell_banner_description,
-                iconRes = R.drawable.banner_icon_secure_core,
-                onClick = onClick,
-                modifier = modifier,
-            )
-        ServerGroupUiItem.BannerType.P2P ->
-            UpsellBanner(
-                titleRes = null,
-                descriptionRes = R.string.p2p_upsell_banner_description,
-                iconRes = R.drawable.banner_icon_p2p,
-                onClick = onClick,
-                modifier = modifier,
-            )
-        ServerGroupUiItem.BannerType.Tor ->
-            UpsellBanner(
-                titleRes = null,
-                descriptionRes = R.string.tor_upsell_banner_description,
-                iconRes = R.drawable.banner_icon_tor,
-                onClick = onClick,
-                modifier = modifier,
-            )
-        is ServerGroupUiItem.BannerType.Search ->
-            UpsellBanner(
-                titleRes = R.string.search_upsell_banner_title,
-                descriptionRes = 0,
-                description = pluralStringResource(R.plurals.search_upsell_banner_message, item.type.countriesCount, item.type.countriesCount),
-                iconRes = R.drawable.upsell_card_worldwide,
-                onClick = onClick,
-                modifier = modifier,
-            )
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    Card(
+        modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        border = border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        val onClick = { navigateToUpsell(item.type) }
+        val bannerModifier = Modifier.padding(0.dp)
+
+        when (item.type) {
+            ServerGroupUiItem.BannerType.Countries ->
+                UpsellBanner(
+                    titleRes = null,
+                    descriptionRes = R.string.countries_upsell_banner_description,
+                    iconRes = R.drawable.banner_icon_worldwide_coverage,
+                    onClick = onClick,
+                    modifier = bannerModifier,
+                )
+            ServerGroupUiItem.BannerType.SecureCore ->
+                UpsellBanner(
+                    titleRes = null,
+                    descriptionRes = R.string.secure_core_upsell_banner_description,
+                    iconRes = R.drawable.banner_icon_secure_core,
+                    onClick = onClick,
+                    modifier = bannerModifier,
+                )
+            ServerGroupUiItem.BannerType.P2P ->
+                UpsellBanner(
+                    titleRes = null,
+                    descriptionRes = R.string.p2p_upsell_banner_description,
+                    iconRes = R.drawable.banner_icon_p2p,
+                    onClick = onClick,
+                    modifier = bannerModifier,
+                )
+            ServerGroupUiItem.BannerType.Tor ->
+                UpsellBanner(
+                    titleRes = null,
+                    descriptionRes = R.string.tor_upsell_banner_description,
+                    iconRes = R.drawable.banner_icon_tor,
+                    onClick = onClick,
+                    modifier = bannerModifier,
+                )
+            is ServerGroupUiItem.BannerType.Search ->
+                UpsellBanner(
+                    titleRes = R.string.search_upsell_banner_title,
+                    descriptionRes = 0,
+                    description = pluralStringResource(R.plurals.search_upsell_banner_message, item.type.countriesCount, item.type.countriesCount),
+                    iconRes = R.drawable.upsell_card_worldwide,
+                    onClick = onClick,
+                    modifier = bannerModifier,
+                )
+        }
     }
 }

@@ -19,18 +19,22 @@
 
 package com.protonvpn.android.redesign.recents.ui
 
+import android.content.Context
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,8 +48,12 @@ import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentRow
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentSecondaryLabel
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentViewState
+import com.protonvpn.android.theme.ThemeType
 import me.proton.core.compose.theme.ProtonTheme
 import me.proton.core.presentation.R as CoreR
+
+private const val PREFS_NAME = "Storage"
+private const val THEME_KEY = "theme"
 
 data class RecentItemViewState(
     val id: Long,
@@ -62,40 +70,67 @@ fun RecentRow(
     onRecentSettingOpen: (RecentItemViewState) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
+    // Получаем текущую тему напрямую из SharedPreferences, так как LocalThemeType может быть недоступен
+    val themeName = remember(context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.getString(THEME_KEY, ThemeType.System.name)
+    }
+
+    val isAmoled = themeName == ThemeType.Amoled.name || themeName == ThemeType.NewYearAmoled.name
+
+    // Белая обводка 1dp только для AMOLED
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    // Определение светлой темы для цвета карточки
+    val isLight = themeName == ThemeType.Light.name || themeName == ThemeType.NewYearLight.name ||
+            (themeName == ThemeType.System.name && !isSystemInDarkTheme())
+
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
     val pinnedStateDescription = stringResource(id = R.string.recent_action_accessibility_state_pinned)
     val iconRes =
         if (item.isPinned) CoreR.drawable.ic_proton_pin_filled else CoreR.drawable.ic_proton_clock_rotate_left
-    ConnectIntentRow(
-        availability = item.availability,
-        connectIntent = item.connectIntent,
-        isConnected = item.isConnected,
-        onClick = onClick,
-        onOpen = { onRecentSettingOpen(item) },
-        leadingComposable = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = painterResource(id = iconRes),
-                    tint = ProtonTheme.colors.iconWeak,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .size(16.dp)
-                )
-                ConnectIntentIcon(item.connectIntent.primaryLabel)
-            }
-        },
+
+    Card(
         modifier = modifier,
-        semanticsStateDescription = if (item.isPinned) pinnedStateDescription else null
-    )
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        border = border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        ConnectIntentRow(
+            availability = item.availability,
+            connectIntent = item.connectIntent,
+            isConnected = item.isConnected,
+            onClick = onClick,
+            onOpen = { onRecentSettingOpen(item) },
+            leadingComposable = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        tint = ProtonTheme.colors.iconWeak,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(16.dp)
+                    )
+                    ConnectIntentIcon(item.connectIntent.primaryLabel)
+                }
+            },
+            modifier = Modifier,
+            semanticsStateDescription = if (item.isPinned) pinnedStateDescription else null
+        )
+    }
 }
 
 @Preview
 @Composable
 private fun PreviewRecent() {
     VpnTheme {
-        var isPinned by remember { mutableStateOf(false) }
         RecentRow(
             item = RecentItemViewState(
                 id = 0,
@@ -104,13 +139,13 @@ private fun PreviewRecent() {
                     secondaryLabel = ConnectIntentSecondaryLabel.SecureCore(null, CountryId.sweden),
                     serverFeatures = emptySet()
                 ),
-                isPinned = isPinned,
+                isPinned = false,
                 isConnected = true,
                 availability = ConnectIntentAvailability.AVAILABLE_OFFLINE,
             ),
             onClick = {},
             onRecentSettingOpen = {},
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.padding(16.dp)
         )
     }
 }

@@ -19,14 +19,25 @@
 
 package com.protonvpn.android.redesign.settings.ui
 
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.protonvpn.android.R
-import com.protonvpn.android.redesign.base.ui.ClickableTextAnnotation
-import com.protonvpn.android.redesign.base.ui.SettingsValueItem
+import me.proton.core.compose.theme.ProtonTheme
+import me.proton.core.presentation.R as CoreR
 
 @Composable
 fun AdvancedSettings(
@@ -55,71 +66,95 @@ fun AdvancedSettings(
     ) {
         profileOverrideInfo?.let {
             ProfileOverrideView(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(bottom = 8.dp),
                 profileOverrideInfo = it
             )
         }
 
-        SettingsToggleItem(
-            altRouting,
+        // Alt Routing (Toggle)
+        AdvancedToggleRow(
+            title = stringResource(id = altRouting.titleRes),
+            icon = CoreR.drawable.ic_proton_arrow_in_to_rectangle, // Используем иконку из CoreR
+            checked = altRouting.value,
             onToggle = onAltRoutingChange
         )
-        SettingsValueItem(
-            state = allowLan,
-            onLearnMore = null,
-            onNavigateTo = onNavigateToLan,
-            onRestricted = onAllowLanRestricted
+
+        // LAN Connections (Navigation)
+        SettingRowWithIcon(
+            title = stringResource(id = allowLan.titleRes),
+            icon = R.drawable.ic_lan,
+            settingValue = allowLan.settingValueView,
+            onClick = if (allowLan.isRestricted) onAllowLanRestricted else onNavigateToLan,
+            trailingIcon = if (allowLan.isRestricted) R.drawable.vpn_plus_badge else null,
+            trailingIconTint = false
         )
 
-        SettingsValueItem(
-            state = natType,
-            onLearnMore = onNatTypeLearnMore,
-            onNavigateTo = onNavigateToNatType,
-            onRestricted = onNatTypeRestricted
+        // NAT Type (Navigation)
+        SettingRowWithIcon(
+            title = stringResource(id = natType.titleRes),
+            icon = CoreR.drawable.ic_proton_shield,
+            settingValue = natType.settingValueView,
+            onClick = if (natType.isRestricted) onNatTypeRestricted else onNavigateToNatType,
+            trailingIcon = if (natType.isRestricted) R.drawable.vpn_plus_badge else null,
+            trailingIconTint = false
         )
 
+        // Custom DNS (Navigation)
         if (customDns != null) {
-            SettingsValueItem(
-                state = customDns,
-                onLearnMore = onCustomDnsLearnMore,
-                onNavigateTo = onNavigateToCustomDns,
-                onRestricted = onCustomDnsRestricted
+            SettingRowWithIcon(
+                title = stringResource(id = customDns.titleRes),
+                icon = R.drawable.ic_dns,
+                settingValue = customDns.settingValueView,
+                onClick = if (customDns.isRestricted) onCustomDnsRestricted else onNavigateToCustomDns,
+                trailingIcon = if (customDns.isRestricted) R.drawable.vpn_plus_badge else null,
+                trailingIconTint = false
             )
         }
 
+        // IPv6 (Toggle)
         if (ipV6 != null) {
-            SettingsToggleItem(
-                ipV6,
-                onToggle = onIPv6Toggle,
-                onInfoClick = onIPv6InfoClick,
+            AdvancedToggleRow(
+                title = stringResource(id = ipV6.titleRes),
+                icon = R.drawable.ic_ipv6,
+                checked = ipV6.value,
+                onToggle = onIPv6Toggle
             )
         }
     }
 }
 
 @Composable
-fun <T> SettingsValueItem(
-    state: SettingsViewModel.SettingViewState<T>,
-    onLearnMore: (() -> Unit)?,
-    onNavigateTo: () -> Unit,
-    onRestricted: () -> Unit,
+private fun AdvancedToggleRow(
+    title: String,
+    @DrawableRes icon: Int,
+    checked: Boolean,
+    onToggle: () -> Unit
 ) {
-    val onClick = if (state.isRestricted) onRestricted else onNavigateTo
-    SettingsValueItem(
-        name = stringResource(id = state.titleRes),
-        description = state.descriptionText(),
-        needsUpgrade = state.isRestricted,
-        settingValue = state.settingValueView,
-        descriptionAnnotation =
-            if (onLearnMore != null && state.annotationRes != null) {
-                ClickableTextAnnotation(
-                    annotatedPart = stringResource(id = state.annotationRes),
-                    onAnnotatedClick = onLearnMore,
-                    onAnnotatedOutsideClick = onClick,
+    SettingRow(
+        title = title,
+        leadingComposable = {
+            // Replicating the Icon style from SettingsView
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(ProtonTheme.colors.interactionNorm.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    tint = ProtonTheme.colors.interactionNorm,
+                    modifier = Modifier.size(20.dp)
                 )
-            } else {
-                null
-            },
-        onClick = onClick
+            }
+        },
+        trailingComposable = {
+            Switch(
+                checked = checked,
+                onCheckedChange = { onToggle() }
+            )
+        },
+        onClick = onToggle
     )
 }

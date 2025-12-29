@@ -19,27 +19,36 @@
 
 package com.protonvpn.android.profiles.ui
 
+import android.content.Context
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,7 +70,6 @@ import com.protonvpn.android.redesign.base.ui.InfoSheet
 import com.protonvpn.android.redesign.base.ui.InfoSheetState
 import com.protonvpn.android.redesign.base.ui.InfoType
 import com.protonvpn.android.redesign.base.ui.ProfileConnectIntentIcon
-import com.protonvpn.android.redesign.base.ui.VpnDivider
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.redesign.base.ui.rememberInfoSheetState
 import com.protonvpn.android.redesign.settings.ui.NatType
@@ -70,9 +78,13 @@ import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentRow
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentSecondaryLabel
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentViewStateProfile
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.utils.openUrl
 import com.protonvpn.android.vpn.ProtocolSelection
 import me.proton.core.compose.theme.ProtonTheme
+
+private const val PREFS_NAME = "Storage"
+private const val THEME_KEY = "theme"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -187,15 +199,15 @@ fun ProfilesList(
             modifier = Modifier.weight(1f),
         ) {
             itemsIndexed(profiles, key = { _, profile -> profile.profile.id }) { index, profile ->
-                Column(modifier = Modifier.animateItemPlacement()) {
-                    ProfileItem(
-                        profile = profile,
-                        onConnect = onConnect,
-                        onSelect = onSelect,
-                    )
-                    if (index < profiles.lastIndex)
-                        VpnDivider()
-                }
+                ProfileItem(
+                    profile = profile,
+                    onConnect = onConnect,
+                    onSelect = onSelect,
+                    modifier = Modifier
+                        .animateItemPlacement()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .fillMaxWidth()
+                )
             }
         }
 
@@ -214,20 +226,43 @@ fun ProfileItem(
     onSelect: (ProfileViewItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    ConnectIntentRow(
-        availability = profile.availability,
-        connectIntent = profile.intent,
-        isConnected = profile.isConnected,
-        onClick = { onConnect(profile) },
-        onOpen = { onSelect(profile) },
-        leadingComposable = {
-            ProfileConnectIntentIcon(
-                profile.intent.primaryLabel,
-                profileConnectIntentIconSize = ConnectIntentIconSize.LARGE
-            )
-        },
+    val context = LocalContext.current
+
+    // Theme Logic similar to RecentRow and Settings
+    val themeName = remember(context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.getString(THEME_KEY, ThemeType.System.name)
+    }
+
+    val isAmoled = themeName == ThemeType.Amoled.name || themeName == ThemeType.NewYearAmoled.name
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeName == ThemeType.Light.name || themeName == ThemeType.NewYearLight.name ||
+            (themeName == ThemeType.System.name && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    Card(
         modifier = modifier,
-    )
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        border = border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        ConnectIntentRow(
+            availability = profile.availability,
+            connectIntent = profile.intent,
+            isConnected = profile.isConnected,
+            onClick = { onConnect(profile) },
+            onOpen = { onSelect(profile) },
+            leadingComposable = {
+                ProfileConnectIntentIcon(
+                    profile.intent.primaryLabel,
+                    profileConnectIntentIconSize = ConnectIntentIconSize.LARGE
+                )
+            },
+            modifier = Modifier,
+        )
+    }
 }
 
 @Preview
@@ -258,7 +293,8 @@ fun ProfileItemPreview() {
                 lanConnections = true,
             ),
             onConnect = {},
-            onSelect = {}
+            onSelect = {},
+            modifier = Modifier.padding(16.dp)
         )
     }
 }

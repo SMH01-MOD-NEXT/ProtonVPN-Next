@@ -19,6 +19,7 @@
 
 package com.protonvpn.android.redesign.recents.ui
 
+import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedContent
@@ -49,11 +50,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -74,9 +78,13 @@ import com.protonvpn.android.redesign.vpn.ui.ConnectIntentLabels
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentSecondaryLabel
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentViewState
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.ui.home.FreeConnectionsInfoBottomSheet
 import me.proton.core.compose.theme.ProtonTheme
 import me.proton.core.presentation.R as CoreR
+
+private const val PREFS_NAME = "Storage"
+private const val THEME_KEY = "theme"
 
 @Immutable
 data class VpnConnectionCardViewState(
@@ -106,6 +114,8 @@ fun VpnConnectionCard(
 ) {
     var showsInfoDialog by rememberSaveable { mutableStateOf(false) }
     val openFreeCountriesInfoPanel = { showsInfoDialog = true }
+    val context = LocalContext.current
+
     Column(
         modifier = modifier
             .animateContentSize()
@@ -116,10 +126,26 @@ fun VpnConnectionCard(
             Modifier.padding(vertical = 12.dp) // There's 4.dp padding on the help button.
         )
         val surfaceShape = ProtonTheme.shapes.large
+
+        // Используем логику из Recents (SharedPreferences) для максимальной точности
+        val themeName = remember(context) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.getString(THEME_KEY, ThemeType.System.name)
+        }
+
+        val isAmoled = themeName == ThemeType.Amoled.name || themeName == ThemeType.NewYearAmoled.name
+
+        // Если Amoled - белая обводка, иначе - стоковая
+        val borderModifier = if (isAmoled) {
+            Modifier.border(1.dp, Color.White, surfaceShape)
+        } else {
+            Modifier.border(1.dp, ProtonTheme.colors.separatorNorm, surfaceShape)
+        }
+
         Surface(
             color = ProtonTheme.colors.backgroundSecondary,
             shape = surfaceShape,
-            modifier = Modifier.border(1.dp, ProtonTheme.colors.separatorNorm, surfaceShape)
+            modifier = borderModifier
         ) {
             // The whole card can be clicked to open the panel but for accessibility this action is placed on the
             // chevron icon.
@@ -160,9 +186,9 @@ fun VpnConnectionCard(
                             )
                         }
                         if (viewState.canOpenPanel) {
-                             val iconRes =
-                                 if (viewState.canOpenConnectionPanel) CoreR.drawable.ic_proton_chevron_up
-                                 else CoreR.drawable.ic_proton_info_circle
+                            val iconRes =
+                                if (viewState.canOpenConnectionPanel) CoreR.drawable.ic_proton_chevron_up
+                                else CoreR.drawable.ic_proton_info_circle
                             val contentDescriptionRes =
                                 if (viewState.canOpenConnectionPanel) R.string.connection_card_accessbility_label_connection_details
                                 else R.string.connection_card_accessbility_label_free_connections

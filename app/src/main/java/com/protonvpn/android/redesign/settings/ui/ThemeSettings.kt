@@ -33,6 +33,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,7 +49,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.protonvpn.android.R
-import com.protonvpn.android.base.ui.ProtonRadio
 import com.protonvpn.android.base.ui.ProtonVpnPreview
 import com.protonvpn.android.base.ui.theme.NoTrim
 import com.protonvpn.android.theme.ThemeType
@@ -83,7 +84,8 @@ fun ThemeSettings(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(IntrinsicSize.Max)
+                        .height(IntrinsicSize.Max),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp) // Отступ между элементами в ряду
                 ) {
                     rowThemes.forEach { theme ->
                         ThemeRadioItem(
@@ -96,7 +98,6 @@ fun ThemeSettings(
                     }
 
                     // Заполняем пустое пространство, если в ряду меньше 3 элементов
-                    // Это предотвращает растягивание элементов
                     val emptySlots = 3 - rowThemes.size
                     if (emptySlots > 0) {
                         repeat(emptySlots) {
@@ -137,7 +138,7 @@ private fun ThemeRadioItem(
                 onClick = onSelected
             )
             .fillMaxHeight()
-            .padding(vertical = 10.dp, horizontal = 4.dp), // For ripple.
+            .padding(vertical = 10.dp, horizontal = 4.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -154,9 +155,13 @@ private fun ThemeRadioItem(
                 modifier = Modifier.align(Alignment.Center)
             )
         }
-        ProtonRadio(
+        RadioButton(
             selected = selected,
             onClick = null,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = ProtonTheme.colors.interactionNorm,
+                unselectedColor = ProtonTheme.colors.iconWeak
+            ),
             modifier = Modifier.clearAndSetSemantics {}
         )
     }

@@ -18,17 +18,26 @@
  */
 package com.protonvpn.android.redesign.settings.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,21 +55,50 @@ import com.protonvpn.android.redesign.CountryId
 import com.protonvpn.android.redesign.base.ui.ConnectIntentIcon
 import com.protonvpn.android.redesign.base.ui.Flag
 import com.protonvpn.android.redesign.base.ui.FlagDimensions
+import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.redesign.recents.ui.DefaultConnectionViewModel
 import com.protonvpn.android.redesign.recents.usecases.DefaultConnItem
 import com.protonvpn.android.redesign.vpn.ServerFeature
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentBlankRow
 import com.protonvpn.android.redesign.vpn.ui.label
+import com.protonvpn.android.theme.ThemeType
 import me.proton.core.compose.theme.ProtonTheme
-
 
 @Composable
 fun DefaultConnectionSetting(onClose: () -> Unit) {
-    SubSettingWithLazyContent(
+    val themeType = LocalThemeType.current
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    BasicSubSetting(
         title = stringResource(id = R.string.settings_default_connection_title),
         onClose = onClose
     ) {
-        DefaultConnectionSelection(onClose = onClose)
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .largeScreenContentPadding()
+                .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp)
+        ) {
+            item {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor),
+                    border = border,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    DefaultConnectionSelection(
+                        onClose = onClose,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -76,50 +114,48 @@ fun DefaultConnectionSelection(
         viewModel.setNewDefaultConnection(defaultConnection)
         onClose()
     }
-    defaultConnectionViewState.value?.let {
-        LazyColumn(
-            modifier = modifier.padding(vertical = 16.dp)
+    defaultConnectionViewState.value?.let { state ->
+        Column(
+            modifier = modifier
         ) {
-            it.recents.forEach { item ->
-                item {
-                    when (item) {
-                        is DefaultConnItem.DefaultConnItemViewState -> {
-                            DefaultSelectionRow(
-                                leadingIcon = { ConnectIntentIcon(item.connectIntentViewState.primaryLabel) },
-                                title = item.connectIntentViewState.primaryLabel.label(),
-                                subTitle = item.connectIntentViewState.secondaryLabel?.label(),
-                                serverFeatures = item.connectIntent.features,
-                                isSelected = item.isDefaultConnection,
-                                onSelected = { onSelected(item) }
-                            )
-                        }
+            state.recents.forEach { item ->
+                when (item) {
+                    is DefaultConnItem.DefaultConnItemViewState -> {
+                        DefaultSelectionRow(
+                            leadingIcon = { ConnectIntentIcon(item.connectIntentViewState.primaryLabel) },
+                            title = item.connectIntentViewState.primaryLabel.label(),
+                            subTitle = item.connectIntentViewState.secondaryLabel?.label(),
+                            serverFeatures = item.connectIntent.features,
+                            isSelected = item.isDefaultConnection,
+                            onSelected = { onSelected(item) }
+                        )
+                    }
 
-                        is DefaultConnItem.PreDefinedItem -> {
-                            DefaultSelectionRow(
-                                leadingIcon = {
-                                    if (item is DefaultConnItem.MostRecentItem)
-                                        IconRecent()
-                                    else
-                                        Flag(CountryId.fastest)
-                                },
-                                title = stringResource(id = item.titleRes),
-                                subTitle = buildAnnotatedString {
-                                    append(stringResource(id = item.subtitleRes))
-                                },
-                                isSelected = item.isDefaultConnection,
-                                serverFeatures = emptySet(),
-                                onSelected = { onSelected(item) }
-                            )
-                        }
+                    is DefaultConnItem.PreDefinedItem -> {
+                        DefaultSelectionRow(
+                            leadingIcon = {
+                                if (item is DefaultConnItem.MostRecentItem)
+                                    IconRecent()
+                                else
+                                    Flag(CountryId.fastest)
+                            },
+                            title = stringResource(id = item.titleRes),
+                            subTitle = buildAnnotatedString {
+                                append(stringResource(id = item.subtitleRes))
+                            },
+                            isSelected = item.isDefaultConnection,
+                            serverFeatures = emptySet(),
+                            onSelected = { onSelected(item) }
+                        )
+                    }
 
-                        is DefaultConnItem.HeaderSeparator -> {
-                            Text(
-                                text = stringResource(item.titleRes),
-                                style = ProtonTheme.typography.body2Regular,
-                                color = ProtonTheme.colors.textWeak,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
+                    is DefaultConnItem.HeaderSeparator -> {
+                        Text(
+                            text = stringResource(item.titleRes),
+                            style = ProtonTheme.typography.body2Regular,
+                            color = ProtonTheme.colors.textWeak,
+                            modifier = Modifier.padding(16.dp)
+                        )
                     }
                 }
             }

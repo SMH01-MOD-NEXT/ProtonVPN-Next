@@ -19,6 +19,7 @@
 
 package com.protonvpn.android.redesign.countries.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -27,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.protonvpn.android.R
 import com.protonvpn.android.redesign.home_screen.ui.ShowcaseRecents
+import me.proton.core.compose.theme.ProtonTheme
 
 @Composable
 fun CountriesRoute(
@@ -34,11 +36,15 @@ fun CountriesRoute(
     onNavigateToSearch: () -> Unit,
 ) {
     val viewModel: CountriesViewModel = hiltViewModel()
+
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ProtonTheme.colors.backgroundNorm)
     ) {
         val mainState = viewModel.stateFlow.collectAsStateWithLifecycle().value
         val subScreenState = viewModel.subScreenStateFlow.collectAsStateWithLifecycle().value
+
         ServerGroupsWithToolbar(
             mainState,
             subScreenState,

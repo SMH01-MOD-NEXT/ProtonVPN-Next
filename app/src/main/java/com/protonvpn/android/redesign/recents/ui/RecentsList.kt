@@ -52,7 +52,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -193,20 +192,17 @@ fun RecentsList(
                 enter = slideInVertically { height -> -height } + fadeIn(),
                 exit = ExitTransition.None,
                 modifier = Modifier
-                    .padding(horizontal = horizontalPadding)
-                    .animateItemPlacement(),
+                    // Исправлено: Добавлен padding(horizontal = 16.dp), если horizontalPadding не задан
+                    .padding(horizontal = if (horizontalPadding == 0.dp) 16.dp else horizontalPadding)
+                    .animateItemPlacement()
+                    .padding(bottom = 8.dp),
             ) {
                 RecentRow(
                     item = item,
                     onClick = { onRecentClicked(item) },
-                    onRecentSettingOpen = onRecentOpen
+                    onRecentSettingOpen = onRecentOpen,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            }
-            if (index < viewState.recents.lastIndex) {
-                VpnDivider(
-                    Modifier
-                        .padding(horizontal = horizontalPadding)
-                        .animateItemPlacement())
             }
         }
     }
@@ -229,9 +225,6 @@ class RecentBottomSheetState {
 
 @Composable
 fun rememberRecentBottomSheetState(): RecentBottomSheetState {
-    // Note: it should be saveable but RecentBottomSheetState requires a RecentItemViewState which is a complex object
-    // that should not be serialized but instead fetched by recent ID. This would require going through the ViewModel
-    // and is not worth the effort for a small, short-lived dialog.
     return remember { RecentBottomSheetState() }
 }
 
@@ -298,6 +291,7 @@ private fun RecentSettingBottomSheetContent(
         }
     }
 }
+
 @Composable
 private fun IconedButton(
     modifier: Modifier = Modifier,
@@ -349,5 +343,5 @@ private fun RecentsListViewState.toItemIds() =
 
 private fun Transition<ItemIds>.itemJustAdded(itemId: Long): Boolean =
     currentState.connectionCard == itemId &&
-        !currentState.recents.contains(itemId) &&
-        targetState.recents.contains(itemId)
+            !currentState.recents.contains(itemId) &&
+            targetState.recents.contains(itemId)

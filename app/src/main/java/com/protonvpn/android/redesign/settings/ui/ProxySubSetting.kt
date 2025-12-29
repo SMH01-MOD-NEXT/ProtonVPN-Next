@@ -18,15 +18,24 @@
  */
 package com.protonvpn.android.redesign.settings.ui
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.protonvpn.android.R
+import com.protonvpn.android.base.ui.SettingsFeatureToggle
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
+import com.protonvpn.android.theme.ThemeType
+import me.proton.core.compose.theme.ProtonTheme
 import me.proton.core.presentation.R as CoreR
 
 @Composable
@@ -36,6 +45,15 @@ fun ProxySubSetting(
     onToggle: () -> Unit,
 ) {
     val listState = rememberLazyListState()
+
+    val themeType = LocalThemeType.current
+
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
 
     FeatureSubSettingScaffold(
         title = stringResource(id = setting.titleRes),
@@ -55,10 +73,27 @@ fun ProxySubSetting(
                 itemModifier = horizontalItemPaddingModifier,
                 setting = setting,
                 imageRes = setting.iconRes ?: CoreR.drawable.ic_proton_globe,
-                onToggle = onToggle,
-                // Исправлено: передаем пустую лямбду вместо null, так как функция не принимает null
                 onLearnMore = {},
             )
+
+            item {
+                Card(
+                    modifier = horizontalItemPaddingModifier.padding(top = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor),
+                    border = border,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    SettingsFeatureToggle(
+                        label = stringResource(setting.titleRes),
+                        checked = setting.value,
+                        onCheckedChange = { _ -> onToggle() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    )
+                }
+            }
         }
     }
 }

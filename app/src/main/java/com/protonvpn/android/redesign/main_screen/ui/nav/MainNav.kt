@@ -67,6 +67,7 @@ import com.protonvpn.android.redesign.main_screen.ui.MainScreenViewModel
 import com.protonvpn.android.redesign.settings.ui.nav.SettingsScreen
 import com.protonvpn.android.redesign.settings.ui.nav.SettingsScreen.settings
 import com.protonvpn.android.redesign.settings.ui.nav.SubSettingsScreen
+import me.proton.core.compose.theme.ProtonTheme
 import java.util.EnumSet
 
 enum class MainTarget {
@@ -206,6 +207,8 @@ object MainScreen : ScreenNoArg<RootNav>("main") {
             if (showAppVersionUpdateDot) add(MainTarget.Settings)
         }
         Scaffold(
+            containerColor = ProtonTheme.colors.backgroundNorm,
+            contentColor = ProtonTheme.colors.textNorm,
             bottomBar = {
                 BottomBarView(
                     selectedTarget = bottomTarget,

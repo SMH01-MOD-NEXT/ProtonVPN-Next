@@ -16,11 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package com.protonvpn.android.redesign.settings.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,31 +28,27 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.protonvpn.android.R
-import com.protonvpn.android.base.ui.ProtonVpnPreview
-import com.protonvpn.android.base.ui.SettingsCheckbox
 import com.protonvpn.android.base.ui.SettingsFeatureToggle
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.theme.ThemeType
 import me.proton.core.compose.theme.ProtonTheme
 
 @Composable
-fun LanSetting(
+fun VpnAcceleratorSubSetting(
     onClose: () -> Unit,
-    lan: SettingsViewModel.SettingViewState.LanConnections,
-    onToggleLan: () -> Unit,
-    onToggleAllowDirectConnection: () -> Unit,
+    vpnAccelerator: SettingsViewModel.SettingViewState.VpnAccelerator,
+    onLearnMore: () -> Unit,
+    onToggle: () -> Unit
 ) {
     val listState = rememberLazyListState()
 
-    // Получаем тему из LocalThemeType (определено в SubSettingsRoute.kt)
+    // Получаем тему из LocalThemeType (предполагается, что он доступен в этом контексте, как в примере)
     val themeType = LocalThemeType.current
 
     // Логика стилизации карточки
@@ -64,26 +60,27 @@ fun LanSetting(
     val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
 
     FeatureSubSettingScaffold(
-        title = stringResource(id = lan.titleRes),
+        title = stringResource(id = vpnAccelerator.titleRes),
         onClose = onClose,
         listState = listState,
         titleInListIndex = 1,
     ) { contentPadding ->
         val horizontalItemPaddingModifier = Modifier
-            .padding(horizontal = 16.dp)
             .largeScreenContentPadding()
+            .padding(horizontal = 16.dp)
+
         LazyColumn(
             state = listState,
             modifier = Modifier.padding(contentPadding)
         ) {
             addFeatureSettingItems(
-                setting = lan,
-                imageRes = R.drawable.setting_lan,
-                onLearnMore = {},
-                // onToggle убран, чтобы переключатель не дублировался в заголовке
                 itemModifier = horizontalItemPaddingModifier,
+                setting = vpnAccelerator,
+                imageRes = R.drawable.setting_vpn_accelerator, // Используем ресурс изображения для VPN Accelerator
+                onLearnMore = onLearnMore,
             )
 
+            // Main Settings Card
             item {
                 Card(
                     modifier = horizontalItemPaddingModifier.padding(top = 16.dp),
@@ -92,48 +89,16 @@ fun LanSetting(
                     border = border,
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    ) {
-                        SettingsFeatureToggle(
-                            label = stringResource(id = lan.titleRes),
-                            checked = lan.value,
-                            onCheckedChange = { _ -> onToggleLan() },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        if (lan.value && lan.allowDirectConnections != null) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                color = ProtonTheme.colors.separatorNorm
-                            )
-                            SettingsCheckbox(
-                                title = stringResource(id = R.string.settings_lan_allow_direct_connection_title),
-                                description = stringResource(id = R.string.settings_lan_allow_direct_connection_description),
-                                value = lan.allowDirectConnections,
-                                onValueChange = { onToggleAllowDirectConnection() },
-                            )
-                        }
-                    }
+                    SettingsFeatureToggle(
+                        label = stringResource(vpnAccelerator.titleRes),
+                        checked = vpnAccelerator.value,
+                        onCheckedChange = { onToggle() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    )
                 }
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun LanSettingPreview() {
-    ProtonVpnPreview {
-        LanSetting(
-            onClose = {},
-            lan = SettingsViewModel.SettingViewState.LanConnections(
-                true,
-                allowDirectConnections = false,
-                overrideProfilePrimaryLabel = null
-            ),
-            onToggleLan = {},
-            onToggleAllowDirectConnection = {},
-        )
     }
 }

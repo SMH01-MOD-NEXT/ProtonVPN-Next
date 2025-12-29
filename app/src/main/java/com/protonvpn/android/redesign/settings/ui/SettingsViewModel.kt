@@ -629,16 +629,6 @@ class SettingsViewModel @Inject constructor(
         val currentState = Storage.getBoolean("proxy_enabled", false)
         val newState = !currentState
         Storage.saveBoolean("proxy_enabled", newState)
-        // No need to manually emit to flow here if listener is working,
-        // but keeping it for immediate feedback within same instance doesn't hurt.
-        // The listener will also fire and re-emit (distinctUntilChanged downstream handles dedupe usually,
-        // though SharedFlow doesn't deduce unless we use distinctUntilChanged on collector)
-
-        try {
-            VlessManager.getInstance(context.applicationContext as android.app.Application)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
     }
 
     // --- JSON Export Logic ---

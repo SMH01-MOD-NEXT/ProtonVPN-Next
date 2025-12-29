@@ -25,9 +25,13 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,18 +45,19 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.protonvpn.android.R
 import com.protonvpn.android.base.ui.AnnotatedClickableText
-import com.protonvpn.android.base.ui.ProtonRadio
 import com.protonvpn.android.redesign.base.ui.ProtonAlert
 import com.protonvpn.android.ui.settings.CustomAppIconData
 import com.protonvpn.android.utils.Constants
 import com.protonvpn.android.utils.openUrl
 import me.proton.core.compose.theme.ProtonTheme
+import me.proton.core.compose.theme.defaultNorm
 
 @Composable
 fun IconSelectionSetting(
@@ -109,17 +114,19 @@ fun IconSelectionScreen(
         )
     }
 
-    Spacer(modifier = Modifier.size(12.dp))
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp),
+        modifier = Modifier.fillMaxWidth(),
     ) {
+        // Proton VPN Section
         Text(
             text = stringResource(id = R.string.settings_change_icon_header_protonvpn),
-            style = ProtonTheme.typography.body2Medium,
+            style = ProtonTheme.typography.defaultNorm.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
-        FlowRow {
+
+        FlowRow(
+            modifier = Modifier.padding(horizontal = 8.dp)
+        ) {
             brandIconList.forEach {
                 AppIconElement(
                     preset = it,
@@ -129,14 +136,23 @@ fun IconSelectionScreen(
                             onItemSelected(it)
                         }
                     },
-                    modifier = Modifier.padding(vertical = 18.dp).weight(1f)
+                    modifier = Modifier.padding(vertical = 12.dp).weight(1f)
                 )
             }
         }
+
+        HorizontalDivider(
+            modifier = Modifier.padding(vertical = 16.dp),
+            color = ProtonTheme.colors.separatorNorm
+        )
+
+        // Discreet Section
         Text(
             text = stringResource(id = R.string.settings_change_icon_header_discreet),
-            style = ProtonTheme.typography.body2Medium,
+            style = ProtonTheme.typography.defaultNorm.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
+
         AnnotatedClickableText(
             style = ProtonTheme.typography.body2Regular,
             annotatedStyle = ProtonTheme.typography.body2Medium,
@@ -147,9 +163,12 @@ fun IconSelectionScreen(
                 id = R.string.settings_icon_change_description,
                 stringResource(id = R.string.learn_more)
             ),
-            modifier = Modifier.padding(vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
-        FlowRow {
+
+        FlowRow(
+            modifier = Modifier.padding(horizontal = 8.dp)
+        ) {
             discreetIconList.forEach {
                 AppIconElement(
                     preset = it,
@@ -159,12 +178,13 @@ fun IconSelectionScreen(
                             onItemSelected(it)
                         }
                     },
-                    modifier = Modifier.padding(vertical = 18.dp).weight(1f)
+                    modifier = Modifier.padding(vertical = 12.dp).weight(1f)
                 )
             }
         }
     }
 }
+
 private fun CustomAppIconData.getPreviewDrawable(): Int {
     return when (this) {
         CustomAppIconData.DEFAULT -> R.drawable.app_icon_preview_classic
@@ -175,6 +195,7 @@ private fun CustomAppIconData.getPreviewDrawable(): Int {
         CustomAppIconData.CALCULATOR -> R.drawable.app_icon_preview_calculator
     }
 }
+
 @Composable
 fun AppIconElement(
     preset: CustomAppIconData,
@@ -194,7 +215,15 @@ fun AppIconElement(
             style = ProtonTheme.typography.body2Regular,
             color = ProtonTheme.colors.textWeak
         )
-        ProtonRadio(selected = isSelected, onClick = onClick)
+        Spacer(modifier = Modifier.height(8.dp))
+        RadioButton(
+            selected = isSelected,
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = ProtonTheme.colors.interactionNorm,
+                unselectedColor = ProtonTheme.colors.iconWeak
+            )
+        )
     }
 }
 

@@ -19,10 +19,13 @@
 
 package com.protonvpn.android.profiles.ui
 
+import android.content.Context
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,13 +35,19 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -61,9 +70,13 @@ import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentSecondaryLabel
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentViewStateProfile
 import com.protonvpn.android.redesign.vpn.ui.label
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.vpn.ProtocolSelection
 import me.proton.core.compose.theme.ProtonTheme
 import me.proton.core.presentation.R as CoreR
+
+private const val PREFS_NAME = "Storage"
+private const val THEME_KEY = "theme"
 
 @Composable
 fun ProfileBottomSheet(
@@ -100,77 +113,102 @@ private fun ProfileSheetContent(
     onProfileDelete: (ProfileViewItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier) {
-        StaticProfileConnectIntentRow(
-            profile.intent,
-            connectIntentIconSize = ConnectIntentIconSize.LARGE,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(horizontal = 16.dp)
+    val context = LocalContext.current
+
+    // Theme Logic similar to RecentRow and Settings
+    val themeName = remember(context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.getString(THEME_KEY, ThemeType.System.name)
+    }
+
+    val isAmoled = themeName == ThemeType.Amoled.name || themeName == ThemeType.NewYearAmoled.name
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeName == ThemeType.Light.name || themeName == ThemeType.NewYearLight.name ||
+            (themeName == ThemeType.System.name && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    Column(modifier = modifier.padding(16.dp)) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = cardColor),
+            border = border,
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            if (profile.netShieldEnabled != null) {
-                val netshieldStateResource = when {
-                    !profile.netShieldEnabled -> R.string.netshield_state_off
-                    profile.customDnsEnabled -> R.string.netshield_state_unavailable
-                    else -> R.string.netshield_state_on
+            Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                StaticProfileConnectIntentRow(
+                    profile.intent,
+                    connectIntentIconSize = ConnectIntentIconSize.LARGE,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    if (profile.netShieldEnabled != null) {
+                        val netshieldStateResource = when {
+                            !profile.netShieldEnabled -> R.string.netshield_state_off
+                            profile.customDnsEnabled -> R.string.netshield_state_unavailable
+                            else -> R.string.netshield_state_on
+                        }
+                        ProfileSettingItem(
+                            R.string.netshield_feature_name,
+                            stringResource(netshieldStateResource),
+                            if (profile.netShieldEnabled) R.drawable.feature_netshield_on else R.drawable.ic_netshield_off,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    ProfileSettingItem(
+                        R.string.settings_custom_dns_title,
+                        stringResource(if (profile.customDnsEnabled) R.string.netshield_state_on else R.string.netshield_state_off),
+                        null,
+                        modifier = Modifier.weight(1f)
+                    )
                 }
-                ProfileSettingItem(
-                    R.string.netshield_feature_name,
-                    stringResource(netshieldStateResource),
-                    if (profile.netShieldEnabled) R.drawable.feature_netshield_on else R.drawable.ic_netshield_off,
-                    modifier = Modifier.weight(1f)
+                VpnDivider(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    ProfileSettingItem(
+                        R.string.settings_protocol_title,
+                        stringResource(profile.protocol.displayName),
+                        null,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ProfileSettingItem(
+                        R.string.profile_bottom_sheet_nat_title,
+                        stringResource(profile.natType.shortLabelRes),
+                        null,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ProfileSettingItem(
+                        R.string.profile_bottom_sheet_lan_title,
+                        stringResource(if (profile.lanConnections) R.string.lan_state_on else R.string.lan_state_off),
+                        null,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                VpnDivider(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp))
+                BottomSheetAction(
+                    CoreR.drawable.ic_proton_pencil,
+                    R.string.profile_action_edit,
+                    { onProfileEdit(profile) }
+                )
+                BottomSheetAction(
+                    CoreR.drawable.ic_proton_folders,
+                    R.string.profile_action_duplicate,
+                    { onProfileDuplicate(profile) }
+                )
+                BottomSheetAction(
+                    CoreR.drawable.ic_proton_trash,
+                    R.string.profile_action_delete,
+                    { onProfileDelete(profile) },
+                    enabled = !profile.isConnected,
                 )
             }
-            ProfileSettingItem(
-                R.string.settings_custom_dns_title,
-                stringResource(if (profile.customDnsEnabled) R.string.netshield_state_on else R.string.netshield_state_off),
-                null,
-                modifier = Modifier.weight(1f)
-            )
         }
-        VpnDivider(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        ) {
-            ProfileSettingItem(
-                R.string.settings_protocol_title,
-                stringResource(profile.protocol.displayName),
-                null,
-                modifier = Modifier.weight(1f)
-            )
-            ProfileSettingItem(
-                R.string.profile_bottom_sheet_nat_title,
-                stringResource(profile.natType.shortLabelRes),
-                null,
-                modifier = Modifier.weight(1f)
-            )
-            ProfileSettingItem(
-                R.string.profile_bottom_sheet_lan_title,
-                stringResource(if (profile.lanConnections) R.string.lan_state_on else R.string.lan_state_off),
-                null,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        VpnDivider(modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp))
-        BottomSheetAction(
-            CoreR.drawable.ic_proton_pencil,
-            R.string.profile_action_edit,
-            { onProfileEdit(profile) }
-        )
-        BottomSheetAction(
-            CoreR.drawable.ic_proton_folders,
-            R.string.profile_action_duplicate,
-            { onProfileDuplicate(profile) }
-        )
-        BottomSheetAction(
-            CoreR.drawable.ic_proton_trash,
-            R.string.profile_action_delete,
-            { onProfileDelete(profile) },
-            enabled = !profile.isConnected,
-        )
     }
 }
 

@@ -19,6 +19,9 @@
 
 package com.protonvpn.android.profiles.ui
 
+import android.content.Context
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,7 +34,10 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
@@ -41,7 +47,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.invisibleToUser
 import androidx.compose.ui.semantics.semantics
@@ -64,8 +72,12 @@ import com.protonvpn.android.profiles.ui.nav.ProfilesRegularAndSubscreenNav
 import com.protonvpn.android.redesign.base.ui.ProtonAlert
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.redesign.base.ui.preventMultiClick
+import com.protonvpn.android.theme.ThemeType
 import me.proton.core.compose.theme.ProtonTheme
 import me.proton.core.presentation.utils.currentLocale
+
+private const val PREFS_NAME = "Storage"
+private const val THEME_KEY = "theme"
 
 @Composable
 fun AddEditProfileRoute(
@@ -223,6 +235,21 @@ fun CreateProfileStep(
     applyContentHorizontalPadding: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
+
+    // Theme Logic similar to RecentRow and Settings
+    val themeName = remember(context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        prefs.getString(THEME_KEY, ThemeType.System.name)
+    }
+
+    val isAmoled = themeName == ThemeType.Amoled.name || themeName == ThemeType.NewYearAmoled.name
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeName == ThemeType.Light.name || themeName == ThemeType.NewYearLight.name ||
+            (themeName == ThemeType.System.name && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -232,14 +259,29 @@ fun CreateProfileStep(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = if (applyContentHorizontalPadding) 16.dp else 0.dp)
                 .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
         ) {
-            content()
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = cardColor),
+                border = border,
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Apply internal padding inside the card instead of the container
+                Column(
+                    modifier = Modifier.padding(if (applyContentHorizontalPadding) 16.dp else 0.dp)
+                ) {
+                    content()
+                }
+            }
         }
 
         ProfileNavigationButtons(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             onNext = onNext,
             onBack = onBack,
             onNextText = onNextText,

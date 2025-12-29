@@ -28,8 +28,10 @@ import android.provider.Settings.EXTRA_APP_PACKAGE
 import android.provider.Settings.EXTRA_CHANNEL_ID
 import androidx.activity.compose.LocalActivity
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +39,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,17 +48,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Switch
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,6 +67,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -80,6 +87,7 @@ import com.protonvpn.android.redesign.reports.ui.BugReportActivity
 import com.protonvpn.android.redesign.settings.ui.nav.SubSettingsScreen
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
 import com.protonvpn.android.redesign.vpn.ui.label
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.ui.drawer.LogActivity
 import com.protonvpn.android.ui.drawer.bugreport.DynamicReportActivity
 import com.protonvpn.android.ui.planupgrade.CarouselUpgradeDialogActivity
@@ -90,7 +98,6 @@ import com.protonvpn.android.ui.settings.OssLicensesActivity
 import com.protonvpn.android.ui.settings.SettingsTelemetryActivity
 import com.protonvpn.android.update.AppUpdateInfo
 import com.protonvpn.android.update.VpnUpdateBanner
-import com.protonvpn.android.utils.Storage
 import com.protonvpn.android.utils.openUrl
 import me.proton.core.accountmanager.presentation.compose.AccountSettingsInfo
 import me.proton.core.accountmanager.presentation.compose.viewmodel.AccountSettingsViewModel
@@ -103,10 +110,10 @@ import me.proton.core.compose.theme.defaultSmallWeak
 import me.proton.core.compose.theme.defaultWeak
 import me.proton.core.devicemigration.presentation.settings.SignInToAnotherDeviceItem
 import me.proton.core.domain.entity.UserId
-import me.proton.core.presentation.R as CoreR
 import me.proton.core.presentation.utils.openMarketLink
 import me.proton.core.telemetry.presentation.ProductMetricsDelegateOwner
 import me.proton.core.telemetry.presentation.compose.LocalProductMetricsDelegateOwner
+import me.proton.core.presentation.R as CoreR
 
 
 @SuppressLint("InlinedApi")
@@ -289,25 +296,25 @@ fun SettingsView(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = extraScreenPadding)
+                .padding(horizontal = 16.dp) // Main container padding for cards
         ) {
-            val horizontalItemPadding = Modifier.padding(horizontal = 16.dp)
+
             VpnUpdateBanner(
                 message = stringResource(R.string.update_banner_description_settings),
                 viewState = viewState.appUpdateBannerState,
                 onAppUpdate = onAppUpdateClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .then(horizontalItemPadding),
+                modifier = Modifier.fillMaxWidth()
             )
 
             viewState.profileOverrideInfo?.let {
                 ProfileOverrideView(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(vertical = 8.dp),
                     profileOverrideInfo = it
                 )
             }
             AccountCategory(
                 state = accountSettingsViewState,
+                themeType = viewState.theme.value,
                 onAccountClick = onAccountClick,
                 onSignUpClick = onSignUpClick,
                 onSignInClick = onSignInClick,
@@ -316,6 +323,7 @@ fun SettingsView(
             )
             FeatureCategory(
                 viewState = viewState,
+                themeType = viewState.theme.value,
                 onNetShieldClick = onNetShieldClick,
                 onNetShieldUpgrade = onNetShieldUpgradeClick,
                 onSplitTunnelClick = onSplitTunnelClick,
@@ -323,8 +331,8 @@ fun SettingsView(
                 onAlwaysOnClick = onAlwaysOnClick
             )
             Category(
-                modifier = horizontalItemPadding,
-                stringResource(id = R.string.settings_connection_category)
+                title = stringResource(id = R.string.settings_connection_category),
+                themeType = viewState.theme.value
             ) {
                 viewState.defaultConnection?.let { connnection ->
                     val connectionLabel = with(connnection) {
@@ -353,7 +361,6 @@ fun SettingsView(
                     settingValue = viewState.vpnAccelerator.settingValueView
                 )
 
-                // Replaced the old Switch implementation with SettingRowWithIcon navigating to sub-setting
                 SettingRowWithIcon(
                     icon = viewState.proxy.iconRes,
                     title = stringResource(id = viewState.proxy.titleRes),
@@ -369,8 +376,8 @@ fun SettingsView(
             }
 
             Category(
-                modifier = horizontalItemPadding,
-                stringResource(id = R.string.settings_category_general)
+                title = stringResource(id = R.string.settings_category_general),
+                themeType = viewState.theme.value
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     SettingRowWithIcon(
@@ -402,8 +409,8 @@ fun SettingsView(
                 )
             }
             Category(
-                modifier = horizontalItemPadding,
-                stringResource(id = R.string.settings_category_support)
+                title = stringResource(id = R.string.settings_category_support),
+                themeType = viewState.theme.value
             ) {
                 SettingRowWithIcon(
                     icon = CoreR.drawable.ic_proton_life_ring,
@@ -430,8 +437,8 @@ fun SettingsView(
                 }
             }
             Category(
-                modifier = horizontalItemPadding,
-                stringResource(id = R.string.settings_category_improve_proton)
+                title = stringResource(id = R.string.settings_category_improve_proton),
+                themeType = viewState.theme.value
             ) {
                 SettingRowWithIcon(
                     icon = CoreR.drawable.ic_proton_users,
@@ -444,22 +451,19 @@ fun SettingsView(
                     trailingIcon = CoreR.drawable.ic_proton_arrow_out_square,
                     onClick = onRateUsClick
                 )
-
-                Spacer(modifier = Modifier.size(8.dp))
             }
             if (viewState.showSignOut) {
-                SettingRowWithIcon(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    icon = CoreR.drawable.ic_proton_arrow_in_to_rectangle,
-                    title = stringResource(id = R.string.settings_sign_out),
-                    onClick = onSignOutClick
-                )
+                Category(title = "", themeType = viewState.theme.value) {
+                    SettingRowWithIcon(
+                        icon = CoreR.drawable.ic_proton_arrow_in_to_rectangle,
+                        title = stringResource(id = R.string.settings_sign_out),
+                        onClick = onSignOutClick
+                    )
+                }
             }
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable { onThirdPartyLicensesClick() }
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -471,14 +475,16 @@ fun SettingsView(
                     text = stringResource(id = R.string.settings_third_party_licenses),
                     color = ProtonTheme.colors.textAccent,
                     style = ProtonTheme.typography.captionNorm,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .clickable { onThirdPartyLicensesClick() }
                 )
             }
             if (viewState.buildInfo != null) {
                 Text(
                     text = viewState.buildInfo,
                     style = ProtonTheme.typography.defaultSmallWeak,
-                    modifier = horizontalItemPadding.padding(vertical = 8.dp)
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
             }
             Spacer(Modifier.height(24.dp))
@@ -490,38 +496,77 @@ fun SettingsView(
 private fun ColumnScope.FeatureCategory(
     modifier: Modifier = Modifier,
     viewState: SettingsViewModel.SettingsViewState,
+    themeType: ThemeType,
     onNetShieldClick: () -> Unit,
     onNetShieldUpgrade: () -> Unit,
     onSplitTunnelClick: () -> Unit,
     onSplitTunnelUpgrade: () -> Unit,
     onAlwaysOnClick: () -> Unit,
 ) {
-    Category(
-        modifier = modifier.padding(start = 16.dp, end = 16.dp),
-        stringResource(id = R.string.settings_category_features)
+    // Manually render title to match Category style
+    Text(
+        text = stringResource(id = R.string.settings_category_features),
+        style = ProtonTheme.typography.defaultNorm.copy(fontWeight = FontWeight.Bold),
+        color = ProtonTheme.colors.textNorm,
+        modifier = modifier
+            .padding(start = 12.dp, top = 24.dp, bottom = 8.dp)
+            .fillMaxWidth()
+    )
+
+    // Определяем стили для карточек Kill Switch и плиток
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    // Row with two square tiles
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // NetShield Tile
         if (viewState.netShield != null) {
-            SettingRowWithIcon(
-                icon = viewState.netShield.iconRes,
-                iconTint = false,
+            FeatureTile(
+                modifier = Modifier.weight(1f),
                 title = stringResource(id = viewState.netShield.titleRes),
+                icon = viewState.netShield.iconRes,
                 settingValue = viewState.netShield.settingValueView,
-                trailingIcon = R.drawable.vpn_plus_badge.takeIf { viewState.netShield.isRestricted },
-                trailingIconTint = false,
+                isRestricted = viewState.netShield.isRestricted,
+                themeType = themeType,
                 onClick = if (viewState.netShield.isRestricted) onNetShieldUpgrade else onNetShieldClick
             )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
         }
-        SettingRowWithIcon(
-            icon = viewState.splitTunneling.iconRes,
-            iconTint = false,
+
+        // Split Tunneling Tile
+        FeatureTile(
+            modifier = Modifier.weight(1f),
             title = stringResource(id = viewState.splitTunneling.titleRes),
+            icon = viewState.splitTunneling.iconRes,
             settingValue = viewState.splitTunneling.settingValueView,
-            trailingIcon = R.drawable.vpn_plus_badge.takeIf { viewState.splitTunneling.isRestricted },
-            trailingIconTint = false,
-            onClick = if (viewState.splitTunneling.isRestricted)
-                onSplitTunnelUpgrade else onSplitTunnelClick
+            isRestricted = viewState.splitTunneling.isRestricted,
+            themeType = themeType,
+            onClick = if (viewState.splitTunneling.isRestricted) onSplitTunnelUpgrade else onSplitTunnelClick
         )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+    }
+
+    // Kill Switch (Full Width Card below tiles)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = cardColor
+            ),
+            border = border,
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            modifier = modifier.fillMaxWidth()
+        ) {
             SettingRowWithIcon(
                 icon = R.drawable.ic_kill_switch,
                 title = stringResource(id = R.string.settings_kill_switch_title),
@@ -532,9 +577,90 @@ private fun ColumnScope.FeatureCategory(
 }
 
 @Composable
+fun FeatureTile(
+    modifier: Modifier = Modifier,
+    title: String,
+    @DrawableRes icon: Int,
+    settingValue: SettingValue?,
+    isRestricted: Boolean,
+    themeType: ThemeType,
+    onClick: () -> Unit
+) {
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    Card(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        border = border,
+        modifier = modifier.aspectRatio(1f) // Makes it a square
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (isRestricted) {
+                Icon(
+                    painter = painterResource(id = R.drawable.vpn_plus_badge),
+                    contentDescription = null,
+                    tint = Color.Unspecified,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(ProtonTheme.colors.interactionNorm.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = icon),
+                        contentDescription = null,
+                        tint = ProtonTheme.colors.interactionNorm,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = title,
+                    style = ProtonTheme.typography.defaultNorm.copy(fontWeight = FontWeight.Medium),
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                if (settingValue != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    SettingValueView(
+                        settingValue = settingValue,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun ColumnScope.AccountCategory(
     modifier: Modifier = Modifier,
     state: AccountSettingsViewState,
+    themeType: ThemeType,
     showSingInOnAnotherDeviceQr: Boolean,
     onAccountClick: () -> Unit,
     onSignUpClick: () -> Unit,
@@ -542,8 +668,9 @@ private fun ColumnScope.AccountCategory(
     onSignOutClick: () -> Unit,
 ) {
     Category(
-        modifier = modifier.padding(start = 16.dp, end = 16.dp),
-        title = stringResource(id = R.string.settings_category_account)
+        modifier = modifier,
+        title = stringResource(id = R.string.settings_category_account),
+        themeType = themeType
     ) {
         AccountSettingsInfo(
             onAccountClicked = { onAccountClick() },
@@ -572,10 +699,42 @@ private fun ColumnScope.AccountCategory(
 private fun ColumnScope.Category(
     modifier: Modifier = Modifier,
     title: String,
+    themeType: ThemeType,
     content: (@Composable ColumnScope.() -> Unit),
 ) {
-    SettingsSectionHeading(title, modifier)
-    content()
+    if (title.isNotEmpty()) {
+        Text(
+            text = title,
+            style = ProtonTheme.typography.defaultNorm.copy(fontWeight = FontWeight.Bold),
+            color = ProtonTheme.colors.textNorm,
+            modifier = modifier
+                .padding(start = 12.dp, top = 24.dp, bottom = 8.dp)
+                .fillMaxWidth()
+        )
+    } else {
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = cardColor
+        ),
+        border = border,
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+            content()
+        }
+    }
 }
 
 @Composable
@@ -588,25 +747,21 @@ fun SettingRow(
     hasNewLabel: Boolean = false,
     onClick: (() -> Unit)? = null,
 ) {
-    var baseModifier = modifier
-        .fillMaxWidth()
+    var baseModifier = modifier.fillMaxWidth()
 
     if (onClick != null) {
-        baseModifier = baseModifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
+        baseModifier = baseModifier.clickable(onClick = onClick)
     }
-    baseModifier = baseModifier.padding(vertical = 16.dp, horizontal = 16.dp)
+    baseModifier = baseModifier.padding(vertical = 12.dp, horizontal = 16.dp)
 
     Row(
         modifier = baseModifier,
-        verticalAlignment = if (subtitleComposable != null) Alignment.Top else Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
         if (leadingComposable != null) {
             Box(
                 modifier = Modifier
-                    .padding(end = 16.dp)
-                    .width(32.dp),
+                    .padding(end = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 leadingComposable()
@@ -621,7 +776,7 @@ fun SettingRow(
             ) {
                 Text(
                     text = title,
-                    style = ProtonTheme.typography.defaultNorm,
+                    style = ProtonTheme.typography.defaultNorm.copy(fontWeight = FontWeight.Medium),
                 )
                 subtitleComposable?.let {
                     it()
@@ -654,27 +809,47 @@ fun SettingRowWithIcon(
 ) {
     SettingRow(
         leadingComposable = {
-            Icon(
-                painter = painterResource(id = icon),
-                contentDescription = null,
-                tint = if (iconTint) ProtonTheme.colors.iconNorm else Color.Unspecified,
-            )
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(ProtonTheme.colors.interactionNorm.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = icon),
+                    contentDescription = null,
+                    tint = if (iconTint) ProtonTheme.colors.interactionNorm else Color.Unspecified,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         },
         trailingComposable = {
-            trailingIcon?.let {
-                Icon(
-                    painter = painterResource(id = it),
-                    contentDescription = null,
-                    tint = if (trailingIconTint) ProtonTheme.colors.iconWeak else Color.Unspecified,
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                trailingIcon?.let {
+                    Icon(
+                        painter = painterResource(id = it),
+                        contentDescription = null,
+                        tint = if (trailingIconTint) ProtonTheme.colors.iconWeak else Color.Unspecified,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                    )
+                }
+
+                if (onClick != null && trailingIcon == null) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                        contentDescription = null,
+                        tint = ProtonTheme.colors.iconWeak.copy(alpha = 0.5f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         },
         title = title,
         hasNewLabel = hasNewLabel,
         subtitleComposable = settingValue?.let {
-            { SettingValueView(settingValue = it, modifier = Modifier.padding(top = 6.dp)) }
+            { SettingValueView(settingValue = it, modifier = Modifier.padding(top = 2.dp)) }
         },
         onClick = onClick,
         modifier = modifier
@@ -685,6 +860,7 @@ fun SettingRowWithIcon(
 private fun SettingValueView(
     settingValue: SettingValue,
     modifier: Modifier = Modifier,
+    textAlign: TextAlign? = null
 ) {
     when (settingValue) {
         is SettingValue.SettingOverrideValue ->
@@ -695,6 +871,7 @@ private fun SettingValueView(
                 text = stringResource(settingValue.subtitleRes),
                 style = ProtonTheme.typography.defaultWeak,
                 modifier = modifier,
+                textAlign = textAlign
             )
 
         is SettingValue.SettingText ->
@@ -702,6 +879,7 @@ private fun SettingValueView(
                 text = settingValue.text,
                 style = ProtonTheme.typography.defaultWeak,
                 modifier = modifier,
+                textAlign = textAlign
             )
     }
 }
@@ -767,7 +945,7 @@ fun SettingRowWithComposablesPreview() {
 fun CategoryPreview() {
     ProtonVpnPreview {
         Column {
-            Category(title = stringResource(id = R.string.settings_category_features)) {
+            Category(title = stringResource(id = R.string.settings_category_features), themeType = ThemeType.System) {
                 SettingRow(
                     leadingComposable = {
                         Box(
@@ -829,6 +1007,7 @@ fun AccountCategoryLoggedInPreview() {
                     displayName = "User",
                     email = "user@domain.com"
                 ),
+                themeType = ThemeType.System,
                 onAccountClick = { },
                 onSignUpClick = { },
                 onSignInClick = { },
@@ -846,6 +1025,7 @@ fun AccountCategoryCredentialLessPreview() {
         Column {
             AccountCategory(
                 state = AccountSettingsViewState.CredentialLess(UserId("userId")),
+                themeType = ThemeType.System,
                 onAccountClick = { },
                 onSignUpClick = { },
                 onSignInClick = { },

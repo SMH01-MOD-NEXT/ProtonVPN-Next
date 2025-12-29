@@ -21,10 +21,8 @@ package com.protonvpn.android.redesign.settings.ui
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,27 +31,32 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.protonvpn.android.R
+import com.protonvpn.android.base.ui.SettingsFeatureToggle
 import com.protonvpn.android.redesign.base.ui.DIALOG_CONTENT_PADDING
 import com.protonvpn.android.redesign.base.ui.ProtonBasicAlert
 import com.protonvpn.android.redesign.base.ui.SettingsRadioItemSmall
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.settings.data.SplitTunnelingMode
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.ui.settings.formatSplitTunnelingItems
-import kotlinx.coroutines.launch
 import me.proton.core.compose.theme.ProtonTheme
+import me.proton.core.compose.theme.defaultNorm
 import me.proton.core.compose.theme.defaultWeak
 import me.proton.core.presentation.R as CoreR
 
@@ -72,6 +75,17 @@ fun SplitTunnelingSubSetting(
     var changeModeDialogShown by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val context = LocalContext.current
+
+    // Получаем тему из LocalThemeType
+    val themeType = LocalThemeType.current
+
+    // Логика стилизации карточки
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
 
     // Launcher for creating a file (Export)
     val exportLauncher = rememberLauncherForActivityResult(
@@ -118,68 +132,102 @@ fun SplitTunnelingSubSetting(
                 itemModifier = horizontalItemPaddingModifier,
                 setting = splitTunneling,
                 imageRes = R.drawable.setting_split_tunneling,
-                onToggle = onSplitTunnelToggle,
+                // onToggle убран, переключатель теперь внутри карточки
                 onLearnMore = onLearnMore,
             )
-            if (splitTunneling.value) {
-                item {
-                    SettingRow(
-                        title = stringResource(id = R.string.settings_split_tunneling_mode_title),
-                        subtitleComposable = {
-                            Spacer(modifier = Modifier.size(4.dp))
-                            Text(text = stringResource(modeLabel), style = ProtonTheme.typography.defaultWeak)
-                        },
-                        onClick = { changeModeDialogShown = true },
-                        modifier = Modifier.largeScreenContentPadding().animateItem()
-                    )
-                }
-                item {
-                    SettingRowWithIcon(
-                        icon = CoreR.drawable.ic_proton_mobile,
-                        title = stringResource(id = appsLabel),
-                        settingValue =
-                            SettingValue.SettingText(formatSplitTunnelingItems(splitTunneling.currentModeAppNames)),
-                        onClick = { onAppsClick(splitTunnelingMode) },
-                        modifier = Modifier.largeScreenContentPadding().animateItem()
-                    )
-                }
-                item {
-                    SettingRowWithIcon(
-                        icon = CoreR.drawable.ic_proton_window_terminal,
-                        title = stringResource(id = ipsLabel),
-                        settingValue =
-                            SettingValue.SettingText(formatSplitTunnelingItems(splitTunneling.currentModeIps)),
-                        onClick = { onIpsClick(splitTunnelingMode) },
-                        modifier = Modifier.largeScreenContentPadding().animateItem()
-                    )
-                }
 
+            // Main Settings Card
+            item {
+                Card(
+                    modifier = horizontalItemPaddingModifier.padding(top = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor),
+                    border = border,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        SettingsFeatureToggle(
+                            label = stringResource(splitTunneling.titleRes),
+                            checked = splitTunneling.value,
+                            onCheckedChange = { _ -> onSplitTunnelToggle() },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        )
+
+                        if (splitTunneling.value) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                                color = ProtonTheme.colors.separatorNorm
+                            )
+
+                            SettingRow(
+                                title = stringResource(id = R.string.settings_split_tunneling_mode_title),
+                                subtitleComposable = {
+                                    Spacer(modifier = Modifier.size(4.dp))
+                                    Text(text = stringResource(modeLabel), style = ProtonTheme.typography.defaultWeak)
+                                },
+                                onClick = { changeModeDialogShown = true },
+                                modifier = Modifier.animateItem()
+                            )
+
+                            SettingRowWithIcon(
+                                icon = CoreR.drawable.ic_proton_mobile,
+                                title = stringResource(id = appsLabel),
+                                settingValue =
+                                    SettingValue.SettingText(formatSplitTunnelingItems(splitTunneling.currentModeAppNames)),
+                                onClick = { onAppsClick(splitTunnelingMode) },
+                                modifier = Modifier.animateItem()
+                            )
+
+                            SettingRowWithIcon(
+                                icon = CoreR.drawable.ic_proton_window_terminal,
+                                title = stringResource(id = ipsLabel),
+                                settingValue =
+                                    SettingValue.SettingText(formatSplitTunnelingItems(splitTunneling.currentModeIps)),
+                                onClick = { onIpsClick(splitTunnelingMode) },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (splitTunneling.value) {
                 // --- Import / Export Section ---
                 item {
-                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.settings_split_tunneling_backup_restore),
-                        style = ProtonTheme.typography.body1Bold,
-                        modifier = horizontalItemPaddingModifier.padding(vertical = 8.dp)
+                        style = ProtonTheme.typography.defaultNorm,
+                        color = ProtonTheme.colors.textNorm,
+                        modifier = horizontalItemPaddingModifier.padding(top = 24.dp, bottom = 8.dp, start = 12.dp)
                     )
                 }
                 item {
-                    SettingRowWithIcon(
-                        icon = CoreR.drawable.ic_proton_arrow_down,
-                        title = stringResource(R.string.settings_split_tunneling_import),
-                        settingValue = SettingValue.SettingText(stringResource(R.string.settings_split_tunneling_import_desc)),
-                        onClick = { importLauncher.launch(arrayOf("application/json")) },
-                        modifier = Modifier.largeScreenContentPadding().animateItem()
-                    )
-                }
-                item {
-                    SettingRowWithIcon(
-                        icon = CoreR.drawable.ic_proton_arrow_up,
-                        title = stringResource(R.string.settings_split_tunneling_export),
-                        settingValue = SettingValue.SettingText(stringResource(R.string.settings_split_tunneling_export_desc)),
-                        onClick = { exportLauncher.launch(exportFilename) },
-                        modifier = Modifier.largeScreenContentPadding().animateItem()
-                    )
+                    Card(
+                        modifier = horizontalItemPaddingModifier.padding(bottom = 16.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = cardColor),
+                        border = border,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            SettingRowWithIcon(
+                                icon = CoreR.drawable.ic_proton_arrow_down,
+                                title = stringResource(R.string.settings_split_tunneling_import),
+                                settingValue = SettingValue.SettingText(stringResource(R.string.settings_split_tunneling_import_desc)),
+                                onClick = { importLauncher.launch(arrayOf("application/json")) },
+                                modifier = Modifier.animateItem()
+                            )
+                            SettingRowWithIcon(
+                                icon = CoreR.drawable.ic_proton_arrow_up,
+                                title = stringResource(R.string.settings_split_tunneling_export),
+                                settingValue = SettingValue.SettingText(stringResource(R.string.settings_split_tunneling_export_desc)),
+                                onClick = { exportLauncher.launch(exportFilename) },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
                 }
             }
         }

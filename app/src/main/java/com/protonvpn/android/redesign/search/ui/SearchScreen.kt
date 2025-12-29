@@ -46,7 +46,9 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -67,10 +69,13 @@ import com.protonvpn.android.base.ui.TopAppBarBackIcon
 import com.protonvpn.android.redesign.base.ui.InfoSheetState
 import com.protonvpn.android.redesign.countries.ui.FiltersRow
 import com.protonvpn.android.redesign.countries.ui.ServerGroupItemsList
-import com.protonvpn.android.redesign.countries.ui.ServerGroupsMainScreenState
 import com.protonvpn.android.redesign.countries.ui.ServerGroups
 import com.protonvpn.android.redesign.countries.ui.ServerGroupsActions
+import com.protonvpn.android.redesign.countries.ui.ServerGroupsMainScreenState
 import com.protonvpn.android.redesign.home_screen.ui.ShowcaseRecents
+import com.protonvpn.android.redesign.settings.ui.LocalThemeType
+import com.protonvpn.android.redesign.settings.ui.SettingsViewModel
+import com.protonvpn.android.theme.ThemeType
 import me.proton.core.compose.theme.ProtonTheme
 import me.proton.core.compose.theme.headlineNorm
 import me.proton.core.presentation.R as CoreR
@@ -80,55 +85,61 @@ fun SearchRoute(
     onBackIconClick: () -> Unit,
     onNavigateToHomeOnConnect: (ShowcaseRecents) -> Unit,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ProtonTheme.colors.backgroundNorm)
-            .navigationBarsPadding()
-            .imePadding()
-    ) {
-        val viewModel: SearchViewModel = hiltViewModel()
-        val focusRequester = remember { FocusRequester() }
+    // Получаем тему для поддержки редизайна (карточки, обводка и т.д.)
+    val settingsViewModel = hiltViewModel<SettingsViewModel>()
+    val themeType by settingsViewModel.theme.collectAsStateWithLifecycle(initialValue = ThemeType.System)
 
-        val currentQuery = viewModel.searchQueryFlow.collectAsStateWithLifecycle(initialValue = null).value
-            ?: return
+    CompositionLocalProvider(LocalThemeType provides themeType) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ProtonTheme.colors.backgroundNorm)
+                .navigationBarsPadding()
+                .imePadding()
+        ) {
+            val viewModel: SearchViewModel = hiltViewModel()
+            val focusRequester = remember { FocusRequester() }
 
-        Column {
-            SearchableTopAppBar(
-                searchQuery = currentQuery,
-                onSearchQueryChange = { viewModel.setQuery(it) },
-                onCloseClicked = onBackIconClick,
-                focusRequester = focusRequester
-            )
+            val currentQuery = viewModel.searchQueryFlow.collectAsStateWithLifecycle(initialValue = null).value
+                ?: return@Box
 
-            val mainState = viewModel.stateFlow.collectAsStateWithLifecycle().value
-            val subScreenState = viewModel.subScreenStateFlow.collectAsStateWithLifecycle().value
-            val serverGroupsActions = ServerGroupsActions(
-                setLocale = { viewModel.localeFlow.value = it },
-                onNavigateBack = viewModel::onNavigateBack,
-                onClose = viewModel::onClose,
-                onItemOpen = viewModel::onItemOpen,
-                onItemConnect = viewModel::onItemConnect
-            )
-            ServerGroups(
-                mainState,
-                subScreenState,
-                onNavigateToHomeOnConnect = onNavigateToHomeOnConnect,
-                actions = serverGroupsActions,
-            ) { mainState, infoSheetState ->
-                val modifier = Modifier.weight(1f).fillMaxWidth()
-                when (mainState) {
-                    is SearchViewState.ZeroScreen ->
-                        SearchZeroScreen(modifier)
+            Column {
+                SearchableTopAppBar(
+                    searchQuery = currentQuery,
+                    onSearchQueryChange = { viewModel.setQuery(it) },
+                    onCloseClicked = onBackIconClick,
+                    focusRequester = focusRequester
+                )
 
-                    is SearchViewState.Result ->
-                        ResultScreen(serverGroupsActions, mainState.result, onNavigateToHomeOnConnect, infoSheetState, modifier)
+                val mainState = viewModel.stateFlow.collectAsStateWithLifecycle().value
+                val subScreenState = viewModel.subScreenStateFlow.collectAsStateWithLifecycle().value
+                val serverGroupsActions = ServerGroupsActions(
+                    setLocale = { viewModel.localeFlow.value = it },
+                    onNavigateBack = viewModel::onNavigateBack,
+                    onClose = viewModel::onClose,
+                    onItemOpen = viewModel::onItemOpen,
+                    onItemConnect = viewModel::onItemConnect
+                )
+                ServerGroups(
+                    mainState,
+                    subScreenState,
+                    onNavigateToHomeOnConnect = onNavigateToHomeOnConnect,
+                    actions = serverGroupsActions,
+                ) { mainState, infoSheetState ->
+                    val modifier = Modifier.weight(1f).fillMaxWidth()
+                    when (mainState) {
+                        is SearchViewState.ZeroScreen ->
+                            SearchZeroScreen(modifier)
+
+                        is SearchViewState.Result ->
+                            ResultScreen(serverGroupsActions, mainState.result, onNavigateToHomeOnConnect, infoSheetState, modifier)
+                    }
                 }
             }
-        }
 
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
+            LaunchedEffect(Unit) {
+                focusRequester.requestFocus()
+            }
         }
     }
 }
@@ -141,6 +152,8 @@ fun ResultScreen(
     infoSheetState: InfoSheetState,
     modifier: Modifier
 ) {
+    val themeType = LocalThemeType.current
+
     Column(modifier) {
         FiltersRow(
             buttonActions = result.filterButtons,
@@ -149,7 +162,7 @@ fun ResultScreen(
         if (result.items.isEmpty())
             EmptySearchResult(Modifier.fillMaxSize())
         else
-            ServerGroupItemsList(serverGroupsActions, result, onNavigateToHomeOnConnect, infoSheetState)
+            ServerGroupItemsList(serverGroupsActions, result, onNavigateToHomeOnConnect, infoSheetState, themeType)
     }
 }
 

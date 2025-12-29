@@ -22,6 +22,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -29,7 +30,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.tv.material3.Text
 import com.protonvpn.android.R
 import com.protonvpn.android.redesign.CountryId
 import me.proton.core.compose.theme.ProtonTheme
@@ -133,7 +133,7 @@ fun ProfileTypeAndLocation(
 @Preview
 @Composable
 fun PreviewProfileTypeAndLocation() {
-   ProfileTypeAndLocation(
+    ProfileTypeAndLocation(
         onNext = {},
         onBack = {},
         state = TypeAndLocationScreenState.Standard(emptyList(), TypeAndLocationScreenState.CountryItem(CountryId.fastest, true), null, null, emptyList(), emptyList(), emptyList()),
@@ -144,5 +144,5 @@ fun PreviewProfileTypeAndLocation() {
         setExitCountrySecureCore = {},
         setEntryCountrySecureCore = {},
         setGateway = {},
-   )
+    )
 }
