@@ -1678,4 +1678,8 @@
     <string name="settings_empty_search">Нет результатов</string>
     <string name="settings_search_placeholder">Поиск</string>
     <string name="settings_split_tunneling_load_system_apps">Показать системные приложения</string>
+    <string name="about_app_title">О приложении</string>
+    <string name="about_telegram">Telegram</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_community">Ссылки</string>
 </resources>

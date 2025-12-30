@@ -88,55 +88,16 @@ abstract class BaseUpgradeDialogActivity(private val allowMultiplePlans: Boolean
     private lateinit var backgroundGradient: GradientDrawable
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdgeVpn()
         super.onCreate(savedInstanceState)
-        setContentView(binding.root)
-        applySystemBarInsets(binding.root) { v, insets ->
-            v.updatePadding(top = insets.top, bottom = 16.toPx() + insets.bottom)
-        }
-        setupGradientBackground()
-
-        if (savedInstanceState == null) {
-            initHighlightsFragment()
-            initPaymentsPanelFragment()
-            viewModel.loadPlans(allowMultiplePlans)
-            viewModel.reportUpgradeFlowStart(getTelemetryUpgradeSource())
-        }
-        upgradeHelper.onCreate(viewModel)
-
-        binding.buttonNotNow.setOnClickListener { finish() }
-
-        binding.composeToolbar.setContent {
-            val state by viewModel.state.collectAsStateWithLifecycle()
-            val purchaseState = state as? CommonUpgradeDialogViewModel.State.PurchaseReady
-            VpnTheme {
-                CloseButtonAndPlanSelectionToolbar(
-                    allPlans = purchaseState?.allPlans ?: emptyList(),
-                    selectedPlan = purchaseState?.selectedPlan,
-                    inProgress = purchaseState?.inProgress ?: false,
-                    onClose = ::finish,
-                    onPlanSelected = { plan ->
-                        viewModel.selectPlan(plan)
-                        onPlanSelected(plan.planName)
-                    },
-                    modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars)
-                )
-            }
-        }
-
-        carouselViewModel.gradientOverride
-            .flowWithLifecycle(lifecycle)
-            .onEach { colors ->
-                if (colors != null) setGradientColors(colors.first, colors.second, colors.third)
-                else setDefaultGradient()
-            }
-            .launchIn(lifecycleScope)
+        // MODIFICATION: Immediately close the activity to prevent showing the upgrade dialog
+        finish()
     }
 
     @CallSuper
     protected open fun afterPaymentSuccess(newPlanName: String) {}
 
     protected fun setGradientColors(top: Int, mid: Int, bottom: Int,  fixedAlpha: Boolean = false) {
+        if (!::backgroundGradient.isInitialized) return
         val alphaFraction: Float = resources.getFraction(R.fraction.upsellDialogGradientAlphaFraction, 1, 1)
         val gradientColors = intArrayOf(top, mid, bottom, 0x00000000.toInt(), 0x00000000.toInt())
         backgroundGradient.colors = if (fixedAlpha) {
@@ -309,8 +270,7 @@ class UpgradeOnboardingDialogActivity : BaseUpgradeDialogActivity(allowMultipleP
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding.buttonNotNow.isVisible = true
-        binding.composeToolbar.isVisible = false
+        if (!isFinishing) finish()
     }
 
     override fun afterPaymentSuccess(newPlanName: String) {

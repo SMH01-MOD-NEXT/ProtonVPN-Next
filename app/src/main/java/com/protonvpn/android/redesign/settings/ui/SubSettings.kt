@@ -410,6 +410,17 @@ fun SubSettingsRoute(
                 SubSettingsScreen.Type.Widget -> {
                     WidgetAddScreen(onClose = onClose)
                 }
+
+                SubSettingsScreen.Type.AboutApp -> {
+                    val settingsViewState = viewModel.viewState.collectAsStateWithLifecycle(initialValue = null).value
+                    if (settingsViewState != null) {
+                        AboutAppScreen(
+                            onClose = onClose,
+                            themeType = themeType,
+                            appVersion = settingsViewState.versionName
+                        )
+                    }
+                }
             }
         }
         InfoSheet(infoSheetState, onOpenUrl = { context.openUrl(it) })

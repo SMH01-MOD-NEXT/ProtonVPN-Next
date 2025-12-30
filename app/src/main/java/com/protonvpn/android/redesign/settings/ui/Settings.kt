@@ -197,7 +197,6 @@ fun SettingsRoute(
                 onVpnAcceleratorUpgrade = {
                     CarouselUpgradeDialogActivity.launch<UpgradeVpnAcceleratorHighlightsFragment>(context)
                 },
-                // Added Proxy click handler
                 onProxyClick = {
                     onNavigateToSubSetting(SubSettingsScreen.Type.Proxy)
                 },
@@ -243,6 +242,9 @@ fun SettingsRoute(
                 onWidgetClick = {
                     viewModel.onWidgetSettingClick()
                 },
+                onAboutAppClick = {
+                    onNavigateToSubSetting(SubSettingsScreen.Type.AboutApp)
+                },
                 onDebugToolsClick = {
                     onNavigateToSubSetting(SubSettingsScreen.Type.DebugTools)
                 }
@@ -270,12 +272,13 @@ fun SettingsView(
     onProtocolClick: () -> Unit,
     onVpnAcceleratorClick: () -> Unit,
     onVpnAcceleratorUpgrade: () -> Unit,
-    onProxyClick: () -> Unit, // Added param
+    onProxyClick: () -> Unit,
     onAdvancedSettingsClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onIconChangeClick: () -> Unit,
     onThemeClick: () -> Unit,
     onWidgetClick: () -> Unit,
+    onAboutAppClick: () -> Unit, // New callback
     onOnHelpCenterClick: () -> Unit,
     onReportBugClick: () -> Unit,
     onDebugLogsClick: () -> Unit,
@@ -450,6 +453,11 @@ fun SettingsView(
                     title = stringResource(id = R.string.settings_rate_us_title),
                     trailingIcon = CoreR.drawable.ic_proton_arrow_out_square,
                     onClick = onRateUsClick
+                )
+                SettingRowWithIcon(
+                    icon = CoreR.drawable.ic_proton_info_circle_filled,
+                    title = stringResource(id = R.string.about_app_title),
+                    onClick = onAboutAppClick
                 )
             }
             if (viewState.showSignOut) {

@@ -1632,4 +1632,8 @@
     <string name="settings_empty_search">No results found</string>
     <string name="settings_search_placeholder">Search</string>
     <string name="settings_split_tunneling_load_system_apps">Show System Apps</string>
+    <string name="about_app_title">About</string>
+    <string name="about_telegram">Telegram</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_community">Community</string>
 </resources>
