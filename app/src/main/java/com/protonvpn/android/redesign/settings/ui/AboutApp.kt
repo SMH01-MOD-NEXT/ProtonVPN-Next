@@ -55,11 +55,9 @@ fun AboutAppScreen(
     val context = LocalContext.current
     val listState = rememberLazyListState()
 
-    // Ссылки (Замени на свои актуальные)
-    val githubUrl = "https://github.com/ProtonVPN/android-app"
-    val telegramUrl = "https://t.me/protonvpn"
+    val githubUrl = "https://github.com/SMH01-MOD-NEXT/ProtonMOD-NEXT"
+    val telegramUrl = "https://t.me/ProtonVPN_MOD"
 
-    // Логика цветов и обводки для Amoled
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 
@@ -89,13 +87,11 @@ fun AboutAppScreen(
             item {
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // 1. Блок информации о приложении (Иконка, Имя, Версия)
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    // Иконка приложения (используем AndroidView для поддержки AdaptiveIcon)
                     AndroidView(
                         factory = { ctx ->
                             ImageView(ctx).apply {
@@ -110,7 +106,7 @@ fun AboutAppScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Название
+                    // App name
                     Text(
                         text = stringResource(id = R.string.app_name),
                         style = ProtonTheme.typography.defaultNorm.copy(
@@ -122,7 +118,7 @@ fun AboutAppScreen(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Версия
+                    // Version
                     Text(
                         text = "v$appVersion",
                         style = ProtonTheme.typography.defaultWeak,
@@ -134,7 +130,6 @@ fun AboutAppScreen(
             }
 
             item {
-                // Заголовок секции
                 Text(
                     text = stringResource(id = R.string.about_community),
                     style = ProtonTheme.typography.defaultNorm.copy(fontWeight = FontWeight.Bold),
@@ -144,12 +139,12 @@ fun AboutAppScreen(
                         .padding(bottom = 12.dp, start = 4.dp)
                 )
 
-                // 2. Блок ссылок (GitHub и Telegram)
+                // 2. Links
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Карточка GitHub
+                    // GitHub
                     AboutLinkCard(
                         modifier = Modifier.weight(1f),
                         title = stringResource(id = R.string.about_github),
@@ -162,7 +157,7 @@ fun AboutAppScreen(
                         }
                     )
 
-                    // Карточка Telegram
+                    // Telegram
                     AboutLinkCard(
                         modifier = Modifier.weight(1f),
                         title = stringResource(id = R.string.about_telegram),
@@ -213,7 +208,6 @@ fun AboutLinkCard(
                     .background(ProtonTheme.colors.interactionNorm.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                // Прямой вызов painterResource без try-catch
                 Icon(
                     painter = painterResource(id = iconRes),
                     contentDescription = null,

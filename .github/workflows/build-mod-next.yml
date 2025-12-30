@@ -4,46 +4,53 @@ on:
   push:
     branches:
       - 'protonmod-next'  # Trigger on commits to main development branch
+    tags:
+      - 'v*' # Trigger on version tags
   workflow_dispatch:  # Allow manual workflow execution from GitHub UI
+    inputs:
+      create_pre_release:
+        description: 'Create GitHub Pre-release'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Permissions required for creating releases
+    permissions:
+      contents: write
 
     steps:
       # Step 1: Clone the repository with full git history
-      # fetch-depth: 0 ensures we get all commits and tags for changelog generation
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # Step 2: Install Java Development Kit 17 (required for Android builds)
+      # Step 2: Install Java Development Kit 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
-          distribution: 'temurin'  # Use Eclipse Temurin JDK distribution
+          distribution: 'temurin'
 
-      # Step 3: Configure Gradle build system with caching for faster builds
+      # Step 3: Configure Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      # Step 4: Make gradlew executable on Linux
+      # Step 4: Make gradlew executable
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      # Step 5: Build both debug and release APK variants
-      # Debug APK: for testing with detailed logging
-      # Release APK: optimized production build
+      # Step 5: Build APKs
       - name: Build APKs (with debug key)
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: ./gradlew assembleProductionGooglePlayStoreDebug assembleProductionGooglePlayStoreRelease
 
-      # Step 6: Check if signing secrets are available in repository secrets
-      # If secrets exist, we'll re-sign APKs with release keystore
+      # Step 6: Check for signing secrets
       - name: Check for signing secrets
         id: check_secrets
         run: |
@@ -57,8 +64,7 @@ jobs:
             echo "One or more signing secrets are missing. Skipping re-signing."
           fi
 
-      # Step 7: Decode base64-encoded keystore file (conditional on secrets availability)
-      # The keystore is stored as base64 in GitHub secrets for security
+      # Step 7: Decode keystore
       - name: Decode Keystore
         if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
         env:
@@ -66,15 +72,14 @@ jobs:
         run: |
           echo $SIGNING_KEY_BASE64 | base64 --decode > $GITHUB_WORKSPACE/app/release-key.jks
 
-      # Step 8: Install Android SDK Build Tools (provides apksigner utility)
-      - name: Install Android SDK Build-Tools (for apksigner)
+      # Step 8: Install Build-Tools
+      - name: Install Android SDK Build-Tools
         if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
         uses: android-actions/setup-android@v3
         with:
           build-tools: 34.0.0
 
-      # Step 9: Sign Debug APK with release keystore (conditional)
-      # This replaces the default debug signature with production signature
+      # Step 9: Sign Debug APK
       - name: Sign Debug APK
         if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
         env:
@@ -90,7 +95,7 @@ jobs:
             --key-pass env:SIGNING_KEY_PASSWORD \
             "$APK_PATH"
 
-      # Step 10: Sign Release APK with release keystore (conditional)
+      # Step 10: Sign Release APK
       - name: Sign Release APK
         if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
         env:
@@ -106,116 +111,130 @@ jobs:
             --key-pass env:SIGNING_KEY_PASSWORD \
             "$APK_PATH"
 
-      # Step 11: Generate changelog from git commits
-      # Logic:
-      # - If triggered by tag push: show commits between previous tag and current tag
-      # - If triggered by branch push: show all commits since last tag
+      # Step 11: Generate changelog
       - name: Generate changelog from commits
         id: changelog
         run: |
+          REPO_URL="https://github.com/${{ github.repository }}"
+          
           # Check if this workflow was triggered by a tag push
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             CURRENT_TAG="${{ github.ref_name }}"
             echo "Current tag: $CURRENT_TAG"
 
-            # Find the previous tag (second most recent)
             PREVIOUS_TAG=$(git describe --tags --abbrev=0 "$CURRENT_TAG^" 2>/dev/null || echo "")
-          
             if [ -z "$PREVIOUS_TAG" ]; then
-              # No previous tag exists, use initial commit as starting point
               PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
-              echo "No previous tag found, using initial commit: $PREVIOUS_TAG"
-            else
-              echo "Previous tag: $PREVIOUS_TAG"
             fi
 
-            # Get all commits between previous and current tag
-            CHANGELOG=$(git log "$PREVIOUS_TAG..$CURRENT_TAG" --pretty=format:"• %s (%h)" --no-merges)
-            TAG_INFO="🏷️ New tag: <b>$CURRENT_TAG</b>"
-          else
-            # Not a tag push - this is a regular branch commit
-            # Find the most recent tag
-            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+            # GitHub Release (Markdown with links)
+            CHANGELOG_MD=$(git log "$PREVIOUS_TAG..$CURRENT_TAG" --pretty=format:"* [%h]($REPO_URL/commit/%H) - %s" --no-merges)
           
+            # Telegram (HTML with links)
+            CHANGELOG_HTML=$(git log "$PREVIOUS_TAG..$CURRENT_TAG" --pretty=format:"• <a href=\"$REPO_URL/commit/%H\">%h</a> - %s" --no-merges)
+          
+            TAG_INFO="🏷️ New tag: <b>$CURRENT_TAG</b>"
+            RELEASE_TAG_NAME="$CURRENT_TAG"
+          else
+            # Not a tag push - branch commit
+            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
             if [ -z "$LAST_TAG" ]; then
-              # Repository has no tags yet, show all commits from initial commit
               LAST_TAG=$(git rev-list --max-parents=0 HEAD)
-              echo "No tags found, using initial commit: $LAST_TAG"
-              CHANGELOG=$(git log "$LAST_TAG..HEAD" --pretty=format:"• %s (%h)" --no-merges)
-            else
-              echo "Last tag: $LAST_TAG"
-              # Get all commits after the last tag up to HEAD
-              CHANGELOG=$(git log "$LAST_TAG..HEAD" --pretty=format:"• %s (%h)" --no-merges)
             fi
           
-            CURRENT_TAG="HEAD"
+            # GitHub Release (Markdown with links)
+            CHANGELOG_MD=$(git log "$LAST_TAG..HEAD" --pretty=format:"* [%h]($REPO_URL/commit/%H) - %s" --no-merges)
+          
+            # Telegram (HTML with links)
+            CHANGELOG_HTML=$(git log "$LAST_TAG..HEAD" --pretty=format:"• <a href=\"$REPO_URL/commit/%H\">%h</a> - %s" --no-merges)
+          
             PREVIOUS_TAG="$LAST_TAG"
-            TAG_INFO="ℹ️ No new tag, latest tag: <b>$PREVIOUS_TAG</b>"
+            TAG_INFO="ℹ️ No new tag, changes since: <b>$PREVIOUS_TAG</b>"
+          
+            # Generate a name for pre-release (Timestamp based)
+            RELEASE_TAG_NAME="pre-release-$(date +'%Y%m%d-%H%M')"
           fi
 
-          # Extract metadata about the most recent commit
-          CURRENT_COMMIT=$(git log -1 --pretty=format:"%h - %s")
+          # Extract metadata
+          CURRENT_COMMIT=$(git log -1 --pretty=format:"%h")
+          CURRENT_COMMIT_FULL=$(git log -1 --pretty=format:"%H")
           COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
           COMMIT_DATE=$(git log -1 --pretty=format:"%cd" --date=format:"%Y-%m-%d %H:%M")
 
-          # Format the Telegram message with HTML markup
-          if [ -z "$CHANGELOG" ]; then
-            # No changes detected
+          # Construct Telegram Message
+          if [ -z "$CHANGELOG_HTML" ]; then
             MESSAGE="🚀 <b>ProtonMOD-Next Build</b>
 
           $TAG_INFO
-          📝 Latest commit: <code>$CURRENT_COMMIT</code>
+          📝 Latest commit: <a href=\"$REPO_URL/commit/$CURRENT_COMMIT_FULL\">$CURRENT_COMMIT</a>
           👤 Author: $COMMIT_AUTHOR
           📅 Date: $COMMIT_DATE
           🔧 Branch: ${{ github.ref_name }}
 
           ℹ️ No changes since $PREVIOUS_TAG"
           else
-            # Changes detected - include full changelog
             MESSAGE="🚀 <b>ProtonMOD-Next Build</b>
 
           $TAG_INFO
-          📝 Latest commit: <code>$CURRENT_COMMIT</code>
+          📝 Latest commit: <a href=\"$REPO_URL/commit/$CURRENT_COMMIT_FULL\">$CURRENT_COMMIT</a>
           👤 Author: $COMMIT_AUTHOR
           📅 Date: $COMMIT_DATE
           🔧 Branch: ${{ github.ref_name }}
 
           📋 <b>Changes since $PREVIOUS_TAG:</b>
-          $CHANGELOG"
+          $CHANGELOG_HTML"
           fi
 
-          # Save message to step output for use in next step
-          # EOF delimiter allows multiline content
-          echo "message<<EOF" >> $GITHUB_OUTPUT
-          echo "$MESSAGE" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # Output variables handling multiline strings
+          {
+            echo "message<<EOF"
+            echo "$MESSAGE"
+            echo "EOF"
+            echo "changelog_md<<EOF"
+            echo "$CHANGELOG_MD"
+            echo "EOF"
+            echo "release_tag=$RELEASE_TAG_NAME"
+          } >> "$GITHUB_OUTPUT"
 
-      # Step 12: Send changelog message to Telegram
-      # Uses Telegram Bot API to post text message with HTML formatting
+      # Step 12: Send changelog to Telegram
       - name: Send Changelog to Telegram
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
           MESSAGE="${{ steps.changelog.outputs.message }}"
-          
-          # POST request to Telegram Bot API sendMessage endpoint
           curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
                -d "chat_id=${TG_CHAT_ID}" \
                -d "parse_mode=HTML" \
-               -d "text=${MESSAGE}"
+               -d "disable_web_page_preview=true" \
+               --data-urlencode "text=${MESSAGE}"
 
-      # Step 13: Upload Debug APK as GitHub Actions artifact
-      # Artifacts are stored for 90 days and available for download from Actions tab
-      - name: Upload MOD-Next Debug APK
+      # Step 13: Create GitHub Pre-release
+      # Creates a release automatically on PUSH or if requested via workflow_dispatch
+      - name: Create GitHub Pre-release
+        if: github.event_name == 'push' || inputs.create_pre_release == true
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.changelog.outputs.release_tag }}
+          name: "Pre-release ${{ steps.changelog.outputs.release_tag }}"
+          body: |
+            ## 📋 Changes
+            ${{ steps.changelog.outputs.changelog_md }}
+            
+            *Automated build by GitHub Actions*
+          artifacts: |
+            app/build/outputs/apk/productionGooglePlayStore/release/*.apk
+            app/build/outputs/apk/productionGooglePlayStore/debug/*.apk
+          prerelease: true
+          allowUpdates: true
+          replacesArtifacts: true
+
+      # Step 14: Upload Artifacts (Actions tab)
+      - name: Upload MOD-Next APKs
         uses: actions/upload-artifact@v4
         with:
-          name: debug-next-apk
-          path: app/build/outputs/apk/productionGooglePlayStore/debug/*.apk
-
-      # Step 14: Upload Release APK as GitHub Actions artifact
-      - name: Upload MOD-Next Release APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-next-apk
-          path: app/build/outputs/apk/productionGooglePlayStore/release/*.apk
+          name: protonmod-next-apks
+          path: |
+            app/build/outputs/apk/productionGooglePlayStore/debug/*.apk
+            app/build/outputs/apk/productionGooglePlayStore/release/*.apk
