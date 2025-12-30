@@ -17,7 +17,7 @@
  * along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package com.protonvpn.android.base.ui
+package com.protonvpn.android.redesign.settings.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -63,7 +63,7 @@ fun SettingsCheckbox(
             colors = CheckboxDefaults.colors(
                 checkedColor = ProtonTheme.colors.interactionNorm,
                 uncheckedColor = ProtonTheme.colors.iconWeak,
-                checkmarkColor = Color.White // Исправлено здесь
+                checkmarkColor = Color.White
             ),
             onCheckedChange = null,
             modifier = Modifier.clearAndSetSemantics {}
@@ -88,7 +88,7 @@ fun SettingsCheckbox(
 @Preview
 @Composable
 fun PreviewProtonDialogCheckbox() {
-    ProtonVpnPreview {
+    _root_ide_package_.com.protonvpn.android.base.ui.ProtonVpnPreview {
         SettingsCheckbox(
             title = "Allow direct connections",
             description = "Allow direct peer-to-peer connections over LAN.",

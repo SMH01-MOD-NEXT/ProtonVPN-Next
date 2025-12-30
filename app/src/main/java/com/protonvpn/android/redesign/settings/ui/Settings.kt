@@ -513,7 +513,6 @@ private fun ColumnScope.FeatureCategory(
             .fillMaxWidth()
     )
 
-    // Определяем стили для карточек Kill Switch и плиток
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 

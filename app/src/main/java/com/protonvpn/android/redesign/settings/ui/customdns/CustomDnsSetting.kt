@@ -27,8 +27,11 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,6 +46,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -63,6 +70,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -85,6 +94,7 @@ import com.protonvpn.android.R
 import com.protonvpn.android.base.ui.AnnotatedClickableText
 import com.protonvpn.android.base.ui.ProtonTextButton
 import com.protonvpn.android.base.ui.ProtonVpnPreview
+import com.protonvpn.android.base.ui.SettingsFeatureToggle
 import com.protonvpn.android.base.ui.VpnSolidButton
 import com.protonvpn.android.redesign.base.ui.DIALOG_CONTENT_PADDING
 import com.protonvpn.android.redesign.base.ui.ProtonBasicAlert
@@ -95,8 +105,10 @@ import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.redesign.base.ui.showSnackbar
 import com.protonvpn.android.redesign.settings.ui.DnsConflictBanner
 import com.protonvpn.android.redesign.settings.ui.FeatureSubSettingScaffold
+import com.protonvpn.android.redesign.settings.ui.LocalThemeType
 import com.protonvpn.android.redesign.settings.ui.SettingsViewModel.SettingViewState
 import com.protonvpn.android.redesign.settings.ui.addFeatureSettingItems
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.utils.Constants
 import com.protonvpn.android.utils.openUrl
 import kotlinx.coroutines.flow.Flow
@@ -129,7 +141,6 @@ fun DnsSettingsScreen(
     actions: CustomDnsActions,
 ) {
     val context = LocalContext.current
-
     var showCustomDnsNetShieldConflictDialog by remember { mutableStateOf(false) }
 
     val itemRemovedMessage = stringResource(R.string.custom_dns_item_removed_snackbar)
@@ -204,7 +215,9 @@ fun DnsSettingsScreen(
                 onLearnMore = { context.openUrl(Constants.URL_CUSTOM_DNS_LEARN_MORE) },
                 onOpenAddAddress = actions.openAddDnsScreen,
                 onPrivateDnsLearnMore = { context.openUrl(Constants.URL_CUSTOM_DNS_PRIVATE_DNS_LEARN_MORE) },
-                onOpenPrivateDnsSettings = { context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) },
+                onOpenPrivateDnsSettings = {
+                    context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS))
+                },
                 snackbarHostState = snackbarHostState,
                 viewState = viewState,
             )
@@ -265,6 +278,13 @@ fun CustomDnsScreen(
     val context = LocalContext.current
     val dnsViewState = viewState.dnsViewState
 
+    val themeType = LocalThemeType.current
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
     val largeScreenModifier = Modifier.largeScreenContentPadding()
 
     FeatureSubSettingScaffold(
@@ -302,6 +322,7 @@ fun CustomDnsScreen(
                         onPrivateDnsLearnMore = onPrivateDnsLearnMore,
                         onOpenPrivateDnsSettings = onOpenPrivateDnsSettings,
                         largeScreenPaddingModifier = largeScreenModifier,
+                        modifier = Modifier.weight(1f)
                     )
                 }
                 dnsViewState.customDns.isNotEmpty() -> {
@@ -311,7 +332,9 @@ fun CustomDnsScreen(
                         onDnsChange = onDnsChange,
                         onCopyToClipboard = {
                             if (Build.VERSION.SDK_INT < 33) {
-                                context.showToast(context.getString(R.string.copied_to_clipboard))
+                                context.showToast(
+                                    context.getString(R.string.copied_to_clipboard)
+                                )
                             }
                             clipboardManager.setText(AnnotatedString(it))
                         },
@@ -320,13 +343,29 @@ fun CustomDnsScreen(
                         onLearnMore = onLearnMore,
                         largeScreenPaddingModifier = largeScreenModifier,
                         onItemRemoved = onItemRemoved,
+                        cardColor = cardColor,
+                        border = border,
                         modifier = Modifier.weight(1f)
                     )
+
+                    if (dnsViewState.descriptionRes != null) {
+                        EmptyState(
+                            dnsDescription = dnsViewState.descriptionRes,
+                            onLearnMore = onLearnMore,
+                            cardColor = cardColor,
+                            border = border,
+                            modifier = largeScreenModifier
+                                .fillMaxWidth()
+                        )
+                    }
                 }
                 else -> {
+
                     EmptyState(
                         dnsDescription = dnsViewState.descriptionRes,
                         onLearnMore = onLearnMore,
+                        cardColor = cardColor,
+                        border = border,
                         modifier = largeScreenModifier
                             .weight(1f)
                             .fillMaxWidth()
@@ -337,43 +376,57 @@ fun CustomDnsScreen(
     }
 }
 
+
 @Composable
 private fun EmptyState(
     @StringRes dnsDescription: Int?,
     onLearnMore: () -> Unit,
+    cardColor: Color,
+    border: BorderStroke?,
     modifier: Modifier = Modifier
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = modifier
+        modifier = modifier.padding(16.dp)
     ) {
-        Image(
-            painterResource(id = R.drawable.setting_custom_dns),
-            contentDescription = null,
-            Modifier.padding(horizontal = 16.dp)
-        )
-        Spacer(Modifier.height(24.dp))
-        Text(
-            text = stringResource(R.string.settings_custom_dns_title),
-            style = ProtonTheme.typography.subheadline,
-            color = ProtonTheme.colors.textNorm,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-        Spacer(Modifier.height(8.dp))
-        if (dnsDescription != null) {
-            AnnotatedClickableText(
-                fullText = stringResource(dnsDescription),
-                annotatedPart = stringResource(R.string.learn_more),
-                onAnnotatedClick = onLearnMore,
-                style = ProtonTheme.typography.body2Regular,
-                annotatedStyle = ProtonTheme.typography.body2Medium,
-                color = ProtonTheme.colors.textWeak,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = cardColor),
+            border = border,
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Image(
+                    painterResource(id = R.drawable.setting_custom_dns),
+                    contentDescription = null,
+                    modifier = Modifier.size(120.dp)
+                )
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    text = stringResource(R.string.settings_custom_dns_title),
+                    style = ProtonTheme.typography.subheadline,
+                    color = ProtonTheme.colors.textNorm,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(8.dp))
+                if (dnsDescription != null) {
+                    AnnotatedClickableText(
+                        fullText = stringResource(dnsDescription),
+                        annotatedPart = stringResource(R.string.learn_more),
+                        onAnnotatedClick = onLearnMore,
+                        style = ProtonTheme.typography.body2Regular,
+                        annotatedStyle = ProtonTheme.typography.body2Medium,
+                        color = ProtonTheme.colors.textWeak,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
         }
-        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -421,14 +474,15 @@ private fun CustomDnsContent(
     onDnsChange: (List<String>) -> Unit,
     onCopyToClipboard: (String) -> Unit,
     largeScreenPaddingModifier: Modifier,
+    cardColor: Color,
+    border: BorderStroke?,
     modifier: Modifier = Modifier
 ) {
     val dnsList = remember(currentDnsList) { currentDnsList.toMutableStateList() }
     var pendingDnsUpdate by remember { mutableStateOf(false) }
     val view = LocalView.current
 
-    // Must take into account items before the reorderable items in LazyColumn
-    val itemsBeforeList = 5
+    val itemsBeforeList = 3
 
     val reorderableLazyListState = rememberReorderableLazyListState(listState) { from, to ->
         val fromIndex = from.index - itemsBeforeList
@@ -438,13 +492,10 @@ private fun CustomDnsContent(
             val item = dnsList.removeAt(fromIndex)
             dnsList.add(toIndex, item)
             pendingDnsUpdate = true
-
             performHapticFeedback(view, HapticFeedbackConstantsCompat.SEGMENT_FREQUENT_TICK)
         }
     }
 
-    // Call onDnsChange only after dragging has ended
-    // To avoid updating state while user is still dragging
     LaunchedEffect(reorderableLazyListState.isAnyItemDragging) {
         if (!reorderableLazyListState.isAnyItemDragging && pendingDnsUpdate) {
             onDnsChange(dnsList)
@@ -456,74 +507,91 @@ private fun CustomDnsContent(
         state = listState,
         modifier = modifier.fillMaxWidth(),
     ) {
-        addFeatureSettingItems(
-            setting = settingViewState,
-            imageRes = R.drawable.setting_custom_dns,
-            onLearnMore = onLearnMore,
-            onToggle = onToggle,
-            itemModifier = largeScreenPaddingModifier.padding(horizontal = 16.dp)
-        )
+        item {
+            val itemModifier = largeScreenPaddingModifier.padding(horizontal = 16.dp)
+            this@LazyColumn.addFeatureSettingItems(
+                itemModifier = itemModifier,
+                setting = settingViewState,
+                imageRes = R.drawable.setting_custom_dns,
+                onLearnMore = onLearnMore,
+            )
+
+            Card(
+                modifier = itemModifier.padding(top = 16.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = cardColor),
+                border = border,
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                SettingsFeatureToggle(
+                    label = stringResource(settingViewState.titleRes),
+                    checked = settingViewState.value,
+                    onCheckedChange = { onToggle() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                )
+            }
+        }
 
         if (settingViewState.value) {
             item {
                 Text(
                     text = stringResource(id = R.string.settings_dns_list_title, currentDnsList.size),
                     style = ProtonTheme.typography.body2Medium,
-                    modifier = largeScreenPaddingModifier.padding(16.dp)
+                    modifier = largeScreenPaddingModifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
             }
-            itemsIndexed(dnsList, key = { _, item -> item }) { index, item ->
-                ReorderableItem(reorderableLazyListState, key = item) { isDragging ->
-                    val elevation by animateDpAsState(if (isDragging) 4.dp else 0.dp, label = "")
-                    val backgroundColor by animateColorAsState(
-                        targetValue = if (!isDragging) ProtonTheme.colors.backgroundNorm else ProtonTheme.colors.backgroundSecondary,
-                        label = ""
-                    )
-                    val dragModifier = Modifier.draggableHandle(
-                        onDragStarted = {
-                            performHapticFeedback(
-                                view,
-                                HapticFeedbackConstantsCompat.GESTURE_START
-                            )
-                        },
-                        onDragStopped = {
-                            performHapticFeedback(
-                                view,
-                                HapticFeedbackConstantsCompat.GESTURE_END
-                            )
+            item {
+                Card(
+                    modifier = largeScreenPaddingModifier.padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor),
+                    border = border,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column {
+                        dnsList.forEachIndexed { index, item ->
+                            ReorderableItem(reorderableLazyListState, key = item) { isDragging ->
+                                val dragModifier = Modifier.draggableHandle(
+                                    onDragStarted = { performHapticFeedback(view, HapticFeedbackConstantsCompat.GESTURE_START) },
+                                    onDragStopped = { performHapticFeedback(view, HapticFeedbackConstantsCompat.GESTURE_END) }
+                                )
+
+                                val onMoveUp = if (index > 0) ({ moveItemUp(currentDnsList, index, item, onDnsChange) }) else null
+                                val onMoveDown = if (index < currentDnsList.size - 1) ({ moveItemDown(currentDnsList, index, item, onDnsChange) }) else null
+
+                                DnsListItem(
+                                    label = item,
+                                    onCopyToClipboard = onCopyToClipboard,
+                                    onMoveUp = onMoveUp,
+                                    onMoveDown = onMoveDown,
+                                    onDelete = { onItemRemoved(item) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    dragModifier = dragModifier
+                                )
+
+                                if (index < dnsList.size - 1) {
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        color = ProtonTheme.colors.separatorNorm
+                                    )
+                                }
+                            }
                         }
-                    )
-                    val onMoveUp = remember(index, currentDnsList, item, onDnsChange) {
-                        { moveItemUp(currentDnsList, index, item, onDnsChange) }.takeIf { index > 0 }
                     }
-                    val onMoveDown = remember(index, currentDnsList, item, onDnsChange) {
-                        { moveItemDown(currentDnsList, index, item, onDnsChange) }
-                            .takeIf { index < currentDnsList.size - 1 }
-                    }
-                    DnsListItem(
-                        label = item,
-                        elevation = elevation,
-                        backgroundColor = backgroundColor,
-                        onCopyToClipboard = onCopyToClipboard,
-                        onMoveUp = onMoveUp,
-                        onMoveDown = onMoveDown,
-                        onDelete = { onItemRemoved(item) },
-                        modifier = largeScreenPaddingModifier.animateItem(),
-                        dragModifier = dragModifier
-                    )
                 }
             }
+
             item(key = "footer") {
-                val label =
-                    if (currentDnsList.size == 1) R.string.settings_dns_list_description
-                    else R.string.settings_dns_list_description_multiple
+                val labelRes = if (currentDnsList.size == 1) R.string.settings_dns_list_description
+                else R.string.settings_dns_list_description_multiple
                 Text(
-                    text = stringResource(id = label),
+                    text = stringResource(id = labelRes),
                     style = ProtonTheme.typography.body2Regular,
                     color = ProtonTheme.colors.textHint,
                     modifier = largeScreenPaddingModifier
-                        .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)
-                        .animateItem()
+                        .padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 16.dp)
                 )
             }
         }
@@ -533,8 +601,6 @@ private fun CustomDnsContent(
 @Composable
 private fun DnsListItem(
     label: String,
-    elevation: Dp,
-    backgroundColor: Color,
     onCopyToClipboard: (String) -> Unit,
     onMoveUp: (() -> Unit)?,
     onMoveDown: (() -> Unit)?,
@@ -543,54 +609,40 @@ private fun DnsListItem(
     dragModifier: Modifier = Modifier
 ) {
     val copyToClipboard = remember(label, onCopyToClipboard) { { onCopyToClipboard(label) } }
-
     val accessibilityActions = customAccessibilityActions(
         onMoveUp = onMoveUp, onMoveDown = onMoveDown, onCopyToClipboard = copyToClipboard, onDelete = onDelete
     )
-    Surface(
-        shadowElevation = elevation,
-        color = backgroundColor,
+
+    Row(
         modifier = modifier
-            .fillMaxWidth()
-            .semantics(mergeDescendants = true) {
-                customActions = accessibilityActions
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onLongPress = { copyToClipboard() }
-                )
-            },
+            .semantics(mergeDescendants = true) { customActions = accessibilityActions }
+            .pointerInput(Unit) { detectTapGestures(onLongPress = { copyToClipboard() }) }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Icon(
+            painterResource(id = R.drawable.ic_dots),
+            contentDescription = null,
+            tint = LocalContentColor.current.copy(alpha = 0.5f),
+            modifier = dragModifier.padding(16.dp)
+        )
+        Text(
+            text = label,
+            style = ProtonTheme.typography.body1Regular,
+            modifier = Modifier.weight(1f)
+        )
+        IconButton(
+            onClick = onDelete,
+            modifier = Modifier.clearAndSetSemantics {}
         ) {
             Icon(
-                painterResource(id = R.drawable.ic_dots),
-                contentDescription = null,
-                tint = LocalContentColor.current,
-                modifier = dragModifier.padding(16.dp)
+                painterResource(id = CoreR.drawable.ic_proton_trash),
+                contentDescription = stringResource(R.string.delete),
+                modifier = Modifier.size(18.dp),
+                tint = ProtonTheme.colors.notificationError
             )
-            Text(
-                text = label,
-                style = ProtonTheme.typography.body1Regular,
-                modifier = Modifier.weight(1f)
-            )
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.clearAndSetSemantics() {}
-            ) {
-                Icon(
-                    painterResource(id = CoreR.drawable.ic_proton_trash),
-                    contentDescription = stringResource(R.string.delete),
-                    modifier = Modifier
-                        .size(14.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
         }
+        Spacer(modifier = Modifier.width(8.dp))
     }
 }
 
@@ -615,9 +667,6 @@ private fun customAccessibilityActions(
     }
 }
 
-// In theory moveItemUp and -Down belong in ViewModel where they could be tested with unit tests.
-// However this code is used with two different ViewModels so we prefer to have a single implementation here - it's
-// simple.
 private fun moveItemUp(list: List<String>, index: Int, item: String, onDnsChange: (List<String>) -> Unit) {
     val newList = list.toMutableList().apply {
         removeAt(index)
@@ -653,81 +702,6 @@ private fun CustomDnsPreview() {
                     overrideProfilePrimaryLabel = null,
                     isFreeUser = false,
                     isPrivateDnsActive = false
-                ),
-            )
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun CustomDnsConflictPreview() {
-    ProtonVpnPreview {
-        CustomDnsScreen(
-            onClose = {},
-            onDnsChange = {},
-            onDnsToggled = {},
-            onLearnMore = {},
-            onPrivateDnsLearnMore = {},
-            onOpenPrivateDnsSettings = {},
-            onItemRemoved = {},
-            viewState = CustomDnsViewState.DnsListState(
-                dnsViewState = SettingViewState.CustomDns(
-                    enabled = false,
-                    customDns = listOf("1.1.1.1", "1.2.1.1"),
-                    overrideProfilePrimaryLabel = null,
-                    isFreeUser = false,
-                    isPrivateDnsActive = true,
-                ),
-            )
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun CustomDnsDisabledPreview() {
-    ProtonVpnPreview {
-        CustomDnsScreen(
-            onClose = {},
-            onDnsChange = {},
-            onDnsToggled = {},
-            onLearnMore = {},
-            onPrivateDnsLearnMore = {},
-            onOpenPrivateDnsSettings = {},
-            onItemRemoved = {},
-            viewState = CustomDnsViewState.DnsListState(
-                dnsViewState = SettingViewState.CustomDns(
-                    enabled = false,
-                    customDns = emptyList(),
-                    overrideProfilePrimaryLabel = null,
-                    isFreeUser = false,
-                    isPrivateDnsActive = true
-                ),
-            )
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun CustomDnsEmptyState() {
-    ProtonVpnPreview {
-        CustomDnsScreen(
-            onClose = {},
-            onDnsChange = {},
-            onDnsToggled = {},
-            onLearnMore = {},
-            onPrivateDnsLearnMore = {},
-            onOpenPrivateDnsSettings = {},
-            onItemRemoved = {},
-            viewState = CustomDnsViewState.DnsListState(
-                dnsViewState = SettingViewState.CustomDns(
-                    enabled = false,
-                    customDns = emptyList(),
-                    overrideProfilePrimaryLabel = null,
-                    isFreeUser = false,
-                    isPrivateDnsActive = false,
                 ),
             )
         )

@@ -48,10 +48,8 @@ fun VpnAcceleratorSubSetting(
 ) {
     val listState = rememberLazyListState()
 
-    // Получаем тему из LocalThemeType (предполагается, что он доступен в этом контексте, как в примере)
     val themeType = LocalThemeType.current
 
-    // Логика стилизации карточки
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 
@@ -76,7 +74,7 @@ fun VpnAcceleratorSubSetting(
             addFeatureSettingItems(
                 itemModifier = horizontalItemPaddingModifier,
                 setting = vpnAccelerator,
-                imageRes = R.drawable.setting_vpn_accelerator, // Используем ресурс изображения для VPN Accelerator
+                imageRes = R.drawable.setting_vpn_accelerator,
                 onLearnMore = onLearnMore,
             )
 

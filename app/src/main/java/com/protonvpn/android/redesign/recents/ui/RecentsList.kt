@@ -192,7 +192,6 @@ fun RecentsList(
                 enter = slideInVertically { height -> -height } + fadeIn(),
                 exit = ExitTransition.None,
                 modifier = Modifier
-                    // Исправлено: Добавлен padding(horizontal = 16.dp), если horizontalPadding не задан
                     .padding(horizontal = if (horizontalPadding == 0.dp) 16.dp else horizontalPadding)
                     .animateItemPlacement()
                     .padding(bottom = 8.dp),

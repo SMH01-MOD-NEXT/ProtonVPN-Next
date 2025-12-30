@@ -37,7 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.protonvpn.android.R
 import com.protonvpn.android.base.ui.ProtonVpnPreview
-import com.protonvpn.android.base.ui.SettingsCheckbox
+import com.protonvpn.android.redesign.settings.ui.SettingsCheckbox
 import com.protonvpn.android.base.ui.SettingsFeatureToggle
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.theme.ThemeType
@@ -52,10 +52,8 @@ fun LanSetting(
 ) {
     val listState = rememberLazyListState()
 
-    // Получаем тему из LocalThemeType (определено в SubSettingsRoute.kt)
     val themeType = LocalThemeType.current
 
-    // Логика стилизации карточки
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 
@@ -80,7 +78,6 @@ fun LanSetting(
                 setting = lan,
                 imageRes = R.drawable.setting_lan,
                 onLearnMore = {},
-                // onToggle убран, чтобы переключатель не дублировался в заголовке
                 itemModifier = horizontalItemPaddingModifier,
             )
 

@@ -74,7 +74,7 @@ fun AdvancedSettings(
         // Alt Routing (Toggle)
         AdvancedToggleRow(
             title = stringResource(id = altRouting.titleRes),
-            icon = CoreR.drawable.ic_proton_arrow_in_to_rectangle, // Используем иконку из CoreR
+            icon = CoreR.drawable.ic_proton_arrow_in_to_rectangle,
             checked = altRouting.value,
             onToggle = onAltRoutingChange
         )

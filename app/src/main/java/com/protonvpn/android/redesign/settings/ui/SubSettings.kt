@@ -36,24 +36,30 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.protonvpn.android.R
-import com.protonvpn.android.base.ui.SimpleTopAppBar
-import com.protonvpn.android.base.ui.TopAppBarBackIcon
 import com.protonvpn.android.profiles.ui.nav.ProfileCreationStepTarget
 import com.protonvpn.android.redesign.app.ui.SettingsChangeViewModel
 import com.protonvpn.android.redesign.base.ui.InfoSheet
@@ -65,13 +71,14 @@ import com.protonvpn.android.redesign.settings.ui.customdns.CustomDnsActions
 import com.protonvpn.android.redesign.settings.ui.customdns.CustomDnsViewModel
 import com.protonvpn.android.redesign.settings.ui.customdns.DnsSettingsScreen
 import com.protonvpn.android.redesign.settings.ui.nav.SubSettingsScreen
+import com.protonvpn.android.redesign.settings.ui.splittunneling.SplitTunnelingScreen
+import com.protonvpn.android.redesign.settings.ui.splittunneling.SplitTunnelingTab
+import com.protonvpn.android.redesign.settings.ui.splittunneling.SplitTunnelingViewModel
 import com.protonvpn.android.settings.data.SplitTunnelingMode
 import com.protonvpn.android.telemetry.UpgradeSource
 import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.ui.planupgrade.CarouselUpgradeDialogActivity
 import com.protonvpn.android.ui.planupgrade.UpgradeAdvancedCustomizationHighlightsFragment
-import com.protonvpn.android.ui.settings.SettingsSplitTunnelAppsActivity
-import com.protonvpn.android.ui.settings.SettingsSplitTunnelIpsActivity
 import com.protonvpn.android.utils.Constants
 import com.protonvpn.android.utils.DebugUtils
 import com.protonvpn.android.utils.openUrl
@@ -85,7 +92,6 @@ import me.proton.core.usersettings.presentation.ui.StartPasswordManagement
 import me.proton.core.usersettings.presentation.ui.StartSecurityKeys
 import me.proton.core.usersettings.presentation.ui.StartUpdateRecoveryEmail
 
-// Создаем локальную переменную для передачи темы вниз по дереву
 val LocalThemeType = compositionLocalOf { ThemeType.System }
 
 @Composable
@@ -100,21 +106,10 @@ fun SubSettingsRoute(
     val context = LocalContext.current
     val vpnUiDelegate = LocalVpnUiDelegate.current
 
-    // Получаем текущую тему
     val themeType by viewModel.theme.collectAsStateWithLifecycle(initialValue = ThemeType.System)
-
-    val onSplitTunnelUpdated = { savedChange: Boolean? ->
-        if (savedChange == true)
-            settingsChangeViewModel.onSplitTunnelingUpdated(vpnUiDelegate)
-    }
-    val splitTunnelIpLauncher = rememberLauncherForActivityResult(
-        SettingsSplitTunnelIpsActivity.createContract(), onSplitTunnelUpdated)
-    val splitTunnelAppsLauncher = rememberLauncherForActivityResult(
-        SettingsSplitTunnelAppsActivity.createContract(), onSplitTunnelUpdated)
 
     val infoSheetState = rememberInfoSheetState()
 
-    // Оборачиваем контент в провайдер темы
     CompositionLocalProvider(LocalThemeType provides themeType) {
         Box(
             modifier = Modifier
@@ -336,18 +331,20 @@ fun SubSettingsRoute(
 
                 SubSettingsScreen.Type.SplitTunneling -> {
                     val splitTunnelingSettings = viewModel.splitTunneling.collectAsStateWithLifecycle(initialValue = null).value
+
                     if (splitTunnelingSettings != null) {
                         val onModeSet = { mode: SplitTunnelingMode ->
                             settingsChangeViewModel.setSplitTunnelingMode(vpnUiDelegate, mode)
                         }
+
                         SplitTunnelingSubSetting(
                             onClose = onClose,
                             splitTunneling = splitTunnelingSettings,
                             onLearnMore = { context.openUrl(Constants.SPLIT_TUNNELING_INFO_URL) },
                             onSplitTunnelToggle = { settingsChangeViewModel.toggleSplitTunneling(vpnUiDelegate) },
                             onSplitTunnelModeSelected = onModeSet,
-                            onAppsClick = { mode -> splitTunnelAppsLauncher.launch(mode) },
-                            onIpsClick = { mode -> splitTunnelIpLauncher.launch(mode) },
+                            onAppsClick = { onNavigateToSubSetting(SubSettingsScreen.Type.SplitTunnelingApps) },
+                            onIpsClick = { onNavigateToSubSetting(SubSettingsScreen.Type.SplitTunnelingIps) },
                             onExportSettings = viewModel::exportSplitTunnelingSettings,
                             onImportSettings = { uri, context ->
                                 viewModel.importSplitTunnelingSettings(uri, context) {
@@ -356,6 +353,34 @@ fun SubSettingsRoute(
                             }
                         )
                     }
+                }
+
+                // New Route: Split Tunneling Apps List
+                SubSettingsScreen.Type.SplitTunnelingApps -> {
+                    val splitViewModel = hiltViewModel<SplitTunnelingViewModel>()
+                    LaunchedEffect(Unit) { splitViewModel.onTabSelected(SplitTunnelingTab.APPS) }
+
+                    SplitTunnelingScreen(
+                        onClose = {
+                            settingsChangeViewModel.onSplitTunnelingUpdated(vpnUiDelegate)
+                            onClose()
+                        },
+                        viewModel = splitViewModel
+                    )
+                }
+
+                // New Route: Split Tunneling IP List
+                SubSettingsScreen.Type.SplitTunnelingIps -> {
+                    val splitViewModel = hiltViewModel<SplitTunnelingViewModel>()
+                    LaunchedEffect(Unit) { splitViewModel.onTabSelected(SplitTunnelingTab.IPS) }
+
+                    SplitTunnelingScreen(
+                        onClose = {
+                            settingsChangeViewModel.onSplitTunnelingUpdated(vpnUiDelegate)
+                            onClose()
+                        },
+                        viewModel = splitViewModel
+                    )
                 }
 
                 SubSettingsScreen.Type.DefaultConnection -> {
@@ -405,10 +430,19 @@ fun BasicSubSetting(
         modifier = modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        SimpleTopAppBar(
+        CenterAlignedTopAppBar(
             title = { Text(text = title) },
-            navigationIcon = { TopAppBarBackIcon(onClose) },
-            backgroundColor = Color.Transparent, // Transparent color for seamless dark/light theme change.
+            navigationIcon = {
+                IconButton(onClick = onClose) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                        contentDescription = stringResource(R.string.accessibility_back)
+                    )
+                }
+            },
+            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                containerColor = Color.Transparent
+            )
         )
         content()
     }
@@ -421,10 +455,8 @@ fun SubSetting(
     onClose: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    // Получаем тему из LocalThemeType
     val themeType = LocalThemeType.current
 
-    // Логика стилизации (обводка и фон)
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 

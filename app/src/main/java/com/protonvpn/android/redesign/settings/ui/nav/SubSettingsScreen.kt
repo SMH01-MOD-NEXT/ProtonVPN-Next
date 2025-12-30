@@ -45,6 +45,8 @@ object SubSettingsScreen : Screen<SubSettingsScreen.Type, RootNav>("subSettingsS
         NetShield,
         Protocol,
         SplitTunneling,
+        SplitTunnelingApps,
+        SplitTunnelingIps,
         Theme,
         VpnAccelerator,
         Widget

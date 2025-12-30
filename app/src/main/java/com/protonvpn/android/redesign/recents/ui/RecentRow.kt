@@ -72,7 +72,6 @@ fun RecentRow(
 ) {
     val context = LocalContext.current
 
-    // Получаем текущую тему напрямую из SharedPreferences, так как LocalThemeType может быть недоступен
     val themeName = remember(context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.getString(THEME_KEY, ThemeType.System.name)
@@ -80,10 +79,8 @@ fun RecentRow(
 
     val isAmoled = themeName == ThemeType.Amoled.name || themeName == ThemeType.NewYearAmoled.name
 
-    // Белая обводка 1dp только для AMOLED
     val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 
-    // Определение светлой темы для цвета карточки
     val isLight = themeName == ThemeType.Light.name || themeName == ThemeType.NewYearLight.name ||
             (themeName == ThemeType.System.name && !isSystemInDarkTheme())
 

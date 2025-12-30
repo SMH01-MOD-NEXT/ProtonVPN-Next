@@ -75,17 +75,16 @@ fun ThemeSettings(
             ThemeType.System
         )
 
-        // Группируем темы по 3 в ряд
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp) // Отступ между рядами
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             themes.chunked(3).forEach { rowThemes ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(IntrinsicSize.Max),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp) // Отступ между элементами в ряду
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     rowThemes.forEach { theme ->
                         ThemeRadioItem(
@@ -97,7 +96,6 @@ fun ThemeSettings(
                         )
                     }
 
-                    // Заполняем пустое пространство, если в ряду меньше 3 элементов
                     val emptySlots = 3 - rowThemes.size
                     if (emptySlots > 0) {
                         repeat(emptySlots) {

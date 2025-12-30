@@ -16,13 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 package com.protonvpn.android.redesign.settings.ui
 
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,13 +44,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.protonvpn.android.R
 import com.protonvpn.android.base.ui.SettingsFeatureToggle
 import com.protonvpn.android.redesign.base.ui.DIALOG_CONTENT_PADDING
@@ -76,10 +88,8 @@ fun SplitTunnelingSubSetting(
     val listState = rememberLazyListState()
     val context = LocalContext.current
 
-    // Получаем тему из LocalThemeType
     val themeType = LocalThemeType.current
 
-    // Логика стилизации карточки
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 
@@ -87,65 +97,106 @@ fun SplitTunnelingSubSetting(
             (themeType == ThemeType.System && !isSystemInDarkTheme())
     val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
 
-    // Launcher for creating a file (Export)
     val exportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri ->
         uri?.let { onExportSettings(it, context) }
     }
 
-    // Launcher for opening a file (Import)
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let { onImportSettings(it, context) }
     }
 
-    // Default export filename from resources
     val exportFilename = stringResource(R.string.settings_split_tunneling_export_filename)
 
-    FeatureSubSettingScaffold(
-        title = stringResource(id = splitTunneling.titleRes),
-        onClose = onClose,
-        listState = listState,
-        titleInListIndex = 1,
-    ) { contentPadding ->
-        val horizontalItemPaddingModifier = Modifier
-            .largeScreenContentPadding()
-            .padding(horizontal = 16.dp)
-        val splitTunnelingMode = splitTunneling.mode
-        val modeStandard = splitTunnelingMode == SplitTunnelingMode.EXCLUDE_ONLY
-        val modeLabel =
-            if (modeStandard) R.string.settings_split_tunneling_mode_standard
-            else R.string.settings_split_tunneling_mode_inverse
-        val appsLabel =
-            if (modeStandard) R.string.settings_split_tunneling_excluded_apps
-            else R.string.settings_split_tunneling_included_apps
-        val ipsLabel =
-            if (modeStandard) R.string.settings_split_tunneling_excluded_ips
-            else R.string.settings_split_tunneling_included_ips
+    BasicSubSetting(
+        title = "",
+        onClose = onClose
+    ) {
+        val horizontalPadding = 16.dp
+
         LazyColumn(
             state = listState,
-            modifier = Modifier.padding(contentPadding)
+            modifier = Modifier
+                .largeScreenContentPadding()
+                .padding(horizontal = horizontalPadding)
         ) {
-            addFeatureSettingItems(
-                itemModifier = horizontalItemPaddingModifier,
-                setting = splitTunneling,
-                imageRes = R.drawable.setting_split_tunneling,
-                // onToggle убран, переключатель теперь внутри карточки
-                onLearnMore = onLearnMore,
-            )
-
-            // Main Settings Card
+            // 1. Header Image & Description
             item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.setting_split_tunneling),
+                            contentDescription = null,
+                            modifier = Modifier.size(160.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = stringResource(id = R.string.upsell_card_split_tunneling_title),
+                        style = ProtonTheme.typography.defaultNorm.copy(
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = ProtonTheme.colors.textNorm,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (splitTunneling.descriptionRes != null) {
+                        Text(
+                            text = stringResource(id = splitTunneling.descriptionRes, ""),
+                            style = ProtonTheme.typography.body2Regular,
+                            color = ProtonTheme.colors.textWeak,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(R.string.learn_more),
+                        style = ProtonTheme.typography.defaultNorm.copy(textDecoration = TextDecoration.Underline),
+                        color = ProtonTheme.colors.brandNorm,
+                        modifier = Modifier.noRippleClickable(onClick = onLearnMore)
+                    )
+                }
+            }
+
+            // 2. Main Settings Card
+            item {
+                val splitTunnelingMode = splitTunneling.mode
+                val modeStandard = splitTunnelingMode == SplitTunnelingMode.EXCLUDE_ONLY
+
+                val modeLabel = if (modeStandard) R.string.settings_split_tunneling_mode_standard
+                else R.string.settings_split_tunneling_mode_inverse
+                val appsLabel = if (modeStandard) R.string.settings_split_tunneling_excluded_apps
+                else R.string.settings_split_tunneling_included_apps
+                val ipsLabel = if (modeStandard) R.string.settings_split_tunneling_excluded_ips
+                else R.string.settings_split_tunneling_included_ips
+
                 Card(
-                    modifier = horizontalItemPaddingModifier.padding(top = 16.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = cardColor),
                     border = border,
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        // Master Toggle
                         SettingsFeatureToggle(
                             label = stringResource(splitTunneling.titleRes),
                             checked = splitTunneling.value,
@@ -161,51 +212,56 @@ fun SplitTunnelingSubSetting(
                                 color = ProtonTheme.colors.separatorNorm
                             )
 
+                            // Mode Selector
                             SettingRow(
                                 title = stringResource(id = R.string.settings_split_tunneling_mode_title),
                                 subtitleComposable = {
-                                    Spacer(modifier = Modifier.size(4.dp))
-                                    Text(text = stringResource(modeLabel), style = ProtonTheme.typography.defaultWeak)
+                                    Text(
+                                        text = stringResource(modeLabel),
+                                        style = ProtonTheme.typography.defaultWeak,
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    )
                                 },
-                                onClick = { changeModeDialogShown = true },
-                                modifier = Modifier.animateItem()
+                                onClick = { changeModeDialogShown = true }
                             )
 
+                            // Apps List Link
                             SettingRowWithIcon(
                                 icon = CoreR.drawable.ic_proton_mobile,
                                 title = stringResource(id = appsLabel),
-                                settingValue =
-                                    SettingValue.SettingText(formatSplitTunnelingItems(splitTunneling.currentModeAppNames)),
-                                onClick = { onAppsClick(splitTunnelingMode) },
-                                modifier = Modifier.animateItem()
+                                settingValue = SettingValue.SettingText(
+                                    formatSplitTunnelingItems(splitTunneling.currentModeAppNames)
+                                ),
+                                onClick = { onAppsClick(splitTunnelingMode) }
                             )
 
+                            // IPs List Link
                             SettingRowWithIcon(
                                 icon = CoreR.drawable.ic_proton_window_terminal,
                                 title = stringResource(id = ipsLabel),
-                                settingValue =
-                                    SettingValue.SettingText(formatSplitTunnelingItems(splitTunneling.currentModeIps)),
-                                onClick = { onIpsClick(splitTunnelingMode) },
-                                modifier = Modifier.animateItem()
+                                settingValue = SettingValue.SettingText(
+                                    formatSplitTunnelingItems(splitTunneling.currentModeIps)
+                                ),
+                                onClick = { onIpsClick(splitTunnelingMode) }
                             )
                         }
                     }
                 }
             }
 
+            // 3. Import / Export Section
             if (splitTunneling.value) {
-                // --- Import / Export Section ---
                 item {
                     Text(
                         text = stringResource(R.string.settings_split_tunneling_backup_restore),
-                        style = ProtonTheme.typography.defaultNorm,
+                        style = ProtonTheme.typography.defaultNorm.copy(fontWeight = FontWeight.Bold),
                         color = ProtonTheme.colors.textNorm,
-                        modifier = horizontalItemPaddingModifier.padding(top = 24.dp, bottom = 8.dp, start = 12.dp)
+                        modifier = Modifier.padding(top = 24.dp, bottom = 8.dp, start = 12.dp)
                     )
                 }
                 item {
                     Card(
-                        modifier = horizontalItemPaddingModifier.padding(bottom = 16.dp),
+                        modifier = Modifier.padding(bottom = 24.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = cardColor),
                         border = border,
@@ -216,19 +272,19 @@ fun SplitTunnelingSubSetting(
                                 icon = CoreR.drawable.ic_proton_arrow_down,
                                 title = stringResource(R.string.settings_split_tunneling_import),
                                 settingValue = SettingValue.SettingText(stringResource(R.string.settings_split_tunneling_import_desc)),
-                                onClick = { importLauncher.launch(arrayOf("application/json")) },
-                                modifier = Modifier.animateItem()
+                                onClick = { importLauncher.launch(arrayOf("application/json")) }
                             )
                             SettingRowWithIcon(
                                 icon = CoreR.drawable.ic_proton_arrow_up,
                                 title = stringResource(R.string.settings_split_tunneling_export),
                                 settingValue = SettingValue.SettingText(stringResource(R.string.settings_split_tunneling_export_desc)),
-                                onClick = { exportLauncher.launch(exportFilename) },
-                                modifier = Modifier.animateItem()
+                                onClick = { exportLauncher.launch(exportFilename) }
                             )
                         }
                     }
                 }
+            } else {
+                item { Spacer(modifier = Modifier.height(24.dp)) }
             }
         }
     }
@@ -255,11 +311,13 @@ private fun ChangeModeDialog(
     ) {
         Column {
             Text(
-                stringResource(R.string.settings_split_tunneling_mode_title),
+                text = stringResource(R.string.settings_split_tunneling_mode_title),
                 style = ProtonTheme.typography.body1Bold,
+                color = ProtonTheme.colors.textNorm,
                 modifier = Modifier.padding(horizontal = DIALOG_CONTENT_PADDING)
             )
             Spacer(modifier = Modifier.height(12.dp))
+
             SettingsRadioItemSmall(
                 title = stringResource(R.string.settings_split_tunneling_mode_standard),
                 description = stringResource(R.string.settings_split_tunneling_mode_description_standard),
@@ -271,6 +329,7 @@ private fun ChangeModeDialog(
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
+
             SettingsRadioItemSmall(
                 title = stringResource(R.string.settings_split_tunneling_mode_inverse),
                 description = stringResource(R.string.settings_split_tunneling_mode_description_inverse),
@@ -282,6 +341,15 @@ private fun ChangeModeDialog(
                 },
                 modifier = Modifier.fillMaxWidth(),
             )
+            Spacer(modifier = Modifier.height(12.dp))
         }
     }
+}
+
+fun Modifier.noRippleClickable(onClick: () -> Unit): Modifier = composed {
+    this.clickable(
+        interactionSource = remember { MutableInteractionSource() },
+        indication = null,
+        onClick = onClick
+    )
 }

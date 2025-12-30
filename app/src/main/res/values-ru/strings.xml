@@ -1672,4 +1672,10 @@
     <string name="settings_theme_value_gold">Золото</string>
     <string name="settings_theme_value_nylight">Новый год (Светлая)</string>
     <string name="settings_theme_value_nyamoled">Новый год (Amoled)</string>
+    <string name="settings_split_tunneling_tab_apps">Приложения</string>
+    <string name="settings_split_tunneling_tab_ips">IP Адреса</string>
+    <string name="settings_split_tunneling_system_apps">Системные приложения</string>
+    <string name="settings_empty_search">Нет результатов</string>
+    <string name="settings_search_placeholder">Поиск</string>
+    <string name="settings_split_tunneling_load_system_apps">Показать системные приложения</string>
 </resources>

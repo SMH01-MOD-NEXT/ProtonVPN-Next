@@ -85,7 +85,6 @@ fun SearchRoute(
     onBackIconClick: () -> Unit,
     onNavigateToHomeOnConnect: (ShowcaseRecents) -> Unit,
 ) {
-    // Получаем тему для поддержки редизайна (карточки, обводка и т.д.)
     val settingsViewModel = hiltViewModel<SettingsViewModel>()
     val themeType by settingsViewModel.theme.collectAsStateWithLifecycle(initialValue = ThemeType.System)
 

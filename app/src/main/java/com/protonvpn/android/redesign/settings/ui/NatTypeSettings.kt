@@ -53,7 +53,6 @@ fun NatTypeSettings(
         title = stringResource(id = nat.titleRes),
         onClose = onClose
     ) {
-        // Описание с секретным тапом для краш-теста
         Text(
             modifier = Modifier
                 .detectMultiTap(7) { throw TestCrash() }
@@ -67,7 +66,6 @@ fun NatTypeSettings(
             color = ProtonTheme.colors.separatorNorm
         )
 
-        // Список опций в новом стиле
         NatType.entries.forEach { type ->
             NatTypeOption(
                 type = type,
@@ -107,7 +105,7 @@ private fun NatTypeOption(
         }
         RadioButton(
             selected = isSelected,
-            onClick = null, // Обработка клика на Row
+            onClick = null,
             colors = RadioButtonDefaults.colors(
                 selectedColor = ProtonTheme.colors.interactionNorm,
                 unselectedColor = ProtonTheme.colors.iconWeak

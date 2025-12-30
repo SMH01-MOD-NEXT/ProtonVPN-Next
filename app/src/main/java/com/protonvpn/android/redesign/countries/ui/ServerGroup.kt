@@ -120,7 +120,6 @@ fun ServerGroupsWithToolbar(
     actions: ServerGroupsActions,
     @StringRes titleRes: Int,
 ) {
-    // Получаем тему для стилизации (для Amoled Stroke)
     val settingsViewModel = hiltViewModel<SettingsViewModel>()
     val themeType by settingsViewModel.theme.collectAsStateWithLifecycle(initialValue = ThemeType.System)
 
@@ -387,11 +386,9 @@ fun ServerGroupItemsList(
                         ServerGroupHeader(item, onOpenInfo = onOpenInfo)
 
                     is ServerGroupUiItem.Banner -> {
-                        // Баннер удален по запросу
                     }
 
                     is ServerGroupUiItem.ServerGroup -> {
-                        // VpnDivider убран, так как теперь используются карточки
                         ServerGroupItem(item, onItemOpen = onItemOpen, onItemClick = onItemClick, themeType = themeType)
                     }
                 }
@@ -412,7 +409,6 @@ private fun ServerGroupBanner(
     navigateToUpsell: (ServerGroupUiItem.BannerType) -> Unit,
     themeType: ThemeType
 ) {
-    // Обводка для AMOLED
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 

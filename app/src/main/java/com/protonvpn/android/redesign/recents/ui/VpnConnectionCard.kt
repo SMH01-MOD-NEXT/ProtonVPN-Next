@@ -127,7 +127,6 @@ fun VpnConnectionCard(
         )
         val surfaceShape = ProtonTheme.shapes.large
 
-        // Используем логику из Recents (SharedPreferences) для максимальной точности
         val themeName = remember(context) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             prefs.getString(THEME_KEY, ThemeType.System.name)
@@ -135,7 +134,6 @@ fun VpnConnectionCard(
 
         val isAmoled = themeName == ThemeType.Amoled.name || themeName == ThemeType.NewYearAmoled.name
 
-        // Если Amoled - белая обводка, иначе - стоковая
         val borderModifier = if (isAmoled) {
             Modifier.border(1.dp, Color.White, surfaceShape)
         } else {

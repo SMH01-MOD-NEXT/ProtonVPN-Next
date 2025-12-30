@@ -64,7 +64,6 @@ fun BottomBarView(
     val indicatorColor = ProtonTheme.colors.textAccent
         .copy(alpha = 0.32f).compositeOver(bgColor)
 
-    // Логика для белой обводки сверху в AMOLED темах
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val borderModifier = if (isAmoled) {
         Modifier.drawBehind {

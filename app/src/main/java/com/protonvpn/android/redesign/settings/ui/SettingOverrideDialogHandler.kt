@@ -156,8 +156,6 @@ fun ProfileOverrideView(
     profileOverrideInfo: SettingsViewModel.ProfileOverrideInfo,
     modifier: Modifier = Modifier,
 ) {
-    // Получаем тему из LocalThemeType (определено в SubSettingsRoute.kt)
-    // Если используется вне SubSettingsRoute, LocalThemeType.current вернет значение по умолчанию (System)
     val themeType = LocalThemeType.current
 
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
@@ -203,7 +201,6 @@ fun OverrideSettingLabel(
     settingValue: SettingValue.SettingOverrideValue,
     modifier: Modifier = Modifier,
 ) {
-    // Используем backgroundNorm для контраста, так как этот лейбл часто находится внутри карточки secondary
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier

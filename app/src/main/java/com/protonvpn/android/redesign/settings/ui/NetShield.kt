@@ -54,10 +54,8 @@ fun NetShieldSetting(
 ) {
     val listState = rememberLazyListState()
 
-    // Получаем тему из LocalThemeType (определено в SubSettingsRoute.kt)
     val themeType = LocalThemeType.current
 
-    // Логика стилизации карточки
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
 
@@ -86,7 +84,6 @@ fun NetShieldSetting(
                 itemModifier = horizontalItemPaddingModifier,
             )
             item {
-                // Оборачиваем элементы управления в карточку
                 Card(
                     modifier = horizontalItemPaddingModifier.padding(top = 16.dp),
                     shape = RoundedCornerShape(16.dp),
@@ -97,7 +94,7 @@ fun NetShieldSetting(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp) // Внутренний отступ карточки
+                            .padding(16.dp)
                     ) {
                         when (netShield.dnsOverride) {
                             DnsOverride.None -> SettingsFeatureToggle(

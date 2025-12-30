@@ -96,7 +96,6 @@ fun ServerGroupsBottomSheet(
     onClose: () -> Unit,
     infoSheetState: InfoSheetState,
 ) {
-    // Получаем тему для AMOLED обводки
     val settingsViewModel = hiltViewModel<SettingsViewModel>()
     val themeType by settingsViewModel.theme.collectAsStateWithLifecycle(initialValue = ThemeType.System)
 
@@ -119,12 +118,9 @@ fun ServerGroupsBottomSheet(
         listStatesMap.remove(screen.rememberStateKey)
         onNavigateBack(onBack)
     }
-
-    // Логика обводки для AMOLED (как в примере)
     val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
     val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
-    // Применяем обводку к контенту, а не к самому ModalBottomSheet, чтобы избежать полноэкранной рамки
     val contentBorderModifier = if (isAmoled) {
         Modifier
             .border(1.dp, Color.White, sheetShape)
@@ -134,7 +130,7 @@ fun ServerGroupsBottomSheet(
     }
 
     ModalBottomSheetWithBackNavigation(
-        modifier = modifier, // Убираем потенциальную обводку отсюда
+        modifier = modifier,
         containerColor = headerAreaColor,
         // The content needs extend under the navigation bar to cover headerAreaColor.
         contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
@@ -152,7 +148,7 @@ fun ServerGroupsBottomSheet(
             navigateToUpsell = navigateToUpsell,
             infoSheetState = infoSheetState,
             themeType = themeType,
-            modifier = contentBorderModifier // Применяем здесь
+            modifier = contentBorderModifier
         )
     }
 }
