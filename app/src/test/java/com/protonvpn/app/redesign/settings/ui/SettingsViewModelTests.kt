@@ -24,20 +24,26 @@ import com.protonvpn.android.R
 import com.protonvpn.android.appconfig.AppFeaturesPrefs
 import com.protonvpn.android.auth.usecase.CurrentUser
 import com.protonvpn.android.components.InstalledAppsProvider
+import com.protonvpn.android.excludedlocations.data.ExcludedLocationsDao
+import com.protonvpn.android.excludedlocations.usecases.ObserveExcludedLocations
 import com.protonvpn.android.managed.ManagedConfig
 import com.protonvpn.android.models.vpn.ConnectionParams
 import com.protonvpn.android.netshield.NetShieldProtocol
 import com.protonvpn.android.profiles.data.toProfile
 import com.protonvpn.android.redesign.CountryId
+import com.protonvpn.android.redesign.countries.TranslationsData
+import com.protonvpn.android.redesign.countries.Translator
 import com.protonvpn.android.redesign.recents.usecases.ObserveDefaultConnection
 import com.protonvpn.android.redesign.recents.usecases.RecentsManager
 import com.protonvpn.android.redesign.reports.FakeIsRedesignedBugReportFeatureFlagEnabled
+import com.protonvpn.android.redesign.settings.FakeIsAutomaticConnectionPreferencesFeatureFlagEnabled
 import com.protonvpn.android.redesign.settings.ui.SettingValue
 import com.protonvpn.android.redesign.settings.ui.SettingsViewModel
 import com.protonvpn.android.redesign.settings.ui.SettingsViewModel.SettingViewState
 import com.protonvpn.android.redesign.vpn.ConnectIntent
 import com.protonvpn.android.redesign.vpn.ui.GetConnectIntentViewState
 import com.protonvpn.android.redesign.vpn.usecases.SettingsForConnection
+import com.protonvpn.android.servers.ServerManager2
 import com.protonvpn.android.settings.data.ApplyEffectiveUserSettings
 import com.protonvpn.android.settings.data.CurrentUserLocalSettingsManager
 import com.protonvpn.android.settings.data.CustomDnsSettings
@@ -53,7 +59,6 @@ import com.protonvpn.android.ui.settings.AppIconManager
 import com.protonvpn.android.ui.settings.BuildConfigInfo
 import com.protonvpn.android.ui.storage.UiStateStorage
 import com.protonvpn.android.ui.storage.UiStateStoreProvider
-import com.protonvpn.android.update.FakeIsAppUpdateBannerFeatureFlagEnabled
 import com.protonvpn.android.update.NoopAppUpdateManager
 import com.protonvpn.android.utils.Constants
 import com.protonvpn.android.vpn.IsPrivateDnsActiveFlow
@@ -66,6 +71,7 @@ import com.protonvpn.mocks.FakeAppUpdateBannerStateFlow
 import com.protonvpn.mocks.FakeGetProfileById
 import com.protonvpn.mocks.FakeIsLanDirectConnectionsFeatureFlagEnabled
 import com.protonvpn.test.shared.InMemoryDataStoreFactory
+import com.protonvpn.test.shared.InMemoryObjectStore
 import com.protonvpn.test.shared.MockSharedPreferencesProvider
 import com.protonvpn.test.shared.TestCurrentUserProvider
 import com.protonvpn.test.shared.TestUser
@@ -84,6 +90,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -96,6 +103,8 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import java.util.Locale
+import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 
@@ -132,6 +141,12 @@ class SettingsViewModelTests {
     @RelaxedMockK
     private lateinit var mockWidgetManager: WidgetManager
 
+    @MockK
+    private lateinit var mockServerManager2: ServerManager2
+
+    @MockK
+    private lateinit var mockExcludedLocationsDao: ExcludedLocationsDao
+
     private lateinit var effectiveSettings: EffectiveCurrentUserSettings
     private lateinit var isPrivateDnsActive: MutableStateFlow<Boolean>
     private lateinit var getProfileById: FakeGetProfileById
@@ -147,6 +162,7 @@ class SettingsViewModelTests {
     private val businessEssentialUser = TestUser.businessEssential.vpnUser
     private val freeUser = TestUser.freeUser.vpnUser
     private val plusUser = TestUser.plusUser.vpnUser
+    private val hasCountriesFlow = MutableStateFlow(value = true)
 
     @Before
     fun setup() {
@@ -158,6 +174,8 @@ class SettingsViewModelTests {
         prefs = AppFeaturesPrefs(MockSharedPreferencesProvider())
         every { mockIsTvCheck.invoke() } returns false
         coEvery { mockObserveDefaultConnection() } returns flowOf(Constants.DEFAULT_CONNECTION)
+        coEvery { mockServerManager2.hasAnyCountryFlow } returns hasCountriesFlow
+        coEvery { mockExcludedLocationsDao.observeAll(any()) } returns flowOf(emptyList())
         val accountUser = createAccountUser()
         testUserProvider = TestCurrentUserProvider(plusUser, accountUser)
         val currentUser = CurrentUser(testUserProvider)
@@ -195,9 +213,10 @@ class SettingsViewModelTests {
             vpnStatusProviderUI = vpnStatusProviderUI,
         )
 
+        val translator = Translator(testScope.backgroundScope, InMemoryObjectStore(null))
         val getConnectIntentViewState = GetConnectIntentViewState(
-            serverManager = mockk(),
-            translator = mockk(),
+            serverManager = mockServerManager2,
+            translator = translator,
             getProfileById = getProfileById,
         )
         isPrivateDnsActive = MutableStateFlow(false)
@@ -223,6 +242,14 @@ class SettingsViewModelTests {
             uiStateStorage = UiStateStorage(UiStateStoreProvider(InMemoryDataStoreFactory()), currentUser),
             appUpdateManager = NoopAppUpdateManager(),
             appUpdateBannerStateFlow = FakeAppUpdateBannerStateFlow(),
+            serverManager = mockServerManager2,
+            isAutomaticConnectionPreferencesFeatureFlagEnabled =
+                FakeIsAutomaticConnectionPreferencesFeatureFlagEnabled(true),
+            observeExcludedLocations = ObserveExcludedLocations(
+                currentUser = currentUser,
+                excludedLocationsDao = mockExcludedLocationsDao,
+            ),
+            translator = translator,
         )
     }
 
@@ -387,6 +414,66 @@ class SettingsViewModelTests {
             false,
             state.vpnAccelerator
         )
+    }
+
+    @Test
+    fun `GIVEN vpn user WHEN getting connection preferences THEN isFreeUser property is properly set`() = testScope.runTest {
+        listOf(
+            businessEssentialUser to false,
+            plusUser to false,
+            freeUser to true,
+        ).forEach { (vpnUser, expectedIsFreeUser) ->
+            testUserProvider.vpnUser = vpnUser
+
+            val connectionPreferences = settingsViewModel.viewState.first().connectionPreferences
+
+            assertEquals(
+                expected = expectedIsFreeUser,
+                actual = connectionPreferences.isFreeUser,
+                message = "Failed for vpnUser: $vpnUser",
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN locale is not set WHEN getting connection preferences THEN excludeLocationsPreferences are default ones`() = testScope.runTest {
+        val expectedExcludeLocationsPreferences = SettingViewState.ConnectionPreferencesState.ExcludedLocationsPreferences(
+            canSelectLocations = false,
+            excludedLocationUiItems = emptyList(),
+            isFeatureDiscovered = false,
+        )
+
+        val connectionPreferences = settingsViewModel.viewState.first().connectionPreferences
+
+        assertEquals(expectedExcludeLocationsPreferences, connectionPreferences.excludeLocationsPreferences)
+    }
+
+    @Test
+    fun `GIVEN locale is set AND whether user has countries or not WHEN getting connection preferences THEN excludeLocationsPreferences are properly set`() = testScope.runTest {
+        settingsViewModel.onLocaleChanged(newLocale = Locale.US)
+
+        listOf(
+            false to SettingViewState.ConnectionPreferencesState.ExcludedLocationsPreferences(
+                canSelectLocations = false,
+                excludedLocationUiItems = emptyList(),
+                isFeatureDiscovered = false,
+            ),
+            true to SettingViewState.ConnectionPreferencesState.ExcludedLocationsPreferences(
+                canSelectLocations = true,
+                excludedLocationUiItems = emptyList(),
+                isFeatureDiscovered = false,
+            ),
+        ).forEach { (hasCountries, expectedExcludeLocationsPreferences) ->
+            hasCountriesFlow.update { hasCountries }
+
+            val connectionPreferences = settingsViewModel.viewState.first().connectionPreferences
+
+            assertEquals(
+                expected = expectedExcludeLocationsPreferences,
+                actual = connectionPreferences.excludeLocationsPreferences,
+                message = "Failed when user hasCountries is: $hasCountries",
+            )
+        }
     }
 
     @Suppress("LongParameterList")

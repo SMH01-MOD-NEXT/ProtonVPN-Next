@@ -27,6 +27,9 @@ import com.protonvpn.android.auth.usecase.CurrentUser
 import com.protonvpn.android.bus.TrafficUpdate
 import com.protonvpn.android.models.vpn.ConnectionParams
 import com.protonvpn.android.redesign.CountryId
+import com.protonvpn.android.redesign.countries.Translator
+import com.protonvpn.android.redesign.countries.city
+import com.protonvpn.android.redesign.countries.state
 import com.protonvpn.android.redesign.vpn.ConnectIntent
 import com.protonvpn.android.redesign.vpn.isVirtualLocation
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
@@ -37,6 +40,7 @@ import com.protonvpn.android.servers.ServerManager2
 import com.protonvpn.android.servers.StreamingService
 import com.protonvpn.android.ui.home.ServerListUpdater
 import com.protonvpn.android.utils.TrafficMonitor
+import com.protonvpn.android.utils.combine
 import com.protonvpn.android.vpn.IpPair
 import com.protonvpn.android.vpn.VpnState
 import com.protonvpn.android.vpn.VpnStateMonitor
@@ -45,7 +49,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -65,6 +68,7 @@ class ConnectionDetailsViewModel @Inject constructor(
     private val getConnectIntentViewState: GetConnectIntentViewState,
     private val trafficMonitor: TrafficMonitor,
     private val streamingServices: GetStreamingServices,
+    private val translator: Translator,
 ) : ViewModel() {
 
     sealed interface ConnectionDetailsViewState {
@@ -77,6 +81,7 @@ class ConnectionDetailsViewModel @Inject constructor(
             val connectIntentViewState: ConnectIntentViewState,
             val serverDisplayName: String,
             val serverCity: String?,
+            val serverState: String?,
             val serverGatewayName: String?,
             val serverLoad: Float,
             @StringRes val protocolDisplay: Int? = null,
@@ -110,16 +115,17 @@ class ConnectionDetailsViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(),
         initialValue = ConnectionDetailsViewState.Connected(
-            "",
-            EMPTY_IP_PAIR,
-            CountryId.fastest,
-            CountryId.fastest,
-            emptyList(),
-            ConnectIntentViewState(ConnectIntentPrimaryLabel.Country(CountryId.fastest, null), null, emptySet()),
-            "",
-            "",
-            null,
-            0F,
+            userIp = "",
+            vpnIp = EMPTY_IP_PAIR,
+            entryCountryId = CountryId.fastest,
+            exitCountryId = CountryId.fastest,
+            trafficHistory = emptyList(),
+            connectIntentViewState = ConnectIntentViewState(ConnectIntentPrimaryLabel.Country(CountryId.fastest, null), null, emptySet()),
+            serverDisplayName = "",
+            serverCity = "",
+            serverState = null,
+            serverGatewayName = null,
+            serverLoad = 0F,
             serverFeatures = ServerFeatures()
         )
     )
@@ -138,7 +144,8 @@ class ConnectionDetailsViewModel @Inject constructor(
             serverListUpdaterPrefs.ipAddress,
             trafficMonitor.trafficHistory.asFlow(),
             serverFlow,
-        ) { vpnUser, exitIp, userIp, trafficHistory, server ->
+            translator.flow,
+        ) { vpnUser, exitIp, userIp, trafficHistory, server, translations ->
             val connectIntent = connectionParams.connectIntent as ConnectIntent
             val protocol = connectionParams.protocolSelection?.displayName ?: 0
             ConnectionDetailsViewState.Connected(
@@ -153,7 +160,8 @@ class ConnectionDetailsViewModel @Inject constructor(
                     server
                 ),
                 serverDisplayName = server.serverName,
-                serverCity = server.displayCity,
+                serverCity = translations.city(server),
+                serverState = translations.state(server),
                 serverGatewayName = server.gatewayName,
                 serverLoad = server.load,
                 protocolDisplay = protocol,

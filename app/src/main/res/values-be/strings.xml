@@ -445,7 +445,7 @@
     <string name="upgrade_plus_countries_title_new"><![CDATA[Разблакіруйце %1$s у %2$s з дапамогай <b>VPN Plus</b>.]]></string>
     <string name="mail_app_name" translateable="false">Proton Mail</string>
     <string name="upgrade_unlimited_all_apps_title">Атрымайце ўсёабдымную прыватнасць з Proton Unlimited</string>
-    <string name="upgrade_unlimited_all_apps_description">Разблакіруйце ўсе прэміяльныя функцыі ад Proton VPN, Пошты, Каляндара, Дыска і Pass.</string>
+    <string name="upgrade_unlimited_all_apps_description">Разблакіруйце ўсе прэміяльныя функцыі ад Proton VPN, Mail, Calendar, Drive і Pass.</string>
     <string name="upgrade_unlimited_more">І іншыя функцыі</string>
     <string name="upgrade_unlimited_vpn_unlimited_countries">Разблакіруйце ўсе краіны</string>
     <string name="upgrade_unlimited_vpn_all_features">Усе іншыя функцыі VPN Plus</string>
@@ -566,7 +566,7 @@
     <string name="upsell_tv_all_countries_description" comment="the first 2 placeholders will be replaced by the amount of servers and countries">Разблакіруйце %1$s бяспечныя серверы ў %2$s краінах. %3$s</string>
     <string name="upsell_tv_netshield_title">Праглядайце старонкі без рэкламы з дапамогай Plus</string>
     <string name="upsell_tv_netshield_description"><![CDATA[Блакіруйце рэкламу, праграмы сачэння і шкодныя праграмы з дапамогай <b>NetShield</b>. %1$s]]></string>
-    <string name="upsell_tv_split_tunneling_title">Атрымлівайце лепшае ад абодвух светаў з Plus</string>
+    <string name="upsell_tv_split_tunneling_title">Атрымлівайце лепшае абодвух светаў з Plus</string>
     <string name="upsell_tv_split_tunneling_description"><![CDATA[З функцыяй <b>Split Tunneling</b> вы зможаце дзяліць свой трафік на той, які будзе праходзіць праз тунэлі VPN і на той, які будзе абыходзіцца без іх. %1$s]]></string>
     <string name="upsell_tv_customization_title">Атрымайце пашыраныя налады VPN з Plus</string>
     <string name="upsell_tv_customization_description"><![CDATA[Разблакіруйце <b>падключэнні па LAN</b>, <b>карыстальніцкія DNS</b> і дадатковыя функцыі VPN. %1$s]]></string>
@@ -664,6 +664,16 @@
     <string name="select_default_connection">Выберыце ваша прадвызначанае падключэнне</string>
     <string name="settings_default_connection_title">Прадвызначанае падключэнне</string>
     <string name="fastest_country_description">Лепшыя серверы на падставе вашага размяшчэння</string>
+    <string name="settings_connection_preferences_title">Параметры падключэння</string>
+    <string name="settings_connection_preferences_snackbar_message_excluded_location_removed">Item removed</string>
+    <string name="settings_excluded_locations_title">Выключаныя месцазнаходжанні</string>
+    <string name="settings_excluded_locations_description">Выбраныя месцазнаходжанні ніколі не будуць выкарыстоўвацца пры падключэнні да Fastest.</string>
+    <string name="settings_excluded_locations_unavailable">Няма даступных месцазнаходжанняў</string>
+    <string name="settings_excluded_locations_selection_hint">Выбраць…</string>
+    <string name="settings_excluded_locations_accessibility_label_deletion">Выдаліць з выключаных месцазнаходжанняў</string>
+    <string name="settings_excluded_locations_accessibility_label_city">Горад</string>
+    <string name="settings_excluded_locations_accessibility_label_country">Краіна</string>
+    <string name="settings_excluded_locations_accessibility_label_state">Штат</string>
     <string name="settings_last_connection_title">Апошняе падключэнне</string>
     <string name="settings_last_connection_description">Ваша апошняе выкарыстанае падключэнне</string>
     <string name="settings_change_icon_title">Значок праграмы</string>
@@ -753,7 +763,7 @@
     <string name="welcome_plus_description">Атрымлівайце асалоду ад дадатковых функцый прыватнасці, палепшанай прадукцыйнасці і больш гнуткага наладжвання вашага падключэння да VPN.</string>
     <string name="welcome_plus_feature_security">Пашыраныя функцыі бяспекі</string>
     <string name="welcome_unlimited_title">Вітаем вас у Proton Unlimited</string>
-    <string name="welcome_unlimited_description"><![CDATA[Вы разблакіравалі ўсе прэміяльныя функцыі праграм Proton VPN, Mail, Calendar, Drive, Pass і Wallet. Таксама цяпер вам даступна <b>%1$d&#160;ГБ</b> агульнага сховішча.]]></string>
+    <string name="welcome_unlimited_description"><![CDATA[Вы разблакіравалі ўсе прэміяльныя функцыі праграм Proton VPN, Mail, Calendar, Drive, Pass і Wallet. Цяпер вам даступна <b>%1$d&#160;ГБ</b> агульнага сховішча.]]></string>
     <string name="welcome_generic_title">Віншуем</string>
     <string name="welcome_generic_description">Вы палепшылі сваю падпіску. Атрымлівайце асалоду ад пашыраных функцый прыватнасці і новага ўзроўню прадукцыйнасці.</string>
     <!-- Example: Up to 10 devices at once

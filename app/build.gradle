@@ -797,6 +797,9 @@ dependencies {
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom:$kotlin_version"))
 
+    // Temporary, remove when Core updates the dependency.
+    implementation("com.appmattus.certificatetransparency:certificatetransparency-android:2.7.1")
+
     implementation 'dnsjava:dnsjava:3.6.2'
     implementation "net.java.dev.jna:jna:5.16.0@aar"
 
@@ -899,7 +902,7 @@ dependencies {
     testImplementation "androidx.room:room-testing:$room_version"
 
     // Proton libs
-    implementation "me.proton.vpn:android-vpn-rust:1.0.7"
+    implementation "me.proton.vpn:android-vpn-rust:1.0.12"
     implementation "me.proton.vpn:go-vpn-lib:$govpnlib_version"
     implementation "me.proton.core:domain:$core_version"
     implementation "me.proton.core:network-data:$core_version"

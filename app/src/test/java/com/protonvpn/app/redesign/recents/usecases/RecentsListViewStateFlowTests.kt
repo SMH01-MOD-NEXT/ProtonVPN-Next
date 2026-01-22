@@ -64,6 +64,7 @@ import com.protonvpn.android.vpn.VpnStatusProviderUI
 import com.protonvpn.mocks.FakeGetProfileById
 import com.protonvpn.mocks.FakeSettingsFeatureFlagsFlow
 import com.protonvpn.mocks.createInMemoryServerManager
+import com.protonvpn.test.shared.InMemoryObjectStore
 import com.protonvpn.test.shared.MockSharedPreference
 import com.protonvpn.test.shared.TestCurrentUserProvider
 import com.protonvpn.test.shared.TestDispatcherProvider
@@ -186,7 +187,7 @@ class RecentsListViewStateFlowTests {
         )
         val serverManager2 = ServerManager2(serverManager, supportsProtocol)
         val getIntentAvailability = GetIntentAvailability(serverManager2, supportsProtocol)
-        val translator = Translator(testScope.backgroundScope, serverManager)
+        val translator = Translator(testScope.backgroundScope, InMemoryObjectStore(null))
         viewStateFlow = RecentsListViewStateFlow(
             recentsManager = mockRecentsManager,
             getConnectIntentViewState = GetConnectIntentViewState(
@@ -293,7 +294,7 @@ class RecentsListViewStateFlowTests {
         coEvery { mockRecentsManager.getMostRecentConnection() } returns flowOf(DefaultRecents.first())
 
         val offlineSecureCore = serverSecureCore.copy(rawIsOnline = false)
-        serverManager.setServers(listOf(serverCh, serverIs, serverSe, offlineSecureCore), null, null)
+        serverManager.setServers(listOf(serverCh, serverIs, serverSe, offlineSecureCore), null)
 
         val viewState = viewStateFlow.first()
 
@@ -311,7 +312,7 @@ class RecentsListViewStateFlowTests {
             serverSe.copy(tier = 0),
             serverIs.copy(tier = 0),
         )
-        serverManager.setServers(servers, null, null)
+        serverManager.setServers(servers, null)
         val viewState = viewStateFlow.first()
         assertEquals(emptyList(), viewState.recents.map { it.availability })
     }
@@ -330,7 +331,7 @@ class RecentsListViewStateFlowTests {
             serverSe.copy(rawIsOnline = false),
             serverIs.copy(rawIsOnline = false),
         )
-        serverManager.setServers(servers, null, null)
+        serverManager.setServers(servers, null)
         val viewState = viewStateFlow.first()
 
         val expected = listOf(
@@ -349,7 +350,7 @@ class RecentsListViewStateFlowTests {
         val viewStates = viewStateFlow
             .onEach {
                 val offlineSecureCoreServer = serverSecureCore.copy(rawIsOnline = false)
-                serverManager.setServers(listOf(serverCh, offlineSecureCoreServer), null, null)
+                serverManager.setServers(listOf(serverCh, offlineSecureCoreServer), null)
             }
             .take(2)
             .toList()
@@ -371,7 +372,7 @@ class RecentsListViewStateFlowTests {
         val wgOnlyDomain =
             ConnectingDomain(entryIp = null, wgEntryProtocols, "domain", null, "id1", publicKeyX25519 = "key")
         val wgOnlyServer = serverSecureCore.copy(connectingDomains = listOf(wgOnlyDomain))
-        serverManager.setServers(listOf(serverCh, wgOnlyServer), null, null)
+        serverManager.setServers(listOf(serverCh, wgOnlyServer), null)
 
         val viewStates = viewStateFlow
             .onEach {

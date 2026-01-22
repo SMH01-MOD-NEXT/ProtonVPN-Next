@@ -22,54 +22,55 @@ package com.protonvpn.android.redesign.settings.ui
 import android.content.Intent
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.protonvpn.android.R
+import com.protonvpn.android.base.ui.SimpleTopAppBar
+import com.protonvpn.android.base.ui.TopAppBarBackIcon
 import com.protonvpn.android.profiles.ui.nav.ProfileCreationStepTarget
 import com.protonvpn.android.redesign.app.ui.SettingsChangeViewModel
 import com.protonvpn.android.redesign.base.ui.InfoSheet
 import com.protonvpn.android.redesign.base.ui.InfoType
 import com.protonvpn.android.redesign.base.ui.LocalVpnUiDelegate
+import com.protonvpn.android.redesign.base.ui.ProtonSnackbar
+import com.protonvpn.android.redesign.base.ui.ProtonSnackbarType
+import com.protonvpn.android.redesign.base.ui.collectAsEffect
 import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.redesign.base.ui.rememberInfoSheetState
+import com.protonvpn.android.redesign.base.ui.showSnackbar
+import com.protonvpn.android.redesign.settings.ui.connectionpreferences.ConnectionPreferencesSetting
 import com.protonvpn.android.redesign.settings.ui.customdns.CustomDnsActions
 import com.protonvpn.android.redesign.settings.ui.customdns.CustomDnsViewModel
 import com.protonvpn.android.redesign.settings.ui.customdns.DnsSettingsScreen
+import com.protonvpn.android.redesign.settings.ui.excludedlocations.ExcludedLocationsSettings
 import com.protonvpn.android.redesign.settings.ui.nav.SubSettingsScreen
 import com.protonvpn.android.redesign.settings.ui.splittunneling.SplitTunnelingScreen
 import com.protonvpn.android.redesign.settings.ui.splittunneling.SplitTunnelingTab
@@ -79,14 +80,18 @@ import com.protonvpn.android.telemetry.UpgradeSource
 import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.ui.planupgrade.CarouselUpgradeDialogActivity
 import com.protonvpn.android.ui.planupgrade.UpgradeAdvancedCustomizationHighlightsFragment
+import com.protonvpn.android.ui.settings.SettingsSplitTunnelAppsActivity
+import com.protonvpn.android.ui.settings.SettingsSplitTunnelIpsActivity
 import com.protonvpn.android.utils.Constants
 import com.protonvpn.android.utils.DebugUtils
 import com.protonvpn.android.utils.openUrl
 import com.protonvpn.android.utils.openVpnSettings
 import com.protonvpn.android.widget.ui.WidgetAddScreen
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 import me.proton.core.compose.theme.ProtonTheme
 import me.proton.core.domain.entity.UserId
+import me.proton.core.presentation.utils.currentLocale
 import me.proton.core.usersettings.presentation.entity.SettingsInput
 import me.proton.core.usersettings.presentation.ui.StartPasswordManagement
 import me.proton.core.usersettings.presentation.ui.StartSecurityKeys
@@ -115,7 +120,6 @@ fun SubSettingsRoute(
             modifier = Modifier
                 .fillMaxSize()
                 .background(color = ProtonTheme.colors.backgroundNorm)
-                .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
             when (type) {
@@ -124,9 +128,10 @@ fun SubSettingsRoute(
                         viewModel.vpnAccelerator.collectAsStateWithLifecycle(initialValue = null).value
                     DebugUtils.debugAssert { vpnAccelerator?.isRestricted != true }
                     if (vpnAccelerator != null) {
-                        VpnAcceleratorSubSetting(
+                        FeatureSubSetting(
+                            imageRes = R.drawable.setting_vpn_accelerator,
+                            setting = vpnAccelerator,
                             onClose = onClose,
-                            vpnAccelerator = vpnAccelerator,
                             onLearnMore = { context.openUrl(Constants.VPN_ACCELERATOR_INFO_URL) },
                             onToggle = settingsChangeViewModel::toggleVpnAccelerator,
                         )
@@ -355,7 +360,6 @@ fun SubSettingsRoute(
                     }
                 }
 
-                // New Route: Split Tunneling Apps List
                 SubSettingsScreen.Type.SplitTunnelingApps -> {
                     val splitViewModel = hiltViewModel<SplitTunnelingViewModel>()
                     LaunchedEffect(Unit) { splitViewModel.onTabSelected(SplitTunnelingTab.APPS) }
@@ -369,7 +373,6 @@ fun SubSettingsRoute(
                     )
                 }
 
-                // New Route: Split Tunneling IP List
                 SubSettingsScreen.Type.SplitTunnelingIps -> {
                     val splitViewModel = hiltViewModel<SplitTunnelingViewModel>()
                     LaunchedEffect(Unit) { splitViewModel.onTabSelected(SplitTunnelingTab.IPS) }
@@ -385,6 +388,72 @@ fun SubSettingsRoute(
 
                 SubSettingsScreen.Type.DefaultConnection -> {
                     DefaultConnectionSetting(onClose)
+                }
+
+                SubSettingsScreen.Type.ConnectionPreferences -> {
+                    val viewState = viewModel.connectionPreferences.collectAsStateWithLifecycle(initialValue = null).value
+
+                    val locale = LocalConfiguration.current.currentLocale()
+
+                    val coroutineScope = rememberCoroutineScope()
+
+                    val snackbarHostState = remember { SnackbarHostState() }
+
+                    val snackbarMessage = stringResource(id = R.string.settings_connection_preferences_snackbar_message_excluded_location_removed)
+
+                    val snackbarActionLabel = stringResource(id = R.string.undo)
+
+                    LaunchedEffect(key1 = locale) {
+                        viewModel.onLocaleChanged(newLocale = locale)
+                    }
+
+                    settingsChangeViewModel.excludedLocationEventsFlow.collectAsEffect { event ->
+                        when (event) {
+                            is SettingsChangeViewModel.ExcludedLocationEvent.OnRemoved -> {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = snackbarMessage,
+                                        actionLabel = snackbarActionLabel,
+                                        duration = SnackbarDuration.Short,
+                                        type = ProtonSnackbarType.NORM,
+                                    ).also { result ->
+                                        if (result == SnackbarResult.ActionPerformed) {
+                                            settingsChangeViewModel.onAddExcludedLocation(
+                                                location = event.location,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    viewState?.let { state ->
+                        ConnectionPreferencesSetting(
+                            state = state,
+                            onClose = onClose,
+                            onDefaultConnectionClick = {
+                                onNavigateToSubSetting(SubSettingsScreen.Type.DefaultConnection)
+                            },
+                            onExcludeLocationClick = {
+                                onNavigateToSubSetting(SubSettingsScreen.Type.ExcludedLocations)
+                            },
+                            onDeleteExcludedLocationClick = settingsChangeViewModel::onRemoveExcludedLocation,
+                            onExcludedLocationsFeatureDiscovered = viewModel::onExcludedLocationsDiscovered,
+                            onUpsellClick = {
+                                CarouselUpgradeDialogActivity.launch<UpgradeAdvancedCustomizationHighlightsFragment>(
+                                    context = context,
+                                )
+                            },
+                            snackbarHostState = snackbarHostState,
+                        )
+                    }
+                }
+
+                SubSettingsScreen.Type.ExcludedLocations -> {
+                    ExcludedLocationsSettings(
+                        onClose = onClose,
+                    )
                 }
 
                 SubSettingsScreen.Type.Theme -> {
@@ -435,27 +504,38 @@ fun BasicSubSetting(
     modifier: Modifier = Modifier,
     title: String,
     onClose: () -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     content: @Composable () -> Unit,
 ) {
-    Column(
+    Scaffold(
         modifier = modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        CenterAlignedTopAppBar(
-            title = { Text(text = title) },
-            navigationIcon = {
-                IconButton(onClick = onClose) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                        contentDescription = stringResource(R.string.accessibility_back)
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = Color.Transparent
+        topBar = {
+            SimpleTopAppBar(
+                navigationIcon = {
+                    TopAppBarBackIcon(onClick = onClose)
+                },
+                title = {
+                    Text(text = title)
+                },
             )
-        )
-        content()
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { snackbarData ->
+                    ProtonSnackbar(snackbarData = snackbarData)
+                },
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues = paddingValues),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            content()
+        }
     }
 }
 
@@ -466,15 +546,6 @@ fun SubSetting(
     onClose: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val themeType = LocalThemeType.current
-
-    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
-    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
-
-    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
-            (themeType == ThemeType.System && !isSystemInDarkTheme())
-    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
-
     BasicSubSetting(
         modifier = modifier,
         title = title,
@@ -483,25 +554,9 @@ fun SubSetting(
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
-                .largeScreenContentPadding()
-                .padding(horizontal = 16.dp), // External padding for the card
+                .largeScreenContentPadding(),
         ) {
-            // New Design: Wrap content in a Card
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = cardColor
-                ),
-                border = border,
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(vertical = 16.dp) // Internal padding
-                ) {
-                    content()
-                }
-            }
+            content()
         }
     }
 }
@@ -511,18 +566,18 @@ fun SubSettingWithLazyContent(
     modifier: Modifier = Modifier,
     title: String,
     onClose: () -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     content: @Composable () -> Unit,
 ) {
-
     BasicSubSetting(
         modifier = modifier,
         title = title,
-        onClose = onClose
+        onClose = onClose,
+        snackbarHostState = snackbarHostState,
     ) {
         Box(
             modifier = Modifier
                 .largeScreenContentPadding()
-                .padding(horizontal = 16.dp)
         ) {
             content()
         }

@@ -70,4 +70,5 @@ class AppFeaturesPrefs @Inject constructor(
         private const val KEY_SHOW_ONBOARDING_USER_ID = "showOnboardingUserId"
         private const val KEY_WIDGET_DISCOVERED = "widgetDiscovered"
     }
+
 }

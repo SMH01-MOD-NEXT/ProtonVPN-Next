@@ -27,7 +27,9 @@ import com.protonvpn.android.servers.Server
 import com.protonvpn.android.redesign.CityStateId
 import com.protonvpn.android.redesign.CountryId
 import com.protonvpn.android.redesign.ServerId
-import com.protonvpn.android.redesign.countries.Translator
+import com.protonvpn.android.redesign.countries.TranslationsData
+import com.protonvpn.android.redesign.countries.city
+import com.protonvpn.android.redesign.countries.state
 import com.protonvpn.android.redesign.search.TextMatch
 import com.protonvpn.android.redesign.vpn.ServerFeature
 import com.protonvpn.android.redesign.vpn.isVirtualLocation
@@ -43,7 +45,6 @@ import kotlin.math.roundToInt
 
 class ServerListViewModelDataAdapterLegacy @Inject constructor(
     private val serverManager2: ServerManager2,
-    private val translator: Translator,
     private val currentUser: CurrentUser,
 ) : ServerListViewModelDataAdapter {
 
@@ -97,7 +98,8 @@ class ServerListViewModelDataAdapterLegacy @Inject constructor(
 
     override fun cities(
         filter: ServerFilterType,
-        country: CountryId
+        country: CountryId,
+        translations: TranslationsData?,
     ): Flow<List<ServerGroupItemData.City>> =
         combine(serverManager2.allServersFlow, userTierFlow) { servers, userTier ->
             val filteredServers = servers.asFilteredSequence(userTier, filter, country)
@@ -108,7 +110,7 @@ class ServerListViewModelDataAdapterLegacy @Inject constructor(
                 .groupBy(groupBySelector)
                 .mapNotNull { (cityOrState, servers) ->
                     availableTypes.update(servers)
-                    toCityItem(translator, hasStates, cityOrState, servers)
+                    toCityItem(translations, hasStates, cityOrState, servers)
                 }
         }
 
@@ -177,10 +179,10 @@ class ServerListViewModelDataAdapterLegacy @Inject constructor(
     ): Sequence<Server> {
         return asSequence().filter { server ->
             (server.tier <= userTier) &&
-                filter.isMatching(server) &&
-                (country == null || country.countryCode == server.exitCountry) &&
-                (cityStateId == null || cityStateId.matches(server)) &&
-                ((forceIncludeGateways && gatewayName == null) || gatewayName == server.gatewayName)
+                    filter.isMatching(server) &&
+                    (country == null || country.countryCode == server.exitCountry) &&
+                    (cityStateId == null || cityStateId.matches(server)) &&
+                    ((forceIncludeGateways && gatewayName == null) || gatewayName == server.gatewayName)
         }
     }
 }
@@ -208,7 +210,7 @@ fun Server.toServerItem(match: TextMatch? = null) = ServerGroupItemData.Server(
 )
 
 fun toCityItem(
-    translator: Translator,
+    translations: TranslationsData?,
     isState: Boolean,
     cityOrState: String?,
     servers: List<Server>,
@@ -218,11 +220,17 @@ fun toCityItem(
         return null
 
     val server = servers.first()
+    val country = CountryId(server.exitCountry)
+
     //TODO: what to do with servers without a state if hasStates is true
     return ServerGroupItemData.City(
-        countryId = CountryId(server.exitCountry),
+        countryId = country,
         cityStateId = CityStateId(cityOrState, isState),
-        name = if (isState) translator.getState(cityOrState) else translator.getCity(cityOrState),
+        name = if (isState) {
+            translations.state(country, cityOrState)
+        } else {
+            translations.city(country, cityOrState)
+        },
         inMaintenance = servers.all { !it.online },
         tier = servers.minOf { it.tier },
         textMatch = match,

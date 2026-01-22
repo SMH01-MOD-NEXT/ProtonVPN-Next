@@ -35,17 +35,23 @@ import com.protonvpn.android.auth.usecase.CurrentUser
 import com.protonvpn.android.auth.usecase.uiName
 import com.protonvpn.android.components.InstalledAppsProvider
 import com.protonvpn.android.managed.ManagedConfig
+import com.protonvpn.android.netshield.NetShieldAvailability
 import com.protonvpn.android.netshield.NetShieldProtocol
 import com.protonvpn.android.netshield.getNetShieldAvailability
-import com.protonvpn.android.proxy.VlessManager
+import com.protonvpn.android.redesign.countries.Translator
+import com.protonvpn.android.excludedlocations.usecases.ObserveExcludedLocations
 import com.protonvpn.android.redesign.recents.data.DefaultConnection
 import com.protonvpn.android.redesign.recents.data.getRecentIdOrNull
 import com.protonvpn.android.redesign.recents.usecases.ObserveDefaultConnection
 import com.protonvpn.android.redesign.recents.usecases.RecentsManager
 import com.protonvpn.android.redesign.reports.IsRedesignedBugReportFeatureFlagEnabled
+import com.protonvpn.android.redesign.settings.IsAutomaticConnectionPreferencesFeatureFlagEnabled
+import com.protonvpn.android.redesign.settings.ui.excludedlocations.ExcludedLocationsViewModel.ExcludedLocationUiItem
+import com.protonvpn.android.redesign.settings.ui.excludedlocations.toExcludedLocationUiItem
 import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
 import com.protonvpn.android.redesign.vpn.ui.GetConnectIntentViewState
 import com.protonvpn.android.redesign.vpn.usecases.SettingsForConnection
+import com.protonvpn.android.servers.ServerManager2
 import com.protonvpn.android.settings.data.CurrentUserLocalSettingsManager
 import com.protonvpn.android.settings.data.SplitTunnelingMode
 import com.protonvpn.android.theme.ThemeType
@@ -74,15 +80,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.proton.core.auth.domain.feature.IsFido2Enabled
@@ -96,6 +105,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.Locale
 import javax.inject.Inject
 import me.proton.core.accountmanager.presentation.R as AccountManagerR
 import me.proton.core.presentation.R as CoreR
@@ -109,6 +119,8 @@ class SettingsViewModel @Inject constructor(
     buildConfigInfo: BuildConfigInfo,
     private val settingsForConnection: SettingsForConnection,
     observeDefaultConnection: ObserveDefaultConnection,
+    serverManager: ServerManager2,
+    observeExcludedLocations: ObserveExcludedLocations,
     private val uiStateStorage: UiStateStorage,
     private val recentsManager: RecentsManager,
     private val installedAppsProvider: InstalledAppsProvider,
@@ -125,6 +137,8 @@ class SettingsViewModel @Inject constructor(
     appUpdateBannerStateFlow: AppUpdateBannerStateFlow,
     private val isDirectLanConnectionsFeatureFlagEnabled: IsDirectLanConnectionsFeatureFlagEnabled,
     private val isRedesignedBugReportFeatureFlagEnabled: IsRedesignedBugReportFeatureFlagEnabled,
+    private val isAutomaticConnectionPreferencesFeatureFlagEnabled: IsAutomaticConnectionPreferencesFeatureFlagEnabled,
+    private val translator: Translator,
     private val settingsManager: CurrentUserLocalSettingsManager,
 ) : ViewModel() {
 
@@ -145,7 +159,7 @@ class SettingsViewModel @Inject constructor(
             override val iconRes: Int = if (netShieldEnabled) R.drawable.feature_netshield_on else R.drawable.feature_netshield_off,
         ) : SettingViewState<Boolean>(
             value = netShieldEnabled,
-            isRestricted = false,
+            isRestricted = isRestricted,
             titleRes = R.string.netshield_feature_name,
             settingValueView = when {
                 dnsOverride == DnsOverride.SystemPrivateDns ->
@@ -176,11 +190,11 @@ class SettingsViewModel @Inject constructor(
             val mode: SplitTunnelingMode,
             val currentModeAppNames: List<CharSequence>,
             val currentModeIps: List<String>,
-            isFreeUser: Boolean,
+            isFreeUser: Boolean = false,
             override val iconRes: Int = if (isEnabled) R.drawable.feature_splittunneling_on else R.drawable.feature_splittunneling_off
         ) : SettingViewState<Boolean>(
             value = isEnabled,
-            isRestricted = false,
+            isRestricted = isFreeUser,
             titleRes = R.string.settings_split_tunneling_title,
             settingValueView = SettingValue.SettingStringRes(if (isEnabled) R.string.split_tunneling_state_on else R.string.split_tunneling_state_off),
             descriptionRes = R.string.settings_split_tunneling_description,
@@ -189,10 +203,11 @@ class SettingsViewModel @Inject constructor(
 
         class VpnAccelerator(
             vpnAcceleratorSettingValue: Boolean,
+            isFreeUser: Boolean = false,
             override val iconRes: Int = CoreR.drawable.ic_proton_rocket
         ) : SettingViewState<Boolean>(
             value = vpnAcceleratorSettingValue,
-            isRestricted = false,
+            isRestricted = isFreeUser,
             iconRes = CoreR.drawable.ic_proton_rocket,
             titleRes = R.string.settings_vpn_accelerator_title,
             settingValueView = SettingValue.SettingStringRes(if (vpnAcceleratorSettingValue) R.string.vpn_accelerator_state_on else R.string.vpn_accelerator_state_off),
@@ -218,6 +233,28 @@ class SettingsViewModel @Inject constructor(
             val predefinedTitle: Int?,
             val recentLabel: ConnectIntentPrimaryLabel?,
         )
+
+        data class ConnectionPreferencesState(
+            val isFeatureDiscovered: Boolean,
+            val isFreeUser: Boolean = false,
+            val defaultConnectionPreferences: DefaultConnectionPreferences,
+            val excludeLocationsPreferences: ExcludedLocationsPreferences,
+        ) {
+
+            data class DefaultConnectionPreferences(
+                val defaultConnection: DefaultConnection,
+                val connectIntentPrimaryLabel: ConnectIntentPrimaryLabel?,
+                val predefinedTitle: Int?,
+            )
+
+            data class ExcludedLocationsPreferences(
+                val canSelectLocations: Boolean,
+                val excludedLocationUiItems: List<ExcludedLocationUiItem.Location>,
+                val isFeatureDiscovered: Boolean,
+            )
+
+        }
+
         class Protocol(
             protocol: ProtocolSelection,
             overrideProfilePrimaryLabel: ConnectIntentPrimaryLabel.Profile?,
@@ -251,11 +288,11 @@ class SettingsViewModel @Inject constructor(
             enabled: Boolean,
             val customDns: List<String>,
             overrideProfilePrimaryLabel: ConnectIntentPrimaryLabel.Profile?,
-            isFreeUser: Boolean,
+            isFreeUser: Boolean = false,
             val isPrivateDnsActive: Boolean,
         ) : SettingViewState<Boolean>(
             value = enabled,
-            isRestricted = false,
+            isRestricted = isFreeUser,
             titleRes = R.string.settings_custom_dns_title,
             settingValueView = when {
                 isPrivateDnsActive ->
@@ -279,10 +316,11 @@ class SettingsViewModel @Inject constructor(
         class LanConnections(
             value: Boolean,
             val allowDirectConnections: Boolean?,
-            overrideProfilePrimaryLabel: ConnectIntentPrimaryLabel.Profile?
+            isFreeUser: Boolean = false,
+            overrideProfilePrimaryLabel: ConnectIntentPrimaryLabel.Profile?,
         ) : SettingViewState<Boolean>(
             value = value,
-            isRestricted = false,
+            isRestricted = isFreeUser,
             titleRes = R.string.settings_advanced_allow_lan_title,
             settingValueView =
                 if (overrideProfilePrimaryLabel != null) {
@@ -308,11 +346,11 @@ class SettingsViewModel @Inject constructor(
 
         class Nat(
             natType: NatType,
-            isFreeUser: Boolean,
+            isFreeUser: Boolean = false,
             overrideProfilePrimaryLabel: ConnectIntentPrimaryLabel.Profile?,
         ) : SettingViewState<NatType>(
             value = natType,
-            isRestricted = false,
+            isRestricted = isFreeUser,
             titleRes = R.string.settings_advanced_nat_type_title,
             settingValueView = if (overrideProfilePrimaryLabel != null) {
                 SettingValue.SettingOverrideValue(
@@ -365,12 +403,16 @@ class SettingsViewModel @Inject constructor(
         val isRedesignedBugReportFeatureFlagEnabled: Boolean,
         val appUpdateBannerState: AppUpdateBannerState,
         val showSingInOnAnotherDeviceQr: Boolean,
+        val connectionPreferences: SettingViewState.ConnectionPreferencesState,
+        val isAutomaticConnectionPreferencesEnabled: Boolean,
     )
 
     enum class UiEvent {
-        NavigateToWidgetInstructions
+        NavigateToConnectionPreferences,
+        NavigateToWidgetInstructions,
     }
 
+    // The configuration doesn't change during runtime.
     private val displayDebugUi = BuildConfigUtils.displayDebugUi()
     private val buildConfigText = if (displayDebugUi) buildConfigInfo() else null
 
@@ -404,36 +446,81 @@ class SettingsViewModel @Inject constructor(
     val acknowledgingAppUpdateBannerStateFlow = appUpdateBannerStateFlow
         .onEach { state ->
             if (state is AppUpdateBannerState.Shown) {
+                // Hides the dot on the Settings button in bottom bar.
                 uiStateStorage.update {
                     it.copy(lastAppUpdatePromptAckedVersion = state.appUpdateInfo.availableVersionCode)
                 }
             }
         }
 
-    // --- Grouping Flows to avoid "combine" argument limit ---
+    private data class FeaturePreferences(
+        val isConnectionPreferencesDiscovered: Boolean,
+        val isExcludedLocationsDiscovered: Boolean,
+        val isWidgetDiscovered: Boolean,
+    )
 
-    // Group 1: Core User & Connection Data
-    private val coreDataFlow = combine(
-        currentUser.jointUserFlow,
-        observeDefaultConnection(),
-        settingsForConnection.getFlowForCurrentConnection()
-    ) { user, defaultConn, connSettings ->
-        Triple(user, defaultConn, connSettings)
-    }
-
-    // Group 2: Feature Flags & States
-    data class FeatureState(val widget: Boolean, val ipv6: Boolean, val privateDns: Boolean, val bugReport: Boolean)
-
-    private val featureStateFlow = combine(
+    private val featurePreferencesFlow = combine(
+        uiStateStorage.state,
         appFeaturePrefs.isWidgetDiscoveredFlow,
-        isIPv6FeatureFlagEnabled.observe(),
-        isPrivateDnsActiveFlow,
-        isRedesignedBugReportFeatureFlagEnabled.observe()
-    ) { widget, ipv6, privateDns, bugReport ->
-        FeatureState(widget, ipv6, privateDns, bugReport)
-    }
+    ) { uiStoredState, isWidgetDiscovered ->
+        FeaturePreferences(
+            isConnectionPreferencesDiscovered = uiStoredState.isConnectionPreferencesDiscovered,
+            isExcludedLocationsDiscovered = uiStoredState.isExcludedLocationsDiscovered,
+            isWidgetDiscovered = isWidgetDiscovered,
+        )
+    }.shareIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(),
+        replay = 1,
+    )
 
-    // Group 3: UI States
+    private data class FeatureFlags(
+        val isIPv6FeatureFlagEnabled: Boolean,
+        val isRedesignedBugReportFeatureFlagEnabled: Boolean,
+        val isAutomaticConnectionPreferencesFeatureFlagEnabled: Boolean,
+    )
+
+    private val featureFlagsFlow = combine(
+        isIPv6FeatureFlagEnabled.observe(),
+        isRedesignedBugReportFeatureFlagEnabled.observe(),
+        isAutomaticConnectionPreferencesFeatureFlagEnabled.observe(),
+        ::FeatureFlags,
+    )
+
+    private val localeFlow = MutableStateFlow<Locale?>(value = null)
+
+    private val excludedLocationPreferencesFlow = localeFlow
+        .flatMapLatest { locale ->
+            if(locale == null) {
+                flowOf(
+                    value = SettingViewState.ConnectionPreferencesState.ExcludedLocationsPreferences(
+                        canSelectLocations = false,
+                        excludedLocationUiItems = emptyList(),
+                        isFeatureDiscovered = false,
+                    )
+                )
+            } else {
+                combine(
+                    observeExcludedLocations(),
+                    serverManager.hasAnyCountryFlow,
+                    featurePreferencesFlow,
+                    translator.flow,
+                ) { excludedLocations, hasCountries, featurePreferences, translations ->
+                    SettingViewState.ConnectionPreferencesState.ExcludedLocationsPreferences(
+                        canSelectLocations = hasCountries,
+                        excludedLocationUiItems = excludedLocations.allLocations.map { excludedLocation ->
+                            excludedLocation.toExcludedLocationUiItem(
+                                locale = locale,
+                                translations = translations,
+                            )
+                        },
+                        isFeatureDiscovered = featurePreferences.isExcludedLocationsDiscovered,
+                    )
+                }
+            }
+        }
+
+    // Combining UI states to keep the main combine clean and under argument limits
     private val uiStateFlow = combine(
         acknowledgingAppUpdateBannerStateFlow,
         proxyEnabledFlow
@@ -441,90 +528,111 @@ class SettingsViewModel @Inject constructor(
         Pair(banner, proxy)
     }
 
-    // Main Combine
-    val viewState = combine(
-        coreDataFlow,
-        featureStateFlow,
-        uiStateFlow
-    ) { (user, defaultConnection, connectionSettings),
-        (isWidgetDiscovered, isIPv6FeatureFlagEnabled, isPrivateDnsActive, isRedesignedBugReportFeatureFlagEnabled),
-        (appUpdateBannerState, isProxyEnabled) ->
+    val viewState =
+        combine(
+            currentUser.jointUserFlow,
+            observeDefaultConnection(),
+            // Will return override settings if connected else global
+            settingsForConnection.getFlowForCurrentConnection(),
+            featurePreferencesFlow,
+            isPrivateDnsActiveFlow,
+            uiStateFlow, // Replaced single banner flow with combined UI state
+            excludedLocationPreferencesFlow,
+            featureFlagsFlow,
+        ) { user, defaultConnection, connectionSettings, featurePreferences, isPrivateDnsActive, (appUpdateBannerState, isProxyEnabled), excludedLocationPreferences, featureFlags ->
+            // MOD: Force free user check to false to unlock features
+            val isFree = false
+            val isCredentialLess = user?.user?.isCredentialLess() == true
+            val settings = connectionSettings.connectionSettings
+            val profileOverrideInfo = connectionSettings.associatedProfile?.let { profile ->
+                val intentView = getConnectIntentViewState.forProfile(profile)
+                ProfileOverrideInfo(
+                    primaryLabel = intentView.primaryLabel,
+                    profileName = profile.info.name,
+                )
+            }
 
-        val isFree = false
-        val isCredentialLess = user?.user?.isCredentialLess() == true
-        val settings = connectionSettings.connectionSettings
-        val profileOverrideInfo = connectionSettings.associatedProfile?.let { profile ->
-            val intentView = getConnectIntentViewState.forProfile(profile)
-            ProfileOverrideInfo(
-                primaryLabel = intentView.primaryLabel,
-                profileName = profile.info.name,
-            )
-        }
+            val netShieldSetting = user?.vpnUser.getNetShieldAvailability().let { netShieldAvailability ->
+                SettingViewState.NetShield(
+                    settings.netShield != NetShieldProtocol.DISABLED,
+                    profileOverrideInfo = profileOverrideInfo,
+                    isRestricted = false, // MOD: Unlocked
+                    dnsOverride = getDnsOverride(isPrivateDnsActive, settings),
+                )
+            }
 
-        val netShieldSetting = user?.vpnUser.getNetShieldAvailability().let { netShieldAvailability ->
-            SettingViewState.NetShield(
-                settings.netShield != NetShieldProtocol.DISABLED,
+            val currentModeAppNames =
+                installedAppsProvider.getNamesOfInstalledApps(settings.splitTunneling.currentModeApps())
+
+            val defaultConnectionSetting =
+                // MOD: Removed 'if (isFree)' check
+                run {
+                    val defaultRecent = defaultConnection.getRecentIdOrNull()?.let { recentsManager.getRecentById(it) }
+                    val recent = defaultRecent?.let { getConnectIntentViewState.forRecent(it, false) }
+                    SettingViewState.DefaultConnectionSettingState(
+                        predefinedTitle = when (defaultConnection) {
+                            DefaultConnection.LastConnection -> R.string.settings_last_connection_title
+                            DefaultConnection.FastestConnection -> R.string.fastest_country
+                            else -> null
+                        },
+                        recentLabel = recent?.primaryLabel,
+                    )
+                }
+
+            SettingsViewState(
                 profileOverrideInfo = profileOverrideInfo,
-                isRestricted = true,
-                dnsOverride = getDnsOverride(isPrivateDnsActive, settings),
+                netShield = netShieldSetting,
+                vpnAccelerator = SettingViewState.VpnAccelerator(settings.vpnAccelerator, isFree),
+                proxy = SettingViewState.Proxy(isProxyEnabled), // MOD: Added Proxy
+                splitTunneling = SettingViewState.SplitTunneling(
+                    isEnabled = settings.splitTunneling.isEnabled,
+                    mode = settings.splitTunneling.mode,
+                    currentModeAppNames = currentModeAppNames,
+                    currentModeIps = settings.splitTunneling.currentModeIps(),
+                    isFreeUser = isFree,
+                ),
+                protocol = SettingViewState.Protocol(settings.protocol, profileOverrideInfo?.primaryLabel),
+                defaultConnection = defaultConnectionSetting,
+                altRouting = SettingViewState.AltRouting(settings.apiUseDoh),
+                lanConnections = SettingViewState.LanConnections(
+                    settings.lanConnections,
+                    allowDirectConnections = settings.lanConnectionsAllowDirect.takeIf { isDirectLanConnectionsFeatureFlagEnabled() },
+                    isFreeUser = isFree,
+                    overrideProfilePrimaryLabel = profileOverrideInfo?.primaryLabel
+                ),
+                natType = SettingViewState.Nat(NatType.fromRandomizedNat(settings.randomizedNat), isFree, profileOverrideInfo?.primaryLabel),
+                buildInfo = buildConfigText,
+                showDebugTools = displayDebugUi,
+                showSignOut = !isCredentialLess && !managedConfig.isManaged,
+                accountScreenEnabled = !managedConfig.isManaged,
+                isWidgetDiscovered = featurePreferences.isWidgetDiscovered,
+                customDns =
+                    SettingViewState.CustomDns(
+                        enabled = settings.customDns.effectiveEnabled,
+                        customDns = settings.customDns.rawDnsList,
+                        overrideProfilePrimaryLabel = profileOverrideInfo?.primaryLabel,
+                        isFreeUser = isFree,
+                        isPrivateDnsActive = isPrivateDnsActive,
+                    ),
+                versionName = BuildConfig.VERSION_NAME,
+                ipV6 = if (featureFlags.isIPv6FeatureFlagEnabled) SettingViewState.IPv6(enabled = settings.ipV6Enabled) else null,
+                theme = SettingViewState.Theme(settings.theme),
+                isRedesignedBugReportFeatureFlagEnabled = featureFlags.isRedesignedBugReportFeatureFlagEnabled,
+                appUpdateBannerState = appUpdateBannerState,
+                showSingInOnAnotherDeviceQr = !managedConfig.isManaged,
+                connectionPreferences = SettingViewState.ConnectionPreferencesState(
+                    isFeatureDiscovered = featurePreferences.isConnectionPreferencesDiscovered,
+                    isFreeUser = isFree,
+                    defaultConnectionPreferences = SettingViewState.ConnectionPreferencesState.DefaultConnectionPreferences(
+                        defaultConnection = defaultConnection,
+                        connectIntentPrimaryLabel = defaultConnectionSetting?.recentLabel,
+                        predefinedTitle = defaultConnectionSetting?.predefinedTitle,
+                    ),
+                    excludeLocationsPreferences = excludedLocationPreferences,
+                ),
+                isAutomaticConnectionPreferencesEnabled = featureFlags.isAutomaticConnectionPreferencesFeatureFlagEnabled,
             )
-        }
-
-        val currentModeAppNames =
-            installedAppsProvider.getNamesOfInstalledApps(settings.splitTunneling.currentModeApps())
-
-        val defaultRecent = defaultConnection.getRecentIdOrNull()?.let { recentsManager.getRecentById(it) }
-        val recent = defaultRecent?.let { getConnectIntentViewState.forRecent(it, false) }
-        val defaultConnectionSetting = SettingViewState.DefaultConnectionSettingState(
-            predefinedTitle = when (defaultConnection) {
-                DefaultConnection.LastConnection -> R.string.settings_last_connection_title
-                DefaultConnection.FastestConnection -> R.string.fastest_country
-                else -> null
-            },
-            recentLabel = recent?.primaryLabel,
-        )
-
-        SettingsViewState(
-            profileOverrideInfo = profileOverrideInfo,
-            netShield = netShieldSetting,
-            vpnAccelerator = SettingViewState.VpnAccelerator(settings.vpnAccelerator),
-            proxy = SettingViewState.Proxy(isProxyEnabled),
-            splitTunneling = SettingViewState.SplitTunneling(
-                isEnabled = settings.splitTunneling.isEnabled,
-                mode = settings.splitTunneling.mode,
-                currentModeAppNames = currentModeAppNames,
-                currentModeIps = settings.splitTunneling.currentModeIps(),
-                isFreeUser = isFree,
-            ),
-            protocol = SettingViewState.Protocol(settings.protocol, profileOverrideInfo?.primaryLabel),
-            defaultConnection = defaultConnectionSetting,
-            altRouting = SettingViewState.AltRouting(settings.apiUseDoh),
-            lanConnections = SettingViewState.LanConnections(
-                settings.lanConnections,
-                allowDirectConnections = settings.lanConnectionsAllowDirect.takeIf { isDirectLanConnectionsFeatureFlagEnabled() },
-                profileOverrideInfo?.primaryLabel
-            ),
-            natType = SettingViewState.Nat(NatType.fromRandomizedNat(settings.randomizedNat), isFree, profileOverrideInfo?.primaryLabel),
-            buildInfo = buildConfigText,
-            showDebugTools = displayDebugUi,
-            showSignOut = !isCredentialLess && !managedConfig.isManaged,
-            accountScreenEnabled = !managedConfig.isManaged,
-            isWidgetDiscovered = isWidgetDiscovered,
-            customDns = SettingViewState.CustomDns(
-                enabled = settings.customDns.effectiveEnabled,
-                customDns = settings.customDns.rawDnsList,
-                overrideProfilePrimaryLabel = profileOverrideInfo?.primaryLabel,
-                isFreeUser = isFree,
-                isPrivateDnsActive = isPrivateDnsActive,
-            ),
-            versionName = BuildConfig.VERSION_NAME,
-            ipV6 = if (isIPv6FeatureFlagEnabled) SettingViewState.IPv6(enabled = settings.ipV6Enabled) else null,
-            theme = SettingViewState.Theme(settings.theme),
-            isRedesignedBugReportFeatureFlagEnabled = isRedesignedBugReportFeatureFlagEnabled,
-            appUpdateBannerState = appUpdateBannerState,
-            showSingInOnAnotherDeviceQr = !managedConfig.isManaged,
-        )
-    }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(1_000), replay = 1)
+        }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(1_000), replay = 1)
 
     val vpnAccelerator = viewState.map { it.vpnAccelerator }.distinctUntilChanged()
     val proxy = viewState.map { it.proxy }.distinctUntilChanged()
@@ -539,6 +647,7 @@ class SettingsViewModel @Inject constructor(
     val customDns = viewState.map { it.customDns }.distinctUntilChanged()
     val splitTunneling = viewState.map { it.splitTunneling }.distinctUntilChanged()
     val theme = viewState.map { it.theme.value }.distinctUntilChanged()
+    val connectionPreferences = viewState.map { it.connectionPreferences }.distinctUntilChanged()
 
     data class AdvancedSettingsViewState(
         val altRouting: SettingViewState.AltRouting,
@@ -574,7 +683,7 @@ class SettingsViewModel @Inject constructor(
     }.distinctUntilChanged()
 
     data class AccountSettingsViewState(
-        val userId: UserId,
+        val userId: UserId, // Needed for navigating to activities
         val displayName: String,
         val planDisplayName: String?,
         val recoveryEmail: String?,
@@ -597,7 +706,7 @@ class SettingsViewModel @Inject constructor(
                     planDisplayName = vpnUser.planDisplayName,
                     recoveryEmail = accountUserSettings?.email?.value,
                     passwordHint = accountUser.recovery?.state?.enum.passwordHint(),
-                    upgradeToPlusBanner = false,
+                    upgradeToPlusBanner = false, // MOD: Disable plus banner
                     isFido2Enabled = isFido2Enabled(accountUser.userId),
                     registeredSecurityKeys = registeredSecurityKeys
                 )
@@ -624,14 +733,32 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    // Toggle Proxy
+    fun onLocaleChanged(newLocale: Locale) {
+        localeFlow.update { newLocale }
+    }
+
+    fun onOpenConnectionPreferences() {
+        viewModelScope.launch {
+            uiStateStorage.update { it.copy(isConnectionPreferencesDiscovered = true) }
+
+            event.emit(value = UiEvent.NavigateToConnectionPreferences)
+        }
+    }
+
+    fun onExcludedLocationsDiscovered() {
+        viewModelScope.launch {
+            uiStateStorage.update { it.copy(isExcludedLocationsDiscovered = true) }
+        }
+    }
+
+    // Toggle Proxy (MOD)
     fun toggleProxy() {
         val currentState = Storage.getBoolean("proxy_enabled", false)
         val newState = !currentState
         Storage.saveBoolean("proxy_enabled", newState)
     }
 
-    // --- JSON Export Logic ---
+    // --- JSON Export Logic (MOD) ---
     fun exportSplitTunnelingSettings(uri: Uri, context: Context) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -663,7 +790,7 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    // --- JSON Import Logic ---
+    // --- JSON Import Logic (MOD) ---
     fun importSplitTunnelingSettings(uri: Uri, context: Context, onImportSuccess: () -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -733,6 +860,7 @@ class SettingsViewModel @Inject constructor(
             }
         }
     }
+
 }
 
 private fun UserRecovery.State?.passwordHint(): Int? = when(this) {

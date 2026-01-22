@@ -115,7 +115,6 @@ import me.proton.core.telemetry.presentation.ProductMetricsDelegateOwner
 import me.proton.core.telemetry.presentation.compose.LocalProductMetricsDelegateOwner
 import me.proton.core.presentation.R as CoreR
 
-
 @SuppressLint("InlinedApi")
 @Composable
 fun SettingsRoute(
@@ -139,9 +138,14 @@ fun SettingsRoute(
     }
 
     viewModel.event.collectAsEffect { event ->
-        when(event) {
-            SettingsViewModel.UiEvent.NavigateToWidgetInstructions ->
+        when (event) {
+            SettingsViewModel.UiEvent.NavigateToConnectionPreferences -> {
+                onNavigateToSubSetting(SubSettingsScreen.Type.ConnectionPreferences)
+            }
+
+            SettingsViewModel.UiEvent.NavigateToWidgetInstructions -> {
                 onNavigateToSubSetting(SubSettingsScreen.Type.Widget)
+            }
         }
     }
 
@@ -190,6 +194,9 @@ fun SettingsRoute(
                 },
                 onDefaultConnectionClick = {
                     onNavigateToSubSetting(SubSettingsScreen.Type.DefaultConnection)
+                },
+                onConnectionPreferencesClick = {
+                    viewModel.onOpenConnectionPreferences()
                 },
                 onVpnAcceleratorClick = {
                     onNavigateToSubSetting(SubSettingsScreen.Type.VpnAccelerator)
@@ -269,6 +276,7 @@ fun SettingsView(
     onSplitTunnelUpgrade: () -> Unit,
     onAlwaysOnClick: () -> Unit,
     onDefaultConnectionClick: () -> Unit,
+    onConnectionPreferencesClick: () -> Unit,
     onProtocolClick: () -> Unit,
     onVpnAcceleratorClick: () -> Unit,
     onVpnAcceleratorUpgrade: () -> Unit,
@@ -337,17 +345,27 @@ fun SettingsView(
                 title = stringResource(id = R.string.settings_connection_category),
                 themeType = viewState.theme.value
             ) {
-                viewState.defaultConnection?.let { connnection ->
-                    val connectionLabel = with(connnection) {
-                        predefinedTitle?.let { stringResource(id = it) } ?: recentLabel?.label()
-                    }
+                if(viewState.isAutomaticConnectionPreferencesEnabled) {
                     SettingRowWithIcon(
-                        icon = connnection.iconRes,
-                        title = stringResource(id = connnection.titleRes),
-                        settingValue = connectionLabel?.let { SettingValue.SettingText(it) },
-                        onClick = onDefaultConnectionClick,
+                        icon = CoreR.drawable.ic_proton_bookmark,
+                        title = stringResource(id = R.string.settings_connection_preferences_title),
+                        hasNewLabel = !viewState.connectionPreferences.isFeatureDiscovered,
+                        onClick = onConnectionPreferencesClick,
                     )
+                } else {
+                    viewState.defaultConnection?.let { connnection ->
+                        val connectionLabel = with(connnection) {
+                            predefinedTitle?.let { stringResource(id = it) } ?: recentLabel?.label()
+                        }
+                        SettingRowWithIcon(
+                            icon = connnection.iconRes,
+                            title = stringResource(id = connnection.titleRes),
+                            settingValue = connectionLabel?.let { SettingValue.SettingText(it) },
+                            onClick = onDefaultConnectionClick,
+                        )
+                    }
                 }
+
                 SettingRowWithIcon(
                     icon = viewState.protocol.iconRes,
                     title = stringResource(id = viewState.protocol.titleRes),

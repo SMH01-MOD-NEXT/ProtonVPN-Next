@@ -64,9 +64,12 @@ open class ProtonApiRetroFit @Inject constructor(
         params: RequestBody,
     ) = manager { postBugReport(TimeoutOverride(writeTimeoutSeconds = 20), params) }
 
+    suspend fun getServerCities(languageTag: String) = manager {
+        getServerCities(languageTag)
+    }
+
     open suspend fun getServerListV1(
         netzone: String?,
-        lang: String,
         protocols: List<String>,
         freeOnly: Boolean,
         lastModified: Long,
@@ -76,7 +79,6 @@ open class ProtonApiRetroFit @Inject constructor(
         getServersV1(
             timeoutOverride = TimeoutOverride(readTimeoutSeconds = 20),
             headers = createLogicalsHeaders(netzone, lastModified, enableTruncation),
-            language = lang,
             protocols = protocols.joinToString(","),
             withState = true,
             userTier = if (freeOnly) VpnUser.FREE_TIER else null,
@@ -86,7 +88,6 @@ open class ProtonApiRetroFit @Inject constructor(
 
     suspend fun getServerList(
         netzone: String?,
-        lang: String,
         protocols: List<String>,
         lastModified: Long,
         enableTruncation: Boolean,
@@ -95,7 +96,6 @@ open class ProtonApiRetroFit @Inject constructor(
         getServers(
             timeoutOverride = TimeoutOverride(readTimeoutSeconds = 20),
             headers = createLogicalsHeaders(netzone, lastModified, enableTruncation),
-            language = lang,
             protocols = protocols.joinToString(","),
             withState = true,
             includeIDs = mustHaveIDs.takeIf { enableTruncation }?.encodeParamSet()
