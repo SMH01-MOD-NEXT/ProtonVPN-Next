@@ -1,38 +1,23 @@
-/*
- * Copyright (c) 2023 Proton AG
- *
- * This file is part of ProtonVPN.
- *
- * ProtonVPN is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * ProtonVPN is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
- */
-
 package com.protonvpn.android.redesign.main_screen.ui.nav
 
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -61,7 +46,6 @@ import com.protonvpn.android.redesign.home_screen.ui.ShowcaseRecents
 import com.protonvpn.android.redesign.home_screen.ui.nav.ConnectionDetailsScreen
 import com.protonvpn.android.redesign.home_screen.ui.nav.HomeScreen
 import com.protonvpn.android.redesign.home_screen.ui.nav.HomeScreen.home
-import com.protonvpn.android.redesign.main_screen.ui.BottomBarView
 import com.protonvpn.android.redesign.main_screen.ui.MainScreenViewModel
 import com.protonvpn.android.redesign.settings.ui.nav.SettingsScreen
 import com.protonvpn.android.redesign.settings.ui.nav.SettingsScreen.settings
@@ -104,27 +88,16 @@ class MainNav(
 ) : BaseNav<MainNav>(selfNav, "main") {
 
     fun navigate(target: MainTarget) {
-        // Don't record whole history of bottom bar navigation
         val navOptions = controller.popToStartNavOptions()
         when (target) {
-            MainTarget.Home ->
-                navigateInternal(HomeScreen, navOptions)
-
-            MainTarget.Profiles ->
-                navigateInternal(ProfilesScreen, navOptions)
-
-            MainTarget.Gateways ->
-                navigateInternal(GatewaysScreen, navOptions)
-
-            MainTarget.Countries ->
-                navigateInternal(CountryListScreen, navOptions)
-
-            MainTarget.Settings ->
-                navigateInternal(SettingsScreen, navOptions)
+            MainTarget.Home -> navigateInternal(HomeScreen, navOptions)
+            MainTarget.Profiles -> navigateInternal(ProfilesScreen, navOptions)
+            MainTarget.Gateways -> navigateInternal(GatewaysScreen, navOptions)
+            MainTarget.Countries -> navigateInternal(CountryListScreen, navOptions)
+            MainTarget.Settings -> navigateInternal(SettingsScreen, navOptions)
         }
     }
 
-    // Gets current bottom bar target and triggers recomposition on change
     @Composable
     fun currentBottomBarTargetAsState(): MainTarget? {
         val current = controller.currentBackStackEntryAsState()
@@ -184,7 +157,6 @@ class MainNav(
     }
 }
 
-
 object MainScreen : ScreenNoArg<RootNav>("main") {
     @Composable
     private fun MainScreenNavigation(
@@ -202,28 +174,36 @@ object MainScreen : ScreenNoArg<RootNav>("main") {
             if (showProfilesDot) add(MainTarget.Profiles)
             if (showAppVersionUpdateDot) add(MainTarget.Settings)
         }
+
         Scaffold(
             containerColor = ProtonTheme.colors.backgroundNorm,
             contentColor = ProtonTheme.colors.textNorm,
-            bottomBar = {
-                BottomBarView(
+            modifier = modifier,
+            contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
+        ) { paddingValues ->
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .consumeWindowInsets(NavigationBarDefaults.windowInsets)
+            ) {
+                mainNav.NavHost(
+                    Modifier.fillMaxSize()
+                )
+
+                LiquidGlassBottomBar(
                     selectedTarget = bottomTarget,
                     showCountries = showCountries,
                     showGateways = showGateways,
                     notificationDots = notificationDots,
                     navigateTo = mainNav::navigate,
-                    modifier = Modifier.testTag("mainBottomBar")
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .testTag("mainBottomBar")
                 )
-            },
-            modifier = modifier,
-            contentWindowInsets = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
-        ) { paddingValues ->
-            mainNav.NavHost(
-                Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .consumeWindowInsets(NavigationBarDefaults.windowInsets) // Bottom bar.
-            )
+            }
         }
     }
 

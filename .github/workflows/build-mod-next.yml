@@ -117,111 +117,91 @@ jobs:
         run: |
           REPO_URL="https://github.com/${{ github.repository }}"
           
-          # Check if this workflow was triggered by a tag push
+          # Get the last tag (either current if pushed tag, or latest if branch push)
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             CURRENT_TAG="${{ github.ref_name }}"
-            echo "Current tag: $CURRENT_TAG"
-
-            PREVIOUS_TAG=$(git describe --tags --abbrev=0 "$CURRENT_TAG^" 2>/dev/null || echo "")
-            if [ -z "$PREVIOUS_TAG" ]; then
-              PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
-            fi
-
-            # GitHub Release (Markdown with links)
-            CHANGELOG_MD=$(git log "$PREVIOUS_TAG..$CURRENT_TAG" --pretty=format:"* [%h]($REPO_URL/commit/%H) - %s" --no-merges)
-          
-            # Telegram (HTML with links)
-            CHANGELOG_HTML=$(git log "$PREVIOUS_TAG..$CURRENT_TAG" --pretty=format:"• <a href=\"$REPO_URL/commit/%H\">%h</a> - %s" --no-merges)
-          
-            TAG_INFO="🏷️ New tag: <b>$CURRENT_TAG</b>"
             RELEASE_TAG_NAME="$CURRENT_TAG"
           else
-            # Not a tag push - branch commit
-            LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-            if [ -z "$LAST_TAG" ]; then
-              LAST_TAG=$(git rev-list --max-parents=0 HEAD)
-            fi
-          
-            # GitHub Release (Markdown with links)
-            CHANGELOG_MD=$(git log "$LAST_TAG..HEAD" --pretty=format:"* [%h]($REPO_URL/commit/%H) - %s" --no-merges)
-          
-            # Telegram (HTML with links)
-            CHANGELOG_HTML=$(git log "$LAST_TAG..HEAD" --pretty=format:"• <a href=\"$REPO_URL/commit/%H\">%h</a> - %s" --no-merges)
-          
-            PREVIOUS_TAG="$LAST_TAG"
-            TAG_INFO="ℹ️ No new tag, changes since: <b>$PREVIOUS_TAG</b>"
-          
-            # Generate a name for pre-release (Timestamp based)
-            RELEASE_TAG_NAME="pre-release-$(date +'%Y%m%d-%H%M')"
+            # For branch pushes, use 'pre-release' tag or create it
+            RELEASE_TAG_NAME="pre-release"
           fi
-
+          
+          # Get previous tag for changelog
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            # No tags yet, use first commit
+            PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
+            CHANGELOG_MD="*Initial commit*"
+          else
+            PREVIOUS_TAG="$LAST_TAG"
+            # Generate changelog with commit links (Markdown)
+            CHANGELOG_MD=$(git log "$PREVIOUS_TAG..HEAD" --pretty=format:"* [%h]($REPO_URL/commit/%H) %s" --no-merges)
+          fi
+          
           # Extract metadata
           CURRENT_COMMIT=$(git log -1 --pretty=format:"%h")
           CURRENT_COMMIT_FULL=$(git log -1 --pretty=format:"%H")
           COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
           COMMIT_DATE=$(git log -1 --pretty=format:"%cd" --date=format:"%Y-%m-%d %H:%M")
+          BRANCH_NAME="${{ github.ref_name }}"
+          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
 
-          # Construct Telegram Message
-          if [ -z "$CHANGELOG_HTML" ]; then
-            MESSAGE="🚀 <b>ProtonMOD-Next Build</b>
-
-          $TAG_INFO
-          📝 Latest commit: <a href=\"$REPO_URL/commit/$CURRENT_COMMIT_FULL\">$CURRENT_COMMIT</a>
-          👤 Author: $COMMIT_AUTHOR
-          📅 Date: $COMMIT_DATE
-          🔧 Branch: ${{ github.ref_name }}
-
-          ℹ️ No changes since $PREVIOUS_TAG"
-          else
-            MESSAGE="🚀 <b>ProtonMOD-Next Build</b>
-
-          $TAG_INFO
-          📝 Latest commit: <a href=\"$REPO_URL/commit/$CURRENT_COMMIT_FULL\">$CURRENT_COMMIT</a>
-          👤 Author: $COMMIT_AUTHOR
-          📅 Date: $COMMIT_DATE
-          🔧 Branch: ${{ github.ref_name }}
-
-          📋 <b>Changes since $PREVIOUS_TAG:</b>
-          $CHANGELOG_HTML"
-          fi
-
-          # Output variables handling multiline strings
+          # Output variables
           {
-            echo "message<<EOF"
-            echo "$MESSAGE"
-            echo "EOF"
             echo "changelog_md<<EOF"
             echo "$CHANGELOG_MD"
             echo "EOF"
             echo "release_tag=$RELEASE_TAG_NAME"
+            echo "previous_tag=$PREVIOUS_TAG"
+            echo "current_commit=$CURRENT_COMMIT"
+            echo "current_commit_full=$CURRENT_COMMIT_FULL"
+            echo "commit_author=$COMMIT_AUTHOR"
+            echo "commit_date=$COMMIT_DATE"
+            echo "branch_name=$BRANCH_NAME"
+            echo "commit_message=$COMMIT_MESSAGE"
           } >> "$GITHUB_OUTPUT"
 
-      # Step 12: Send changelog to Telegram
-      - name: Send Changelog to Telegram
+      # Step 12: Send brief notification to Telegram
+      - name: Send Build Complete Notification to Telegram
+        if: always()
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
         run: |
-          MESSAGE="${{ steps.changelog.outputs.message }}"
+          BUILD_STATUS="✅ Success"
+          if [ "${{ job.status }}" = "failure" ]; then
+            BUILD_STATUS="❌ Failed"
+          fi
+          
+          MESSAGE="$BUILD_STATUS Build: ${{ steps.changelog.outputs.branch_name }}
+          Commit: ${{ steps.changelog.outputs.current_commit }}
+          Author: ${{ steps.changelog.outputs.commit_author }}"
+          
           curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
                -d "chat_id=${TG_CHAT_ID}" \
                -d "parse_mode=HTML" \
-               -d "disable_web_page_preview=true" \
                --data-urlencode "text=${MESSAGE}"
 
-      # Step 13: Create GitHub Pre-release
-      # Creates a release automatically on PUSH or if requested via workflow_dispatch
-      - name: Create GitHub Pre-release
-        if: github.event_name == 'push' || inputs.create_pre_release == true
+      # Step 13: Create or Update GitHub Pre-release
+      - name: Create or Update Pre-release
+        if: success() && (github.event_name == 'push' || inputs.create_pre_release == true)
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ steps.changelog.outputs.release_tag }}
-          name: "Pre-release ${{ steps.changelog.outputs.release_tag }}"
+          name: "Build ${{ steps.changelog.outputs.release_tag }}"
           body: |
-            ## 📋 Changes
+            ## 🔨 Build Info
+            - **Branch**: `${{ steps.changelog.outputs.branch_name }}`
+            - **Author**: ${{ steps.changelog.outputs.commit_author }}
+            - **Date**: ${{ steps.changelog.outputs.commit_date }}
+            - **Latest commit**: [${{ steps.changelog.outputs.current_commit }}](https://github.com/${{ github.repository }}/commit/${{ steps.changelog.outputs.current_commit_full }}) - ${{ steps.changelog.outputs.commit_message }}
+            
+            ## 📋 Changes Since ${{ steps.changelog.outputs.previous_tag }}
             ${{ steps.changelog.outputs.changelog_md }}
             
+            ---
             *Automated build by GitHub Actions*
           artifacts: |
             app/build/outputs/apk/productionGooglePlayStore/release/*.apk
@@ -229,6 +209,7 @@ jobs:
           prerelease: true
           allowUpdates: true
           replacesArtifacts: true
+          omitBodyDuringUpdate: false
 
       # Step 14: Upload Artifacts (Actions tab)
       - name: Upload MOD-Next APKs

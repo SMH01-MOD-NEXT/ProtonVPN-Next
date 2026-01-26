@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,7 +39,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -436,10 +439,12 @@ fun HomeView(
             }
             val recentsViewStateValue = recentsComponent.recentsViewState.value
             if (recentsViewStateValue != null) {
+                val bottomNavHeight = 100.dp
+                val bottomNavHeightPx = LocalDensity.current.run { bottomNavHeight.toPx() }
                 val maxHeightPx = LocalDensity.current.run { maxHeight.toPx() }
-                recentsComponent.recentsExpandState.setMaxHeight(maxHeightPx.roundToInt())
-                val horizontalPadding = ProtonTheme.extraPaddingForWindowSize(viewportSize)
+                recentsComponent.recentsExpandState.setMaxHeight((maxHeightPx - bottomNavHeightPx).roundToInt())
 
+                val horizontalPadding = ProtonTheme.extraPaddingForWindowSize(viewportSize)
                 val listBgGradientHeight =
                     if (widthSizeClass == WindowWidthSizeClass.Compact) ListBgGradientHeightBasic else ListBgGradientHeightExpanded
                 val listBgGradientOffset =
@@ -474,6 +479,7 @@ fun HomeView(
                             )
                             drawRect(listBgColor, topLeft = Offset(0f, gradientBottom))
                         }
+                        .padding(bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + bottomNavHeight)
                 )
             }
         }
@@ -501,18 +507,7 @@ fun HomeView(
                 .statusBarsPadding()
                 .constrainAs(vpnStatusTop) {}
         )
-
-        prominentPromoComponent?.let {
-            PromoOfferProminentBanner(
-                state = it.state,
-                onDismiss = it.onDismiss,
-                onAction = it.onClick,
-                contentWindowInsets = WindowInsets.statusBars,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
     }
-
     HomeDialog(dialogState, onDismiss = onDismissDialog)
 }
 

@@ -21,6 +21,7 @@ package com.protonvpn.android.profiles.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -33,6 +34,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.protonvpn.android.R
@@ -54,8 +56,11 @@ fun ProfilesRoute(
 ) {
     val viewModel : ProfilesViewModel = hiltViewModel()
     val snackbarHostState = remember { SnackbarHostState() }
+
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(bottom = 120.dp)
     ) {
         val state = viewModel.state.collectAsStateWithLifecycle().value
         // Collect selectedProfile without lifecycle, otherwise changes are not observed during navigation animation to
