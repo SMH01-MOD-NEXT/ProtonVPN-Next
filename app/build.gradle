@@ -188,6 +188,21 @@ android {
                 keyPassword 'android'
             }
         }
+        // CI Signing Configuration
+        release {
+            def storeFileEnv = System.getenv("SIGNING_STORE_FILE")
+            def storePasswordEnv = System.getenv("SIGNING_STORE_PASSWORD")
+            def keyAliasEnv = System.getenv("SIGNING_KEY_ALIAS")
+            def keyPasswordEnv = System.getenv("SIGNING_KEY_PASSWORD")
+
+            // Check if all necessary environment variables are present
+            if (storeFileEnv && storePasswordEnv && keyAliasEnv && keyPasswordEnv) {
+                storeFile file(storeFileEnv)
+                storePassword storePasswordEnv
+                keyAlias keyAliasEnv
+                keyPassword keyPasswordEnv
+            }
+        }
     }
     buildFeatures {
         buildConfig true
@@ -393,7 +408,8 @@ android {
         }
         release {
             minifyEnabled true
-            signingConfig signingConfigs.debug
+            // Use release signing config if available (CI), otherwise fallback to debug (Local)
+            signingConfig signingConfigs.release.storeFile ? signingConfigs.release : signingConfigs.debug
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
