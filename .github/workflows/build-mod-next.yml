@@ -197,6 +197,7 @@ jobs:
           artifacts: "artifacts/*.apk"
           prerelease: true
           allowUpdates: true
+          removeArtifacts: true
           replacesArtifacts: true
           omitBodyDuringUpdate: false
 
