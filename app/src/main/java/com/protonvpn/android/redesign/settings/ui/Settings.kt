@@ -330,7 +330,6 @@ fun SettingsView(
                 onSignUpClick = onSignUpClick,
                 onSignInClick = onSignInClick,
                 onSignOutClick = onSignOutClick,
-                showSingInOnAnotherDeviceQr = viewState.showSingInOnAnotherDeviceQr
             )
             FeatureCategory(
                 viewState = viewState,
@@ -706,17 +705,15 @@ private fun ColumnScope.AccountCategory(
             initialCount = 1,
             state = state
         )
-        if (showSingInOnAnotherDeviceQr) {
-            SignInToAnotherDeviceItem(
-                content = { label, onLogOut ->
-                    SettingRowWithIcon(
-                        icon = CoreR.drawable.ic_proton_qr_code,
-                        title = label,
-                        onClick = onLogOut
-                    )
-                }
-            )
-        }
+        SignInToAnotherDeviceItem(
+            content = { label, onLogOut ->
+                SettingRowWithIcon(
+                    icon = CoreR.drawable.ic_proton_qr_code,
+                    title = label,
+                    onClick = onLogOut
+                )
+            }
+        )
     }
 }
 
@@ -1037,7 +1034,6 @@ fun AccountCategoryLoggedInPreview() {
                 onSignUpClick = { },
                 onSignInClick = { },
                 onSignOutClick = { },
-                showSingInOnAnotherDeviceQr = true
             )
         }
     }
@@ -1055,7 +1051,6 @@ fun AccountCategoryCredentialLessPreview() {
                 onSignUpClick = { },
                 onSignInClick = { },
                 onSignOutClick = { },
-                showSingInOnAnotherDeviceQr = true
             )
         }
     }

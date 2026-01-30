@@ -1161,11 +1161,12 @@
     <string name="country_filter_states_list_header">Штаты (%1$d)</string>
     <string name="country_filter_servers_list_header">Серверы</string>
     <string name="country_filter_secure_core_list_header">Страны с серверами Secure Core (%1$d)</string>
-    <string name="country_filter_p2p_list_header">P2P-страны (%1$d)</string>
-    <string name="country_filter_p2p_list_header_cities">P2P-города (%1$d)</string>
-    <string name="country_filter_p2p_list_header_states">P2P-страны (%1$d)</string>
-    <string name="country_filter_tor_list_header">Tor-страны (%1$d)</string>
-    <string name="country_filter_tor_servers_list_header">Tor-серверы</string>
+    <string name="country_filter_p2p_list_header">Страны P2P (%1$d)</string>
+    <string name="country_filter_p2p_list_header_cities">Города P2P (%1$d)</string>
+    <string name="country_filter_p2p_list_header_states">Страны P2P (%1$d)</string>
+    <string name="counrty_filter_p2p_servers_list_header">P2P servers</string>
+    <string name="country_filter_tor_list_header">Страны Tor (%1$d)</string>
+    <string name="country_filter_tor_servers_list_header">Серверы Tor</string>
     <string name="country_filter_info_label">Информация</string>
     <!-- Content description for server load indicator. Used by accessibility services only.
          Note: the trailing \'%\' sign needs to be doubled
@@ -1218,6 +1219,8 @@
     <string name="connection_details_country">Страна</string>
     <!-- tag(Redesign_2023) -->
     <string name="connection_details_city">Город</string>
+    <!-- Label for server location "state", as a state of the USA. -->
+    <string name="connection_details_state">State</string>
     <!-- tag(Redesign_2023)
          Will be shown in a UI row which indicates Server load, on the left side will be Server load, and on the right actual load values.
     -->
