@@ -1,26 +1,5 @@
 name: Build ProtonMOD-Next
 
-#
-# SELF-HOSTED RUNNER CONFIGURATION GUIDE
-#
-# This workflow relies on specific environment variables defined in the runner's
-# .env file to function correctly without downloading tools repeatedly.
-#
-# Required variables in ~/actions-runner/.env:
-# 1. ANDROID_HOME
-#    Path to the Android SDK.
-#    Example: ANDROID_HOME=/opt/android-sdk
-#
-# 2. JAVA_HOME
-#    Path to JDK 17 installation.
-#    Example: JAVA_HOME=/usr/lib/jvm/java-17-openjdk
-#
-# 3. PROJECT_ROOT
-#    Path to the local repository clone on the machine.
-#    Example: PROJECT_ROOT=/home/user/StudioProjects/ProtonMOD-NEXT
-#
-
-# Workflow triggers: runs on push to protonmod-next branch or when version tags are pushed
 on:
   push:
     branches:
@@ -36,23 +15,25 @@ on:
         default: true
 
 jobs:
+  # JOB 1: BUILD
   build:
     runs-on: self-hosted
-    permissions:
-      contents: write
+    outputs:
+      release_tag: ${{ steps.changelog.outputs.release_tag }}
+      commit_author: ${{ steps.changelog.outputs.commit_author }}
+      commit_date: ${{ steps.changelog.outputs.commit_date }}
+      current_commit: ${{ steps.changelog.outputs.current_commit }}
+      current_commit_full: ${{ steps.changelog.outputs.current_commit_full }}
+      commit_message: ${{ steps.changelog.outputs.commit_message }}
+      changelog_md: ${{ steps.changelog.outputs.changelog_md }}
 
     steps:
-      # Step 1: Configure Gradle
-      # Uses the Gradle wrapper from the project root defined in .env
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      # Step 2: Make gradlew executable
       - name: Grant execute permission for gradlew
         run: chmod +x "$PROJECT_ROOT/gradlew"
 
-      # Step 3: Check for signing secrets
-      # Verifies that all necessary secrets for signing are present in GitHub Actions
       - name: Check for signing secrets
         id: check_secrets
         run: |
@@ -66,9 +47,6 @@ jobs:
             echo "One or more signing secrets are missing. Skipping re-signing."
           fi
 
-      # Step 4: Decode Keystore
-      # Decodes the base64 encoded keystore from secrets into a file.
-      # This must be done BEFORE the build step so Gradle can find it during signing configuration.
       - name: Decode Keystore
         if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
         env:
@@ -76,9 +54,6 @@ jobs:
         run: |
           echo $SIGNING_KEY_BASE64 | base64 --decode > "$PROJECT_ROOT/app/release-key.jks"
 
-      # Step 5: Build APKs
-      # Builds both Debug and Release APKs.
-      # Gradle automatically signs the release APK using the keystore decoded in Step 4 and env vars provided here.
       - name: Build APKs
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
@@ -88,19 +63,14 @@ jobs:
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
           cd "$PROJECT_ROOT"
-          
-          # Set the path to the keystore for Gradle to use
           export SIGNING_STORE_FILE="$PROJECT_ROOT/app/release-key.jks"
-          
           ./gradlew assembleProductionGooglePlayStoreDebug assembleProductionGooglePlayStoreRelease
 
-      # Step 6: Generate changelog
-      # parses git history to generate a changelog for the release body
+      # Generates changelog and sets outputs for the next job
       - name: Generate changelog from commits
         id: changelog
         run: |
           cd "$PROJECT_ROOT"
-          
           REPO_URL="https://github.com/${{ github.repository }}"
           
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
@@ -111,7 +81,6 @@ jobs:
           fi
           
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
           if [ -z "$LAST_TAG" ]; then
             PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
             CHANGELOG_MD="*Initial commit*"
@@ -124,26 +93,41 @@ jobs:
           CURRENT_COMMIT_FULL=$(git log -1 --pretty=format:"%H")
           COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
           COMMIT_DATE=$(git log -1 --pretty=format:"%cd" --date=format:"%Y-%m-%d %H:%M")
-          BRANCH_NAME="${{ github.ref_name }}"
+          # BRANCH_NAME="${{ github.ref_name }}" # Removed to avoid redundancy
           COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
 
-          {
-            echo "changelog_md<<EOF"
-            echo "$CHANGELOG_MD"
-            echo "EOF"
-            echo "release_tag=$RELEASE_TAG_NAME"
-            echo "previous_tag=$PREVIOUS_TAG"
-            echo "current_commit=$CURRENT_COMMIT"
-            echo "current_commit_full=$CURRENT_COMMIT_FULL"
-            echo "commit_author=$COMMIT_AUTHOR"
-            echo "commit_date=$COMMIT_DATE"
-            echo "branch_name=$BRANCH_NAME"
-            echo "commit_message=$COMMIT_MESSAGE"
-          } >> "$GITHUB_OUTPUT"
+          # Important: We need to escape newlines for multi-line outputs
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "changelog_md<<$EOF" >> "$GITHUB_OUTPUT"
+          echo "$CHANGELOG_MD" >> "$GITHUB_OUTPUT"
+          echo "$EOF" >> "$GITHUB_OUTPUT"
 
-      # Step 7: Notify Telegram
-      # Sends a status update to the configured Telegram chat
-      - name: Send Build Complete Notification to Telegram
+          echo "release_tag=$RELEASE_TAG_NAME" >> "$GITHUB_OUTPUT"
+          echo "current_commit=$CURRENT_COMMIT" >> "$GITHUB_OUTPUT"
+          echo "current_commit_full=$CURRENT_COMMIT_FULL" >> "$GITHUB_OUTPUT"
+          echo "commit_author=$COMMIT_AUTHOR" >> "$GITHUB_OUTPUT"
+          echo "commit_date=$COMMIT_DATE" >> "$GITHUB_OUTPUT"
+          # echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT" # Removed causing secret warning
+          echo "commit_message=$COMMIT_MESSAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare Artifacts
+        run: |
+          # Clean previous artifacts to avoid accumulation on self-hosted runner
+          rm -rf artifacts
+          mkdir -p artifacts
+          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/release/*.apk "artifacts/ProtonMOD-Next-release.apk" || true
+          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/debug/*.apk "artifacts/ProtonMOD-Next-debug.apk" || true
+
+      # Uploads files to GitHub's temporary storage.
+      - name: Upload Artifacts to GitHub Storage
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-apks
+          path: artifacts/*.apk
+          retention-days: 1
+          compression-level: 0
+
+      - name: Send Build Notification (Telegram)
         if: always()
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
@@ -153,44 +137,45 @@ jobs:
           if [ "${{ job.status }}" = "failure" ]; then
             BUILD_STATUS="❌ Failed"
           fi
-          
-          MESSAGE="$BUILD_STATUS Build: ${{ steps.changelog.outputs.branch_name }}
-          Commit: ${{ steps.changelog.outputs.current_commit }}
-          Author: ${{ steps.changelog.outputs.commit_author }}"
-          
+          # Using github.ref_name directly here as well for consistency
+          MESSAGE="$BUILD_STATUS Build: ${{ github.ref_name }}%0ACommit: ${{ steps.changelog.outputs.current_commit }}%0AAuthor: ${{ steps.changelog.outputs.commit_author }}"
           curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
                 -d "chat_id=${TG_CHAT_ID}" \
                 -d "parse_mode=HTML" \
                 --data-urlencode "text=${MESSAGE}"
 
-      # Step 8: Prepare Artifacts
-      # Copies generated APKs from the project build folder to a local artifacts directory for upload
-      - name: Prepare Artifacts
-        run: |
-          mkdir -p artifacts
-          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/release/*.apk artifacts/ || true
-          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/debug/*.apk artifacts/ || true
-          echo "Artifacts copied to $(pwd)/artifacts"
-          ls -R artifacts
+  # JOB 2: RELEASE
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: success() && (github.event_name == 'push' || inputs.create_pre_release == true)
+    permissions:
+      contents: write
 
-      # Step 9: Create or Update GitHub Release
-      # Creates a pre-release on GitHub with the generated APKs and changelog
+    steps:
+      # Downloads the artifacts
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-apks
+          path: artifacts
+
+      # Creates the release using GitHub
       - name: Create or Update Pre-release
-        if: success() && (github.event_name == 'push' || inputs.create_pre_release == true)
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.changelog.outputs.release_tag }}
-          name: "Build ${{ steps.changelog.outputs.release_tag }}"
+          tag: ${{ needs.build.outputs.release_tag }}
+          name: "Build ${{ needs.build.outputs.release_tag }}"
           body: |
             ## 🔨 Build Info
-            - **Branch**: `${{ steps.changelog.outputs.branch_name }}`
-            - **Author**: ${{ steps.changelog.outputs.commit_author }}
-            - **Date**: ${{ steps.changelog.outputs.commit_date }}
-            - **Latest commit**: [${{ steps.changelog.outputs.current_commit }}](https://github.com/${{ github.repository }}/commit/${{ steps.changelog.outputs.current_commit_full }}) - ${{ steps.changelog.outputs.commit_message }}
+            - **Branch**: `${{ github.ref_name }}`
+            - **Author**: ${{ needs.build.outputs.commit_author }}
+            - **Date**: ${{ needs.build.outputs.commit_date }}
+            - **Latest commit**: [${{ needs.build.outputs.current_commit }}](https://github.com/${{ github.repository }}/commit/${{ needs.build.outputs.current_commit_full }}) - ${{ needs.build.outputs.commit_message }}
             
-            ## 📋 Changes Since ${{ steps.changelog.outputs.previous_tag }}
-            ${{ steps.changelog.outputs.changelog_md }}
+            ## 📋 Changes
+            ${{ needs.build.outputs.changelog_md }}
             
             ---
             *Automated build by GitHub Actions*
@@ -200,11 +185,3 @@ jobs:
           removeArtifacts: true
           replacesArtifacts: true
           omitBodyDuringUpdate: false
-
-      # Step 10: Upload Artifacts
-      # Uploads APKs to GitHub Actions artifacts storage (accessible from the Actions tab)
-      - name: Upload MOD-Next APKs
-        uses: actions/upload-artifact@v4
-        with:
-          name: protonmod-next-apks
-          path: artifacts/*.apk
