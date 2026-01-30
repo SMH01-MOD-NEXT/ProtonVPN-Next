@@ -685,7 +685,6 @@ private fun ColumnScope.AccountCategory(
     modifier: Modifier = Modifier,
     state: AccountSettingsViewState,
     themeType: ThemeType,
-    showSingInOnAnotherDeviceQr: Boolean,
     onAccountClick: () -> Unit,
     onSignUpClick: () -> Unit,
     onSignInClick: () -> Unit,
