@@ -1,12 +1,10 @@
 name: Build ProtonMOD-Next
-# Workflow triggers: runs on push to protonmod-next branch or when version tags are pushed
 on:
   push:
     branches:
-      - 'protonmod-next'  # Trigger on commits to main development branch
+      - 'protonmod-next'
     tags:
-      - 'v*' # Trigger on version tags
-  workflow_dispatch:  # Allow manual workflow execution from GitHub UI
+  workflow_dispatch:
     inputs:
       create_pre_release:
         description: 'Create GitHub Pre-release'
@@ -16,41 +14,32 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    # Permissions required for creating releases
+    runs-on: self-hosted
     permissions:
       contents: write
 
     steps:
-      # Step 1: Clone the repository with full git history
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # Step 2: Install Java Development Kit 17
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      # Step 3: Configure Gradle
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      # Step 4: Make gradlew executable
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+        run: chmod +x "$PROJECT_ROOT/gradlew"
 
-      # Step 5: Build APKs
       - name: Build APKs (with debug key)
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
-        run: ./gradlew assembleProductionGooglePlayStoreDebug assembleProductionGooglePlayStoreRelease
+        run: |
+          cd "$PROJECT_ROOT"
+          ./gradlew assembleProductionGooglePlayStoreDebug assembleProductionGooglePlayStoreRelease
 
-      # Step 6: Check for signing secrets
       - name: Check for signing secrets
         id: check_secrets
         run: |
@@ -64,22 +53,13 @@ jobs:
             echo "One or more signing secrets are missing. Skipping re-signing."
           fi
 
-      # Step 7: Decode keystore
       - name: Decode Keystore
         if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
         env:
           SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
         run: |
-          echo $SIGNING_KEY_BASE64 | base64 --decode > $GITHUB_WORKSPACE/app/release-key.jks
+          echo $SIGNING_KEY_BASE64 | base64 --decode > "$PROJECT_ROOT/app/release-key.jks"
 
-      # Step 8: Install Build-Tools
-      - name: Install Android SDK Build-Tools
-        if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
-        uses: android-actions/setup-android@v3
-        with:
-          build-tools: 34.0.0
-
-      # Step 9: Sign Debug APK
       - name: Sign Debug APK
         if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
         env:
@@ -87,15 +67,21 @@ jobs:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
-          APK_PATH=$(find app/build/outputs/apk/productionGooglePlayStore/debug/ -name "*.apk" | head -n 1)
+          APK_PATH=$(find "$PROJECT_ROOT/app/build/outputs/apk/productionGooglePlayStore/debug/" -name "*.apk" | head -n 1)
           echo "Signing $APK_PATH"
-          $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign --ks $GITHUB_WORKSPACE/app/release-key.jks \
+          
+          if [ -f "$ANDROID_HOME/build-tools/34.0.0/apksigner" ]; then
+             APKSIGNER="$ANDROID_HOME/build-tools/34.0.0/apksigner"
+          else
+             APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)
+          fi
+
+          "$APKSIGNER" sign --ks "$PROJECT_ROOT/app/release-key.jks" \
             --ks-key-alias "$SIGNING_KEY_ALIAS" \
             --ks-pass env:SIGNING_STORE_PASSWORD \
             --key-pass env:SIGNING_KEY_PASSWORD \
             "$APK_PATH"
 
-      # Step 10: Sign Release APK
       - name: Sign Release APK
         if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
         env:
@@ -103,43 +89,45 @@ jobs:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
-          APK_PATH=$(find app/build/outputs/apk/productionGooglePlayStore/release/ -name "*.apk" | head -n 1)
+          APK_PATH=$(find "$PROJECT_ROOT/app/build/outputs/apk/productionGooglePlayStore/release/" -name "*.apk" | head -n 1)
           echo "Signing $APK_PATH"
-          $ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner sign --ks $GITHUB_WORKSPACE/app/release-key.jks \
+          
+          if [ -f "$ANDROID_HOME/build-tools/34.0.0/apksigner" ]; then
+             APKSIGNER="$ANDROID_HOME/build-tools/34.0.0/apksigner"
+          else
+             APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)
+          fi
+
+          "$APKSIGNER" sign --ks "$PROJECT_ROOT/app/release-key.jks" \
             --ks-key-alias "$SIGNING_KEY_ALIAS" \
             --ks-pass env:SIGNING_STORE_PASSWORD \
             --key-pass env:SIGNING_KEY_PASSWORD \
             "$APK_PATH"
 
-      # Step 11: Generate changelog
       - name: Generate changelog from commits
         id: changelog
         run: |
+          cd "$PROJECT_ROOT"
+          
           REPO_URL="https://github.com/${{ github.repository }}"
           
-          # Get the last tag (either current if pushed tag, or latest if branch push)
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             CURRENT_TAG="${{ github.ref_name }}"
             RELEASE_TAG_NAME="$CURRENT_TAG"
           else
-            # For branch pushes, use 'pre-release' tag or create it
             RELEASE_TAG_NAME="pre-release"
           fi
           
-          # Get previous tag for changelog
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           
           if [ -z "$LAST_TAG" ]; then
-            # No tags yet, use first commit
             PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
             CHANGELOG_MD="*Initial commit*"
           else
             PREVIOUS_TAG="$LAST_TAG"
-            # Generate changelog with commit links (Markdown)
             CHANGELOG_MD=$(git log "$PREVIOUS_TAG..HEAD" --pretty=format:"* [%h]($REPO_URL/commit/%H) %s" --no-merges)
           fi
           
-          # Extract metadata
           CURRENT_COMMIT=$(git log -1 --pretty=format:"%h")
           CURRENT_COMMIT_FULL=$(git log -1 --pretty=format:"%H")
           COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
@@ -147,7 +135,6 @@ jobs:
           BRANCH_NAME="${{ github.ref_name }}"
           COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
 
-          # Output variables
           {
             echo "changelog_md<<EOF"
             echo "$CHANGELOG_MD"
@@ -162,7 +149,6 @@ jobs:
             echo "commit_message=$COMMIT_MESSAGE"
           } >> "$GITHUB_OUTPUT"
 
-      # Step 12: Send brief notification to Telegram
       - name: Send Build Complete Notification to Telegram
         if: always()
         env:
@@ -179,9 +165,17 @@ jobs:
           Author: ${{ steps.changelog.outputs.commit_author }}"
           
           curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
-               -d "chat_id=${TG_CHAT_ID}" \
-               -d "parse_mode=HTML" \
-               --data-urlencode "text=${MESSAGE}"
+                -d "chat_id=${TG_CHAT_ID}" \
+                -d "parse_mode=HTML" \
+                --data-urlencode "text=${MESSAGE}"
+
+      - name: Prepare Artifacts
+        run: |
+          mkdir -p artifacts
+          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/release/*.apk artifacts/ || true
+          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/debug/*.apk artifacts/ || true
+          echo "Artifacts copied to $(pwd)/artifacts"
+          ls -R artifacts
 
       # Step 13: Create or Update GitHub Pre-release
       - name: Create or Update Pre-release
@@ -203,19 +197,15 @@ jobs:
             
             ---
             *Automated build by GitHub Actions*
-          artifacts: |
-            app/build/outputs/apk/productionGooglePlayStore/release/*.apk
-            app/build/outputs/apk/productionGooglePlayStore/debug/*.apk
+          artifacts: "artifacts/*.apk"
           prerelease: true
           allowUpdates: true
           replacesArtifacts: true
           omitBodyDuringUpdate: false
 
-      # Step 14: Upload Artifacts (Actions tab)
+      # Step 14: Upload Artifacts
       - name: Upload MOD-Next APKs
         uses: actions/upload-artifact@v4
         with:
           name: protonmod-next-apks
-          path: |
-            app/build/outputs/apk/productionGooglePlayStore/debug/*.apk
-            app/build/outputs/apk/productionGooglePlayStore/release/*.apk
+          path: artifacts/*.apk
