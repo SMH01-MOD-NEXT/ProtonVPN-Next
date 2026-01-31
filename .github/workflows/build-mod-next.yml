@@ -2,10 +2,8 @@ name: Build ProtonMOD-Next
 
 on:
   push:
-    branches:
-      - 'protonmod-next'
     tags:
-      - 'v*'
+      - '*'
   workflow_dispatch:
     inputs:
       create_pre_release:
@@ -16,16 +14,15 @@ on:
 
 jobs:
   # JOB 1: BUILD
-  build:
+  build_local:
     runs-on: self-hosted
     outputs:
       release_tag: ${{ steps.changelog.outputs.release_tag }}
-      commit_author: ${{ steps.changelog.outputs.commit_author }}
-      commit_date: ${{ steps.changelog.outputs.commit_date }}
-      current_commit: ${{ steps.changelog.outputs.current_commit }}
-      current_commit_full: ${{ steps.changelog.outputs.current_commit_full }}
-      commit_message: ${{ steps.changelog.outputs.commit_message }}
       changelog_md: ${{ steps.changelog.outputs.changelog_md }}
+      version_code: ${{ steps.extract_version.outputs.version_code }}
+      version_name: ${{ steps.extract_version.outputs.version_name }}
+      commit_author: ${{ steps.changelog.outputs.commit_author }}
+      current_commit: ${{ steps.changelog.outputs.current_commit }}
 
     steps:
       - name: Setup Gradle
@@ -34,25 +31,16 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x "$PROJECT_ROOT/gradlew"
 
-      - name: Check for signing secrets
-        id: check_secrets
-        run: |
-          if [ -n "${{ secrets.SIGNING_KEY_BASE64 }}" ] && \
-             [ -n "${{ secrets.SIGNING_STORE_PASSWORD }}" ] && \
-             [ -n "${{ secrets.SIGNING_KEY_ALIAS }}" ] && \
-             [ -n "${{ secrets.SIGNING_KEY_PASSWORD }}" ]; then
-            echo "SECRETS_PRESENT=true" >> $GITHUB_OUTPUT
-          else
-            echo "SECRETS_PRESENT=false" >> $GITHUB_OUTPUT
-            echo "One or more signing secrets are missing. Skipping re-signing."
-          fi
-
       - name: Decode Keystore
-        if: steps.check_secrets.outputs.SECRETS_PRESENT == 'true'
         env:
           SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
         run: |
-          echo $SIGNING_KEY_BASE64 | base64 --decode > "$PROJECT_ROOT/app/release-key.jks"
+          if [ -n "$SIGNING_KEY_BASE64" ]; then
+             echo $SIGNING_KEY_BASE64 | base64 --decode > "$PROJECT_ROOT/app/release-key.jks"
+          else
+             echo "Error: Signing key not found!"
+             exit 1
+          fi
 
       - name: Build APKs
         env:
@@ -64,18 +52,30 @@ jobs:
         run: |
           cd "$PROJECT_ROOT"
           export SIGNING_STORE_FILE="$PROJECT_ROOT/app/release-key.jks"
-          ./gradlew assembleProductionGooglePlayStoreDebug assembleProductionGooglePlayStoreRelease
+          ./gradlew assembleProductionGooglePlayStoreDebug \
+                    assembleProductionGooglePlayStoreRelease \
+                    assembleProductionVanillaOpenSourceDebug \
+                    assembleProductionVanillaOpenSourceRelease
 
-      # Generates changelog and sets outputs for the next job
-      - name: Generate changelog from commits
+      - name: Extract Version Info
+        id: extract_version
+        run: |
+          cd "$PROJECT_ROOT"
+          # Get version info from Gradle to pass to the Cloud Job
+          VERSION_CODE=$(./gradlew -q :app:getVersionCode | tail -n 1)
+          VERSION_NAME=$(./gradlew -q :app:getVersionName | tail -n 1)
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "Detected: $VERSION_NAME ($VERSION_CODE)"
+
+      - name: Generate Changelog
         id: changelog
         run: |
           cd "$PROJECT_ROOT"
           REPO_URL="https://github.com/${{ github.repository }}"
           
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
-            CURRENT_TAG="${{ github.ref_name }}"
-            RELEASE_TAG_NAME="$CURRENT_TAG"
+            RELEASE_TAG_NAME="${{ github.ref_name }}"
           else
             RELEASE_TAG_NAME="pre-release"
           fi
@@ -89,45 +89,165 @@ jobs:
             CHANGELOG_MD=$(git log "$PREVIOUS_TAG..HEAD" --pretty=format:"* [%h]($REPO_URL/commit/%H) %s" --no-merges)
           fi
           
-          CURRENT_COMMIT=$(git log -1 --pretty=format:"%h")
-          CURRENT_COMMIT_FULL=$(git log -1 --pretty=format:"%H")
           COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
-          COMMIT_DATE=$(git log -1 --pretty=format:"%cd" --date=format:"%Y-%m-%d %H:%M")
-          # BRANCH_NAME="${{ github.ref_name }}" # Removed to avoid redundancy
-          COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
+          CURRENT_COMMIT=$(git log -1 --pretty=format:"%h")
 
-          # Important: We need to escape newlines for multi-line outputs
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "changelog_md<<$EOF" >> "$GITHUB_OUTPUT"
           echo "$CHANGELOG_MD" >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
-
           echo "release_tag=$RELEASE_TAG_NAME" >> "$GITHUB_OUTPUT"
-          echo "current_commit=$CURRENT_COMMIT" >> "$GITHUB_OUTPUT"
-          echo "current_commit_full=$CURRENT_COMMIT_FULL" >> "$GITHUB_OUTPUT"
           echo "commit_author=$COMMIT_AUTHOR" >> "$GITHUB_OUTPUT"
-          echo "commit_date=$COMMIT_DATE" >> "$GITHUB_OUTPUT"
-          # echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT" # Removed causing secret warning
-          echo "commit_message=$COMMIT_MESSAGE" >> "$GITHUB_OUTPUT"
+          echo "current_commit=$CURRENT_COMMIT" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare Artifacts
-        run: |
-          # Clean previous artifacts to avoid accumulation on self-hosted runner
-          rm -rf artifacts
-          mkdir -p artifacts
-          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/release/*.apk "artifacts/ProtonMOD-Next-release.apk" || true
-          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/debug/*.apk "artifacts/ProtonMOD-Next-debug.apk" || true
-
-      # Uploads files to GitHub's temporary storage.
-      - name: Upload Artifacts to GitHub Storage
+      - name: Upload APKs to GitHub Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-apks
-          path: artifacts/*.apk
+          # Upload directly from build folders to avoid local copying/renaming mess
+          path: |
+            ${{ env.PROJECT_ROOT }}/app/build/outputs/apk/productionGooglePlayStore/release/*.apk
+            ${{ env.PROJECT_ROOT }}/app/build/outputs/apk/productionGooglePlayStore/debug/*.apk
+            ${{ env.PROJECT_ROOT }}/app/build/outputs/apk/productionVanillaOpenSource/release/*.apk
+            ${{ env.PROJECT_ROOT }}/app/build/outputs/apk/productionVanillaOpenSource/debug/*.apk
           retention-days: 1
           compression-level: 0
 
-      - name: Send Build Notification (Telegram)
+  # JOB 2: DEPLOY
+  deploy_cloud:
+    needs: build_local
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for release creation and pushing to web branch
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        # Need checkout to have access to git for pushing to web branch
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-apks
+          path: dist/ # Download all APKs into a clean 'dist' folder
+
+      - name: Rename APKs for Standard Naming
+        run: |
+          cd dist
+          # Find and rename files to standard names expected by JSON/R2
+          mv *-production-googlePlayStore-release.apk ProtonMOD-Next-release.apk
+          mv *-production-googlePlayStore-debug.apk ProtonMOD-Next-debug.apk
+          mv *-production-vanilla-openSource-release.apk ProtonMOD-Next-FOSS-release.apk
+          mv *-production-vanilla-openSource-debug.apk ProtonMOD-Next-FOSS-debug.apk
+          ls -la
+
+      # UPLOAD TO CLOUDFLARE R2
+      - name: Upload APKs to R2
+        uses: ryand56/r2-upload-action@v1.2
+        with:
+          r2-account-id: ${{ secrets.R2_ACCOUNT_ID }}
+          r2-access-key-id: ${{ secrets.R2_ACCESS_KEY_ID }}
+          r2-secret-access-key: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          r2-bucket: ${{ secrets.R2_BUCKET }}
+          source-dir: dist
+          destination-dir: ${{ needs.build_local.outputs.release_tag }}
+
+      # GENERATE UPDATE.JSON
+      - name: Generate update.json
+        env:
+          CHANGELOG: ${{ needs.build_local.outputs.changelog_md }}
+          TAG: ${{ needs.build_local.outputs.release_tag }}
+          VERSION_CODE: ${{ needs.build_local.outputs.version_code }}
+          VERSION_NAME: ${{ needs.build_local.outputs.version_name }}
+          R2_DOMAIN: ${{ secrets.R2_PUBLIC_DOMAIN }}
+        run: |
+          cat <<EOF > generate_json.py
+          import json
+          import os
+          import sys
+
+          try:
+              vc_str = os.environ.get('VERSION_CODE', '').strip()
+              vn_str = os.environ.get('VERSION_NAME', '').strip()
+          
+              base_url = f"{os.environ['R2_DOMAIN']}/{os.environ['TAG']}"
+          
+              if not vc_str:
+                  print("Error: Version code missing")
+                  sys.exit(1)
+
+              data = {
+                  "versionCode": int(vc_str),
+                  "versionName": vn_str,
+                  "changelog": os.environ['CHANGELOG'],
+                  "forceUpdate": False,
+                  "downloads": {
+                      "googleRelease": f"{base_url}/ProtonMOD-Next-release.apk",
+                      "googleDebug": f"{base_url}/ProtonMOD-Next-debug.apk",
+                      "fossRelease": f"{base_url}/ProtonMOD-Next-FOSS-release.apk",
+                      "fossDebug": f"{base_url}/ProtonMOD-Next-FOSS-debug.apk"
+                  }
+              }
+          
+              with open('update.json', 'w') as f:
+                  json.dump(data, f, indent=2)
+              print("update.json generated successfully")
+          except Exception as e:
+              print(f"Error generating JSON: {e}")
+              sys.exit(1)
+          EOF
+
+          python3 generate_json.py
+          rm generate_json.py
+          cat update.json
+
+      # PUSH JSON TO CDN
+      - name: Deploy update.json to Web Branch
+        run: |
+          git config --global user.name "ProtonMOD Bot"
+          git config --global user.email "bot@protonmod.next"
+          
+          # Clone web branch into temp dir
+          git clone --depth 1 --branch web "https://oauth2:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" web_deploy_temp
+          
+          # Update file
+          cp update.json web_deploy_temp/
+          
+          # Push
+          cd web_deploy_temp
+          git add update.json
+          git commit -m "Update JSON for version ${{ needs.build_local.outputs.release_tag }}" || echo "No changes to commit"
+          git push origin web
+          cd ..
+          rm -rf web_deploy_temp
+
+      # GITHUB RELEASE
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ needs.build_local.outputs.release_tag }}
+          name: "Build ${{ needs.build_local.outputs.release_tag }}"
+          body: |
+            ## 🔨 Build Info
+            - **Branch**: `${{ github.ref_name }}`
+            - **Version**: ${{ needs.build_local.outputs.version_name }} (${{ needs.build_local.outputs.version_code }})
+            
+            ## 🚀 Downloads (High Speed CDN)
+            The app updates automatically via Cloudflare R2.
+            Backup downloads are available below.
+            
+            ## 📋 Changes
+            ${{ needs.build_local.outputs.changelog_md }}
+            
+            ---
+            *Hybrid Build: Local Compilation + Cloud Deployment*
+          artifacts: "dist/*"
+          allowUpdates: true
+          removeArtifacts: true
+          replacesArtifacts: true
+
+      - name: Send Notification (Telegram)
         if: always()
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
@@ -137,51 +257,10 @@ jobs:
           if [ "${{ job.status }}" = "failure" ]; then
             BUILD_STATUS="❌ Failed"
           fi
-          # Using github.ref_name directly here as well for consistency
-          MESSAGE="$BUILD_STATUS Build: ${{ github.ref_name }}%0ACommit: ${{ steps.changelog.outputs.current_commit }}%0AAuthor: ${{ steps.changelog.outputs.commit_author }}"
+          
+          MESSAGE="$BUILD_STATUS Deployment%0AVersion: ${{ needs.build_local.outputs.release_tag }}%0AAuthor: ${{ needs.build_local.outputs.commit_author }}"
+          
           curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
                 -d "chat_id=${TG_CHAT_ID}" \
                 -d "parse_mode=HTML" \
                 --data-urlencode "text=${MESSAGE}"
-
-  # JOB 2: RELEASE
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    if: success() && (github.event_name == 'push' || inputs.create_pre_release == true)
-    permissions:
-      contents: write
-
-    steps:
-      # Downloads the artifacts
-      - name: Download Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-apks
-          path: artifacts
-
-      # Creates the release using GitHub
-      - name: Create or Update Pre-release
-        uses: ncipollo/release-action@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ needs.build.outputs.release_tag }}
-          name: "Build ${{ needs.build.outputs.release_tag }}"
-          body: |
-            ## 🔨 Build Info
-            - **Branch**: `${{ github.ref_name }}`
-            - **Author**: ${{ needs.build.outputs.commit_author }}
-            - **Date**: ${{ needs.build.outputs.commit_date }}
-            - **Latest commit**: [${{ needs.build.outputs.current_commit }}](https://github.com/${{ github.repository }}/commit/${{ needs.build.outputs.current_commit_full }}) - ${{ needs.build.outputs.commit_message }}
-            
-            ## 📋 Changes
-            ${{ needs.build.outputs.changelog_md }}
-            
-            ---
-            *Automated build by GitHub Actions*
-          artifacts: "artifacts/*.apk"
-          prerelease: true
-          allowUpdates: true
-          removeArtifacts: true
-          replacesArtifacts: true
-          omitBodyDuringUpdate: false
