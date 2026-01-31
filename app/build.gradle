@@ -22,8 +22,9 @@ import com.android.build.gradle.internal.dsl.BaseFlavor
 import configuration.EnvironmentConfigSettings
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
-import groovy.json.StringEscapeUtils
+import org.apache.commons.text.StringEscapeUtils
 import io.gitlab.arturbosch.detekt.Detekt
+import org.gradle.api.plugins.ExtraPropertiesExtension
 
 buildscript {
     repositories {
@@ -47,6 +48,12 @@ plugins {
     id 'androidx.baselineprofile'
 }
 
+// Applying Firebase plugins only for Google-related tasks to keep Open Source clean
+if (gradle.startParameter.taskRequests.toString().toLowerCase().contains("google")) {
+    apply plugin: 'com.google.gms.google-services'
+    apply plugin: 'com.google.firebase.crashlytics'
+}
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
@@ -55,8 +62,6 @@ apply plugin: 'com.jaredsburrows.license'
 apply plugin: 'dagger.hilt.android.plugin'
 apply plugin: 'io.gitlab.arturbosch.detekt'
 apply plugin: 'me.proton.core.gradle-plugins.environment-config'
-apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.google.firebase.crashlytics'
 
 dependencyCheck {
     formats = ["SARIF", "HTML", "JUNIT"]
@@ -281,67 +286,7 @@ android {
                 apiPrefix = 'vpn-api'
             }
         }
-        black {
-            dimension "environment"
-            versionNameSuffix '-dev'
 
-            def blackToken = System.getenv("BLACK_TOKEN")
-            // Use either:
-            //  - TEST_ENV_DOMAIN for regular test environments,
-            //  - the BTI_* variables for the BTI environment.
-            def testEnvHost = System.getenv("TEST_ENV_DOMAIN")
-            def dohUrls, apiPinsString, altPinsString, altRoutingCertForMainRoute, customApiHost, customPrefix, customHv3Host
-
-            if (testEnvHost != null) {
-                dohUrls = null
-                // Disable cert pinning:
-                apiPinsString = "{}"
-                altPinsString = "{}"
-                altRoutingCertForMainRoute = false
-
-                customApiHost = testEnvHost
-            }
-            else {
-                def apiPins = System.getenv("BTI_API_TLS_PINNINGS")
-                def altPins = System.getenv("BTI_ALT_ROUTE_TLS_PINNINGS")
-                dohUrls = System.getenv("BTI_AR_DOH_URLS")
-                apiPinsString = "{${helpers.sanitizeStringListForBuildConfig(apiPins)}}"
-                altPinsString = altPins != null ? "{${helpers.sanitizeStringListForBuildConfig(altPins)}}" : null
-                altRoutingCertForMainRoute = true
-
-                customPrefix = System.getenv("BTI_PREFIX")
-                customApiHost = System.getenv("BTI_HOST")
-                customHv3Host = System.getenv("BTI_HV3_DOMAIN")
-            }
-
-            helpers.protonEnvironmentConfig(it) {
-                if (customApiHost != null)
-                    host = StringEscapeUtils.escapeJava(customApiHost)
-                if (customPrefix != null)
-                    apiPrefix = StringEscapeUtils.escapeJava(customPrefix)
-                if (customHv3Host != null)
-                    hv3Host = StringEscapeUtils.escapeJava(customHv3Host)
-                proxyToken = StringEscapeUtils.escapeJava(blackToken)
-            }
-
-            if (customApiHost != null) {
-                Helpers.setAssetLinksResValue(it, customApiHost)
-            }
-
-            def vpnServerRootCert = System.getenv("BTI_SERVERS_ROOT_CERT")
-            buildConfigField "Boolean", "ALT_ROUTING_CERT_FOR_MAIN_ROUTE", "$altRoutingCertForMainRoute"
-            buildConfigField "String[]", "DOH_SERVICES_URLS", "{${helpers.sanitizeStringListForBuildConfig(dohUrls)}}"
-            buildConfigField "String[]", "API_TLS_PINS", apiPinsString
-
-            // Below are not mandatory
-            if (altPinsString != null) {
-                buildConfigField "String[]", "API_ALT_TLS_PINS", altPinsString
-            }
-            if (vpnServerRootCert != null) {
-                buildConfigField "String", "VPN_SERVER_ROOT_CERT", "\"${StringEscapeUtils.escapeJava(vpnServerRootCert)}\""
-            }
-        }
-        def additionalProguard =  "proguard-rules-logcat.pro"
         vanilla {
             dimension "functionality"
         }
@@ -354,32 +299,13 @@ android {
             dimension "distribution"
             getIsDefault().set(true)
             buildConfigField "String", "STORE_SUFFIX", "\"+play\""
-            proguardFile additionalProguard
+            proguardFile "proguard-rules-logcat.pro"
         }
 
-        amazon {
-            dimension "distribution"
-            minSdkVersion rootProject.ext.minSdkVersionAmazon
-            buildConfigField "String", "STORE_SUFFIX", "\"+aws\""
-            proguardFile additionalProguard
-        }
-        direct {
-            dimension "distribution"
-            buildConfigField "String", "STORE_SUFFIX", "\"+apk\""
-            proguardFile additionalProguard
-        }
         openSource {
             dimension "distribution"
             buildConfigField "String", "STORE_SUFFIX", "\"+os\""
-            proguardFile additionalProguard
-        }
-        dev {
-            dimension "distribution"
-            applicationIdSuffix '.dev'
-            buildConfigField "String", "STORE_SUFFIX", "\"\""
-            buildConfigField "Boolean", "ALLOW_LOGCAT", "true"
-
-            manifestPlaceholders = ["gwpAsanMode": "always"]
+            proguardFile "proguard-rules-logcat.pro"
         }
     }
     variantFilter { variant ->
@@ -387,12 +313,19 @@ android {
         def functionality = variant.flavors[1].name
         def dist = variant.flavors[2].name
 
-        if (dist == "dev")
-            return
-        if (environment == "black" && dist !in ["playStore", "direct"])
-            setIgnore(true) // We don't need all distributions for testing.
-        if (functionality == "google" && dist != "playStore" || functionality != "google" && dist == "playStore")
+        if (dist == "openSource" && functionality != "vanilla") {
             setIgnore(true)
+        }
+        if (dist == "playStore" && functionality != "google") {
+            setIgnore(true)
+        }
+        // Also ignore inverse mismatch to keep list clean
+        if (functionality == "vanilla" && dist == "playStore") {
+            setIgnore(true)
+        }
+        if (functionality == "google" && dist == "openSource") {
+            setIgnore(true)
+        }
     }
 
     buildTypes {
@@ -442,6 +375,7 @@ android {
         }
         jniLibs {
             useLegacyPackaging = true
+            pickFirst 'lib/**/libgojni.so'
         }
     }
 
@@ -449,7 +383,7 @@ android {
     sourceSets {
         main.res.srcDirs += 'src/main/res_flags'
         main {
-           assets.srcDirs = ['src/main/assets', 'assets', 'ovpnlibs/assets', '../openvpn/build/ovpnassets']
+            assets.srcDirs = ['src/main/assets', 'assets', 'ovpnlibs/assets', '../openvpn/build/ovpnassets']
             jniLibs.srcDirs = ['src/main/jniLibs']
         }
         // Screenshot test does not automatically include app resources. Check if it's still needed when updating screenshot test module.
@@ -592,8 +526,6 @@ tasks.withType(Test).configureEach {
         showExceptions true
     }
 }
-
-import org.gradle.internal.extensibility.DefaultExtraPropertiesExtension
 
 class Helpers {
     private File workingDir
@@ -740,9 +672,9 @@ class Helpers {
     }
 
     private static void setEnvironmentConfigExt(
-        DefaultExtraPropertiesExtension ext,
-        String name,
-        Closure<EnvironmentConfigSettings> configurator
+            ExtraPropertiesExtension ext,
+            String name,
+            Closure<EnvironmentConfigSettings> configurator
     ) {
         def configSettings = new EnvironmentConfigSettings()
 
@@ -859,10 +791,10 @@ dependencies {
     implementation 'com.caverock:androidsvg-aar:1.4'
 
     // Firebase
-    implementation platform('com.google.firebase:firebase-bom:33.7.0')
-    implementation 'com.google.firebase:firebase-crashlytics'
-    implementation 'com.google.firebase:firebase-analytics'
-    implementation 'com.google.firebase:firebase-firestore-ktx'
+    googleImplementation platform('com.google.firebase:firebase-bom:33.7.0')
+    googleImplementation 'com.google.firebase:firebase-crashlytics'
+    googleImplementation 'com.google.firebase:firebase-analytics'
+    googleImplementation 'com.google.firebase:firebase-firestore-ktx'
 
     // Compose
     def composeBom = platform('androidx.compose:compose-bom:2024.10.01')
