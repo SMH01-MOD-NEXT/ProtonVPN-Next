@@ -2,10 +2,8 @@ name: Build ProtonMOD-Next
 
 on:
   push:
-    branches:
-      - 'protonmod-next'
     tags:
-      - 'v*'
+      - '*'
   workflow_dispatch:
     inputs:
       create_pre_release:
@@ -18,6 +16,9 @@ jobs:
   # JOB 1: BUILD
   build:
     runs-on: self-hosted
+    permissions:
+      contents: write
+
     outputs:
       release_tag: ${{ steps.changelog.outputs.release_tag }}
       commit_author: ${{ steps.changelog.outputs.commit_author }}
@@ -56,17 +57,18 @@ jobs:
 
       - name: Build APKs
         env:
-          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
-          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
           cd "$PROJECT_ROOT"
           export SIGNING_STORE_FILE="$PROJECT_ROOT/app/release-key.jks"
-          ./gradlew assembleProductionGooglePlayStoreDebug assembleProductionGooglePlayStoreRelease
+          # Building all 4 variants
+          ./gradlew assembleProductionGooglePlayStoreDebug \
+                    assembleProductionGooglePlayStoreRelease \
+                    assembleProductionVanillaOpenSourceDebug \
+                    assembleProductionVanillaOpenSourceRelease
 
-      # Generates changelog and sets outputs for the next job
       - name: Generate changelog from commits
         id: changelog
         run: |
@@ -93,41 +95,111 @@ jobs:
           CURRENT_COMMIT_FULL=$(git log -1 --pretty=format:"%H")
           COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
           COMMIT_DATE=$(git log -1 --pretty=format:"%cd" --date=format:"%Y-%m-%d %H:%M")
-          # BRANCH_NAME="${{ github.ref_name }}" # Removed to avoid redundancy
           COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
-
-          # Important: We need to escape newlines for multi-line outputs
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "changelog_md<<$EOF" >> "$GITHUB_OUTPUT"
           echo "$CHANGELOG_MD" >> "$GITHUB_OUTPUT"
           echo "$EOF" >> "$GITHUB_OUTPUT"
-
           echo "release_tag=$RELEASE_TAG_NAME" >> "$GITHUB_OUTPUT"
           echo "current_commit=$CURRENT_COMMIT" >> "$GITHUB_OUTPUT"
           echo "current_commit_full=$CURRENT_COMMIT_FULL" >> "$GITHUB_OUTPUT"
           echo "commit_author=$COMMIT_AUTHOR" >> "$GITHUB_OUTPUT"
           echo "commit_date=$COMMIT_DATE" >> "$GITHUB_OUTPUT"
-          # echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT" # Removed causing secret warning
           echo "commit_message=$COMMIT_MESSAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Generate update.json
+        env:
+          CHANGELOG: ${{ steps.changelog.outputs.changelog_md }}
+          TAG: ${{ steps.changelog.outputs.release_tag }}
+          REPO: ${{ github.repository }}
+          R2_DOMAIN: ${{ secrets.R2_PUBLIC_DOMAIN }}
+        run: |
+          cd "$PROJECT_ROOT"
+          
+          echo "Extracting version info via Gradle..."
+          VERSION_CODE=$(./gradlew -q :app:getVersionCode | tail -n 1)
+          VERSION_NAME=$(./gradlew -q :app:getVersionName | tail -n 1)
+          echo "Detected Version: $VERSION_NAME ($VERSION_CODE)"
+          
+          cat <<EOF > generate_json.py
+          import json
+          import os
+          import sys
+          try:
+              vc_str = os.environ.get('VERSION_CODE', '').strip()
+              vn_str = os.environ.get('VERSION_NAME', '').strip()
+              r2_domain = os.environ.get('R2_DOMAIN', '')
+              if r2_domain.endswith('/'):
+                  r2_domain = r2_domain[:-1]
+          
+              base_url = f"{r2_domain}/VPN-Next"
+          
+              if not vc_str:
+                  sys.exit(1)
+              data = {
+                  "versionCode": int(vc_str),
+                  "versionName": vn_str,
+                  "changelog": os.environ['CHANGELOG'],
+                  "forceUpdate": False,
+                  "downloads": {
+                      "googleRelease": f"{base_url}/ProtonMOD-Next-release.apk",
+                      "googleDebug": f"{base_url}/ProtonMOD-Next-debug.apk",
+                      "fossRelease": f"{base_url}/ProtonMOD-Next-FOSS-release.apk",
+                      "fossDebug": f"{base_url}/ProtonMOD-Next-FOSS-debug.apk"
+                  }
+              }
+          
+              with open('update.json', 'w') as f:
+                  json.dump(data, f, indent=2)
+              print("update.json generated successfully")
+          except Exception as e:
+              print(f"Error generating JSON: {e}")
+              sys.exit(1)
+          EOF
+          export VERSION_CODE="$VERSION_CODE"
+          export VERSION_NAME="$VERSION_NAME"
+          python3 generate_json.py
+          rm generate_json.py
+
+      - name: Deploy update.json to Web Branch
+        run: |
+          cd "$PROJECT_ROOT"
+          git config --global user.name "ProtonMOD Bot"
+          git config --global user.email "bot@protonmod.next"
+          
+          rm -rf web_deploy_temp
+          git clone --depth 1 --branch web "https://oauth2:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" web_deploy_temp
+          
+          cp update.json web_deploy_temp/
+          
+          cd web_deploy_temp
+          git add update.json
+          git commit -m "Update JSON for version ${{ steps.changelog.outputs.release_tag }}" || echo "No changes to commit"
+          git push origin web
+          
+          cd ..
+          rm -rf web_deploy_temp
 
       - name: Prepare Artifacts
         run: |
-          # Clean previous artifacts to avoid accumulation on self-hosted runner
           rm -rf artifacts
           mkdir -p artifacts
+          
           cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/release/*.apk "artifacts/ProtonMOD-Next-release.apk" || true
           cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/debug/*.apk "artifacts/ProtonMOD-Next-debug.apk" || true
+          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionVanillaOpenSource/release/*.apk "artifacts/ProtonMOD-Next-FOSS-release.apk" || true
+          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionVanillaOpenSource/debug/*.apk "artifacts/ProtonMOD-Next-FOSS-debug.apk" || true
+          cp "$PROJECT_ROOT/update.json" "artifacts/update.json" || true
 
-      # Uploads files to GitHub's temporary storage.
       - name: Upload Artifacts to GitHub Storage
         uses: actions/upload-artifact@v4
         with:
           name: build-apks
-          path: artifacts/*.apk
+          path: artifacts/*
           retention-days: 1
           compression-level: 0
 
-      - name: Send Build Notification (Telegram)
+      - name: Send Status Notification (Telegram)
         if: always()
         env:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
@@ -137,7 +209,6 @@ jobs:
           if [ "${{ job.status }}" = "failure" ]; then
             BUILD_STATUS="❌ Failed"
           fi
-          # Using github.ref_name directly here as well for consistency
           MESSAGE="$BUILD_STATUS Build: ${{ github.ref_name }}%0ACommit: ${{ steps.changelog.outputs.current_commit }}%0AAuthor: ${{ steps.changelog.outputs.commit_author }}"
           curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
                 -d "chat_id=${TG_CHAT_ID}" \
@@ -153,14 +224,124 @@ jobs:
       contents: write
 
     steps:
-      # Downloads the artifacts
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-apks
           path: artifacts
 
-      # Creates the release using GitHub
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Telethon
+        run: pip install telethon
+
+      - name: Upload APKs via Telethon
+        env:
+          TG_API_ID: ${{ secrets.TG_API_ID }}
+          TG_API_HASH: ${{ secrets.TG_API_HASH }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          TAG_NAME: ${{ needs.build.outputs.release_tag }}
+          COMMIT_MSG: ${{ needs.build.outputs.commit_message }}
+          AUTHOR: ${{ needs.build.outputs.commit_author }}
+          CHANGELOG: ${{ needs.build.outputs.changelog_md }}
+        run: |
+          cat <<EOF > telegram_upload.py
+          import os
+          import asyncio
+          from telethon import TelegramClient
+
+          # Get credentials from environment
+          try:
+              api_id = int(os.environ['TG_API_ID'])
+          except ValueError:
+              print("Error: TG_API_ID is not a number")
+              exit(1)
+          
+          api_hash = os.environ['TG_API_HASH']
+          bot_token = os.environ['TG_BOT_TOKEN']
+          chat_id = int(os.environ['TG_CHAT_ID'])
+          
+          tag_name = os.environ.get('TAG_NAME', 'Unknown')
+          author = os.environ.get('AUTHOR', 'Unknown')
+          changelog = os.environ.get('CHANGELOG', '')
+
+          # List of files to upload
+          files_to_send = [
+              "artifacts/ProtonMOD-Next-release.apk",
+              "artifacts/ProtonMOD-Next-debug.apk",
+              "artifacts/ProtonMOD-Next-FOSS-release.apk",
+              "artifacts/ProtonMOD-Next-FOSS-debug.apk"
+          ]
+          
+          # Filter existing files only
+          files_to_send = [f for f in files_to_send if os.path.exists(f)]
+
+          async def main():
+              print("Connecting to Telegram via Telethon...")
+              client = TelegramClient('bot_session', api_id, api_hash)
+              await client.start(bot_token=bot_token)
+          
+              async with client:
+                  # 1. Send Release Info Message
+                  caption_header = (
+                      f"🚀 **New Build: {tag_name}**\n"
+                      f"👤 Author: {author}\n\n"
+                      f"📋 **Changelog:**\n{changelog}"
+                  )
+                  if len(caption_header) > 4000:
+                      caption_header = caption_header[:4000] + "..."
+          
+                  print("Sending Info Message...")
+                  await client.send_message(chat_id, caption_header, parse_mode='markdown')
+
+                  # 2. Send Files
+                  if not files_to_send:
+                      print("No APK files found to send!")
+                      return
+
+                  print(f"Found {len(files_to_send)} files. Sending...")
+          
+                  for file_path in files_to_send:
+                      file_name = os.path.basename(file_path)
+                      print(f"Uploading {file_name}...")
+          
+                      # Upload and send
+                      await client.send_file(
+                          chat_id, 
+                          file_path, 
+                          caption=f"📦 {file_name}",
+                          force_document=True
+                      )
+                      print(f"Sent {file_name}")
+
+          if __name__ == '__main__':
+              try:
+                  asyncio.run(main())
+              except Exception as e:
+                  print(f"Error sending to Telegram: {e}")
+          EOF
+          
+          python3 telegram_upload.py
+          rm telegram_upload.py
+
+      # UPLOAD TO R2
+      - name: Sync Artifacts to Cloudflare R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          aws s3 sync artifacts/ s3://$R2_BUCKET/VPN-Next \
+            --endpoint-url https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com \
+            --delete \
+            --no-progress
+
       - name: Create or Update Pre-release
         uses: ncipollo/release-action@v1
         with:
@@ -179,7 +360,7 @@ jobs:
             
             ---
             *Automated build by GitHub Actions*
-          artifacts: "artifacts/*.apk"
+          artifacts: "artifacts/*"
           prerelease: true
           allowUpdates: true
           removeArtifacts: true

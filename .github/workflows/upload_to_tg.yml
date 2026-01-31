@@ -1,0 +1,136 @@
+name: Manual Telegram Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      override_version:
+        description: 'Version Name (optional, overrides update.json)'
+        required: false
+        type: string
+
+jobs:
+  manual-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install telethon requests
+
+      - name: Download and Send
+        env:
+          TG_API_ID: ${{ secrets.TG_API_ID }}
+          TG_API_HASH: ${{ secrets.TG_API_HASH }}
+          TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
+          TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
+          R2_DOMAIN: ${{ secrets.R2_PUBLIC_DOMAIN }}
+          INPUT_VERSION: ${{ inputs.override_version }}
+        run: |
+          cat <<EOF > manual_upload.py
+          import os
+          import json
+          import asyncio
+          import requests
+          from telethon import TelegramClient
+
+          # 1. Setup Config
+          try:
+              api_id = int(os.environ['TG_API_ID'])
+          except ValueError:
+              print("Error: TG_API_ID must be a number")
+              exit(1)
+          
+          api_hash = os.environ['TG_API_HASH']
+          bot_token = os.environ['TG_BOT_TOKEN']
+          chat_id = int(os.environ['TG_CHAT_ID'])
+          
+          r2_domain = os.environ.get('R2_DOMAIN', '').strip().rstrip('/')
+          base_url = f"{r2_domain}/VPN-Next"
+          
+          # 2. Fetch Metadata (update.json)
+          print(f"Fetching metadata from {base_url}/update.json ...")
+          version_name = os.environ.get('INPUT_VERSION')
+          changelog = "Manual upload from CDN"
+          
+          try:
+              r = requests.get(f"{base_url}/update.json")
+              if r.status_code == 200:
+                  data = r.json()
+                  if not version_name:
+                      version_name = data.get('versionName', 'Unknown')
+                  changelog = data.get('changelog', '')
+                  print(f"Detected version: {version_name}")
+              else:
+                  print("Could not fetch update.json, using defaults.")
+                  if not version_name: version_name = "Manual Build"
+          except Exception as e:
+              print(f"Error fetching JSON: {e}")
+              if not version_name: version_name = "Manual Build"
+
+          # 3. Download APKs
+          files_map = {
+              "ProtonMOD-Next-release.apk": f"{base_url}/ProtonMOD-Next-release.apk",
+              "ProtonMOD-Next-debug.apk": f"{base_url}/ProtonMOD-Next-debug.apk",
+              "ProtonMOD-Next-FOSS-release.apk": f"{base_url}/ProtonMOD-Next-FOSS-release.apk",
+              "ProtonMOD-Next-FOSS-debug.apk": f"{base_url}/ProtonMOD-Next-FOSS-debug.apk"
+          }
+          
+          local_files = []
+          
+          print("Downloading APKs from CDN...")
+          for fname, url in files_map.items():
+              try:
+                  print(f"Downloading {fname}...")
+                  r = requests.get(url, stream=True)
+                  if r.status_code == 200:
+                      with open(fname, 'wb') as f:
+                          for chunk in r.iter_content(chunk_size=8192):
+                              f.write(chunk)
+                      local_files.append(fname)
+                      print(f"Saved {fname}")
+                  else:
+                      print(f"Failed to download {url} (Status: {r.status_code})")
+              except Exception as e:
+                  print(f"Error downloading {fname}: {e}")
+
+          if not local_files:
+              print("No files downloaded successfully. Exiting.")
+              exit(1)
+
+          # 4. Upload to Telegram
+          async def main():
+              print("Connecting to Telegram via Telethon...")
+              client = TelegramClient('bot_session_manual', api_id, api_hash)
+              await client.start(bot_token=bot_token)
+          
+              async with client:
+                  # Send Info
+                  caption = (
+                      f"🔄 **Manual Re-upload**\n"
+                      f"🚀 **Version: {version_name}**\n\n"
+                      f"📋 **Changelog form CDN:**\n{changelog}"
+                  )
+                  if len(caption) > 4000: caption = caption[:4000] + "..."
+          
+                  await client.send_message(chat_id, caption, parse_mode='markdown')
+
+                  # Send Files
+                  for fpath in local_files:
+                      print(f"Uploading {fpath} to Telegram...")
+                      await client.send_file(
+                          chat_id,
+                          fpath,
+                          caption=f"📦 {fpath}",
+                          force_document=True
+                      )
+                      print(f"Sent {fpath}")
+
+          if __name__ == '__main__':
+              asyncio.run(main())
+          EOF
+          
+          python3 manual_upload.py
