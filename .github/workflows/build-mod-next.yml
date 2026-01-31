@@ -2,10 +2,8 @@ name: Build ProtonMOD-Next
 
 on:
   push:
-    branches:
-      - 'protonmod-next'
     tags:
-      - 'v*'
+      - '*'
   workflow_dispatch:
     inputs:
       create_pre_release:
@@ -64,7 +62,11 @@ jobs:
         run: |
           cd "$PROJECT_ROOT"
           export SIGNING_STORE_FILE="$PROJECT_ROOT/app/release-key.jks"
-          ./gradlew assembleProductionGooglePlayStoreDebug assembleProductionGooglePlayStoreRelease
+          # Building all 4 variants
+          ./gradlew assembleProductionGooglePlayStoreDebug \
+                    assembleProductionGooglePlayStoreRelease \
+                    assembleProductionVanillaOpenSourceDebug \
+                    assembleProductionVanillaOpenSourceRelease
 
       # Generates changelog and sets outputs for the next job
       - name: Generate changelog from commits
@@ -93,10 +95,8 @@ jobs:
           CURRENT_COMMIT_FULL=$(git log -1 --pretty=format:"%H")
           COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
           COMMIT_DATE=$(git log -1 --pretty=format:"%cd" --date=format:"%Y-%m-%d %H:%M")
-          # BRANCH_NAME="${{ github.ref_name }}" # Removed to avoid redundancy
           COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
 
-          # Important: We need to escape newlines for multi-line outputs
           EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
           echo "changelog_md<<$EOF" >> "$GITHUB_OUTPUT"
           echo "$CHANGELOG_MD" >> "$GITHUB_OUTPUT"
@@ -107,23 +107,90 @@ jobs:
           echo "current_commit_full=$CURRENT_COMMIT_FULL" >> "$GITHUB_OUTPUT"
           echo "commit_author=$COMMIT_AUTHOR" >> "$GITHUB_OUTPUT"
           echo "commit_date=$COMMIT_DATE" >> "$GITHUB_OUTPUT"
-          # echo "branch_name=$BRANCH_NAME" >> "$GITHUB_OUTPUT" # Removed causing secret warning
           echo "commit_message=$COMMIT_MESSAGE" >> "$GITHUB_OUTPUT"
+
+      # --- NEW STEP: GENERATE UPDATE.JSON ---
+      - name: Generate update.json
+        env:
+          CHANGELOG: ${{ steps.changelog.outputs.changelog_md }}
+          TAG: ${{ steps.changelog.outputs.release_tag }}
+          REPO: ${{ github.repository }}
+        run: |
+          cd "$PROJECT_ROOT"
+          
+          # Use Gradle tasks defined in build.gradle to get dynamic versions
+          # -q (quiet) suppresses logs so we get clean output
+          # tail -n 1 ensures we get the last printed line (the value)
+          echo "Extracting version info via Gradle..."
+          VERSION_CODE=$(./gradlew -q :app:getVersionCode | tail -n 1)
+          VERSION_NAME=$(./gradlew -q :app:getVersionName | tail -n 1)
+
+          echo "Detected Version: $VERSION_NAME ($VERSION_CODE)"
+          
+          # Create python script to safely generate JSON
+          cat <<EOF > generate_json.py
+          import json
+          import os
+          import sys
+
+          try:
+              vc_str = os.environ.get('VERSION_CODE', '').strip()
+              vn_str = os.environ.get('VERSION_NAME', '').strip()
+          
+              if not vc_str:
+                  print("Error: VERSION_CODE is empty from Gradle output")
+                  sys.exit(1)
+
+              data = {
+                  "versionCode": int(vc_str),
+                  "versionName": vn_str,
+                  "downloadUrl": f"https://github.com/{os.environ['REPO']}/releases/download/{os.environ['TAG']}/ProtonMOD-Next-release.apk",
+                  "changelog": os.environ['CHANGELOG'],
+                  "forceUpdate": False
+              }
+          
+              with open('update.json', 'w') as f:
+                  json.dump(data, f, indent=2)
+              print("update.json generated successfully")
+          except Exception as e:
+              print(f"Error generating JSON: {e}")
+              sys.exit(1)
+          EOF
+
+          # Run python script passing variables explicitly
+          export VERSION_CODE="$VERSION_CODE"
+          export VERSION_NAME="$VERSION_NAME"
+          python3 generate_json.py
+          
+          # Move to root for artifacts step if needed
+          mv update.json "$PROJECT_ROOT/update.json"
+          cat "$PROJECT_ROOT/update.json"
 
       - name: Prepare Artifacts
         run: |
-          # Clean previous artifacts to avoid accumulation on self-hosted runner
           rm -rf artifacts
           mkdir -p artifacts
+          
+          # Google Play Release
           cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/release/*.apk "artifacts/ProtonMOD-Next-release.apk" || true
+          
+          # Google Play Debug
           cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/debug/*.apk "artifacts/ProtonMOD-Next-debug.apk" || true
+          
+          # FOSS Release
+          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionVanillaOpenSource/release/*.apk "artifacts/ProtonMOD-Next-FOSS-release.apk" || true
 
-      # Uploads files to GitHub's temporary storage.
+          # FOSS Debug
+          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionVanillaOpenSource/debug/*.apk "artifacts/ProtonMOD-Next-FOSS-debug.apk" || true
+
+          # Update JSON
+          cp "$PROJECT_ROOT/update.json" "artifacts/update.json" || true
+
       - name: Upload Artifacts to GitHub Storage
         uses: actions/upload-artifact@v4
         with:
           name: build-apks
-          path: artifacts/*.apk
+          path: artifacts/*
           retention-days: 1
           compression-level: 0
 
@@ -137,7 +204,6 @@ jobs:
           if [ "${{ job.status }}" = "failure" ]; then
             BUILD_STATUS="❌ Failed"
           fi
-          # Using github.ref_name directly here as well for consistency
           MESSAGE="$BUILD_STATUS Build: ${{ github.ref_name }}%0ACommit: ${{ steps.changelog.outputs.current_commit }}%0AAuthor: ${{ steps.changelog.outputs.commit_author }}"
           curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
                 -d "chat_id=${TG_CHAT_ID}" \
@@ -153,14 +219,12 @@ jobs:
       contents: write
 
     steps:
-      # Downloads the artifacts
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           name: build-apks
           path: artifacts
 
-      # Creates the release using GitHub
       - name: Create or Update Pre-release
         uses: ncipollo/release-action@v1
         with:
@@ -179,7 +243,7 @@ jobs:
             
             ---
             *Automated build by GitHub Actions*
-          artifacts: "artifacts/*.apk"
+          artifacts: "artifacts/*"
           prerelease: true
           allowUpdates: true
           removeArtifacts: true
