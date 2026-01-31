@@ -56,6 +56,8 @@ buildscript {
         classpath "androidx.baselineprofile:androidx.baselineprofile.gradle.plugin:$baselineprofile"
         // The newest version fails on Windows: https://issuetracker.google.com/issues/422412664
         classpath 'com.android.compose.screenshot:screenshot-test-gradle-plugin:0.0.1-alpha09'
+        classpath 'com.google.gms:google-services:4.4.0'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
