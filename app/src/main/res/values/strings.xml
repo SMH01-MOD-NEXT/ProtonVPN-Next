@@ -1649,4 +1649,26 @@
     <string name="about_telegram">Telegram</string>
     <string name="about_github">GitHub</string>
     <string name="about_community">Community</string>
+    <string name="proton_mod_update_check_failed">Failed to check for updates (Network error)</string>
+    <string name="proton_mod_update_unknown_version">Unknown</string>
+    <string name="proton_mod_update_default_changelog">Bug fixes and improvements.</string>
+    <string name="proton_mod_update_latest_version">You have the latest version (%1$s)</string>
+    <string name="proton_mod_update_error_checking">Error checking updates: %1$s</string>
+    <string name="proton_mod_update_no_url">Update detected but no URL found for this variant.</string>
+    <string name="proton_mod_update_dialog_title">Update Available: %1$s</string>
+    <string name="proton_mod_update_browser_error">Cannot open browser: %1$s</string>
+    <string name="proton_mod_settings_category_title">Proton VPN-Next</string>
+    <string name="proton_mod_settings_check_update_title">Check for Updates</string>
+    <string name="proton_mod_settings_check_update_subtitle">Check for Proton VPN-Next updates</string>
+    <string name="proton_mod_update_screen_title">New Update Available</string>
+    <string name="proton_mod_update_version_label">Version %1$s</string>
+    <string name="proton_mod_update_changelog_title">What\'s New</string>
+    <string name="proton_mod_update_btn_download">Download &amp; Install</string>
+    <string name="proton_mod_update_btn_downloading">Downloading... %1$d%%</string>
+    <string name="proton_mod_update_btn_install">Install Now</string>
+    <string name="proton_mod_update_btn_later">Remind me later</string>
+    <string name="proton_mod_update_error_download">Download failed. Tap to retry.</string>
+    <string name="proton_mod_update_permission_rationale">To install this update, you need to allow installing unknown apps from ProtonVPN settings.</string>
+    <string name="proton_mod_update_size_calculating">Calculating size...</string>
+    <string name="proton_mod_update_size_mb">%.1f MB</string>
 </resources>
