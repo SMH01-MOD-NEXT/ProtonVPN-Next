@@ -65,6 +65,7 @@ import com.protonvpn.android.tv.IsTvCheck
 import com.protonvpn.android.ui.onboarding.ReviewTracker
 import com.protonvpn.android.ui.planupgrade.ShowUpgradeSuccess
 import com.protonvpn.android.ui.promooffers.OneTimePopupNotificationTrigger
+import com.protonvpn.android.utils.FirebaseLogger
 import com.protonvpn.android.utils.SentryIntegration.initSentry
 import com.protonvpn.android.utils.Storage
 import com.protonvpn.android.utils.VpnCoreLogger
@@ -155,18 +156,15 @@ open class ProtonApplication : Application() {
     protected var lastMainProcessExitReason: Int? = null
 
     override fun onCreate() {
-        if (BuildConfig.DEBUG) {
-            val reporter = CrashReporter(this, Constants.TG_BOT_TOKEN, Constants.TG_CHAT_ID)
-            CrashReporter.init(this, Constants.TG_BOT_TOKEN, Constants.TG_CHAT_ID)
-            reporter.handleStartupLogs()
-            reporter.sendPendingCrashes()
-        }
         installCertificateTransparencySupport(
             excludedCommonNames = if (BuildConfig.DEBUG) listOf("localhost") else emptyList()
         )
 
         super.onCreate()
         appContext = this
+
+        // Initialize Firebase Logger (Crashlytics)
+        FirebaseLogger.init(this)
 
         initPreferences()
         initSentry(this)

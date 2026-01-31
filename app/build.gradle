@@ -45,6 +45,8 @@ plugins {
     id 'androidx.room'
     id 'org.jetbrains.kotlin.plugin.compose'
     id 'androidx.baselineprofile'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 apply plugin: 'com.android.application'
@@ -855,6 +857,12 @@ dependencies {
     implementation "androidx.core:core-splashscreen:1.0.1"
     implementation 'com.github.seancfoley:ipaddress:5.5.1'
     implementation 'com.caverock:androidsvg-aar:1.4'
+
+    // Firebase
+    implementation platform('com.google.firebase:firebase-bom:33.7.0')
+    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-firestore-ktx'
 
     // Compose
     def composeBom = platform('androidx.compose:compose-bom:2024.10.01')

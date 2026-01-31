@@ -52,7 +52,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.protonvpn.android.BuildConfig
 import com.protonvpn.android.Constants
-import com.protonvpn.android.CrashReporter
 import com.protonvpn.android.ProtonApplicationHilt
 import com.protonvpn.android.R
 import com.protonvpn.android.base.ui.ProtonVpnPreview
