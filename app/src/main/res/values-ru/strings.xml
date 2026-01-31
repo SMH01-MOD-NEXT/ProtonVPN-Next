@@ -1695,4 +1695,26 @@
     <string name="about_telegram">Telegram</string>
     <string name="about_github">GitHub</string>
     <string name="about_community">Ссылки</string>
+    <string name="proton_mod_update_check_failed">Не удалось проверить обновление (Network error)</string>
+    <string name="proton_mod_update_unknown_version">Неизвестно</string>
+    <string name="proton_mod_update_default_changelog">Исправление ошибок и улучшения.</string>
+    <string name="proton_mod_update_latest_version">У вас установлена последняя версия (%1$s)</string>
+    <string name="proton_mod_update_error_checking">Не удалось проверить обновления: %1$s</string>
+    <string name="proton_mod_update_no_url">Обновление доступно, но не найден URL для этой версии.</string>
+    <string name="proton_mod_update_dialog_title">Обновление доступно: %1$s</string>
+    <string name="proton_mod_update_browser_error">Не удалось открыть браузер: %1$s</string>
+    <string name="proton_mod_settings_category_title">Proton VPN-Next</string>
+    <string name="proton_mod_settings_check_update_title">Проверить обновления</string>
+    <string name="proton_mod_settings_check_update_subtitle">Проверить обновления Proton VPN-Next.</string>
+    <string name="proton_mod_update_screen_title">Обновление доступно</string>
+    <string name="proton_mod_update_version_label">Версия %1$s</string>
+    <string name="proton_mod_update_changelog_title">Что нового</string>
+    <string name="proton_mod_update_btn_download">Скачать &amp; Установить</string>
+    <string name="proton_mod_update_btn_downloading">Скачивание... %1$d%%</string>
+    <string name="proton_mod_update_btn_install">Установить</string>
+    <string name="proton_mod_update_btn_later">Напомнить позже</string>
+    <string name="proton_mod_update_error_download">Скачивание не удалось. Нажмите, чтобы повторить.</string>
+    <string name="proton_mod_update_permission_rationale">Чтобы установить обновление, вы должны разрешить установку неизвестных приложений в настройках.</string>
+    <string name="proton_mod_update_size_calculating">Определяем вес...</string>
+    <string name="proton_mod_update_size_mb">%.1f МБ</string>
 </resources>
