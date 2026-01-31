@@ -64,7 +64,10 @@ jobs:
         run: |
           cd "$PROJECT_ROOT"
           export SIGNING_STORE_FILE="$PROJECT_ROOT/app/release-key.jks"
-          ./gradlew assembleProductionGooglePlayStoreDebug assembleProductionGooglePlayStoreRelease
+          # Added assembleProductionVanillaOpenSourceRelease for FOSS build
+          ./gradlew assembleProductionGooglePlayStoreDebug \
+                    assembleProductionGooglePlayStoreRelease \
+                    assembleProductionVanillaOpenSourceRelease
 
       # Generates changelog and sets outputs for the next job
       - name: Generate changelog from commits
@@ -115,8 +118,15 @@ jobs:
           # Clean previous artifacts to avoid accumulation on self-hosted runner
           rm -rf artifacts
           mkdir -p artifacts
+          
+          # Google Play Release
           cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/release/*.apk "artifacts/ProtonMOD-Next-release.apk" || true
+          
+          # Google Play Debug
           cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/debug/*.apk "artifacts/ProtonMOD-Next-debug.apk" || true
+          
+          # FOSS Release
+          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionVanillaOpenSource/release/*.apk "artifacts/ProtonMOD-Next-FOSS-release.apk" || true
 
       # Uploads files to GitHub's temporary storage.
       - name: Upload Artifacts to GitHub Storage
