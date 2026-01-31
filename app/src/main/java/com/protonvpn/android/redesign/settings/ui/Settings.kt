@@ -53,6 +53,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
+import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -98,6 +99,7 @@ import com.protonvpn.android.ui.settings.OssLicensesActivity
 import com.protonvpn.android.ui.settings.SettingsTelemetryActivity
 import com.protonvpn.android.update.AppUpdateInfo
 import com.protonvpn.android.update.VpnUpdateBanner
+import com.protonvpn.android.utils.ProtonModUpdateManager
 import com.protonvpn.android.utils.openUrl
 import me.proton.core.accountmanager.presentation.compose.AccountSettingsInfo
 import me.proton.core.accountmanager.presentation.compose.viewmodel.AccountSettingsViewModel
@@ -163,6 +165,10 @@ fun SettingsRoute(
                 onSignOutClick = onSignOutClick,
                 onAppUpdateClick = { updateInfo ->
                     viewModel.onAppUpdateClick(activity, updateInfo)
+                },
+                onCheckModUpdateClick = {
+                    // Trigger manual update check
+                    ProtonModUpdateManager.check(context, manualCheck = true)
                 },
                 onAccountClick = {
                     if (viewState.accountScreenEnabled)
@@ -266,6 +272,7 @@ fun SettingsView(
     viewState: SettingsViewModel.SettingsViewState,
     accountSettingsViewState: AccountSettingsViewState,
     onAppUpdateClick: (AppUpdateInfo) -> Unit,
+    onCheckModUpdateClick: () -> Unit,
     onAccountClick: () -> Unit,
     onSignUpClick: () -> Unit,
     onSignInClick: () -> Unit,
@@ -286,7 +293,7 @@ fun SettingsView(
     onIconChangeClick: () -> Unit,
     onThemeClick: () -> Unit,
     onWidgetClick: () -> Unit,
-    onAboutAppClick: () -> Unit, // New callback
+    onAboutAppClick: () -> Unit,
     onOnHelpCenterClick: () -> Unit,
     onReportBugClick: () -> Unit,
     onDebugLogsClick: () -> Unit,
@@ -307,7 +314,7 @@ fun SettingsView(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = extraScreenPadding)
-                .padding(horizontal = 16.dp) // Main container padding for cards
+                .padding(horizontal = 16.dp)
         ) {
 
             VpnUpdateBanner(
@@ -323,6 +330,42 @@ fun SettingsView(
                     profileOverrideInfo = it
                 )
             }
+
+            // --- PROTONMOD SECTION ---
+            Category(
+                title = stringResource(R.string.proton_mod_settings_category_title),
+                themeType = viewState.theme.value
+            ) {
+                // Using a generic refresh/cycle icon for updates
+                SettingRow(
+                    leadingComposable = {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(ProtonTheme.colors.interactionNorm.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Refresh,
+                                contentDescription = null,
+                                tint = ProtonTheme.colors.interactionNorm,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    },
+                    title = stringResource(R.string.proton_mod_settings_check_update_title),
+                    subtitleComposable = {
+                        Text(
+                            text = stringResource(R.string.proton_mod_settings_check_update_subtitle),
+                            style = ProtonTheme.typography.defaultWeak
+                        )
+                    },
+                    onClick = onCheckModUpdateClick
+                )
+            }
+            // -------------------------
+
             AccountCategory(
                 state = accountSettingsViewState,
                 themeType = viewState.theme.value,
