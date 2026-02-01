@@ -1,1 +1,12 @@
-{}
+{
+  "versionCode": 605159304,
+  "versionName": "5.15.93.4",
+  "changelog": "",
+  "forceUpdate": false,
+  "downloads": {
+    "googleRelease": "https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next/releases/download/5.15.93.4/ProtonMOD-Next-release.apk",
+    "googleDebug": "https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next/releases/download/5.15.93.4/ProtonMOD-Next-debug.apk",
+    "fossRelease": "https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next/releases/download/5.15.93.4/ProtonMOD-Next-FOSS-release.apk",
+    "fossDebug": "https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next/releases/download/5.15.93.4/ProtonMOD-Next-FOSS-debug.apk"
+  }
+}
