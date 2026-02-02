@@ -36,6 +36,7 @@ import com.protonvpn.android.models.vpn.usecase.ComputeAllowedIPs
 import com.protonvpn.android.models.vpn.wireguard.WireGuardTunnel
 import com.protonvpn.android.redesign.vpn.AnyConnectIntent
 import com.protonvpn.android.redesign.vpn.usecases.SettingsForConnection
+import com.protonvpn.android.statistics.domain.VpnConnectionTracker
 import com.protonvpn.android.ui.ForegroundActivityTracker
 import com.protonvpn.android.ui.home.GetNetZone
 import com.protonvpn.android.utils.Constants
@@ -93,11 +94,12 @@ class WireguardBackend @Inject constructor(
     private val prepareForConnection: PrepareForConnection,
     private val computeAllowedIPs: ComputeAllowedIPs,
     foregroundActivityTracker: ForegroundActivityTracker,
+    vpnConnectionTracker: VpnConnectionTracker,
     @SharedOkHttpClient okHttp: OkHttpClient,
     private val serverNameTopStrategyEnabled: ServerNameTopStrategyEnabled,
 ) : VpnBackend(
     settingsForConnection, certificateRepository, networkManager, networkCapabilitiesFlow, VpnProtocol.WireGuard, mainScope,
-    dispatcherProvider, localAgentUnreachableTracker, currentUser, getNetZone, foregroundActivityTracker, okHttp
+    dispatcherProvider, localAgentUnreachableTracker, currentUser, getNetZone, foregroundActivityTracker, vpnConnectionTracker, okHttp
 ) {
     private val wireGuardIo = dispatcherProvider.newSingleThreadDispatcherForInifiniteIo()
     private val backend: GoBackend by lazy { GoBackend(WireguardContextWrapper(context)) }

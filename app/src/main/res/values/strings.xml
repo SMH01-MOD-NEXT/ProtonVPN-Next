@@ -1671,4 +1671,26 @@
     <string name="proton_mod_update_permission_rationale">To install this update, you need to allow installing unknown apps from ProtonVPN settings.</string>
     <string name="proton_mod_update_size_calculating">Calculating size...</string>
     <string name="proton_mod_update_size_mb">%.1f MB</string>
+    <string name="statistics_title">VPN Statistics</string>
+    <string name="statistics_day">Day</string>
+    <string name="statistics_month">Month</string>
+    <string name="statistics_year">Year</string>
+    <string name="statistics_connections">Connections</string>
+    <string name="statistics_errors">Errors</string>
+    <string name="statistics_total_time">Total Time</string>
+    <string name="statistics_success_rate">Success Rate</string>
+    <string name="statistics_success_title">Connection Success Rate</string>
+    <string name="statistics_traffic">Traffic</string>
+    <string name="statistics_download">Download</string>
+    <string name="statistics_upload">Upload</string>
+    <string name="statistics_total">Total</string>
+    <string name="statistics_server_distribution">Server Distribution</string>
+    <string name="statistics_protocol_distribution">Used Protocols</string>
+    <string name="statistics_connection_history">Connection History</string>
+    <string name="statistics_empty_title">No data to display</string>
+    <string name="statistics_empty_description">Statistics will be collected as you use VPN</string>
+    <string name="statistics_error_label">Error: %s</string>
+    <string name="statistics_duration_label">Duration: %s</string>
+    <string name="statistics_success">✓</string>
+    <string name="statistics_error">❌</string>
 </resources>

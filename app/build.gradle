@@ -795,6 +795,7 @@ dependencies {
     googleImplementation 'com.google.firebase:firebase-crashlytics'
     googleImplementation 'com.google.firebase:firebase-analytics'
     googleImplementation 'com.google.firebase:firebase-firestore-ktx'
+    googleImplementation 'com.google.firebase:firebase-config'
 
     // Compose
     def composeBom = platform('androidx.compose:compose-bom:2024.10.01')

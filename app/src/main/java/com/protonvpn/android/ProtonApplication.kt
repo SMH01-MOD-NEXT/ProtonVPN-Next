@@ -36,6 +36,7 @@ import com.protonvpn.android.app.AppStartExitLogger
 import com.protonvpn.android.appconfig.periodicupdates.PeriodicUpdateManager
 import com.protonvpn.android.auth.usecase.CloseSessionOnForceLogout
 import com.protonvpn.android.auth.usecase.LogoutOnForceUpdate
+import com.protonvpn.android.core.featureflags.FeatureFlagManager
 import com.protonvpn.android.logging.AppProcessStart
 import com.protonvpn.android.logging.CurrentStateLogger
 import com.protonvpn.android.logging.CurrentStateLoggerGlobal
@@ -85,8 +86,11 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
 import me.proton.core.accountmanager.data.AccountStateHandler
 import me.proton.core.eventmanager.data.CoreEventManagerStarter
 import me.proton.core.humanverification.presentation.HumanVerificationStateHandler
@@ -96,6 +100,7 @@ import me.proton.core.userrecovery.presentation.compose.DeviceRecoveryHandler
 import me.proton.core.userrecovery.presentation.compose.DeviceRecoveryNotificationSetup
 import me.proton.core.util.kotlin.CoreLogger
 import java.util.concurrent.Executors
+import kotlin.jvm.java
 
 
 /**
@@ -155,6 +160,12 @@ open class ProtonApplication : Application() {
 
     protected var lastMainProcessExitReason: Int? = null
 
+    @EntryPoint
+    @InstallIn(SingletonComponent::class)
+    interface FeatureFlagEntryPoint {
+        fun featureFlagManager(): FeatureFlagManager
+    }
+
     override fun onCreate() {
         installCertificateTransparencySupport(
             excludedCommonNames = if (BuildConfig.DEBUG) listOf("localhost") else emptyList()
@@ -163,8 +174,15 @@ open class ProtonApplication : Application() {
         super.onCreate()
         appContext = this
 
-        // Initialize Firebase Logger (Crashlytics)
+        // Initialize Firebase
         FirebaseLogger.init(this)
+        val featureFlagManager = EntryPointAccessors.fromApplication(
+            applicationContext,
+            FeatureFlagEntryPoint::class.java
+        ).featureFlagManager()
+        CoroutineScope(Dispatchers.IO).launch {
+            featureFlagManager.fetchAndActivate()
+        }
 
         initPreferences()
         initSentry(this)

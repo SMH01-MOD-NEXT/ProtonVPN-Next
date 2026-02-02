@@ -34,6 +34,7 @@ import com.protonvpn.android.appconfig.AppFeaturesPrefs
 import com.protonvpn.android.auth.usecase.CurrentUser
 import com.protonvpn.android.auth.usecase.uiName
 import com.protonvpn.android.components.InstalledAppsProvider
+import com.protonvpn.android.core.featureflags.FeatureFlagManager
 import com.protonvpn.android.managed.ManagedConfig
 import com.protonvpn.android.netshield.NetShieldAvailability
 import com.protonvpn.android.netshield.NetShieldProtocol
@@ -140,6 +141,7 @@ class SettingsViewModel @Inject constructor(
     private val isAutomaticConnectionPreferencesFeatureFlagEnabled: IsAutomaticConnectionPreferencesFeatureFlagEnabled,
     private val translator: Translator,
     private val settingsManager: CurrentUserLocalSettingsManager,
+    private val featureFlagManager: FeatureFlagManager, // Inject Feature Manager
 ) : ViewModel() {
 
     sealed class SettingViewState<T>(
@@ -405,6 +407,7 @@ class SettingsViewModel @Inject constructor(
         val showAccountCategory: Boolean,
         val connectionPreferences: SettingViewState.ConnectionPreferencesState,
         val isAutomaticConnectionPreferencesEnabled: Boolean,
+        val isStatisticsEnabled: Boolean, // Added statistics flag
     )
 
     enum class UiEvent {
@@ -631,6 +634,7 @@ class SettingsViewModel @Inject constructor(
                     excludeLocationsPreferences = excludedLocationPreferences,
                 ),
                 isAutomaticConnectionPreferencesEnabled = featureFlags.isAutomaticConnectionPreferencesFeatureFlagEnabled,
+                isStatisticsEnabled = featureFlagManager.isStatisticsEnabled(), // Set statistics enabled state
             )
         }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(1_000), replay = 1)
 

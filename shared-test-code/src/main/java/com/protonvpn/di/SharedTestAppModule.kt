@@ -40,6 +40,7 @@ import com.protonvpn.android.servers.ServersStore
 import com.protonvpn.android.models.vpn.usecase.GetConnectingDomain
 import com.protonvpn.android.models.vpn.usecase.SupportsProtocol
 import com.protonvpn.android.redesign.vpn.usecases.SettingsForConnection
+import com.protonvpn.android.statistics.domain.VpnConnectionTracker
 import com.protonvpn.android.telemetry.NoopSnapshotScheduler
 import com.protonvpn.android.telemetry.NoopTelemetryUploadScheduler
 import com.protonvpn.android.telemetry.SnapshotScheduler
@@ -211,6 +212,7 @@ class SharedTestAppModule {
         supportsProtocol: SupportsProtocol,
         getConnectingDomain: GetConnectingDomain,
         foregroundActivityTracker: ForegroundActivityTracker,
+        vpnConnectionTracker: VpnConnectionTracker, // Added dependency
     ): VpnBackendProvider =
         if (TestSettings.mockedConnectionUsed) {
             ProtonVpnBackendProvider(
@@ -227,6 +229,7 @@ class SharedTestAppModule {
                     getNetZone,
                     foregroundActivityTracker,
                     getConnectingDomain,
+                    vpnConnectionTracker, // Passed to OpenVPN mock
                 ),
                 wireGuard = MockVpnBackend(
                     scope,
@@ -241,6 +244,7 @@ class SharedTestAppModule {
                     getNetZone,
                     foregroundActivityTracker,
                     getConnectingDomain,
+                    vpnConnectionTracker, // Passed to WireGuard mock
                 ),
                 config = appConfig,
                 supportsProtocol = supportsProtocol

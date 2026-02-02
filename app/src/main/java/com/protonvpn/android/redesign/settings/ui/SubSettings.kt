@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
@@ -112,6 +113,8 @@ fun SubSettingsRoute(
     val vpnUiDelegate = LocalVpnUiDelegate.current
 
     val themeType by viewModel.theme.collectAsStateWithLifecycle(initialValue = ThemeType.System)
+
+    val viewState = viewModel.viewState.collectAsStateWithLifecycle(initialValue = null).value
 
     val infoSheetState = rememberInfoSheetState()
 
@@ -250,10 +253,10 @@ fun SubSettingsRoute(
                 SubSettingsScreen.Type.CustomDns -> {
                     val customDnsViewModel = hiltViewModel<CustomDnsViewModel>()
                     val dataSource = customDnsViewModel.customDnsHelper
-                    val viewState = dataSource.customDnsSettingState.collectAsStateWithLifecycle(null).value
-                    if (viewState != null) {
+                    val dnsViewState = dataSource.customDnsSettingState.collectAsStateWithLifecycle(null).value
+                    if (dnsViewState != null) {
                         DnsSettingsScreen(
-                            viewState = viewState,
+                            viewState = dnsViewState,
                             events = dataSource.events.receiveAsFlow(),
                             actions = CustomDnsActions(
                                 onClose = onClose,
@@ -391,7 +394,7 @@ fun SubSettingsRoute(
                 }
 
                 SubSettingsScreen.Type.ConnectionPreferences -> {
-                    val viewState = viewModel.connectionPreferences.collectAsStateWithLifecycle(initialValue = null).value
+                    val prefViewState = viewModel.connectionPreferences.collectAsStateWithLifecycle(initialValue = null).value
 
                     val locale = LocalConfiguration.current.currentLocale()
 
@@ -428,7 +431,7 @@ fun SubSettingsRoute(
                         }
                     }
 
-                    viewState?.let { state ->
+                    prefViewState?.let { state ->
                         ConnectionPreferencesSetting(
                             state = state,
                             onClose = onClose,
@@ -478,6 +481,25 @@ fun SubSettingsRoute(
 
                 SubSettingsScreen.Type.Widget -> {
                     WidgetAddScreen(onClose = onClose)
+                }
+
+                SubSettingsScreen.Type.Statistics -> {
+                    // Feature Flag Guard with Null-safety
+                    if (viewState == null) {
+                        // While loading state, show spinner to prevent premature closing
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
+                    } else if (viewState.isStatisticsEnabled) {
+                        com.protonvpn.android.redesign.settings.ui.statistics.StatisticsScreen(
+                            onClose = onClose
+                        )
+                    } else {
+                        // Only close if we are SURE it is disabled (state loaded AND flag is false)
+                        LaunchedEffect(Unit) {
+                            onClose()
+                        }
+                    }
                 }
 
                 SubSettingsScreen.Type.AboutApp -> {

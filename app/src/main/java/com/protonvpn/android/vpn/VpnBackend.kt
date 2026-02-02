@@ -45,6 +45,7 @@ import com.protonvpn.android.netshield.NetShieldStats
 import com.protonvpn.android.redesign.vpn.AnyConnectIntent
 import com.protonvpn.android.redesign.vpn.usecases.SettingsForConnection
 import com.protonvpn.android.settings.data.LocalUserSettings
+import com.protonvpn.android.statistics.domain.VpnConnectionTracker
 import com.protonvpn.android.ui.ForegroundActivityTracker
 import com.protonvpn.android.ui.home.GetNetZone
 import com.protonvpn.android.ui.home.vpn.fetchRealIp
@@ -120,6 +121,7 @@ abstract class VpnBackend(
     val currentUser: CurrentUser,
     val getNetZone: GetNetZone,
     val foregroundActivityTracker: ForegroundActivityTracker,
+    val vpnConnectionTracker: VpnConnectionTracker,
     @SharedOkHttpClient val okHttp: OkHttpClient? = null,
     val shouldWaitForTunnelVerified: Boolean = true,
 ) : VpnStateSource {
@@ -136,6 +138,8 @@ abstract class VpnBackend(
         // Keep "is final error" between onStatusUpdate and onError callbacks.
         @Volatile
         private var isFinalError: Boolean = false
+        @Volatile
+        private var lastErrorReason: String? = null
 
         fun close() {
             isClosed = true
@@ -150,6 +154,7 @@ abstract class VpnBackend(
             mainScope.launch {
                 if (isClosed) return@launch
                 ProtonLogger.log(LocalAgentError, "code: $code, $description")
+
                 when (code) {
                     agentConstants.errorCodeMaxSessionsBasic,
                     agentConstants.errorCodeMaxSessionsFree,
@@ -190,8 +195,12 @@ abstract class VpnBackend(
                         ProtonLogger.logCustom(LogCategory.LOCAL_AGENT, "Restricted server, waiting...")
 
                     else -> {
-                        if (isFinalError)
+                        if (isFinalError) {
                             setError(ErrorType.LOCAL_AGENT_ERROR, description = description)
+                            // Используем последнюю причину ошибки из StatusMessage вместо парсинга логов
+                            val errorReason = lastErrorReason ?: description
+                            vpnConnectionTracker.onConnectionError(errorReason)
+                        }
                     }
                 }
             }
@@ -240,6 +249,8 @@ abstract class VpnBackend(
                     }
                 }
                 isFinalError = status.reason?.final == true
+                // Сохраняем причину ошибки для использования в onError
+                lastErrorReason = status.reason?.description
                 ProtonLogger.log(LocalAgentStatus, status.toString())
             }
         }
@@ -289,12 +300,18 @@ abstract class VpnBackend(
     open suspend fun connect(connectionParams: ConnectionParams) {
         closeAgentConnection()
         lastConnectionParams = connectionParams
+        vpnConnectionTracker.onConnecting(
+            serverName = connectionParams.server.serverName,
+            serverCountry = connectionParams.server.exitCountry,
+            protocol = connectionParams.protocolSelection?.vpn?.toString() ?: ""
+        )
     }
 
     suspend fun disconnect() {
         if (vpnProtocolState != VpnState.Disabled)
             vpnProtocolState = VpnState.Disconnecting
 
+        vpnConnectionTracker.onDisconnected()
         closeAgentConnection()
         closeVpnTunnel()
     }
@@ -435,6 +452,7 @@ abstract class VpnBackend(
     private fun onVpnProtocolStateChange(value: VpnState) {
         mainScope.launch(start = CoroutineStart.UNDISPATCHED) {
             if (value == VpnState.Connected) {
+                vpnConnectionTracker.onConnected()
                 withContext(dispatcherProvider.Io) {
                     // TCP sockets cannot be reused after connecting to another server, force
                     // OkHttp to reset all sockets so that we avoid timeout for next request.
@@ -443,6 +461,9 @@ abstract class VpnBackend(
                 if (shouldWaitForTunnelVerified && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
                     waitForTunnelVerified()
             } else {
+                if (value is VpnState.Disconnecting || value is VpnState.Error || value == VpnState.Disabled) {
+                    vpnConnectionTracker.onDisconnected()
+                }
                 lastKnownExitIp.value = null
             }
             processCombinedState(value, agent?.lastState)

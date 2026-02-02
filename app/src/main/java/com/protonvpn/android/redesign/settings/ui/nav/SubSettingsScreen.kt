@@ -52,6 +52,7 @@ object SubSettingsScreen : Screen<SubSettingsScreen.Type, RootNav>("subSettingsS
         Theme,
         VpnAccelerator,
         Widget,
+        Statistics,
         AboutApp
         // Not here! Keep them alphabetically sorted.
     }

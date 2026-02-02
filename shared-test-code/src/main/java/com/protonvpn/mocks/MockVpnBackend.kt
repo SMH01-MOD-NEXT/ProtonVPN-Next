@@ -29,6 +29,7 @@ import com.protonvpn.android.servers.Server
 import com.protonvpn.android.models.vpn.usecase.GetConnectingDomain
 import com.protonvpn.android.redesign.vpn.AnyConnectIntent
 import com.protonvpn.android.redesign.vpn.usecases.SettingsForConnection
+import com.protonvpn.android.statistics.domain.VpnConnectionTracker
 import com.protonvpn.android.ui.ForegroundActivityTracker
 import com.protonvpn.android.ui.home.GetNetZone
 import com.protonvpn.android.vpn.AgentConnectionInterface
@@ -62,6 +63,7 @@ class MockVpnBackend(
     getNetZone: GetNetZone,
     foregroundActivityTracker: ForegroundActivityTracker,
     val getConnectingDomain: GetConnectingDomain,
+    vpnConnectionTracker: VpnConnectionTracker, // Added parameter
 ) : VpnBackend(
     settingsForConnection = settingsForConnection,
     networkManager = networkManager,
@@ -74,6 +76,7 @@ class MockVpnBackend(
     currentUser = currentUser,
     getNetZone = getNetZone,
     foregroundActivityTracker = foregroundActivityTracker,
+    vpnConnectionTracker = vpnConnectionTracker, // Pass to super
     shouldWaitForTunnelVerified = false,
 ) {
     private var agentProvider: MockAgentProvider? = null

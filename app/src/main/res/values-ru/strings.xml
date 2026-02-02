@@ -1717,4 +1717,26 @@
     <string name="proton_mod_update_permission_rationale">Чтобы установить обновление, вы должны разрешить установку неизвестных приложений в настройках.</string>
     <string name="proton_mod_update_size_calculating">Определяем вес...</string>
     <string name="proton_mod_update_size_mb">%.1f МБ</string>
+    <string name="statistics_title">VPN Статистика</string>
+    <string name="statistics_day">День</string>
+    <string name="statistics_month">Месяц</string>
+    <string name="statistics_year">Год</string>
+    <string name="statistics_connections">Подключений</string>
+    <string name="statistics_errors">Ошибок</string>
+    <string name="statistics_total_time">Общее время</string>
+    <string name="statistics_success_rate">Успех</string>
+    <string name="statistics_success_title">Процент успеха подключения</string>
+    <string name="statistics_traffic">Трафик</string>
+    <string name="statistics_download">Загрузка</string>
+    <string name="statistics_upload">Выгрузка</string>
+    <string name="statistics_total">Всего</string>
+    <string name="statistics_server_distribution">Распределение по странам</string>
+    <string name="statistics_protocol_distribution">Используемые протоколы</string>
+    <string name="statistics_connection_history">История подключений</string>
+    <string name="statistics_empty_title">Нет данных для отображения</string>
+    <string name="statistics_empty_description">Статистика будет собираться по мере использования VPN</string>
+    <string name="statistics_error_label">Ошибка: %s</string>
+    <string name="statistics_duration_label">Длительность: %s</string>
+    <string name="statistics_success">✓</string>
+    <string name="statistics_error">❌</string>
 </resources>
