@@ -1739,4 +1739,21 @@
     <string name="statistics_duration_label">Длительность: %s</string>
     <string name="statistics_success">✓</string>
     <string name="statistics_error">❌</string>
+    <string name="proxy_custom_configs_title">Пользовательские VLESS конфигурации</string>
+    <string name="proxy_server_configs_title">Серверные VLESS конфигурации</string>
+    <string name="proxy_add_config_input_label">Вставьте JSON конфигурацию</string>
+    <string name="proxy_add_config_button">Добавить конфиг</string>
+    <string name="proxy_config_added_toast">Конфигурация успешно добавлена</string>
+    <string name="proxy_invalid_json_toast">Неверный формат JSON</string>
+    <string name="proxy_ping_label">Пинг: %1$s</string>
+    <string name="proxy_ping_timeout">Тайм-аут</string>
+    <string name="proxy_delete_content_description">Удалить конфиг</string>
+    <string name="proxy_ping_content_description">Пинговать сервер</string>
+    <string name="proxy_unknown_host">Неизвестный хост</string>
+    <string name="proxy_unnamed_config">Безымянный конфиг</string>
+    <string name="proxy_no_server_configs">Серверные конфигурации недоступны</string>
+    <string name="proxy_dialog_title">Добавить VLESS прокси</string>
+    <string name="proxy_dialog_message">Вставьте вашу VLESS JSON конфигурацию ниже, чтобы добавить её в список пользовательских.</string>
+    <string name="proxy_dialog_positive">Добавить</string>
+    <string name="proxy_dialog_negative">Отмена</string>
 </resources>

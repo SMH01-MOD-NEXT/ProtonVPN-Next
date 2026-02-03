@@ -21,11 +21,15 @@ package com.protonvpn.android
 import android.app.Activity
 import android.app.Application
 import android.app.ApplicationExitInfo
+import android.app.AlertDialog
 import android.content.Context
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
@@ -246,6 +250,12 @@ open class ProtonApplication : Application() {
                                     val app = button.context.applicationContext as ProtonApplicationHilt
                                     val vlessManager = VlessManager.getInstance(app)
                                 }
+
+                                // Long click to add config
+                                button.setOnLongClickListener {
+                                    showAddConfigDialog(activity)
+                                    true
+                                }
                             }
                         },
                         true
@@ -260,6 +270,38 @@ open class ProtonApplication : Application() {
             override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
             override fun onActivityDestroyed(activity: Activity) {}
         })
+    }
+
+    private fun showAddConfigDialog(context: Context) {
+        val input = EditText(context).apply {
+            hint = "JSON Config"
+            minLines = 3
+            maxLines = 6
+        }
+        val layout = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 10)
+            addView(input)
+        }
+
+        AlertDialog.Builder(context)
+            .setTitle(R.string.proxy_dialog_title)
+            .setMessage(R.string.proxy_dialog_message)
+            .setView(layout)
+            .setPositiveButton(R.string.proxy_dialog_positive) { _, _ ->
+                val json = input.text.toString()
+                if (json.isNotBlank()) {
+                    try {
+                        val app = context.applicationContext
+                        VlessManager.getInstance(app).addCustomConfig(json)
+                        Toast.makeText(context, R.string.proxy_config_added_toast, Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(context, R.string.proxy_invalid_json_toast, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton(R.string.proxy_dialog_negative, null)
+            .show()
     }
 
     fun initDependencies() {

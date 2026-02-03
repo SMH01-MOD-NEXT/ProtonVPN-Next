@@ -24,6 +24,7 @@ package com.protonvpn.android.proxy
 import android.content.Context
 import android.util.Base64
 import android.util.Log
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -38,6 +39,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
 import java.io.IOException
@@ -45,6 +48,7 @@ import java.io.InterruptedIOException
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.Socket
+import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
 /**
@@ -53,6 +57,7 @@ import kotlin.system.measureTimeMillis
 class VlessManager private constructor(private val context: Context) {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var connectionJob: Job? = null
     private var xrayProcess: Process? = null
     private var outReaderJob: Job? = null
     private var errReaderJob: Job? = null
@@ -67,6 +72,10 @@ class VlessManager private constructor(private val context: Context) {
         File(context.applicationInfo.nativeLibraryDir, XRAY_BINARY_NAME)
     }
 
+    private val prefs by lazy {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
     fun start() {
         Log.d(TAG, "Start command received.")
         if (isRunning) {
@@ -74,7 +83,9 @@ class VlessManager private constructor(private val context: Context) {
             return
         }
 
-        coroutineScope.launch {
+        connectionJob?.cancel()
+
+        connectionJob = coroutineScope.launch {
             try {
                 isRunning = true
                 isReady = false
@@ -87,75 +98,64 @@ class VlessManager private constructor(private val context: Context) {
                 }
                 Log.d(TAG, "Binary found and executable: ${xrayBinary.absolutePath}")
 
-                Log.d(TAG, "State -> Pinging. Fetching and decoding configs...")
-                val configs = fetchAndDecodeConfigs()
-                val sortedServers = getSortedServersByPing(configs)
+                val customConfigs = getCustomConfigs()
+                if (customConfigs.isNotEmpty()) {
+                    Log.i(TAG, "Found ${customConfigs.size} custom configs. Using strict priority.")
 
-                if (sortedServers.isEmpty()) {
-                    throw Exception("No responsive VLESS servers found after pinging.")
+                    for ((index, config) in customConfigs.withIndex()) {
+                        val alias = config.optString("ps", "Custom Config #${index + 1}")
+                        Log.i(TAG, "Attempting connection with Custom Config: $alias")
+
+                        if (attemptConnection(config)) {
+                            Log.i(TAG, "Successfully connected via Custom Config: $alias")
+                            return@launch // Stop here, we are good
+                        } else {
+                            Log.w(TAG, "Custom config $alias failed. Trying next...")
+                        }
+                    }
+                    Log.w(TAG, "All custom configs failed. Falling back to server configs.")
                 }
 
-                Log.i(TAG, "Found ${sortedServers.size} responsive servers. Trying them in order...")
+                // 2. Fallback to Server Configs (if custom failed or empty)
+                Log.d(TAG, "State -> Fetching Server Configs...")
 
-                var connectionSuccessful = false
+                val githubConfigs = try {
+                    fetchAndDecodeConfigs()
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to fetch GitHub configs", e)
+                    emptyList()
+                }
+
+                if (githubConfigs.isEmpty()) {
+                    throw Exception("No server configs available and custom configs failed/empty.")
+                }
+
+                // Auto-selection using TCP ping for server configs
+                val sortedServers = pingAndSortAll(githubConfigs)
+
+                if (sortedServers.isEmpty()) {
+                    throw Exception("No responsive server VLESS configs found after pinging.")
+                }
+
+                Log.i(TAG, "Found ${sortedServers.size} responsive server configs. Trying them in order...")
+
                 for ((index, serverConfig) in sortedServers.withIndex()) {
                     val host = serverConfig.extractHost()
-                    Log.i(TAG, "Attempt #${index + 1}: Connecting to server '${serverConfig.optString("ps", "Unnamed")}' ($host)")
+                    // FIXED: Index starting from 1
+                    val psName = serverConfig.optString("ps", "Server #${index + 1}")
+                    Log.i(TAG, "Attempting connection with Server Config: $psName ($host)")
 
-                    try {
-                        // Create a mutable copy for modification
-                        val configToUse = JSONObject(serverConfig.toString())
-
-                        // Remove routing/dns blocks to avoid geoip/geosite errors
-                        configToUse.remove("routing")
-                        configToUse.remove("dns")
-
-                        // Patch TLS SNI if missing
-                        val outbound = configToUse.getJSONArray("outbounds").getJSONObject(0)
-                        outbound.optJSONObject("streamSettings")?.let { streamSettings ->
-                            if (streamSettings.optString("security") == "tls") {
-                                val tlsSettings = streamSettings.optJSONObject("tlsSettings")
-                                if (tlsSettings != null && !tlsSettings.has("serverName")) {
-                                    val sni = streamSettings.optJSONObject("wsSettings")?.optString("host")
-                                        ?: configToUse.optString("sni", "")
-                                    if (sni.isNotEmpty()) {
-                                        tlsSettings.put("serverName", sni)
-                                        Log.d(TAG, "Patched missing SNI with: $sni")
-                                    }
-                                }
-                            }
-                        }
-
-                        val configFile = File(context.filesDir, "config.json")
-                        configFile.writeText(configToUse.toString(4))
-                        Log.d(TAG, "Config file created for attempt #${index + 1}.")
-
-                        startXray()
-                        waitForProxyReady()
-                        Log.d(TAG, "Local proxy on port $PROXY_PORT confirmed ready for attempt #${index + 1}.")
-
-                        if (testProxyConnection()) {
-                            Log.i(TAG, "Proxy connection test SUCCESSFUL for server: $host")
-                            delay(100)
-                            isReady = true
-                            bestServerHost = host
-                            connectionSuccessful = true
-                            Log.d(TAG, "State -> Ready. Xray started successfully with server #${index + 1}.")
-                            break // Exit the loop on success
-                        } else {
-                            Log.w(TAG, "Proxy connection test FAILED for server: $host. Trying next server.")
-                            stopInternal() // Clean up the failed Xray process
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Error setting up server $host. Trying next server.", e)
-                        stopInternal() // Clean up on any exception during setup
+                    if (attemptConnection(serverConfig)) {
+                        Log.i(TAG, "Successfully connected via Server Config: $psName")
+                        return@launch
                     }
                 }
 
-                if (!connectionSuccessful) {
-                    throw Exception("Failed to establish a working proxy connection with any of the ${sortedServers.size} servers.")
-                }
+                throw Exception("Failed to establish a working proxy connection with any server.")
 
+            } catch (e: CancellationException) {
+                Log.d(TAG, "Start sequence cancelled.")
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Error in VlessManager start sequence", e)
                 errorMessage = e.message ?: "Unknown error"
@@ -164,8 +164,62 @@ class VlessManager private constructor(private val context: Context) {
         }
     }
 
+    /**
+     * Tries to start Xray with the provided config and verifies the connection.
+     * Returns true if successful, false otherwise.
+     */
+    private suspend fun attemptConnection(config: JSONObject): Boolean {
+        return try {
+            // Create a mutable copy for modification
+            val configToUse = JSONObject(config.toString())
+            val host = try { config.extractHost() } catch(e: Exception) { "unknown" }
+
+            // Remove routing/dns blocks to avoid geoip/geosite errors
+            configToUse.remove("routing")
+            configToUse.remove("dns")
+
+            // Patch TLS SNI if missing
+            val outbound = configToUse.getJSONArray("outbounds").getJSONObject(0)
+            outbound.optJSONObject("streamSettings")?.let { streamSettings ->
+                if (streamSettings.optString("security") == "tls") {
+                    val tlsSettings = streamSettings.optJSONObject("tlsSettings")
+                    if (tlsSettings != null && !tlsSettings.has("serverName")) {
+                        val sni = streamSettings.optJSONObject("wsSettings")?.optString("host")
+                            ?: configToUse.optString("sni", "")
+                        if (sni.isNotEmpty()) {
+                            tlsSettings.put("serverName", sni)
+                            Log.d(TAG, "Patched missing SNI with: $sni")
+                        }
+                    }
+                }
+            }
+
+            val configFile = File(context.filesDir, "config.json")
+            configFile.writeText(configToUse.toString(4))
+
+            startXray()
+            waitForProxyReady()
+
+            // Real URL Test for the ACTIVE connection
+            if (testProxyConnection()) {
+                delay(100)
+                isReady = true
+                bestServerHost = host
+                true
+            } else {
+                stopInternal() // Clean up the failed Xray process
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error during connection attempt", e)
+            stopInternal()
+            false
+        }
+    }
+
     fun stop() {
         Log.d(TAG, "Stop command received.")
+        connectionJob?.cancel() // Ensure the logic loop stops
         stopInternal()
         isRunning = false
         isReady = false
@@ -193,7 +247,7 @@ class VlessManager private constructor(private val context: Context) {
         xrayProcess?.let { p ->
             try {
                 p.destroy()
-                if (!p.waitFor(500, java.util.concurrent.TimeUnit.MILLISECONDS)) {
+                if (!p.waitFor(500, TimeUnit.MILLISECONDS)) {
                     p.destroyForcibly()
                     Log.w(TAG, "Xray process was forcibly destroyed.")
                 }
@@ -216,25 +270,113 @@ class VlessManager private constructor(private val context: Context) {
     fun getBestServerHost(): String? = bestServerHost
     fun getErrorMessage(): String? = errorMessage
 
+    // --- Config Management & Utils ---
+
+    suspend fun getGithubConfigs(): List<JSONObject> {
+        return try {
+            fetchAndDecodeConfigs()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting GitHub configs", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Pings a specific server configuration.
+     * Returns latency in milliseconds, or -1 if unreachable/error.
+     */
+    suspend fun pingServer(config: JSONObject): Long = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val host = config.extractHost()
+            val port = config.extractPort()
+            measureTimeMillis {
+                Socket().use { it.connect(InetSocketAddress(host, port), PING_TIMEOUT_MS) }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Ping failed for specific server", e)
+            -1L
+        }
+    }
+
+    fun addCustomConfig(jsonString: String) {
+        try {
+            // Validate JSON
+            JSONObject(jsonString)
+            val currentList = getCustomConfigs().map { it.toString() }.toMutableList()
+            if (!currentList.contains(jsonString)) {
+                currentList.add(jsonString)
+                saveCustomConfigsList(currentList)
+
+                if (isRunning) {
+                    Log.i(TAG, "Custom config added while running. Restarting to apply...")
+                    stop()
+                    start()
+                }
+            }
+        } catch (e: JSONException) {
+            Log.e(TAG, "Invalid JSON provided for custom config", e)
+            throw IllegalArgumentException("Invalid JSON format")
+        }
+    }
+
+    fun removeCustomConfig(index: Int) {
+        val currentList = getCustomConfigs().map { it.toString() }.toMutableList()
+        if (index in 0 until currentList.size) {
+            currentList.removeAt(index)
+            saveCustomConfigsList(currentList)
+
+            if (isRunning) {
+                Log.i(TAG, "Custom config removed while running. Restarting to re-evaluate...")
+                stop()
+                start()
+            }
+        }
+    }
+
+    fun getCustomConfigs(): List<JSONObject> {
+        val jsonString = prefs.getString(KEY_CUSTOM_CONFIGS, "[]") ?: "[]"
+        return try {
+            val jsonArray = JSONArray(jsonString)
+            val list = mutableListOf<JSONObject>()
+            for (i in 0 until jsonArray.length()) {
+                list.add(JSONObject(jsonArray.getString(i)))
+            }
+            list
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing saved custom configs", e)
+            emptyList()
+        }
+    }
+
+    private fun saveCustomConfigsList(list: List<String>) {
+        val jsonArray = JSONArray()
+        list.forEach { jsonArray.put(it) }
+        prefs.edit().putString(KEY_CUSTOM_CONFIGS, jsonArray.toString()).apply()
+    }
+
+    /**
+     * Tests the proxy connection by making a real HTTP request through the local SOCKS port.
+     */
     private suspend fun testProxyConnection(): Boolean = withContext(Dispatchers.IO) {
         val socksProxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress("127.0.0.1", PROXY_PORT))
         val client = OkHttpClient.Builder()
             .proxy(socksProxy)
-            .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
             .build()
-        val request = Request.Builder().url("https://api.ipify.org").build()
+
+        // Use a reliable, fast endpoint for connection testing (Google generate_204)
+        val request = Request.Builder().url(CONNECTION_TEST_URL).build()
 
         try {
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) {
-                    Log.d(TAG, "Proxy test SUCCESS! IP: ${response.body?.string()?.trim()}")
+                    Log.d(TAG, "Proxy test SUCCESS! Code: ${response.code}")
 
-                    // Clean up connection pool in a separate coroutine to avoid NetworkOnMainThreadException
+                    // Clean up connection pool in a separate coroutine
                     coroutineScope.launch(Dispatchers.IO) {
                         try {
                             client.connectionPool.evictAll()
-                            Log.d(TAG, "Connection pool evicted successfully")
                         } catch (e: Exception) {
                             Log.w(TAG, "Failed to evict connection pool", e)
                         }
@@ -248,7 +390,6 @@ class VlessManager private constructor(private val context: Context) {
         } catch (e: Exception) {
             Log.e(TAG, "Proxy test FAILED with exception", e)
         } finally {
-            // Ensure connection pool cleanup in background thread
             coroutineScope.launch(Dispatchers.IO) {
                 try {
                     client.connectionPool.evictAll()
@@ -282,31 +423,23 @@ class VlessManager private constructor(private val context: Context) {
         }
     }
 
-    /**
-     * Pings all servers and returns a list of responsive servers sorted by latency.
-     */
-    private suspend fun getSortedServersByPing(configs: List<JSONObject>): List<JSONObject> = withContext(Dispatchers.IO) {
+    private suspend fun pingAndSortAll(configs: List<JSONObject>): List<JSONObject> = withContext(Dispatchers.IO) {
         if (configs.isEmpty()) return@withContext emptyList()
 
         val results = configs.map { config ->
             async {
                 var ping = PING_TIMEOUT_MS + 1L
-                val serverName = config.optString("ps", "Unnamed")
                 try {
                     val host = config.extractHost()
                     val port = config.extractPort()
                     ping = measureTimeMillis {
                         Socket().use { it.connect(InetSocketAddress(host, port), PING_TIMEOUT_MS) }
                     }
-                    Log.d(TAG, "Ping successful for '$serverName': $ping ms")
-                } catch (_: Exception) {
-                    Log.w(TAG, "Ping failed for '$serverName'")
-                }
+                } catch (_: Exception) { }
                 config to ping
             }
         }.awaitAll()
 
-        // Filter for responsive servers, sort them by ping, and return the JSONObject
         return@withContext results
             .filter { it.second <= PING_TIMEOUT_MS }
             .sortedBy { it.second }
@@ -327,9 +460,8 @@ class VlessManager private constructor(private val context: Context) {
                     val line = reader.readLine() ?: break
                     Log.i(TAG, "[Xray-out] $line")
                 }
-            } catch (e: InterruptedIOException) {
-                // This is expected on stop
-            } catch (e: IOException) {
+            } catch (e: InterruptedIOException) { }
+            catch (e: IOException) {
                 if (isActive) Log.w(TAG, "Xray stdout error: ${e.message}")
             } finally {
                 try { reader.close() } catch (_: Exception) {}
@@ -343,9 +475,8 @@ class VlessManager private constructor(private val context: Context) {
                     val line = reader.readLine() ?: break
                     Log.e(TAG, "[Xray-err] $line")
                 }
-            } catch (e: InterruptedIOException) {
-                // This is expected on stop
-            } catch (e: IOException) {
+            } catch (e: InterruptedIOException) { }
+            catch (e: IOException) {
                 if (isActive) Log.w(TAG, "Xray stderr error: ${e.message}")
             } finally {
                 try { reader.close() } catch (_: Exception) {}
@@ -386,8 +517,11 @@ class VlessManager private constructor(private val context: Context) {
         private const val TAG = "VLESS_MANAGER"
         private const val XRAY_BINARY_NAME = "libxray.so"
         private const val GITHUB_CONFIG_URL = "https://raw.githubusercontent.com/SMH01-MOD-NEXT/mod-next-proxy/refs/heads/main/vless.txt"
+        private const val CONNECTION_TEST_URL = "https://www.google.com/generate_204"
         private const val PING_TIMEOUT_MS = 2000
         const val PROXY_PORT = 10808
+        private const val PREFS_NAME = "vless_custom_configs"
+        private const val KEY_CUSTOM_CONFIGS = "configs_list"
 
         @Volatile
         private var INSTANCE: VlessManager? = null
