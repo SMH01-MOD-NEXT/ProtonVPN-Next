@@ -20,7 +20,9 @@
 package com.protonvpn.android.redesign.settings.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +30,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
@@ -37,6 +44,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -46,12 +54,15 @@ import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.protonvpn.android.R
 import com.protonvpn.android.base.ui.AnnotatedClickableText
 import com.protonvpn.android.base.ui.LabelBadge
 import com.protonvpn.android.models.config.TransmissionProtocol
 import com.protonvpn.android.models.config.VpnProtocol
 import com.protonvpn.android.redesign.base.ui.ProtonAlert
+import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
+import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.utils.Constants
 import com.protonvpn.android.utils.openUrl
 import com.protonvpn.android.vpn.ProtocolSelection
@@ -66,40 +77,88 @@ fun ProtocolSettings(
     onLearnMore: () -> Unit,
     onProtocolSelected: (ProtocolSelection) -> Unit,
 ) {
-    SubSetting(
-        title = stringResource(protocolViewState.titleRes),
+    // Theme logic for Card appearance
+    val themeType = LocalThemeType.current
+    val isAmoled = themeType == ThemeType.Amoled || themeType == ThemeType.NewYearAmoled
+    val border = if (isAmoled) BorderStroke(1.dp, Color.White) else null
+
+    val isLight = themeType == ThemeType.Light || themeType == ThemeType.NewYearLight ||
+            (themeType == ThemeType.System && !isSystemInDarkTheme())
+    val cardColor = if (isLight) Color(0xFFF0F0F0) else ProtonTheme.colors.backgroundSecondary
+
+    val listState = rememberLazyListState()
+
+    BasicSubSetting(
+        title = "", // Title is handled inside the list header
         onClose = onClose
     ) {
-        ProtocolSettingsList(
-            currentProtocol = protocolViewState.value,
-            onProtocolSelected = onProtocolSelected,
-        )
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .largeScreenContentPadding()
+                .padding(horizontal = 16.dp)
+        ) {
+            // 1. Header Section (Title & Description)
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = stringResource(protocolViewState.titleRes),
+                        style = ProtonTheme.typography.defaultNorm.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = ProtonTheme.colors.textNorm,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-        // Footer description
-        val footerPadding = Modifier.padding(top = 12.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
-        protocolViewState.descriptionText()?.let { descriptionText ->
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                color = ProtonTheme.colors.separatorNorm
-            )
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            if (protocolViewState.annotationRes != null) {
-                AnnotatedClickableText(
-                    fullText = descriptionText,
-                    annotatedPart = stringResource(protocolViewState.annotationRes),
-                    onAnnotatedClick = onLearnMore,
-                    style = ProtonTheme.typography.body2Regular,
-                    annotatedStyle = ProtonTheme.typography.body2Medium,
-                    color = ProtonTheme.colors.textWeak,
-                    modifier = footerPadding,
-                )
-            } else {
-                Text(
-                    text = descriptionText,
-                    style = ProtonTheme.typography.body2Regular,
-                    color = ProtonTheme.colors.textWeak,
-                    modifier = footerPadding,
-                )
+                    // Description text with clickable annotation
+                    protocolViewState.descriptionText()?.let { descriptionText ->
+                        if (protocolViewState.annotationRes != null) {
+                            AnnotatedClickableText(
+                                fullText = descriptionText,
+                                annotatedPart = stringResource(protocolViewState.annotationRes),
+                                onAnnotatedClick = onLearnMore,
+                                style = ProtonTheme.typography.body2Regular,
+                                annotatedStyle = ProtonTheme.typography.body2Medium.copy(
+                                    textDecoration = TextDecoration.Underline,
+                                    color = ProtonTheme.colors.brandNorm
+                                ),
+                                color = ProtonTheme.colors.textWeak,
+                            )
+                        } else {
+                            Text(
+                                text = descriptionText,
+                                style = ProtonTheme.typography.body2Regular,
+                                color = ProtonTheme.colors.textWeak,
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 2. Protocols Card
+            item {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardColor),
+                    border = border,
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)
+                ) {
+                    ProtocolSettingsList(
+                        currentProtocol = protocolViewState.value,
+                        onProtocolSelected = onProtocolSelected,
+                        modifier = Modifier.padding(vertical = 8.dp),
+                        horizontalContentPadding = 16.dp
+                    )
+                }
             }
         }
     }
@@ -110,8 +169,9 @@ fun ProtocolSettingsList(
     currentProtocol: ProtocolSelection,
     onProtocolSelected: (ProtocolSelection) -> Unit,
     modifier: Modifier = Modifier,
-    horizontalContentPadding: Dp = 16.dp, // Kept for API compatibility, but handled internally by ProtocolOption padding
+    horizontalContentPadding: Dp = 16.dp,
 ) {
+    // State for OpenVPN deprecation dialog (inside the list so it works in modals too)
     val openVpnDeprecationDialogForTransmission =
         rememberSaveable(currentProtocol) { mutableStateOf<TransmissionProtocol?>(null) }
 
@@ -124,31 +184,37 @@ fun ProtocolSettingsList(
     }
 
     Column(modifier = modifier) {
-        // Smart Protocol
+        // -- Smart Protocol --
         ProtocolItem(
             itemProtocol = ProtocolSelection.SMART,
             title = R.string.settings_protocol_smart_title,
             description = R.string.settings_protocol_smart_description,
             onProtocolSelected = onProtocolSelected,
             selectedProtocol = currentProtocol,
+            horizontalContentPadding = horizontalContentPadding,
             trailingTitleContent = {
                 LabelBadge(stringResource(R.string.settings_protocol_badge_recommended))
             }
         )
 
         HorizontalDivider(
-            modifier = Modifier.padding(vertical = 8.dp),
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = horizontalContentPadding),
             color = ProtonTheme.colors.separatorNorm
         )
 
-        // Speed Section
-        ProtocolSectionHeader(text = stringResource(R.string.settings_protocol_section_speed))
+        // -- Speed Section --
+        ProtocolSectionHeader(
+            text = stringResource(R.string.settings_protocol_section_speed),
+            paddingStart = horizontalContentPadding
+        )
+
         ProtocolItem(
             itemProtocol = ProtocolSelection(VpnProtocol.WireGuard, TransmissionProtocol.UDP),
             title = R.string.settings_protocol_wireguard_title,
             description = R.string.settings_protocol_wireguard_udp_description,
             onProtocolSelected = onProtocolSelected,
             selectedProtocol = currentProtocol,
+            horizontalContentPadding = horizontalContentPadding
         )
         ProtocolItem(
             itemProtocol = ProtocolSelection(VpnProtocol.OpenVPN, TransmissionProtocol.UDP),
@@ -156,21 +222,27 @@ fun ProtocolSettingsList(
             description = R.string.settings_protocol_openvpn_udp_description,
             onProtocolSelected = { openVpnDeprecationDialogForTransmission.value = TransmissionProtocol.UDP },
             selectedProtocol = currentProtocol,
+            horizontalContentPadding = horizontalContentPadding
         )
 
         HorizontalDivider(
-            modifier = Modifier.padding(vertical = 8.dp),
+            modifier = Modifier.padding(vertical = 4.dp, horizontal = horizontalContentPadding),
             color = ProtonTheme.colors.separatorNorm
         )
 
-        // Reliability Section
-        ProtocolSectionHeader(text = stringResource(R.string.settings_protocol_section_reliability))
+        // -- Reliability Section --
+        ProtocolSectionHeader(
+            text = stringResource(R.string.settings_protocol_section_reliability),
+            paddingStart = horizontalContentPadding
+        )
+
         ProtocolItem(
             itemProtocol = ProtocolSelection(VpnProtocol.WireGuard, TransmissionProtocol.TCP),
             title = R.string.settings_protocol_wireguard_title,
             description = R.string.settings_protocol_wireguard_tcp_description,
             onProtocolSelected = onProtocolSelected,
             selectedProtocol = currentProtocol,
+            horizontalContentPadding = horizontalContentPadding
         )
         ProtocolItem(
             itemProtocol = ProtocolSelection(VpnProtocol.OpenVPN, TransmissionProtocol.TCP),
@@ -178,6 +250,7 @@ fun ProtocolSettingsList(
             description = R.string.settings_protocol_openvpn_tcp_description,
             onProtocolSelected = { openVpnDeprecationDialogForTransmission.value = TransmissionProtocol.TCP },
             selectedProtocol = currentProtocol,
+            horizontalContentPadding = horizontalContentPadding
         )
         ProtocolItem(
             itemProtocol = ProtocolSelection(VpnProtocol.WireGuard, TransmissionProtocol.TLS),
@@ -185,6 +258,7 @@ fun ProtocolSettingsList(
             description = R.string.settings_protocol_stealth_description,
             onProtocolSelected = onProtocolSelected,
             selectedProtocol = currentProtocol,
+            horizontalContentPadding = horizontalContentPadding
         )
     }
 }
@@ -235,7 +309,7 @@ fun ProtocolItem(
     onProtocolSelected: (ProtocolSelection) -> Unit,
     selectedProtocol: ProtocolSelection,
     modifier: Modifier = Modifier,
-    horizontalContentPadding: Dp = 16.dp, // Unused but kept for compatibility
+    horizontalContentPadding: Dp = 16.dp,
     trailingTitleContent: (@Composable () -> Unit)? = null,
 ) {
     ProtocolOption(
@@ -243,6 +317,7 @@ fun ProtocolItem(
         description = stringResource(id = description),
         isSelected = itemProtocol == selectedProtocol,
         onClick = { onProtocolSelected(itemProtocol) },
+        horizontalPadding = horizontalContentPadding,
         trailingTitleContent = trailingTitleContent
     )
 }
@@ -253,13 +328,14 @@ private fun ProtocolOption(
     description: String,
     isSelected: Boolean,
     onClick: () -> Unit,
+    horizontalPadding: Dp = 16.dp,
     trailingTitleContent: (@Composable () -> Unit)? = null
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = horizontalPadding, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
@@ -295,13 +371,16 @@ private fun ProtocolOption(
 }
 
 @Composable
-private fun ProtocolSectionHeader(text: String) {
+private fun ProtocolSectionHeader(
+    text: String,
+    paddingStart: Dp = 16.dp
+) {
     Text(
         text = text,
         style = ProtonTheme.typography.defaultNorm.copy(fontWeight = FontWeight.Bold),
         color = ProtonTheme.colors.textNorm,
         modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(start = paddingStart, end = 16.dp, top = 12.dp, bottom = 4.dp)
             .fillMaxWidth()
     )
 }
