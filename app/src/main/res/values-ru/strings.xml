@@ -1756,4 +1756,11 @@
     <string name="proxy_dialog_message">Вставьте вашу VLESS JSON конфигурацию ниже, чтобы добавить её в список пользовательских.</string>
     <string name="proxy_dialog_positive">Добавить</string>
     <string name="proxy_dialog_negative">Отмена</string>
+    <string name="settings_country_spoofing_title">Подмена страны</string>
+    <string name="settings_country_spoofing_description">Подмена кода страны, отправляемого в API, для имитации другого физического местоположения.</string>
+    <string name="settings_country_spoofing_null_label">Null-подмена</string>
+    <string name="settings_country_spoofing_null_desc">Не отправлять заголовок с кодом страны в API.</string>
+    <string name="settings_country_spoofing_code_label">Код страны (ISO 3166-1 alpha-2)</string>
+    <string name="settings_country_spoofing_code_hint">напр. US, DE, RU</string>
+    <string name="settings_country_spoofing_update_toast">Обновление списка серверов...</string>
 </resources>

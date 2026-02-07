@@ -35,6 +35,7 @@ object SubSettingsScreen : Screen<SubSettingsScreen.Type, RootNav>("subSettingsS
         Account,
         Advanced,
         Proxy,
+        CountrySpoofing,
         ConnectionPreferences,
         CustomDns,
         DebugTools,

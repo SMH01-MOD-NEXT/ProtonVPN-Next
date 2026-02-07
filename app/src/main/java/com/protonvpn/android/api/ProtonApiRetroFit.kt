@@ -36,6 +36,7 @@ import com.protonvpn.android.models.vpn.PromoCodesBody
 import com.protonvpn.android.telemetry.StatsBody
 import com.protonvpn.android.telemetry.StatsEvent
 import com.protonvpn.android.ui.promooffers.usecase.PostNps
+import com.protonvpn.android.utils.Storage // Added Storage import
 import me.proton.core.network.domain.ApiResult
 import me.proton.core.network.domain.TimeoutOverride
 import me.proton.core.network.domain.session.SessionId
@@ -179,14 +180,39 @@ open class ProtonApiRetroFit @Inject constructor(
     suspend fun putTelemetryGlobalSetting(isEnabled: Boolean): ApiResult<GlobalSettingsResponse> =
         manager { putTelemetryGlobalSetting(UpdateGlobalTelemetry(isEnabled)) }
 
+    // MODIFIED: Spoofing headers logic
     private fun createNetZoneHeaders(netzone: String?) =
         mutableMapOf<String, String>().apply {
-            val effectiveMCC = userCountryTelephonyBased()?.countryCode
-            if (effectiveMCC != null)
-                put(ProtonVPNRetrofit.HEADER_COUNTRY, effectiveMCC)
+            val isSpoofingEnabled = Storage.getBoolean("spoof_country_enabled", false)
+            val isNullSpoof = Storage.getBoolean("spoof_country_null", false)
+
+            if (isSpoofingEnabled) {
+                if (!isNullSpoof) {
+                    val spoofedCode = Storage.getString("spoof_country_code", "").uppercase()
+                    if (spoofedCode.length == 2) {
+                        put(ProtonVPNRetrofit.HEADER_COUNTRY, spoofedCode)
+                        ProtonLogger.logCustom(LogCategory.API, "Spoofing country: $spoofedCode")
+                    } else {
+                        // Fallback if code is invalid but enabled
+                        val effectiveMCC = userCountryTelephonyBased()?.countryCode
+                        if (effectiveMCC != null) put(ProtonVPNRetrofit.HEADER_COUNTRY, effectiveMCC)
+                    }
+                } else {
+                    ProtonLogger.logCustom(LogCategory.API, "Null Spoofing active (no country header sent)")
+                }
+            } else {
+                // Default behavior
+                val effectiveMCC = userCountryTelephonyBased()?.countryCode
+                if (effectiveMCC != null)
+                    put(ProtonVPNRetrofit.HEADER_COUNTRY, effectiveMCC)
+            }
+
             val effectiveNetzone = debugApiPrefs?.netzone ?: netzone
             if (!effectiveNetzone.isNullOrEmpty())
                 put(ProtonVPNRetrofit.HEADER_NETZONE, effectiveNetzone)
+
+            // Log for debugging
+            val effectiveMCC = userCountryTelephonyBased()?.countryCode
             ProtonLogger.logCustom(LogCategory.API, "netzone: $effectiveNetzone, mcc: $effectiveMCC")
         }
 

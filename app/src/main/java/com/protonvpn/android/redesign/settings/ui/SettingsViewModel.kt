@@ -53,6 +53,7 @@ import com.protonvpn.android.redesign.vpn.ui.ConnectIntentPrimaryLabel
 import com.protonvpn.android.redesign.vpn.ui.GetConnectIntentViewState
 import com.protonvpn.android.redesign.vpn.usecases.SettingsForConnection
 import com.protonvpn.android.servers.ServerManager2
+import com.protonvpn.android.servers.UpdateServerListFromApi
 import com.protonvpn.android.settings.data.CurrentUserLocalSettingsManager
 import com.protonvpn.android.settings.data.SplitTunnelingMode
 import com.protonvpn.android.theme.ThemeType
@@ -142,6 +143,7 @@ class SettingsViewModel @Inject constructor(
     private val translator: Translator,
     private val settingsManager: CurrentUserLocalSettingsManager,
     private val featureFlagManager: FeatureFlagManager, // Inject Feature Manager
+    private val updateServerListFromApi: UpdateServerListFromApi,
 ) : ViewModel() {
 
     sealed class SettingViewState<T>(
@@ -382,6 +384,13 @@ class SettingsViewModel @Inject constructor(
         val profileName: String,
     )
 
+    // State for Country Spoofing feature
+    data class CountrySpoofingState(
+        val isEnabled: Boolean,
+        val isNullSpoof: Boolean,
+        val countryCode: String
+    )
+
     data class SettingsViewState(
         val profileOverrideInfo: ProfileOverrideInfo? = null,
         val netShield: SettingViewState.NetShield?,
@@ -408,6 +417,7 @@ class SettingsViewModel @Inject constructor(
         val connectionPreferences: SettingViewState.ConnectionPreferencesState,
         val isAutomaticConnectionPreferencesEnabled: Boolean,
         val isStatisticsEnabled: Boolean, // Added statistics flag
+        val countrySpoofing: CountrySpoofingState, // Add to view state
     )
 
     enum class UiEvent {
@@ -425,6 +435,17 @@ class SettingsViewModel @Inject constructor(
         tryEmit(Storage.getBoolean("proxy_enabled", false))
     }
 
+    // Flow for Country Spoofing settings
+    private val countrySpoofingFlow = MutableSharedFlow<CountrySpoofingState>(replay = 1).apply {
+        tryEmit(
+            CountrySpoofingState(
+                isEnabled = Storage.getBoolean("spoof_country_enabled", false),
+                isNullSpoof = Storage.getBoolean("spoof_country_null", false),
+                countryCode = Storage.getString("spoof_country_code", "")
+            )
+        )
+    }
+
     // --- State Synchronization Fix ---
     // We register a listener to the SharedPreferences to ensure that if the proxy setting
     // is changed in another instance of the ViewModel (e.g. inside SubSettings),
@@ -433,6 +454,16 @@ class SettingsViewModel @Inject constructor(
     private val preferenceChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         if (key == "proxy_enabled") {
             proxyEnabledFlow.tryEmit(sharedPreferences.getBoolean("proxy_enabled", false))
+        }
+        // Listener for spoofing keys
+        if (key == "spoof_country_enabled" || key == "spoof_country_null" || key == "spoof_country_code") {
+            countrySpoofingFlow.tryEmit(
+                CountrySpoofingState(
+                    isEnabled = sharedPreferences.getBoolean("spoof_country_enabled", false),
+                    isNullSpoof = sharedPreferences.getBoolean("spoof_country_null", false),
+                    countryCode = sharedPreferences.getString("spoof_country_code", "") ?: ""
+                )
+            )
         }
     }
 
@@ -526,9 +557,10 @@ class SettingsViewModel @Inject constructor(
     // Combining UI states to keep the main combine clean and under argument limits
     private val uiStateFlow = combine(
         acknowledgingAppUpdateBannerStateFlow,
-        proxyEnabledFlow
-    ) { banner, proxy ->
-        Pair(banner, proxy)
+        proxyEnabledFlow,
+        countrySpoofingFlow // Add spoofing state
+    ) { banner, proxy, spoofing ->
+        Triple(banner, proxy, spoofing)
     }
 
     val viewState =
@@ -542,7 +574,7 @@ class SettingsViewModel @Inject constructor(
             uiStateFlow, // Replaced single banner flow with combined UI state
             excludedLocationPreferencesFlow,
             featureFlagsFlow,
-        ) { user, defaultConnection, connectionSettings, featurePreferences, isPrivateDnsActive, (appUpdateBannerState, isProxyEnabled), excludedLocationPreferences, featureFlags ->
+        ) { user, defaultConnection, connectionSettings, featurePreferences, isPrivateDnsActive, (appUpdateBannerState, isProxyEnabled, spoofingState), excludedLocationPreferences, featureFlags ->
             // MOD: Force free user check to false to unlock features
             val isFree = false
             val isCredentialLess = user?.user?.isCredentialLess() == true
@@ -635,6 +667,7 @@ class SettingsViewModel @Inject constructor(
                 ),
                 isAutomaticConnectionPreferencesEnabled = featureFlags.isAutomaticConnectionPreferencesFeatureFlagEnabled,
                 isStatisticsEnabled = featureFlagManager.isStatisticsEnabled(), // Set statistics enabled state
+                countrySpoofing = spoofingState // Mapped state
             )
         }.shareIn(viewModelScope, SharingStarted.WhileSubscribed(1_000), replay = 1)
 
@@ -652,6 +685,7 @@ class SettingsViewModel @Inject constructor(
     val splitTunneling = viewState.map { it.splitTunneling }.distinctUntilChanged()
     val theme = viewState.map { it.theme.value }.distinctUntilChanged()
     val connectionPreferences = viewState.map { it.connectionPreferences }.distinctUntilChanged()
+    val countrySpoofing = viewState.map { it.countrySpoofing }.distinctUntilChanged()
 
     data class AdvancedSettingsViewState(
         val altRouting: SettingViewState.AltRouting,
@@ -865,6 +899,36 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    // --- Country Spoofing Methods ---
+
+    fun toggleCountrySpoofing(enabled: Boolean) {
+        Storage.saveBoolean("spoof_country_enabled", enabled)
+        refreshServerList()
+    }
+
+    fun toggleNullSpoof(enabled: Boolean) {
+        Storage.saveBoolean("spoof_country_null", enabled)
+        refreshServerList()
+    }
+
+    fun setSpoofCountryCode(code: String) {
+        Storage.saveString("spoof_country_code", code.uppercase())
+        refreshServerList()
+    }
+
+    private fun refreshServerList() {
+        viewModelScope.launch {
+            // Force server list update
+            updateServerListFromApi(
+                netzone = null,
+                freeOnlyNeeded = false,
+                serverListLastModified = 0 // Force update
+            )
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, R.string.settings_country_spoofing_update_toast, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 }
 
 private fun UserRecovery.State?.passwordHint(): Int? = when(this) {

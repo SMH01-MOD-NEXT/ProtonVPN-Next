@@ -68,6 +68,7 @@ import com.protonvpn.android.redesign.base.ui.largeScreenContentPadding
 import com.protonvpn.android.redesign.base.ui.rememberInfoSheetState
 import com.protonvpn.android.redesign.base.ui.showSnackbar
 import com.protonvpn.android.redesign.settings.ui.connectionpreferences.ConnectionPreferencesSetting
+import com.protonvpn.android.redesign.settings.ui.countryspoofing.CountrySpoofingScreen
 import com.protonvpn.android.redesign.settings.ui.customdns.CustomDnsActions
 import com.protonvpn.android.redesign.settings.ui.customdns.CustomDnsViewModel
 import com.protonvpn.android.redesign.settings.ui.customdns.DnsSettingsScreen
@@ -81,8 +82,6 @@ import com.protonvpn.android.telemetry.UpgradeSource
 import com.protonvpn.android.theme.ThemeType
 import com.protonvpn.android.ui.planupgrade.CarouselUpgradeDialogActivity
 import com.protonvpn.android.ui.planupgrade.UpgradeAdvancedCustomizationHighlightsFragment
-import com.protonvpn.android.ui.settings.SettingsSplitTunnelAppsActivity
-import com.protonvpn.android.ui.settings.SettingsSplitTunnelIpsActivity
 import com.protonvpn.android.utils.Constants
 import com.protonvpn.android.utils.DebugUtils
 import com.protonvpn.android.utils.openUrl
@@ -126,6 +125,11 @@ fun SubSettingsRoute(
                 .navigationBarsPadding()
         ) {
             when (type) {
+                // Modified: Now uses the separate screen class
+                SubSettingsScreen.Type.CountrySpoofing -> {
+                    CountrySpoofingScreen(onClose = onClose)
+                }
+
                 SubSettingsScreen.Type.VpnAccelerator -> {
                     val vpnAccelerator =
                         viewModel.vpnAccelerator.collectAsStateWithLifecycle(initialValue = null).value
@@ -245,6 +249,10 @@ fun SubSettingsRoute(
                                     CarouselUpgradeDialogActivity.launch<UpgradeAdvancedCustomizationHighlightsFragment>(
                                         context
                                     )
+                                },
+                                // Added button to navigate to Country Spoofing in Advanced settings
+                                onNavigateToCountrySpoofing = {
+                                    onNavigateToSubSetting(SubSettingsScreen.Type.CountrySpoofing)
                                 }
                             )
                         }
@@ -484,9 +492,7 @@ fun SubSettingsRoute(
                 }
 
                 SubSettingsScreen.Type.Statistics -> {
-                    // Feature Flag Guard with Null-safety
                     if (viewState == null) {
-                        // While loading state, show spinner to prevent premature closing
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator()
                         }
@@ -495,7 +501,6 @@ fun SubSettingsRoute(
                             onClose = onClose
                         )
                     } else {
-                        // Only close if we are SURE it is disabled (state loaded AND flag is false)
                         LaunchedEffect(Unit) {
                             onClose()
                         }

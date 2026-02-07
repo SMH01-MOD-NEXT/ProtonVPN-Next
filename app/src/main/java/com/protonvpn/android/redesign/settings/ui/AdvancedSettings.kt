@@ -54,6 +54,7 @@ fun AdvancedSettings(
     onNatTypeLearnMore: () -> Unit,
     onNavigateToNatType: () -> Unit,
     onNavigateToCustomDns: () -> Unit,
+    onNavigateToCountrySpoofing: () -> Unit,
     onCustomDnsLearnMore: () -> Unit,
     onCustomDnsRestricted: () -> Unit,
     onAllowLanRestricted: () -> Unit,
@@ -87,6 +88,13 @@ fun AdvancedSettings(
             onClick = if (allowLan.isRestricted) onAllowLanRestricted else onNavigateToLan,
             trailingIcon = if (allowLan.isRestricted) R.drawable.vpn_plus_badge else null,
             trailingIconTint = false
+        )
+
+        SettingRowWithIcon(
+            icon = CoreR.drawable.ic_proton_globe, // Используем иконку глобуса или другую подходящую
+            title = stringResource(R.string.settings_country_spoofing_title),
+            onClick = onNavigateToCountrySpoofing,
+            trailingIcon = null // Стрелочка будет добавлена автоматически внутри SettingRowWithIcon, если onClick != null
         )
 
         // NAT Type (Navigation)

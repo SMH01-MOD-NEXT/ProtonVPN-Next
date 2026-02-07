@@ -34,6 +34,7 @@ import com.protonvpn.android.ui.home.updateTier
 import com.protonvpn.android.utils.CountryTools
 import com.protonvpn.android.utils.DebugUtils
 import com.protonvpn.android.utils.ServerManager
+import com.protonvpn.android.utils.Storage // Import for Storage
 import com.protonvpn.android.vpn.ProtocolSelection
 import com.protonvpn.android.vpn.usecases.GetTruncationMustHaveIDs
 import com.protonvpn.android.vpn.usecases.ServerListTruncationEnabled
@@ -87,16 +88,33 @@ class UpdateServerListFromApi @Inject constructor(
     ): PeriodicActionResult<Result> {
         val realProtocolsNames = ProtocolSelection.REAL_PROTOCOLS.map { it.apiName }
         val enableTruncation = truncationFeatureFlagEnabled()
-        val requestedMustHaveIDs = if (enableTruncation) getTruncationMustHaveIDs() else emptySet()
+
+        // --- Spoofing & Update Logic ---
+        // 1. Detect if this is a forced update (Caller passed 0, usually from CountrySpoofingViewModel)
+        val isForcedUpdate = serverListLastModified == 0L
+
+        // 2. If it is a forced update (spoofing toggle), we MUST disable truncation to get a full fresh list.
+        //    Otherwise, we respect the feature flag.
+        val effectiveEnableTruncation = if (isForcedUpdate) false else enableTruncation
+
+        // 3. For MustHaveIDs, if we disabled truncation, we don't need them.
+        val requestedMustHaveIDs = if (effectiveEnableTruncation) getTruncationMustHaveIDs() else emptySet()
+
         val binaryServerStatusEnabled = binaryServerStatusEnabled()
         // Partial updates are not supported with binary status.
         val freeOnly = freeOnlyNeeded && !binaryServerStatusEnabled
+
+        // Note: We use serverListLastModified directly.
+        // If it is 0 (forced), the API returns the full list (200 OK).
+        // If it is > 0 (periodic), the API may return 304 or 200 (truncated or full).
+        // We do NOT force 0 here purely based on isSpoofingEnabled anymore, allowing subsequent updates to be efficient.
+
         val fetchResult = if (binaryServerStatusEnabled) {
             val listResult = api.getServerList(
                 netzone,
                 protocols = realProtocolsNames,
                 lastModified = serverListLastModified,
-                enableTruncation = enableTruncation,
+                enableTruncation = effectiveEnableTruncation, // Use our calculated flag
                 mustHaveIDs = requestedMustHaveIDs,
             )
             processServerListResult(listResult,  ::processServerList)
@@ -105,7 +123,7 @@ class UpdateServerListFromApi @Inject constructor(
                 netzone,
                 realProtocolsNames,
                 freeOnly,
-                enableTruncation = enableTruncation,
+                enableTruncation = effectiveEnableTruncation, // Use our calculated flag
                 lastModified = serverListLastModified,
                 mustHaveIDs = requestedMustHaveIDs,
             )
