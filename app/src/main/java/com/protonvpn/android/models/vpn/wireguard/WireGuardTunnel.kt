@@ -18,13 +18,13 @@
  */
 package com.protonvpn.android.models.vpn.wireguard
 
-import com.wireguard.android.backend.Statistics
-import com.wireguard.android.backend.Tunnel
-import com.wireguard.config.Config
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.withContext
+import org.amnezia.awg.backend.Statistics
+import org.amnezia.awg.backend.Tunnel
+import org.amnezia.awg.config.Config
 
 class WireGuardTunnel internal constructor(
     private var name: String,

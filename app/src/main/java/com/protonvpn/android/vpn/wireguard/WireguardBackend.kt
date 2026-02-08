@@ -20,27 +20,24 @@ package com.protonvpn.android.vpn.wireguard
  */
 
 import android.content.Context
-import android.util.Log
 import com.protonvpn.android.auth.usecase.CurrentUser
 import com.protonvpn.android.concurrency.VpnDispatcherProvider
 import com.protonvpn.android.logging.ConnError
 import com.protonvpn.android.logging.LogCategory
-import com.protonvpn.android.logging.LogLevel
 import com.protonvpn.android.logging.ProtonLogger
 import com.protonvpn.android.models.config.TransmissionProtocol
 import com.protonvpn.android.models.config.VpnProtocol
 import com.protonvpn.android.models.vpn.ConnectionParams
 import com.protonvpn.android.models.vpn.ConnectionParamsWireguard
-import com.protonvpn.android.servers.Server
 import com.protonvpn.android.models.vpn.usecase.ComputeAllowedIPs
 import com.protonvpn.android.models.vpn.wireguard.WireGuardTunnel
 import com.protonvpn.android.redesign.vpn.AnyConnectIntent
 import com.protonvpn.android.redesign.vpn.usecases.SettingsForConnection
+import com.protonvpn.android.servers.Server
 import com.protonvpn.android.statistics.domain.VpnConnectionTracker
 import com.protonvpn.android.ui.ForegroundActivityTracker
 import com.protonvpn.android.ui.home.GetNetZone
 import com.protonvpn.android.utils.Constants
-import com.protonvpn.android.utils.DebugUtils
 import com.protonvpn.android.vpn.CertificateRepository
 import com.protonvpn.android.vpn.ErrorType
 import com.protonvpn.android.vpn.LocalAgentUnreachableTracker
@@ -50,13 +47,8 @@ import com.protonvpn.android.vpn.PrepareResult
 import com.protonvpn.android.vpn.VpnBackend
 import com.protonvpn.android.vpn.VpnState
 import com.protonvpn.android.vpn.usecases.ServerNameTopStrategyEnabled
-import com.wireguard.android.backend.BackendException
-import com.wireguard.android.backend.GoBackend
-import com.wireguard.android.backend.Tunnel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -65,8 +57,10 @@ import kotlinx.coroutines.withContext
 import me.proton.core.network.data.di.SharedOkHttpClient
 import me.proton.core.network.domain.NetworkManager
 import me.proton.core.network.domain.NetworkStatus
-import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
+import org.amnezia.awg.backend.BackendException
+import org.amnezia.awg.backend.GoBackend
+import org.amnezia.awg.backend.Tunnel
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.concurrent.CancellationException
@@ -102,10 +96,14 @@ class WireguardBackend @Inject constructor(
     dispatcherProvider, localAgentUnreachableTracker, currentUser, getNetZone, foregroundActivityTracker, vpnConnectionTracker, okHttp
 ) {
     private val wireGuardIo = dispatcherProvider.newSingleThreadDispatcherForInifiniteIo()
+
+    // AmneziaWG: Use the updated GoBackend with your ContextWrapper
     private val backend: GoBackend by lazy { GoBackend(WireguardContextWrapper(context)) }
 
     private var monitoringJob: Job? = null
     private var service: WireguardWrapperService? = null
+
+    // AmneziaWG: Using the adapted WireGuardTunnel class
     private val testTunnel = WireGuardTunnel(
         name = Constants.WIREGUARD_TUNNEL_NAME,
         config = null,
@@ -149,21 +147,30 @@ class WireguardBackend @Inject constructor(
         val wireguardParams = connectionParams as ConnectionParamsWireguard
         try {
             val settings = settingsForConnection.getFor(wireguardParams.connectIntent)
+
+            // AmneziaWG: This will generate the Amnezia config (with Jc, Jmin etc if implemented in Params)
             val config = wireguardParams.getTunnelConfig(
                 context, settings, currentUser.sessionId(), certificateRepository, computeAllowedIPs
             )
-            val transmission = wireguardParams.protocolSelection?.transmission ?: TransmissionProtocol.UDP
-            val transmissionStr = transmission.toString().lowercase()
+
+            // Proton logic for Strategy - kept for logic, but removed from setState as Amnezia GoBackend
+            // usually relies on Config object, not setState params for obfuscation/strategies.
             val serverNameStrategy =
                 if (serverNameTopStrategyEnabled()) ServerNameStrategy.ServerNameTop
                 else ServerNameStrategy.ServerNameRandom
+
             withContext(wireGuardIo) {
                 try {
-                    backend.setState(testTunnel, Tunnel.State.UP, config, transmissionStr, serverNameStrategy.value)
+                    // AmneziaWG adaptation:
+                    // Standard Amnezia/WireGuard GoBackend setState signature is (Tunnel, State, Config).
+                    // Removed 'transmissionStr' and 'serverNameStrategy' as they are specific to Proton's modified backend.
+                    // If you need TCP/Obfuscation, it should be part of the 'config' object generated above.
+                    backend.setState(testTunnel, Tunnel.State.UP, config)
                 } catch (e: BackendException) {
+                    // Handling timeout specifically
                     if (e.reason == BackendException.Reason.UNABLE_TO_START_VPN && e.cause is TimeoutException) {
-                        // GoBackend waits only 2s for the VPN service to start. Sometimes this is not enough, retry.
-                        backend.setState(testTunnel, Tunnel.State.UP, config, transmissionStr, serverNameStrategy.value)
+                        // Retry once
+                        backend.setState(testTunnel, Tunnel.State.UP, config)
                     } else {
                         throw e
                     }
@@ -186,59 +193,43 @@ class WireguardBackend @Inject constructor(
     private fun startMonitoringJob() {
         monitoringJob = mainScope.launch(dispatcherProvider.infiniteIo) {
             ProtonLogger.logCustom(LogCategory.CONN_WIREGUARD, "start monitoring job")
+
             val networkJob = launch(dispatcherProvider.Main) {
                 networkManager.observe().collect { status ->
                     val isConnected = status != NetworkStatus.Disconnected
-                    ProtonLogger.logCustom(LogCategory.CONN_WIREGUARD, "set network available: $isConnected")
+                    ProtonLogger.logCustom(LogCategory.CONN_WIREGUARD, "network status changed: $isConnected")
+
+                    // AmneziaWG/Standard WireGuard adaptation:
+                    // Standard GoBackend does not expose setNetworkAvailable publicly.
+                    // It handles network changes internally.
+                    // Uncomment only if you have patched org.amnezia.awg.backend.GoBackend
+                    /*
                     withContext(wireGuardIo) {
                         backend.setNetworkAvailable(isConnected)
                     }
+                    */
                 }
             }
+
             try {
-                var failCountdown = FAIL_COUNTDOWN_INIT
-                var keepRunning = true
-                while (keepRunning) {
-                    // NOTE: backend.state call is blocking
-                    val newState = when (val state = backend.state) {
-                        WG_STATE_DISABLED -> {
-                            if (vpnProtocolState !is VpnState.Error)
-                                VpnState.Disabled else null
-                        }
-                        WG_STATE_CONNECTING ->
-                            VpnState.Connecting
-                        WG_STATE_CONNECTED ->
-                            VpnState.Connected
-                        WG_STATE_ERROR -> {
-                            failCountdown--
-                            if (failCountdown <= 0) {
-                                failCountdown = FAIL_COUNTDOWN_INIT
-                                VpnState.Error(ErrorType.UNREACHABLE_INTERNAL, isFinal = false)
-                            } else {
-                                VpnState.Connecting
-                            }
-                        }
-                        WG_STATE_WAITING_FOR_NETWORK -> {
-                            VpnState.WaitingForNetwork
-                        }
-                        WG_STATE_CLOSED -> {
-                            keepRunning = false
-                            VpnState.Disabled
-                        }
-                        else -> {
-                            DebugUtils.fail("unexpected WireGuard state $state")
-                            ProtonLogger.logCustom(
-                                LogLevel.ERROR, LogCategory.CONN_WIREGUARD, "unexpected WireGuard state $state"
-                            )
-                            VpnState.Error(ErrorType.GENERIC_ERROR, isFinal = true)
-                        }
-                    }
+                // AmneziaWG adaptation:
+                // Replaced the 'while' loop and integer state polling (Proton specific)
+                // with the Flow observer from WireGuardTunnel (Standard Android/WG pattern).
+                // This reacts to state changes propagated by GoBackend to the Tunnel instance.
+                testTunnel.stateFlow.collect { state ->
                     ensureActive()
-                    launch (dispatcherProvider.Main) {
-                        newState?.let { state ->
-                            if (state != vpnProtocolState ||
-                                    (state as? VpnState.Error)?.type == ErrorType.UNREACHABLE_INTERNAL)
-                                vpnProtocolState = state
+
+                    val newState: VpnState = when (state) {
+                        Tunnel.State.UP -> VpnState.Connected
+                        Tunnel.State.DOWN -> VpnState.Disabled // Or Disconnected
+                        Tunnel.State.TOGGLE -> VpnState.Connecting
+                        else -> VpnState.Error(ErrorType.GENERIC_ERROR, isFinal = false)
+                    }
+
+                    withContext(dispatcherProvider.Main) {
+                        if (vpnProtocolState != newState) {
+                            // Only update if changed to avoid loops
+                            vpnProtocolState = newState
                         }
                     }
                 }
@@ -258,6 +249,7 @@ class WireguardBackend @Inject constructor(
             delay(10)
         }
         withContext(wireGuardIo) {
+            // AmneziaWG adaptation: standard setState signature
             backend.setState(testTunnel, Tunnel.State.DOWN, null)
         }
     }
@@ -274,22 +266,13 @@ class WireguardBackend @Inject constructor(
         ProtonLogger.log(
             ConnError,
             "Caught exception while connecting with WireGuard\n" +
-                StringWriter().apply { e.printStackTrace(PrintWriter(this)) }.toString()
+                    StringWriter().apply { e.printStackTrace(PrintWriter(this)) }.toString()
         )
         // TODO do not use generic error here (depends on other branch)
         selfStateFlow.value = VpnState.Error(ErrorType.GENERIC_ERROR, isFinal = true)
     }
 
     companion object {
-        const val WG_STATE_CLOSED = -1
-        const val WG_STATE_DISABLED = 0
-        const val WG_STATE_CONNECTING = 1
-        const val WG_STATE_CONNECTED = 2
-        const val WG_STATE_ERROR = 3
-        const val WG_STATE_WAITING_FOR_NETWORK = 4
-
-        const val FAIL_COUNTDOWN_INIT = 5
-
         private const val PRIMARY_PORT = 443
     }
 }

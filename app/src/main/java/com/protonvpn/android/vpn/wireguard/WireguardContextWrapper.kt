@@ -24,7 +24,7 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.os.Build
 import com.protonvpn.android.utils.DebugUtils
-import com.wireguard.android.backend.GoBackend
+import org.amnezia.awg.backend.GoBackend
 
 class WireguardContextWrapper(context: Context) : ContextWrapper(context) {
     override fun startService(serviceIntent: Intent?): ComponentName? {

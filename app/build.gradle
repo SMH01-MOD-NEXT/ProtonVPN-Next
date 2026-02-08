@@ -948,8 +948,11 @@ dependencies {
     implementation "androidx.leanback:leanback:$leanback_version"
     implementation "androidx.leanback:leanback-preference:$leanback_version"
 
+    // Amnezia WG
+    implementation(project(":amneziawg-android:tunnel"))
+
     // Wireguard
-    implementation 'me.proton.vpn:wireguard-android:1.0.20230512.29'
+    //  implementation 'me.proton.vpn:wireguard-android:1.0.20230512.29'
 
     // Hilt
     ksp "com.google.dagger:hilt-compiler:$hilt_version"

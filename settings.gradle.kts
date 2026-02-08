@@ -37,6 +37,7 @@ include(":observability:domain")
 include(":observability:tools")
 include(":openvpn")
 include(":shared-test-code")
+include(":amneziawg-android:tunnel")
 
 develocity {
     buildScan {

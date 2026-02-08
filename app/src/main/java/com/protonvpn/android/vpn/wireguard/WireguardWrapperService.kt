@@ -31,10 +31,10 @@ import com.protonvpn.android.utils.Constants
 import com.protonvpn.android.vpn.CurrentVpnServiceProvider
 import com.protonvpn.android.vpn.VpnConnectionManager
 import com.protonvpn.android.vpn.VpnStateMonitor
-import com.wireguard.android.backend.GoBackend
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.amnezia.awg.backend.GoBackend
 import javax.inject.Inject
 
 @AndroidEntryPoint
