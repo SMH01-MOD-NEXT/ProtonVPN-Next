@@ -2,33 +2,53 @@
 
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
-val pkg: String = providers.gradleProperty("amneziawgPackageName").get()
+// FIX: Hardcoded package name to avoid MissingValueException
+val pkg = "org.amnezia.awg"
 val cmakeAndroidPackageName: String = providers.environmentVariable("ANDROID_PACKAGE_NAME").getOrElse(pkg)
 
 plugins {
-    alias(libs.plugins.android.library)
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
+    namespace = "${pkg}.tunnel"
+    compileSdk = 34
+
+    defaultConfig {
+        minSdk = 21
+        targetSdk = 34
+        consumerProguardFiles("consumer-rules.pro")
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    namespace = "${pkg}.tunnel"
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
     externalNativeBuild {
         cmake {
+            // Path to CMakeLists.txt inside the module
             path("tools/CMakeLists.txt")
         }
     }
+
     testOptions.unitTests.all {
         it.testLogging { events(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED) }
     }
+
     buildTypes {
         all {
             externalNativeBuild {
                 cmake {
                     targets("libwg-go.so", "libwg.so", "libwg-quick.so")
                     arguments("-DGRADLE_USER_HOME=${project.gradle.gradleUserHomeDir}")
+                    // Recommended to prevent STL conflicts with Go runtime
+                    arguments("-DANDROID_STL=none")
                 }
             }
         }
@@ -47,6 +67,7 @@ android {
             }
         }
     }
+
     lint {
         disable += "LongLogTag"
         disable += "NewApi"
@@ -54,8 +75,8 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.annotation)
-    implementation(libs.androidx.collection)
-    compileOnly(libs.jsr305)
-    testImplementation(libs.junit)
+    implementation("androidx.annotation:annotation:1.7.1")
+    implementation("androidx.collection:collection:1.4.0")
+    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
+    testImplementation("junit:junit:4.13.2")
 }
