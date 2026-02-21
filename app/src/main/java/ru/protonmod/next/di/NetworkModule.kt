@@ -1,0 +1,69 @@
+package ru.protonmod.next.di
+
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.json.Json
+import okhttp3.Interceptor
+import okhttp3.MediaType
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import ru.protonmod.next.data.network.ProtonAuthApi
+import java.util.concurrent.TimeUnit
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+
+    private const val PROTON_API_BASE_URL = "https://mail-api.proton.me/"
+
+    @Provides
+    @Singleton
+    fun provideJson(): Json {
+        return Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient {
+        // Interceptor to add mandatory Proton headers to every request
+        val headerInterceptor = Interceptor { chain ->
+            val request = chain.request().newBuilder()
+                // These headers mimic the official client to avoid 400/403 errors
+                .addHeader("x-pm-appversion", "Android_1.18.10")
+                .addHeader("x-pm-apiversion", "4")
+                .addHeader("Accept", "application/vnd.protonmail.v1+json")
+                .build()
+            chain.proceed(request)
+        }
+
+        return OkHttpClient.Builder()
+            .addInterceptor(headerInterceptor)
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
+        val contentType = MediaType.get("application/json")
+        return Retrofit.Builder()
+            .baseUrl(PROTON_API_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(json.asConverterFactory(contentType))
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideProtonAuthApi(retrofit: Retrofit): ProtonAuthApi {
+        return retrofit.create(ProtonAuthApi::class.java)
+    }
+}

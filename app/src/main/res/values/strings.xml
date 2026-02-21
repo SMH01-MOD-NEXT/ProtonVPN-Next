@@ -1,3 +1,18 @@
 <resources>
-    <string name="app_name">Proton VPN Next</string>
+    <string name="app_name">Proton VPN-Next</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Privacy is a human right</string>
+    <string name="welcome_subtitle">Take control of your digital life with secure, private, and fast VPN. No logs, no tracking.</string>
+    <string name="btn_create_account">Create Account</string>
+    <string name="btn_login">Log In</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Log in to your Proton account</string>
+    <string name="hint_username">Email or Username</string>
+    <string name="hint_password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="desc_back_button">Navigate back</string>
+    <string name="desc_toggle_password">Toggle password visibility</string>
 </resources>

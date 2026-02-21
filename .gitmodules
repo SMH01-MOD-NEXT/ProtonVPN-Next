@@ -1,0 +1,3 @@
+[submodule "amneziawg-android"]
+	path = amneziawg-android
+	url = git@github.com:SMH01-MOD-NEXT/amneziawg-android.git
