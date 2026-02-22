@@ -13,6 +13,7 @@ import ru.protonmod.next.data.repository.AuthRepository
 import javax.inject.Inject
 
 // --- API Error Models ---
+
 @Serializable
 data class ProtonErrorResponse(
     @SerialName("Code") val code: Int,
@@ -25,26 +26,45 @@ data class ProtonErrorDetails(
 )
 
 /**
- * Custom exception to trigger the Captcha WebView in the UI
+ * Custom exception to trigger the Captcha WebView in the UI.
+ * Used when the server returns error code 9001.
  */
 class CaptchaRequiredException(val webUrl: String) : Exception("Human Verification Required")
 
 // --- UI State ---
+
 sealed class LoginUiState {
     object Idle : LoginUiState()
     object Loading : LoginUiState()
 
-    // Holds credentials and webUrl to resume login after solving captcha
-    data class RequiresCaptcha(val webUrl: String, val username: String, val passwordRaw: String) : LoginUiState()
+    /**
+     * State triggered when Proton requires a Captcha.
+     * Stores credentials to resume the login process automatically after success.
+     */
+    data class RequiresCaptcha(
+        val webUrl: String,
+        val username: String,
+        val passwordRaw: String
+    ) : LoginUiState()
 
-    // Now holds refreshToken to perform the session upgrade after 2FA
+    /**
+     * State triggered when Two-Factor Authentication is active.
+     * Contains session tokens required for the second stage of authentication.
+     */
     data class Requires2FA(
         val sessionId: String,
         val tempAccessToken: String,
         val refreshToken: String
     ) : LoginUiState()
 
-    data class Success(val accessToken: String, val userId: String) : LoginUiState()
+    /**
+     * Final successful state with permanent tokens and user information.
+     */
+    data class Success(
+        val accessToken: String,
+        val userId: String
+    ) : LoginUiState()
+
     data class Error(val message: String) : LoginUiState()
 }
 
@@ -57,8 +77,8 @@ class LoginViewModel @Inject constructor(
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     /**
-     * Initial login attempt using SRP.
-     * Can be called with a captchaToken if redirected from the WebView.
+     * Starts the authentication flow using SRP.
+     * If a [captchaToken] is provided, it's sent as a verification header.
      */
     fun login(username: String, passwordRaw: String, captchaToken: String? = null) {
         if (username.isBlank() || passwordRaw.isBlank()) return
@@ -67,15 +87,17 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             authRepository.login(username, passwordRaw, captchaToken)
                 .onSuccess { response ->
-                    if (response.scopes.contains("twofactor")) {
-                        // Store the session UID, the restricted token, and the refresh token.
+                    val scopes = response.scopes
+
+                    // Check if 2FA is required based on the scopes returned by the server
+                    if (scopes.contains("twofactor")) {
                         _uiState.value = LoginUiState.Requires2FA(
                             sessionId = response.sessionId ?: "",
                             tempAccessToken = response.accessToken ?: "",
                             refreshToken = response.refreshToken ?: ""
                         )
                     } else {
-                        // Fully logged in directly
+                        // Direct success if 2FA is not enabled for this account
                         _uiState.value = LoginUiState.Success(
                             accessToken = response.accessToken ?: "",
                             userId = response.userId ?: ""
@@ -89,36 +111,57 @@ class LoginViewModel @Inject constructor(
     }
 
     /**
-     * Final step of 2FA login.
-     * Verifies code, refreshes session for full tokens, and fetches User ID.
+     * Submits the TOTP code for accounts with 2FA enabled.
+     * Performs a full cycle: verification -> session upgrade -> user profile fetch.
      */
     fun submit2FA(sessionId: String, tempAccessToken: String, refreshToken: String, totpCode: String) {
         if (totpCode.isBlank()) return
 
         _uiState.value = LoginUiState.Loading
         viewModelScope.launch {
-            authRepository.verify2FA(sessionId, tempAccessToken, refreshToken, totpCode)
+            authRepository.verify2FA(
+                sessionId = sessionId,
+                tempAccessToken = tempAccessToken,
+                totpCode = totpCode
+            )
                 .onSuccess { response ->
-                    // Full login success with valid UserID
+                    // Full login success with valid long-lived AccessToken and actual UserID
                     _uiState.value = LoginUiState.Success(
                         accessToken = response.accessToken ?: "",
                         userId = response.userId ?: ""
                     )
                 }
                 .onFailure { exception ->
-                    _uiState.value = LoginUiState.Error(exception.localizedMessage ?: "2FA verification failed")
+                    _uiState.value = LoginUiState.Error(
+                        exception.localizedMessage ?: "Two-factor verification failed"
+                    )
                 }
         }
     }
 
+    /**
+     * Handles various error scenarios, specifically filtering for Captcha requirements.
+     */
     private fun handleFailure(throwable: Throwable, username: String, passwordRaw: String) {
         if (throwable is CaptchaRequiredException) {
             _uiState.value = LoginUiState.RequiresCaptcha(throwable.webUrl, username, passwordRaw)
         } else {
-            _uiState.value = LoginUiState.Error(throwable.localizedMessage ?: "An unexpected error occurred")
+            _uiState.value = LoginUiState.Error(
+                throwable.localizedMessage ?: "An unexpected authentication error occurred"
+            )
         }
     }
 
+    /**
+     * Resets the UI state to Idle, allowing the user to try again.
+     */
+    fun resetState() {
+        _uiState.value = LoginUiState.Idle
+    }
+
+    /**
+     * Specifically resets only the error state.
+     */
     fun resetError() {
         if (_uiState.value is LoginUiState.Error) {
             _uiState.value = LoginUiState.Idle

@@ -3,9 +3,11 @@ package ru.protonmod.next.data.network
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 // --- Auth Requests ---
 
@@ -26,20 +28,6 @@ data class LoginRequest(
 @Serializable
 data class SecondFactorRequest(
     @SerialName("TwoFactorCode") val twoFactorCode: String
-)
-
-/**
- * Matches AuthRefreshReq from go-proton-api
- */
-@Serializable
-data class RefreshSessionRequest(
-    @SerialName("UID") val sessionId: String,
-    @SerialName("RefreshToken") val refreshToken: String,
-    @SerialName("ResponseType") val responseType: String = "token",
-    @SerialName("GrantType") val grantType: String = "refresh_token",
-    @SerialName("RedirectURI") val redirectUri: String = "https://protonmail.ch",
-    @SerialName("State") val state: String,
-    @SerialName("AccessToken") val accessToken: String? = null
 )
 
 // --- Responses ---
@@ -75,8 +63,16 @@ data class UserInfo(
     @SerialName("Name") val name: String
 )
 
+@Serializable
+data class GenericResponse(
+    @SerialName("Code") val code: Int
+)
+
 // --- Retrofit Interface ---
 
+/**
+ * Interface for Proton VPN API (https://vpn-api.proton.me/)
+ */
 interface ProtonAuthApi {
 
     @POST("auth/v4/info")
@@ -98,13 +94,14 @@ interface ProtonAuthApi {
         @Body request: SecondFactorRequest
     ): LoginResponse
 
-    @POST("auth/v4/refresh")
-    suspend fun refreshSession(
-        @Body request: RefreshSessionRequest
-    ): LoginResponse
+    @DELETE("auth/v4")
+    suspend fun revokeSession(
+        @Query("AuthDevice") revokeAuthDevice: Int = 1
+    ): GenericResponse
 
-    @GET("core/v4/user")
+    @GET("core/v4/users")
     suspend fun getUser(
-        @Header("Authorization") authorization: String
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String // <-- MISSING HEADER THAT CAUSED 404
     ): UserResponse
 }

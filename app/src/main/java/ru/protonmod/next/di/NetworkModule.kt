@@ -11,6 +11,7 @@ import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import ru.protonmod.next.data.network.ProtonAuthApi
+import ru.protonmod.next.data.network.ProtonVpnApi
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -18,7 +19,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val PROTON_API_BASE_URL = "https://mail-api.proton.me/"
+    private const val PROTON_API_BASE_URL = "https://vpn-api.proton.me/"
 
     @Provides
     @Singleton
@@ -65,5 +66,11 @@ object NetworkModule {
     @Singleton
     fun provideProtonAuthApi(retrofit: Retrofit): ProtonAuthApi {
         return retrofit.create(ProtonAuthApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideProtonVpnApi(retrofit: Retrofit): ProtonVpnApi {
+        return retrofit.create(ProtonVpnApi::class.java)
     }
 }
