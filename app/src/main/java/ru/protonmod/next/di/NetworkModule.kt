@@ -1,5 +1,6 @@
 package ru.protonmod.next.di
 
+import android.os.Build
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -35,12 +36,18 @@ object NetworkModule {
     fun provideOkHttpClient(): OkHttpClient {
         // Interceptor to add mandatory Proton headers to every request
         val headerInterceptor = Interceptor { chain ->
+
+            // Хардкодим User-Agent на 100% из оригинального лога
+            val userAgent = "ProtonVPN/5.15.95.5 (Android 12; HUAWEI BLK-LX9)"
+
             val request = chain.request().newBuilder()
-                // These headers mimic the official client to avoid 400/403 errors
-                .addHeader("x-pm-appversion", "Android_1.18.10")
+                .addHeader("User-Agent", userAgent)
+                // Используем ТОЧНЫЙ формат версии, который мы получили из логов ProtonCore
+                .addHeader("x-pm-appversion", "android-vpn@5.15.95.5-dev+play")
                 .addHeader("x-pm-apiversion", "4")
                 .addHeader("Accept", "application/vnd.protonmail.v1+json")
                 .build()
+
             chain.proceed(request)
         }
 

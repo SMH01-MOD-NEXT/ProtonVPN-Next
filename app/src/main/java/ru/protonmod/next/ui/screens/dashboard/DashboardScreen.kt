@@ -26,16 +26,14 @@ import ru.protonmod.next.data.network.LogicalServer
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
-    accessToken: String,
-    sessionId: String,
     onNavigateToSettings: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    // Загружаем серверы при старте экрана
+    // Fetch servers on start (ViewModel handles getting tokens from DB)
     LaunchedEffect(Unit) {
-        viewModel.loadServers(accessToken, sessionId)
+        viewModel.loadServers()
     }
 
     Scaffold(
@@ -71,7 +69,7 @@ fun DashboardScreen(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text("Ошибка загрузки серверов", color = MaterialTheme.colorScheme.error)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Button(onClick = { viewModel.loadServers(accessToken, sessionId) }) {
+                                Button(onClick = { viewModel.loadServers() }) {
                                     Text("Повторить")
                                 }
                             }
@@ -239,8 +237,6 @@ fun ServerCard(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
-
-            // Server load or ping indicator can go here
         }
     }
 }

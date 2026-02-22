@@ -2,6 +2,7 @@ package ru.protonmod.next.data.network
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -13,7 +14,8 @@ import retrofit2.http.Query
 
 @Serializable
 data class AuthInfoRequest(
-    @SerialName("Username") val username: String
+    @SerialName("Username") val username: String,
+    @SerialName("Intent") val intent: String = "Auto"
 )
 
 @Serializable
@@ -22,7 +24,7 @@ data class LoginRequest(
     @SerialName("ClientEphemeral") val clientEphemeral: String,
     @SerialName("ClientProof") val clientProof: String,
     @SerialName("SRPSession") val srpSession: String,
-    @SerialName("Payload") val payload: Map<String, String> = emptyMap()
+    @SerialName("Payload") val payload: JsonObject? = null
 )
 
 @Serializable
@@ -70,23 +72,34 @@ data class GenericResponse(
 
 // --- Retrofit Interface ---
 
-/**
- * Interface for Proton VPN API (https://vpn-api.proton.me/)
- */
 interface ProtonAuthApi {
 
+    // 0. Создание обязательной анонимной сессии для VPN
+    @POST("auth/v4/sessions")
+    suspend fun createAnonymousSession(
+        @Body payload: JsonObject,
+        @Header("x-pm-human-verification-token") captchaToken: String? = null
+    ): LoginResponse
+
+    // 1. Получение инфо (ТЕПЕРЬ С ТОКЕНАМИ АНОНИМНОЙ СЕССИИ!)
     @POST("auth/v4/info")
     suspend fun getAuthInfo(
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String,
         @Body request: AuthInfoRequest,
         @Header("x-pm-human-verification-token") captchaToken: String? = null
     ): AuthInfoResponse
 
+    // 2. Сам логин
     @POST("auth/v4")
     suspend fun performLogin(
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String,
         @Body request: LoginRequest,
         @Header("x-pm-human-verification-token") captchaToken: String? = null
     ): LoginResponse
 
+    // 3. 2FA
     @POST("auth/v4/2fa")
     suspend fun performSecondFactor(
         @Header("Authorization") authorization: String,
@@ -102,6 +115,6 @@ interface ProtonAuthApi {
     @GET("core/v4/users")
     suspend fun getUser(
         @Header("Authorization") authorization: String,
-        @Header("x-pm-uid") sessionId: String // <-- MISSING HEADER THAT CAUSED 404
+        @Header("x-pm-uid") sessionId: String
     ): UserResponse
 }

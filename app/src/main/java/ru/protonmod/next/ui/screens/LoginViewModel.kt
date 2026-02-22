@@ -122,6 +122,7 @@ class LoginViewModel @Inject constructor(
             authRepository.verify2FA(
                 sessionId = sessionId,
                 tempAccessToken = tempAccessToken,
+                refreshToken = refreshToken, // <-- ПЕРЕДАЕМ REFRESH TOKEN В РЕПОЗИТОРИЙ
                 totpCode = totpCode
             )
                 .onSuccess { response ->

@@ -3,6 +3,7 @@ package ru.protonmod.next.data.repository
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.ProtonVpnApi
 import javax.inject.Inject
@@ -25,14 +26,19 @@ class VpnRepository @Inject constructor(
             val response = vpnApi.getLogicalServers(bearer, sessionId)
 
             if (response.code == 1000) {
-                // Filter for free servers (Tier 0) for testing, or return all
+                // Возвращаем все сервера, либо фильтруем it.tier == 0 для бесплатных
                 val freeServers = response.logicalServers.filter { it.tier == 0 }
                 Result.success(freeServers)
             } else {
                 Result.failure(Exception("Failed to fetch servers, code: ${response.code}"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching servers", e)
+            if (e is HttpException) {
+                val errBody = e.response()?.errorBody()?.string()
+                Log.e(TAG, "HTTP Error ${e.code()} when fetching servers: $errBody")
+            } else {
+                Log.e(TAG, "Error fetching servers", e)
+            }
             Result.failure(e)
         }
     }

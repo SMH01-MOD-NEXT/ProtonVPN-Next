@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.repository.VpnRepository
 import javax.inject.Inject
@@ -23,31 +24,35 @@ sealed class DashboardUiState {
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val vpnRepository: VpnRepository
+    private val vpnRepository: VpnRepository,
+    private val sessionDao: SessionDao // Injecting Room DB DAO
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<DashboardUiState>(DashboardUiState.Loading)
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
 
-    // TODO: В реальном приложении эти токены нужно брать из DataStore / SharedPreferences
-    private var tempAccessToken: String = ""
-    private var tempSessionId: String = ""
-
     /**
-     * Инициализация с токенами, полученными после логина
+     * Loads servers using the session stored in Room Database.
+     * Takes no parameters since it resolves tokens internally.
      */
-    fun loadServers(accessToken: String, sessionId: String) {
-        this.tempAccessToken = accessToken
-        this.tempSessionId = sessionId
-
+    fun loadServers() {
         viewModelScope.launch {
             _uiState.value = DashboardUiState.Loading
-            vpnRepository.getServers(accessToken, sessionId)
+
+            // 1. Get session from local DB
+            val session = sessionDao.getSession()
+            if (session == null) {
+                _uiState.value = DashboardUiState.Error("Активная сессия не найдена. Пожалуйста, авторизуйтесь снова.")
+                return@launch
+            }
+
+            // 2. Fetch servers using tokens from DB
+            vpnRepository.getServers(session.accessToken, session.sessionId)
                 .onSuccess { servers ->
                     _uiState.value = DashboardUiState.Success(servers = servers)
                 }
                 .onFailure { error ->
-                    _uiState.value = DashboardUiState.Error(error.localizedMessage ?: "Unknown error")
+                    _uiState.value = DashboardUiState.Error(error.localizedMessage ?: "Неизвестная ошибка")
                 }
         }
     }
@@ -57,10 +62,8 @@ class DashboardViewModel @Inject constructor(
         if (currentState is DashboardUiState.Success) {
             val isConnecting = !currentState.isConnected
 
-            // TODO: Здесь будет логика инициализации AmneziaWG туннеля
-            // 1. Сгенерировать WG ключи
-            // 2. Отправить POST /vpn/v1/certificate
-            // 3. Собрать WG Config и запустить туннель
+            // TODO: Here we will exchange WG keys using POST /vpn/v1/certificate
+            // and pass the configuration to the AmneziaWG backend
 
             _uiState.value = currentState.copy(
                 isConnected = isConnecting,

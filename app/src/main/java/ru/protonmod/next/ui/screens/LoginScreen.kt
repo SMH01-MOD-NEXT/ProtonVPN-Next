@@ -50,7 +50,7 @@ fun LoginScreen(
         when (uiState) {
             is LoginUiState.Success -> {
                 Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
-                onLoginSuccess()
+                onLoginSuccess() // triggers navigation to dashboard
             }
             is LoginUiState.Error -> {
                 val errorMessage = (uiState as LoginUiState.Error).message
@@ -85,7 +85,7 @@ fun LoginScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
-            AnimatedContent(targetState = uiState) { state ->
+            AnimatedContent(targetState = uiState, label = "login_state") { state ->
                 when (state) {
                     is LoginUiState.RequiresCaptcha -> {
                         // --- CAPTCHA WebView ---
@@ -99,7 +99,6 @@ fun LoginScreen(
                                         settings.javaScriptEnabled = true
                                         settings.domStorageEnabled = true
 
-                                        // 1. JS Interface to catch postMessages
                                         addJavascriptInterface(object : Any() {
                                             @JavascriptInterface
                                             fun onCaptchaSuccess(token: String) {
@@ -111,12 +110,8 @@ fun LoginScreen(
                                         webViewClient = object : WebViewClient() {
                                             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                                 val url = request?.url?.toString() ?: ""
-                                                Log.d("Captcha", "URL Changed: $url")
-
-                                                // 2. Fallback: Catch token from redirect URL parameters
                                                 val token = request?.url?.getQueryParameter("token")
                                                 if (!token.isNullOrBlank() && !url.contains("verify.proton.me")) {
-                                                    Log.d("Captcha", "Got Token from Redirect: $token")
                                                     viewModel.login(state.username, state.passwordRaw, token)
                                                     return true
                                                 }
@@ -125,12 +120,10 @@ fun LoginScreen(
 
                                             override fun onPageFinished(view: WebView?, url: String?) {
                                                 super.onPageFinished(view, url)
-                                                // Inject JS listener to forward Proton's postMessage to our native interface
                                                 view?.evaluateJavascript(
                                                     """
                                                     window.addEventListener('message', function(event) {
                                                         if (event.data) {
-                                                            // Sometimes the token is directly in event.data or event.data.token
                                                             var token = event.data.token || (typeof event.data === 'string' ? event.data : null);
                                                             if (token && token.length > 20) {
                                                                 ProtonCaptchaNative.onCaptchaSuccess(token);
@@ -168,7 +161,6 @@ fun LoginScreen(
                             )
                             Spacer(modifier = Modifier.height(32.dp))
                             Button(
-                                // Pass the temporary access token to the ViewModel
                                 onClick = { viewModel.submit2FA(state.sessionId, state.tempAccessToken, state.refreshToken, totpCode) },
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = MaterialTheme.shapes.large,
@@ -180,7 +172,7 @@ fun LoginScreen(
                         }
                     }
 
-                    // --- Standard Login View (Idle, Loading, Success, Error fall here) ---
+                    // --- Standard Login View ---
                     else -> {
                         Column {
                             Text(stringResource(R.string.login_title), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
