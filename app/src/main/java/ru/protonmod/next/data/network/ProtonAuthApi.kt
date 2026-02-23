@@ -10,8 +10,6 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import retrofit2.http.Query
 
-// --- Auth Requests ---
-
 @Serializable
 data class AuthInfoRequest(
     @SerialName("Username") val username: String,
@@ -31,8 +29,6 @@ data class LoginRequest(
 data class SecondFactorRequest(
     @SerialName("TwoFactorCode") val twoFactorCode: String
 )
-
-// --- Responses ---
 
 @Serializable
 data class AuthInfoResponse(
@@ -70,18 +66,14 @@ data class GenericResponse(
     @SerialName("Code") val code: Int
 )
 
-// --- Retrofit Interface ---
-
 interface ProtonAuthApi {
 
-    // 0. Создание обязательной анонимной сессии для VPN
     @POST("auth/v4/sessions")
     suspend fun createAnonymousSession(
         @Body payload: JsonObject,
         @Header("x-pm-human-verification-token") captchaToken: String? = null
     ): LoginResponse
 
-    // 1. Получение инфо (ТЕПЕРЬ С ТОКЕНАМИ АНОНИМНОЙ СЕССИИ!)
     @POST("auth/v4/info")
     suspend fun getAuthInfo(
         @Header("Authorization") authorization: String,
@@ -90,7 +82,6 @@ interface ProtonAuthApi {
         @Header("x-pm-human-verification-token") captchaToken: String? = null
     ): AuthInfoResponse
 
-    // 2. Сам логин
     @POST("auth/v4")
     suspend fun performLogin(
         @Header("Authorization") authorization: String,
@@ -99,7 +90,6 @@ interface ProtonAuthApi {
         @Header("x-pm-human-verification-token") captchaToken: String? = null
     ): LoginResponse
 
-    // 3. 2FA
     @POST("auth/v4/2fa")
     suspend fun performSecondFactor(
         @Header("Authorization") authorization: String,

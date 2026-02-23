@@ -1,5 +1,9 @@
 package ru.protonmod.next.ui.screens.dashboard
 
+import android.app.Activity
+import android.net.VpnService
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -30,8 +35,17 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    // Fetch servers on start (ViewModel handles getting tokens from DB)
+    // Launcher for Android's system VPN permission dialog
+    val vpnPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // Permission granted, state will be handled in ViewModel if retried
+        }
+    }
+
     LaunchedEffect(Unit) {
         viewModel.loadServers()
     }
@@ -78,7 +92,22 @@ fun DashboardScreen(
                     is DashboardUiState.Success -> {
                         DashboardContent(
                             state = state,
-                            onServerClick = { server -> viewModel.toggleConnection(server) }
+                            onServerClick = { server ->
+                                try {
+                                    // Проверяем разрешение VPN. Оборачиваем в try-catch для защиты от системных багов AppOps.
+                                    val intent = VpnService.prepare(context)
+                                    if (intent != null) {
+                                        vpnPermissionLauncher.launch(intent)
+                                    } else {
+                                        viewModel.toggleConnection(server)
+                                    }
+                                } catch (e: SecurityException) {
+                                    android.util.Log.e("DashboardScreen", "System AppOps Error", e)
+                                    android.widget.Toast.makeText(context, "System error: please reinstall the app.", android.widget.Toast.LENGTH_LONG).show()
+                                    // Пытаемся запустить в обход, если система уже дала права, но глючит
+                                    viewModel.toggleConnection(server)
+                                }
+                            }
                         )
                     }
                 }
@@ -93,12 +122,11 @@ fun DashboardContent(
     onServerClick: (LogicalServer) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Main Connection Card
         ConnectionStatusCard(
             isConnected = state.isConnected,
+            isConnecting = state.isConnecting,
             connectedServer = state.connectedServer,
             onQuickConnect = {
-                // Quick connect to the first available server
                 state.servers.firstOrNull()?.let { onServerClick(it) }
             }
         )
@@ -122,6 +150,7 @@ fun DashboardContent(
                 ServerCard(
                     server = server,
                     isConnected = state.connectedServer?.id == server.id,
+                    isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
                     onClick = { onServerClick(server) }
                 )
             }
@@ -132,10 +161,15 @@ fun DashboardContent(
 @Composable
 fun ConnectionStatusCard(
     isConnected: Boolean,
+    isConnecting: Boolean,
     connectedServer: LogicalServer?,
     onQuickConnect: () -> Unit
 ) {
-    val cardColor = if (isConnected) Color(0xFF3DDC84) else MaterialTheme.colorScheme.surfaceVariant
+    val cardColor = when {
+        isConnected -> Color(0xFF3DDC84)
+        isConnecting -> MaterialTheme.colorScheme.primaryContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
     val contentColor = if (isConnected) Color.Black else MaterialTheme.colorScheme.onSurface
 
     Card(
@@ -152,7 +186,11 @@ fun ConnectionStatusCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = if (isConnected) "Подключено" else "Отключено",
+                text = when {
+                    isConnected -> "Подключено"
+                    isConnecting -> "Подключение..."
+                    else -> "Отключено"
+                },
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = contentColor
@@ -161,28 +199,31 @@ fun ConnectionStatusCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = if (isConnected) "${connectedServer?.name} (${connectedServer?.city})" else "Ваш трафик не защищен",
+                text = if (isConnected || isConnecting) "${connectedServer?.name} (${connectedServer?.city})" else "Ваш трафик не защищен",
                 style = MaterialTheme.typography.bodyLarge,
                 color = contentColor.copy(alpha = 0.8f)
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Power Button
             Box(
                 modifier = Modifier
                     .size(80.dp)
                     .clip(CircleShape)
                     .background(if (isConnected) Color.White.copy(alpha = 0.3f) else MaterialTheme.colorScheme.primary)
-                    .clickable { onQuickConnect() },
+                    .clickable(enabled = !isConnecting) { onQuickConnect() },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.PowerSettingsNew,
-                    contentDescription = "Toggle Connection",
-                    modifier = Modifier.size(40.dp),
-                    tint = if (isConnected) Color.DarkGray else Color.White
-                )
+                if (isConnecting) {
+                    CircularProgressIndicator(modifier = Modifier.size(40.dp), color = Color.White)
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.PowerSettingsNew,
+                        contentDescription = "Toggle Connection",
+                        modifier = Modifier.size(40.dp),
+                        tint = if (isConnected) Color.DarkGray else Color.White
+                    )
+                }
             }
         }
     }
@@ -192,12 +233,13 @@ fun ConnectionStatusCard(
 fun ServerCard(
     server: LogicalServer,
     isConnected: Boolean,
+    isConnecting: Boolean,
     onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(enabled = !isConnecting) { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
@@ -236,6 +278,10 @@ fun ServerCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
+            }
+
+            if (isConnecting) {
+                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
             }
         }
     }

@@ -12,8 +12,8 @@ data class LogicalServersResponse(
 @Serializable
 data class LogicalServer(
     @SerialName("ID") val id: String,
-    @SerialName("Name") val name: String, // e.g. "NL-FREE#1"
-    @SerialName("Tier") val tier: Int, // 0 = Free, 1 = Basic, 2 = Plus
+    @SerialName("Name") val name: String,
+    @SerialName("Tier") val tier: Int,
     @SerialName("Features") val features: Int,
     @SerialName("EntryCountry") val entryCountry: String,
     @SerialName("ExitCountry") val exitCountry: String,
@@ -28,4 +28,15 @@ data class PhysicalServer(
     @SerialName("Domain") val domain: String,
     @SerialName("Status") val status: Int,
     @SerialName("X25519PublicKey") val wgPublicKey: String? = null
+)
+
+// --- Server-Generated EC Key Models ---
+// We request the server to generate an EC key for us. The server will implicitly
+// authorize the X25519 (WireGuard) counterpart of this key on its backend.
+
+@Serializable
+data class ServerKeyResponse(
+    @SerialName("Code") val code: Int,
+    @SerialName("PrivateKey") val privateKey: String,
+    @SerialName("PublicKey") val publicKey: String
 )

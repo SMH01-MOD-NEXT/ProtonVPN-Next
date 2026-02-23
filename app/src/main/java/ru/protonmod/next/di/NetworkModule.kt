@@ -15,6 +15,7 @@ import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
+import javax.inject.Named
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -24,35 +25,34 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideJson(): Json {
-        return Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-        }
+    fun provideJson(): Json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
     }
 
+    /**
+     * IMPORTANT: We should ideally use the same OkHttpClient that supports VLESS proxy
+     * if the user is in a restricted region.
+     * For now, we fix the headers and rely on the manifest security config.
+     */
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
-        // Interceptor to add mandatory Proton headers to every request
         val headerInterceptor = Interceptor { chain ->
-
-            // Хардкодим User-Agent на 100% из оригинального лога
             val userAgent = "ProtonVPN/5.15.95.5 (Android 12; HUAWEI BLK-LX9)"
-
             val request = chain.request().newBuilder()
                 .addHeader("User-Agent", userAgent)
-                // Используем ТОЧНЫЙ формат версии, который мы получили из логов ProtonCore
                 .addHeader("x-pm-appversion", "android-vpn@5.15.95.5-dev+play")
                 .addHeader("x-pm-apiversion", "4")
                 .addHeader("Accept", "application/vnd.protonmail.v1+json")
                 .build()
-
             chain.proceed(request)
         }
 
         return OkHttpClient.Builder()
             .addInterceptor(headerInterceptor)
+            // If you want API to follow the VLESS proxy,
+            // you should inject and set the ProxySelector here as well.
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .build()
@@ -71,13 +71,9 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideProtonAuthApi(retrofit: Retrofit): ProtonAuthApi {
-        return retrofit.create(ProtonAuthApi::class.java)
-    }
+    fun provideProtonAuthApi(retrofit: Retrofit): ProtonAuthApi = retrofit.create(ProtonAuthApi::class.java)
 
     @Provides
     @Singleton
-    fun provideProtonVpnApi(retrofit: Retrofit): ProtonVpnApi {
-        return retrofit.create(ProtonVpnApi::class.java)
-    }
+    fun provideProtonVpnApi(retrofit: Retrofit): ProtonVpnApi = retrofit.create(ProtonVpnApi::class.java)
 }

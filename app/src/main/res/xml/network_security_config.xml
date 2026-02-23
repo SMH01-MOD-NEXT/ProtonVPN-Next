@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <!-- Trust system-installed CA certificates -->
+            <certificates src="system" />
+            <!-- Trust user-installed CA certificates (useful for proxy/VLESS bypassing) -->
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Explicitly allow traffic to Proton and GitHub domains -->
+    <domain-config>
+        <domain includeSubdomains="true">proton.me</domain>
+        <domain includeSubdomains="true">protonvpn.com</domain>
+        <domain includeSubdomains="true">protonmail.com</domain>
+
+        <!-- Add GitHub domains used by VlessManager to fetch configs -->
+        <domain includeSubdomains="true">github.com</domain>
+        <domain includeSubdomains="true">githubusercontent.com</domain>
+        <domain includeSubdomains="true">raw.githubusercontent.com</domain>
+
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </domain-config>
+</network-security-config>
