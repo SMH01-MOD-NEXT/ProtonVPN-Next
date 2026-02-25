@@ -17,7 +17,9 @@ data class SessionEntity(
     val accessToken: String,
     val refreshToken: String,
     val sessionId: String,
-    val userId: String
+    val userId: String,
+    val wgPrivateKey: String? = null,
+    val wgPublicKeyPem: String? = null
 )
 
 // --- DAO ---
@@ -36,7 +38,7 @@ interface SessionDao {
 
 // --- Database ---
 
-@Database(entities = [SessionEntity::class], version = 1, exportSchema = false)
+@Database(entities = [SessionEntity::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
 }

@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.util.Base64
 import android.util.Log
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -18,15 +17,13 @@ import org.amnezia.awg.config.Interface
 import org.amnezia.awg.config.Peer
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.network.PhysicalServer
-import ru.protonmod.next.data.repository.VpnRepository
 import java.net.InetAddress
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AmneziaVpnManager @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val vpnRepository: VpnRepository
+    @ApplicationContext private val context: Context
 ) {
     companion object {
         private const val TAG = "AmneziaVpnManager"
@@ -38,7 +35,7 @@ class AmneziaVpnManager @Inject constructor(
     val tunnelState: StateFlow<Tunnel.State> = _tunnelState
 
     init {
-        // Слушаем изменения статуса от изолированного процесса :vpn
+        // Listen for state changes coming from the isolated :vpn process
         val filter = IntentFilter(ProtonVpnService.ACTION_STATE_CHANGED)
         ContextCompat.registerReceiver(context, object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, intent: Intent?) {
@@ -60,32 +57,16 @@ class AmneziaVpnManager @Inject constructor(
             Log.d(TAG, "Starting AWG connection to ${server.domain}")
             _tunnelState.value = Tunnel.State.TOGGLE
 
-            // 1. Generate Ed25519 KeyPair using Proton's library
-            // It is completely safe to use here because this runs in the main UI process,
-            // while the AmneziaWG engine runs in the isolated :vpn process!
-            val keyPair = com.proton.gopenpgp.ed25519.KeyPair()
+            // 1. Retrieve the pre-generated offline private key
+            val wgPrivateKeyB64 = session.wgPrivateKey ?: throw Exception("Offline VPN certificate missing!")
 
-            // Server strictly expects Ed25519 PKIX PEM, but WG needs derived X25519
-            val publicKeyPem = keyPair.publicKeyPKIXPem()
-            val wgPrivateKeyB64 = keyPair.toX25519Base64()
-
-            // 2. Register our public key at /vpn/v1/certificate
-            val regResult = vpnRepository.registerWireGuardKey(
-                accessToken = session.accessToken,
-                sessionId = session.sessionId,
-                publicKeyPem = publicKeyPem
-            )
-
-            if (regResult.isFailure) {
-                _tunnelState.value = Tunnel.State.DOWN
-                return@withContext Result.failure(regResult.exceptionOrNull()!!)
-            }
-
-            // 3. Set internal IPs
+            // 2. Set internal IPs
             val localIp = PROTON_CLIENT_IP
             val dnsServer = PROTON_DNS_IP
 
-            // 4. Resolve the target Node IP
+            // 3. Resolve the target Node IP
+            // Note: In strict censorship scenarios, DNS over HTTPS/TLS might be needed here,
+            // or caching the known IPs of servers beforehand.
             val targetIp = try {
                 InetAddress.getByName(server.domain).hostAddress ?: throw Exception("DNS resolution failed")
             } catch (e: Exception) {
@@ -94,16 +75,16 @@ class AmneziaVpnManager @Inject constructor(
                 throw e
             }
 
-            // 5. Use the static Server Public Key from the server list
+            // 4. Use the static Server Public Key from the server list
             val serverPubKey = server.wgPublicKey ?: throw Exception("Missing WG Public Key for Server")
 
-            // 6. Build Config
+            // 5. Build Config (Zero API calls required here!)
             val config = buildAwgConfig(serverPubKey, wgPrivateKeyB64, localIp, dnsServer, targetIp)
             val configStr = config.toAwgQuickString()
 
             Log.d(TAG, "Sending AWG Config to isolated :vpn process...")
 
-            // 7. Send config to isolated VPN process
+            // 6. Send config to isolated VPN process
             val intent = Intent(context, ProtonVpnService::class.java).apply {
                 action = ProtonVpnService.ACTION_CONNECT
                 putExtra(ProtonVpnService.EXTRA_CONFIG, configStr)
@@ -134,7 +115,7 @@ class AmneziaVpnManager @Inject constructor(
     ): Config {
         val peer = Peer.Builder()
             .parsePublicKey(serverPublicKey)
-            .parseEndpoint("$targetIp:51820")
+            .parseEndpoint("$targetIp:1194")
             .parseAllowedIPs("0.0.0.0/0")
             .setPersistentKeepalive(60)
             .build()
@@ -143,7 +124,7 @@ class AmneziaVpnManager @Inject constructor(
             .parsePrivateKey(privateKey)
             .parseAddresses("$localIp/32")
             .parseDnsServers(dnsServer)
-            .setMtu(1420)
+            .setMtu(1280)
             .setJunkPacketCount(3)
             .setJunkPacketMinSize(1)
             .setJunkPacketMaxSize(3)

@@ -18,6 +18,7 @@ import javax.inject.Singleton
 @Singleton
 class AuthRepository @Inject constructor(
     private val authApi: ProtonAuthApi,
+    private val vpnRepository: VpnRepository, // Injecting VpnRepository to register certs during auth
     private val sessionDao: SessionDao
 ) {
     companion object {
@@ -29,7 +30,6 @@ class AuthRepository @Inject constructor(
         try {
             Log.d(TAG, "[Login] Phase 0: Creating Anonymous Session")
 
-            // 1. Собираем Anti-fraud payload
             val challengePayload = buildJsonObject {
                 putJsonObject("Payload") {
                     putJsonObject("vpn-android-v4-challenge-0") {
@@ -53,7 +53,6 @@ class AuthRepository @Inject constructor(
                 }
             }
 
-            // 2. Получаем анонимные токены
             val anonSession = authApi.createAnonymousSession(challengePayload, captchaToken)
             val anonToken = anonSession.accessToken
             val anonUid = anonSession.sessionId
@@ -87,9 +86,18 @@ class AuthRepository @Inject constructor(
             val finalRefreshToken = loginResponse.refreshToken ?: anonSession.refreshToken ?: ""
             val finalUid = loginResponse.sessionId ?: anonUid
 
-            // Если 2FA не нужна, сохраняем сессию
             if (!loginResponse.scopes.contains("twofactor")) {
-                saveSessionLocally(finalAccessToken, finalRefreshToken, finalUid, loginResponse.userId ?: "")
+                Log.d(TAG, "[Login] Registering offline VPN certificate...")
+                val keys = registerAndGetVpnKeys(finalAccessToken, finalUid)
+
+                saveSessionLocally(
+                    accessToken = finalAccessToken,
+                    refreshToken = finalRefreshToken,
+                    sessionId = finalUid,
+                    userId = loginResponse.userId ?: "",
+                    wgPrivateKey = keys?.first,
+                    wgPublicKeyPem = keys?.second
+                )
             }
 
             Log.d(TAG, "[Login] Success. Scopes: ${loginResponse.scopes}")
@@ -126,7 +134,17 @@ class AuthRepository @Inject constructor(
             val userResponse = authApi.getUser(fullBearer, sessionId)
             val finalUserId = userResponse.user?.id ?: ""
 
-            saveSessionLocally(fullToken, refreshToken, sessionId, finalUserId)
+            Log.d(TAG, "[2FA] Registering offline VPN certificate...")
+            val keys = registerAndGetVpnKeys(fullToken, sessionId)
+
+            saveSessionLocally(
+                accessToken = fullToken,
+                refreshToken = refreshToken,
+                sessionId = sessionId,
+                userId = finalUserId,
+                wgPrivateKey = keys?.first,
+                wgPublicKeyPem = keys?.second
+            )
 
             Log.d(TAG, "[2FA] Complete. Final UserID: $finalUserId")
             Result.success(response2fa.copy(userId = finalUserId))
@@ -136,13 +154,51 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    private suspend fun saveSessionLocally(accessToken: String, refreshToken: String, sessionId: String, userId: String) {
+    /**
+     * Generates Ed25519 KeyPair, converts it to proper X.509/WireGuard formats,
+     * and registers it with the Proton API to be used later completely offline.
+     * Returns Pair(PrivateKeyB64, PublicKeyPem).
+     */
+    private suspend fun registerAndGetVpnKeys(accessToken: String, sessionId: String): Pair<String, String>? {
+        return try {
+            val keyPair = com.proton.gopenpgp.ed25519.KeyPair()
+            val publicKeyPem = keyPair.publicKeyPKIXPem()
+            val wgPrivateKeyB64 = keyPair.toX25519Base64()
+
+            val regResult = vpnRepository.registerWireGuardKey(
+                accessToken = accessToken,
+                sessionId = sessionId,
+                publicKeyPem = publicKeyPem
+            )
+
+            if (regResult.isSuccess) {
+                Pair(wgPrivateKeyB64, publicKeyPem)
+            } else {
+                Log.e(TAG, "Failed to register offline certificate: ${regResult.exceptionOrNull()}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating offline keys", e)
+            null
+        }
+    }
+
+    private suspend fun saveSessionLocally(
+        accessToken: String,
+        refreshToken: String,
+        sessionId: String,
+        userId: String,
+        wgPrivateKey: String?,
+        wgPublicKeyPem: String?
+    ) {
         sessionDao.saveSession(
             SessionEntity(
                 accessToken = accessToken,
                 refreshToken = refreshToken,
                 sessionId = sessionId,
-                userId = userId
+                userId = userId,
+                wgPrivateKey = wgPrivateKey,
+                wgPublicKeyPem = wgPublicKeyPem
             )
         )
     }
