@@ -30,8 +30,9 @@
         </activity>
 
         <service
-            android:name="org.amnezia.awg.backend.GoBackend$VpnService"
+            android:name=".vpn.ProtonVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
+            android:process=":vpn"
             android:foregroundServiceType="specialUse"
             android:exported="false">
             <intent-filter>
