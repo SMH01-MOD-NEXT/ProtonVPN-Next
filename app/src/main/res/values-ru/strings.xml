@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">Proton VPN-Next</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Приватность — это право человека</string>
+    <string name="welcome_subtitle">Возьмите под контроль свою цифровую жизнь с помощью безопасного, частного и быстрого VPN. Без логов и слежки.</string>
+    <string name="btn_create_account">Создать аккаунт</string>
+    <string name="btn_login">Войти</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">С возвращением</string>
+    <string name="login_subtitle">Войдите в свой аккаунт Proton</string>
+    <string name="hint_username">Электронная почта или имя пользователя</string>
+    <string name="hint_password">Пароль</string>
+    <string name="forgot_password">Забыли пароль?</string>
+    <string name="desc_back_button">Назад</string>
+    <string name="desc_toggle_password">Показать/скрыть пароль</string>
+    <string name="login_success">Вход выполнен успешно!</string>
+    <string name="login_error">Ошибка: %1$s</string>
+    <string name="title_security_check">Проверка безопасности</string>
+    <string name="title_2fa">Двухфакторная аутентификация</string>
+    <string name="msg_2fa_instruction">Введите 6-значный код TOTP из вашего приложения-аутентификатора.</string>
+    <string name="hint_2fa_code">6-значный код</string>
+    <string name="btn_verify">Подтвердить</string>
+
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-Next</string>
+    <string name="desc_settings">Настройки</string>
+    <string name="error_loading_servers">Ошибка при загрузке серверов</string>
+    <string name="btn_retry">Повторить</string>
+    <string name="error_system_appops">Системная ошибка: пожалуйста, переустановите приложение.</string>
+    <string name="title_free_servers">Бесплатные серверы</string>
+    <string name="status_connected">Подключено</string>
+    <string name="status_connecting">Подключение…</string>
+    <string name="status_disconnected">Отключено</string>
+    <string name="msg_traffic_not_protected">Ваш трафик не защищен</string>
+    <string name="desc_toggle_connection">Переключить соединение</string>
+    <string name="desc_country">Страна</string>
+
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">Активная сессия не найдена. Пожалуйста, войдите снова.</string>
+    <string name="error_unknown">Неизвестная ошибка</string>
+    <string name="error_auth_failed">Произошла непредвиденная ошибка аутентификации</string>
+    <string name="error_2fa_failed">Ошибка двухфакторной проверки</string>
+</resources>

@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">Proton VPN-Next</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_title">حریم خصوصی یک حق انسانی است</string>
+    <string name="welcome_subtitle">کنترل زندگی دیجیتال خود را با VPN امن، خصوصی و سریع به دست بگیرید. بدون گزارش، بدون ردیابی.</string>
+    <string name="btn_create_account">ایجاد حساب کاربری</string>
+    <string name="btn_login">ورود</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">خوش آمدید</string>
+    <string name="login_subtitle">وارد حساب Proton خود شوید</string>
+    <string name="hint_username">ایمیل یا نام کاربری</string>
+    <string name="hint_password">رمز عبور</string>
+    <string name="forgot_password">رمز عبور را فراموش کرده‌اید؟</string>
+    <string name="desc_back_button">بازگشت</string>
+    <string name="desc_toggle_password">تغییر وضعیت نمایش رمز عبور</string>
+    <string name="login_success">ورود با موفقیت انجام شد!</string>
+    <string name="login_error">خطا: %1$s</string>
+    <string name="title_security_check">بررسی امنیتی</string>
+    <string name="title_2fa">احراز هویت دو مرحله‌ای</string>
+    <string name="msg_2fa_instruction">کد ۶ رقمی TOTP را از برنامه احراز هویت خود وارد کنید.</string>
+    <string name="hint_2fa_code">کد ۶ رقمی</string>
+    <string name="btn_verify">تایید</string>
+
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-Next</string>
+    <string name="desc_settings">تنظیمات</string>
+    <string name="error_loading_servers">خطا در بارگذاری سرورها</string>
+    <string name="btn_retry">تلاش مجدد</string>
+    <string name="error_system_appops">خطای سیستم: لطفا برنامه را دوباره نصب کنید.</string>
+    <string name="title_free_servers">سرورهای رایگان</string>
+    <string name="status_connected">متصل</string>
+    <string name="status_connecting">در حال اتصال…</string>
+    <string name="status_disconnected">قطع شد</string>
+    <string name="msg_traffic_not_protected">ترافیک شما محافظت نمی‌شود</string>
+    <string name="desc_toggle_connection">تغییر وضعیت اتصال</string>
+    <string name="desc_country">کشور</string>
+
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">نشست فعال یافت نشد. لطفا دوباره وارد شوید.</string>
+    <string name="error_unknown">خطای ناشناخته</string>
+    <string name="error_auth_failed">یک خطای احراز هویت غیرمنتظره رخ داد</string>
+    <string name="error_2fa_failed">تایید دو مرحله‌ای ناموفق بود</string>
+</resources>

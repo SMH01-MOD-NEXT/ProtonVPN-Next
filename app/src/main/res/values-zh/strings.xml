@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">Proton VPN-Next</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_title">隐私是一项基本人权</string>
+    <string name="welcome_subtitle">通过安全、私密且快速的 VPN 控制您的数字生活。无日志，无追踪。</string>
+    <string name="btn_create_account">创建账户</string>
+    <string name="btn_login">登录</string>
+
+    <!-- Login Screen -->
+    <string name="login_title">欢迎回来</string>
+    <string name="login_subtitle">登录您的 Proton 账户</string>
+    <string name="hint_username">电子邮箱或用户名</string>
+    <string name="hint_password">密码</string>
+    <string name="forgot_password">忘记密码？</string>
+    <string name="desc_back_button">返回</string>
+    <string name="desc_toggle_password">切换密码可见性</string>
+    <string name="login_success">登录成功！</string>
+    <string name="login_error">错误：%1$s</string>
+    <string name="title_security_check">安全检查</string>
+    <string name="title_2fa">双重身份验证</string>
+    <string name="msg_2fa_instruction">输入身份验证器应用中的 6 位 TOTP 代码。</string>
+    <string name="hint_2fa_code">6 位代码</string>
+    <string name="btn_verify">验证</string>
+
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-Next</string>
+    <string name="desc_settings">设置</string>
+    <string name="error_loading_servers">加载服务器时出错</string>
+    <string name="btn_retry">重试</string>
+    <string name="error_system_appops">系统错误：请重新安装应用。</string>
+    <string name="title_free_servers">免费服务器</string>
+    <string name="status_connected">已连接</string>
+    <string name="status_connecting">正在连接…</string>
+    <string name="status_disconnected">未连接</string>
+    <string name="msg_traffic_not_protected">您的流量未受保护</string>
+    <string name="desc_toggle_connection">切换连接状态</string>
+    <string name="desc_country">国家</string>
+
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">未找到活动会话。请重新登录。</string>
+    <string name="error_unknown">未知错误</string>
+    <string name="error_auth_failed">发生意外的身份验证错误</string>
+    <string name="error_2fa_failed">双重验证失败</string>
+</resources>
