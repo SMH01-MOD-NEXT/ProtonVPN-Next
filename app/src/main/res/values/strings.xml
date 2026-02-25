@@ -15,4 +15,31 @@
     <string name="forgot_password">Forgot password?</string>
     <string name="desc_back_button">Navigate back</string>
     <string name="desc_toggle_password">Toggle password visibility</string>
+    <string name="login_success">Login Successful!</string>
+    <string name="login_error">Error: %1$s</string>
+    <string name="title_security_check">Security Check</string>
+    <string name="title_2fa">Two-Factor Authentication</string>
+    <string name="msg_2fa_instruction">Enter the 6-digit TOTP code from your authenticator app.</string>
+    <string name="hint_2fa_code">6-digit Code</string>
+    <string name="btn_verify">Verify</string>
+
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-Next</string>
+    <string name="desc_settings">Settings</string>
+    <string name="error_loading_servers">Error loading servers</string>
+    <string name="btn_retry">Retry</string>
+    <string name="error_system_appops">System error: please reinstall the app.</string>
+    <string name="title_free_servers">Free servers</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="msg_traffic_not_protected">Your traffic is not protected</string>
+    <string name="desc_toggle_connection">Toggle Connection</string>
+    <string name="desc_country">Country</string>
+
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">Active session not found. Please log in again.</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="error_auth_failed">An unexpected authentication error occurred</string>
+    <string name="error_2fa_failed">Two-factor verification failed</string>
 </resources>

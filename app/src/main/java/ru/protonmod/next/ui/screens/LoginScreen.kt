@@ -49,12 +49,12 @@ fun LoginScreen(
     LaunchedEffect(uiState) {
         when (uiState) {
             is LoginUiState.Success -> {
-                Toast.makeText(context, "Login Successful!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, context.getString(R.string.login_success), Toast.LENGTH_SHORT).show()
                 onLoginSuccess() // triggers navigation to dashboard
             }
             is LoginUiState.Error -> {
                 val errorMessage = (uiState as LoginUiState.Error).message
-                Toast.makeText(context, "Error: $errorMessage", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.getString(R.string.login_error, errorMessage), Toast.LENGTH_LONG).show()
                 viewModel.resetError()
             }
             else -> {}
@@ -69,7 +69,7 @@ fun LoginScreen(
                 title = { },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.desc_back_button))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -90,7 +90,7 @@ fun LoginScreen(
                     is LoginUiState.RequiresCaptcha -> {
                         // --- CAPTCHA WebView ---
                         Column(modifier = Modifier.fillMaxSize()) {
-                            Text("Security Check", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.title_security_check), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.height(16.dp))
 
                             AndroidView(
@@ -145,14 +145,14 @@ fun LoginScreen(
                     is LoginUiState.Requires2FA -> {
                         // --- 2FA Input View ---
                         Column {
-                            Text("Two-Factor Authentication", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                            Text(stringResource(R.string.title_2fa), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Enter the 6-digit TOTP code from your authenticator app.", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+                            Text(stringResource(R.string.msg_2fa_instruction), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
                             Spacer(modifier = Modifier.height(32.dp))
                             OutlinedTextField(
                                 value = totpCode,
                                 onValueChange = { totpCode = it },
-                                label = { Text("6-digit Code") },
+                                label = { Text(stringResource(R.string.hint_2fa_code)) },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
                                 shape = MaterialTheme.shapes.medium,
@@ -167,7 +167,7 @@ fun LoginScreen(
                                 enabled = totpCode.isNotBlank() && !isLoading
                             ) {
                                 if (isLoading) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
-                                else Text("Verify", style = MaterialTheme.typography.labelLarge)
+                                else Text(stringResource(R.string.btn_verify), style = MaterialTheme.typography.labelLarge)
                             }
                         }
                     }
@@ -202,7 +202,7 @@ fun LoginScreen(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                                 trailingIcon = {
                                     val image = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) { Icon(imageVector = image, contentDescription = "Toggle") }
+                                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) { Icon(imageVector = image, contentDescription = stringResource(R.string.desc_toggle_password)) }
                                 }
                             )
                             Spacer(modifier = Modifier.height(32.dp))

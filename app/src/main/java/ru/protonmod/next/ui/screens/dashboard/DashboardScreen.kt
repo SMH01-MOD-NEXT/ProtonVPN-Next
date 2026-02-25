@@ -23,9 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,10 +55,10 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Proton VPN-Next", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.dashboard_title), fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = "Settings")
+                        Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.desc_settings))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -81,10 +83,10 @@ fun DashboardScreen(
                     is DashboardUiState.Error -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Ошибка загрузки серверов", color = MaterialTheme.colorScheme.error)
+                                Text(stringResource(R.string.error_loading_servers), color = MaterialTheme.colorScheme.error)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Button(onClick = { viewModel.loadServers() }) {
-                                    Text("Повторить")
+                                    Text(stringResource(R.string.btn_retry))
                                 }
                             }
                         }
@@ -103,7 +105,7 @@ fun DashboardScreen(
                                     }
                                 } catch (e: SecurityException) {
                                     android.util.Log.e("DashboardScreen", "System AppOps Error", e)
-                                    android.widget.Toast.makeText(context, "System error: please reinstall the app.", android.widget.Toast.LENGTH_LONG).show()
+                                    android.widget.Toast.makeText(context, context.getString(R.string.error_system_appops), android.widget.Toast.LENGTH_LONG).show()
                                     // Пытаемся запустить в обход, если система уже дала права, но глючит
                                     viewModel.toggleConnection(server)
                                 }
@@ -134,7 +136,7 @@ fun DashboardContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Свободные серверы",
+            text = stringResource(R.string.title_free_servers),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 24.dp)
@@ -187,9 +189,9 @@ fun ConnectionStatusCard(
         ) {
             Text(
                 text = when {
-                    isConnected -> "Подключено"
-                    isConnecting -> "Подключение..."
-                    else -> "Отключено"
+                    isConnected -> stringResource(R.string.status_connected)
+                    isConnecting -> stringResource(R.string.status_connecting)
+                    else -> stringResource(R.string.status_disconnected)
                 },
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
@@ -199,7 +201,7 @@ fun ConnectionStatusCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = if (isConnected || isConnecting) "${connectedServer?.name} (${connectedServer?.city})" else "Ваш трафик не защищен",
+                text = if (isConnected || isConnecting) "${connectedServer?.name} (${connectedServer?.city})" else stringResource(R.string.msg_traffic_not_protected),
                 style = MaterialTheme.typography.bodyLarge,
                 color = contentColor.copy(alpha = 0.8f)
             )
@@ -219,7 +221,7 @@ fun ConnectionStatusCard(
                 } else {
                     Icon(
                         imageVector = Icons.Default.PowerSettingsNew,
-                        contentDescription = "Toggle Connection",
+                        contentDescription = stringResource(R.string.desc_toggle_connection),
                         modifier = Modifier.size(40.dp),
                         tint = if (isConnected) Color.DarkGray else Color.White
                     )
@@ -260,7 +262,7 @@ fun ServerCard(
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Public,
-                    contentDescription = "Country",
+                    contentDescription = stringResource(R.string.desc_country),
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
