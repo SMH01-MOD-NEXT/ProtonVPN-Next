@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.di
 
+import android.os.Build
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -29,6 +30,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 import javax.inject.Named
@@ -38,12 +40,43 @@ import javax.inject.Named
 object NetworkModule {
 
     private const val PROTON_API_BASE_URL = "https://vpn-api.proton.me/"
+    private const val APP_VERSION_STRING = "5.15.95.5"
 
     @Provides
     @Singleton
     fun provideJson(): Json = Json {
         ignoreUnknownKeys = true
         isLenient = true
+    }
+
+    /**
+     * Helper function to build a safe, device-specific User-Agent.
+     * Proton API is very strict, so we maintain the exact structure of the official app.
+     */
+    private fun generateUserAgent(): String {
+        val androidVersion = Build.VERSION.RELEASE ?: "12"
+        val manufacturer = Build.MANUFACTURER ?: "Unknown"
+        val model = Build.MODEL ?: "Device"
+
+        // Capitalize manufacturer to look natural (e.g., "samsung" -> "Samsung")
+        val capManufacturer = manufacturer.replaceFirstChar {
+            if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString()
+        }
+
+        // Sometimes the model already starts with the manufacturer name (e.g. "HTC One")
+        val deviceName = if (model.lowercase(Locale.US).startsWith(manufacturer.lowercase(Locale.US))) {
+            model.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
+        } else {
+            "$capManufacturer $model"
+        }
+
+        // CRITICAL: Strip any non-ASCII characters.
+        // Some obscure custom ROMs include emojis or unicode characters in the device name.
+        // OkHttp will crash if it tries to add non-ASCII characters to HTTP headers.
+        val safeDeviceName = deviceName.replace(Regex("[^\\x20-\\x7E]"), "").trim()
+        val safeAndroidVersion = androidVersion.replace(Regex("[^\\x20-\\x7E]"), "").trim()
+
+        return "ProtonVPN/$APP_VERSION_STRING (Android $safeAndroidVersion; $safeDeviceName)"
     }
 
     /**
@@ -55,10 +88,11 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
         val headerInterceptor = Interceptor { chain ->
-            val userAgent = "ProtonVPN/5.15.95.5 (Android 12; HUAWEI BLK-LX9)"
+            val userAgent = generateUserAgent()
+
             val request = chain.request().newBuilder()
                 .addHeader("User-Agent", userAgent)
-                .addHeader("x-pm-appversion", "android-vpn@5.15.95.5-dev+play")
+                .addHeader("x-pm-appversion", "android-vpn@$APP_VERSION_STRING-dev+play")
                 .addHeader("x-pm-apiversion", "4")
                 .addHeader("Accept", "application/vnd.protonmail.v1+json")
                 .build()
