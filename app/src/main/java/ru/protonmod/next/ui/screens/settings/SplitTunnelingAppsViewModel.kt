@@ -19,7 +19,8 @@ package ru.protonmod.next.ui.screens.settings
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
-import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -70,11 +71,19 @@ class SplitTunnelingAppsViewModel @Inject constructor(
     private suspend fun getInstalledApps(excludedApps: Set<String>): List<AppInfo> =
         withContext(Dispatchers.IO) {
             try {
-                val packages = context.packageManager.getInstalledPackages(0)
+                // Handle API changes for fetching installed packages safely
+                val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(0L))
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.packageManager.getInstalledPackages(0)
+                }
+
                 packages
                     .filter { packageInfo ->
                         val appInfo = packageInfo.applicationInfo
-                        appInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) == 0 // Only non-system apps
+                        // Filter out system apps, we only want user-installed applications
+                        appInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) == 0
                     }
                     .mapNotNull { packageInfo ->
                         val appInfo = packageInfo.applicationInfo ?: return@mapNotNull null
@@ -91,6 +100,7 @@ class SplitTunnelingAppsViewModel @Inject constructor(
                     }
                     .sortedBy { it.appName.lowercase() }
             } catch (_: Exception) {
+                // Return an empty list if querying packages fails (e.g., due to missing permissions)
                 emptyList()
             }
         }

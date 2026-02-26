@@ -30,7 +30,7 @@ plugins {
 
 android {
     namespace = "ru.protonmod.next"
-    compileSdk = 35
+    compileSdk = 36
 
     // Force AGP to use a specific NDK version instead of the default one
     ndkVersion = "29.0.13113169"
@@ -38,8 +38,8 @@ android {
     defaultConfig {
         applicationId = "ru.protonmod.next"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 12
+        targetSdk = 36
+        versionCode = 605159512
         versionName = "12.0.0"
 
         ndk {
@@ -51,7 +51,6 @@ android {
     productFlavors {
         create("foss") {
             dimension = "distribution"
-            applicationIdSuffix = ".foss"
             versionNameSuffix = "-foss"
         }
         create("google") {
@@ -60,6 +59,11 @@ android {
             apply(plugin = "com.google.gms.google-services")
             apply(plugin = "com.google.firebase.crashlytics")
             apply(plugin = "com.google.firebase.firebase-perf")
+        }
+        create("dev") {
+            dimension = "distribution"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
         }
     }
 

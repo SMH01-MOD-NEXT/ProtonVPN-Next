@@ -30,6 +30,7 @@ import dagger.hilt.android.HiltAndroidApp
 class ProtonNextApp : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Here you can initialize other global libraries if needed in the future
+        // Initialize flavor-specific components (e.g., Firebase for Google flavor)
+        FlavorInitializer.initialize(this)
     }
 }

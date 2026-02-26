@@ -35,9 +35,9 @@ import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 
-
 sealed class DashboardUiState {
-    object Loading : DashboardUiState()
+    // Use data object for better toString representation and consistency
+    data object Loading : DashboardUiState()
     data class Success(
         val servers: List<LogicalServer>,
         val recentConnections: List<LogicalServer> = emptyList(),
@@ -61,22 +61,17 @@ class DashboardViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     private val _errorMessage = MutableStateFlow<String?>(null)
 
+    // Combine flows cleanly without using Array<Any?> and unsafe casts
+    // Nesting `combine` allows us to bypass the 5-argument limit gracefully.
     val uiState: StateFlow<DashboardUiState> = combine(
-        _servers,
-        _isLoading,
-        _errorMessage,
+        combine(_servers, _isLoading, _errorMessage) { servers, isLoading, error ->
+            Triple(servers, isLoading, error)
+        },
         amneziaVpnManager.tunnelState,
         connectedServerState.connectedServer,
         recentConnectionDao.getRecentConnections()
-    ) { array ->
-        @Suppress("UNCHECKED_CAST")
-        val servers = array[0] as List<LogicalServer>
-        val isLoading = array[1] as Boolean
-        val error = array[2] as String?
-        val tunnelState = array[3] as Tunnel.State
-        val connectedServer = array[4] as LogicalServer?
-        @Suppress("UNCHECKED_CAST")
-        val recentEntities = array[5] as List<RecentConnectionEntity>
+    ) { localState, tunnelState, connectedServer, recentEntities ->
+        val (servers, isLoading, error) = localState
 
         if (isLoading && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -86,6 +81,7 @@ class DashboardViewModel @Inject constructor(
             val isConnected = tunnelState == Tunnel.State.UP
             val isConnecting = tunnelState == Tunnel.State.TOGGLE
 
+            // Map recent connections entities back to domain models
             val recentServers = recentEntities.mapNotNull { entity ->
                 servers.find { it.id == entity.serverId }
             }
@@ -132,7 +128,7 @@ class DashboardViewModel @Inject constructor(
             _errorMessage.value = null
             val session = sessionDao.getSession()
             if (session == null) {
-                _errorMessage.value = "Активная сессия не найдена. Пожалуйста, авторизуйтесь снова."
+                _errorMessage.value = "Active session not found. Please log in again."
                 _isLoading.value = false
                 return@launch
             }
@@ -144,9 +140,10 @@ class DashboardViewModel @Inject constructor(
                 .onFailure { error ->
                     val cachedServers = serversCacheManager.getCachedServers()
                     if (cachedServers.isNotEmpty()) {
+                        // Fallback to cached servers if network fails
                         _servers.value = cachedServers
                     } else {
-                        _errorMessage.value = error.localizedMessage ?: "Неизвестная ошибка"
+                        _errorMessage.value = error.localizedMessage ?: "Unknown error occurred"
                     }
                 }
             _isLoading.value = false
@@ -154,7 +151,7 @@ class DashboardViewModel @Inject constructor(
     }
 
     /**
-     * Обновить кэш серверов при подключении к VPN, если он старше 1 часа
+     * Refresh the servers cache upon VPN connection if it's older than 1 hour.
      */
     private fun refreshServersIfExpired() {
         viewModelScope.launch {
@@ -188,7 +185,7 @@ class DashboardViewModel @Inject constructor(
                         return@launch
                     }
 
-                    // We pick the first active physical server inside the logical group
+                    // Pick the first active physical server inside the logical group
                     val physicalServer = server.servers.firstOrNull { it.status == 1 }
                     if (physicalServer != null) {
                         // Pass logical server ID as the first parameter
@@ -197,11 +194,12 @@ class DashboardViewModel @Inject constructor(
                         // Handle potential connection failure to avoid infinite loading state
                         if (result.isFailure) {
                             connectedServerState.setConnectedServer(null)
-                            // Optional: You can emit an error side-effect here to show a Toast or Snackbar
+                            // State will naturally revert to disconnected
                         }
                     } else {
                         // Revert state if no active physical server is available
                         connectedServerState.setConnectedServer(null)
+                        _errorMessage.value = "Selected server is currently unavailable."
                     }
                 }
             }

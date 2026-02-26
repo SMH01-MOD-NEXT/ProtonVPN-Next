@@ -20,10 +20,12 @@ package ru.protonmod.next.ui.screens.countries
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.amnezia.awg.backend.Tunnel
 import ru.protonmod.next.data.cache.ServersCacheManager
 import ru.protonmod.next.data.local.SessionDao
@@ -33,7 +35,8 @@ import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 
 sealed class CountriesUiState {
-    object Loading : CountriesUiState()
+    // Use data object for consistency
+    data object Loading : CountriesUiState()
     data class CountriesList(val countries: List<String>) : CountriesUiState()
     data class CitiesList(
         val country: String,
@@ -73,7 +76,7 @@ class CountriesViewModel @Inject constructor(
             _uiState.value = CountriesUiState.Loading
             val session = sessionDao.getSession()
             if (session == null) {
-                _uiState.value = CountriesUiState.Error("Активная сессия не найдена.")
+                _uiState.value = CountriesUiState.Error("Active session not found.")
                 return@launch
             }
 
@@ -82,24 +85,28 @@ class CountriesViewModel @Inject constructor(
                 allServers = serversCacheManager.getCachedServers()
 
                 if (allServers.isEmpty()) {
-                    _uiState.value = CountriesUiState.Error("Серверы не загружены")
+                    _uiState.value = CountriesUiState.Error("No servers available.")
                     return@launch
                 }
 
-                serversGroupedByCountry = allServers
-                    .groupBy { it.exitCountry }
-                    .toSortedMap()
-
-                serversGroupedByCityInCountry = serversGroupedByCountry.mapValues { (_, serversByCountry) ->
-                    serversByCountry
-                        .groupBy { it.city }
+                // Move heavy grouping and sorting operations to the background thread
+                // This prevents UI stutters when processing large server lists
+                withContext(Dispatchers.Default) {
+                    serversGroupedByCountry = allServers
+                        .groupBy { it.exitCountry }
                         .toSortedMap()
+
+                    serversGroupedByCityInCountry = serversGroupedByCountry.mapValues { (_, serversByCountry) ->
+                        serversByCountry
+                            .groupBy { it.city }
+                            .toSortedMap()
+                    }
                 }
 
                 val countries = serversGroupedByCountry.keys.toList()
                 _uiState.value = CountriesUiState.CountriesList(countries)
             } catch (e: Exception) {
-                _uiState.value = CountriesUiState.Error(e.localizedMessage ?: "Неизвестная ошибка")
+                _uiState.value = CountriesUiState.Error(e.localizedMessage ?: "Unknown error occurred.")
             }
         }
     }
@@ -110,23 +117,27 @@ class CountriesViewModel @Inject constructor(
             return
         }
 
-        // Check if already connecting or connected
+        // Check if already connecting or connected to the same server
         val tunnelState = amneziaVpnManager.tunnelState.value
         if (tunnelState == Tunnel.State.TOGGLE || (tunnelState == Tunnel.State.UP && connectedServerState.connectedServer.value?.id == server.id)) {
             return
         }
 
-        // We pick the first active physical server inside the logical group
+        // Pick the first active physical server inside the logical group
         val physicalServer = server.servers.firstOrNull { it.status == 1 }
+
         if (physicalServer != null) {
-            // Set shared state before connecting to show loading in UI
+            // Set shared state before connecting to show loading indicator in UI
             connectedServerState.setConnectedServer(server)
-            
+
             val result = amneziaVpnManager.connect(server.id, physicalServer, session)
-            
+
             if (result.isFailure) {
                 connectedServerState.setConnectedServer(null)
             }
+        } else {
+            // Fail gracefully if no physical servers are available under this logical group
+            _uiState.value = CountriesUiState.Error("Selected server is currently unavailable.")
         }
     }
 
