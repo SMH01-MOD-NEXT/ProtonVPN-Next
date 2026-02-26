@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 import ru.protonmod.next.data.network.*
 import java.io.EOFException
@@ -36,60 +37,148 @@ class VpnRepository @Inject constructor(
 ) {
     companion object {
         private const val TAG = "VpnRepository"
+        private val json = Json { ignoreUnknownKeys = true }
     }
 
-    suspend fun getServers(accessToken: String, sessionId: String): Result<List<LogicalServer>> = withContext(Dispatchers.IO) {
+    /**
+     * Fetch the list of servers considering their current load.
+     */
+    suspend fun getServers(accessToken: String, sessionId: String, userTier: Int = 0): Result<List<LogicalServer>> = withContext(Dispatchers.IO) {
         try {
             val bearer = "Bearer $accessToken"
-            val response = vpnApi.getLogicalServers(bearer, sessionId)
-            if (response.code == 1000) {
-                Result.success(response.logicalServers.filter { it.tier == 0 })
-            } else {
-                Result.failure(Exception("Failed to fetch servers: ${response.code}"))
+            
+            // 1. Fetch logical servers list
+            val serversResponse = vpnApi.getLogicalServers(bearer, sessionId)
+            Log.d(TAG, "getLogicalServers response code: ${serversResponse.code}, total: ${serversResponse.logicalServers.size}")
+
+            if (serversResponse.code != 1000) {
+                return@withContext Result.failure(Exception("Failed to fetch servers: ${serversResponse.code}"))
             }
+
+            val logicalServers = serversResponse.logicalServers.filter { it.tier <= userTier }
+            Log.d(TAG, "Filtered servers (userTier=$userTier): ${logicalServers.size}")
+            
+            if (logicalServers.isNotEmpty()) {
+                Log.d(TAG, "Sample LogicalServer ID: ${logicalServers[0].id}")
+                if (logicalServers[0].servers.isNotEmpty()) {
+                    Log.d(TAG, "Sample PhysicalServer ID: ${logicalServers[0].servers[0].id}")
+                }
+            }
+
+            // 2. Fetch server loads
+            Log.d(TAG, "Fetching loads for tier: $userTier")
+            val loadsResponse = vpnApi.getLoads(bearer, sessionId, userTier)
+            val loadsBody = loadsResponse.body()?.string()
+            Log.d(TAG, "Loads API response code: ${loadsResponse.code()}, body: $loadsBody")
+            
+            val loadsData = if (loadsResponse.isSuccessful && loadsBody != null) {
+                try {
+                    json.decodeFromString<LoadsResponse>(loadsBody)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to decode LoadsResponse", e)
+                    null
+                }
+            } else {
+                null
+            }
+
+            val loadsMap = loadsData?.loads?.associate { it.id to it.load } ?: emptyMap()
+            Log.d(TAG, "Mapped loads count: ${loadsMap.size}")
+            if (loadsMap.isNotEmpty()) {
+                Log.d(TAG, "Sample load ID: ${loadsMap.keys.first()}")
+            }
+
+            // 3. Map loads to servers
+            var logicalWithLoad = 0
+            var physicalMatches = 0
+            logicalServers.forEach { logical ->
+                // First, try to match the logical server directly
+                val logicalLoad = loadsMap[logical.id]
+                if (logicalLoad != null) {
+                    logical.averageLoad = logicalLoad
+                    logicalWithLoad++
+                    
+                    // If we have logical load, maybe physical servers should also have it?
+                    // Or maybe the API returns physical server loads in that same list?
+                    logical.servers.forEach { physical ->
+                        physical.load = loadsMap[physical.id] ?: logicalLoad
+                    }
+                } else {
+                    // Fallback to physical server matching
+                    var totalLoad = 0
+                    var activeServers = 0
+                    
+                    logical.servers.forEach { physical ->
+                        val load = loadsMap[physical.id]
+                        if (load != null) {
+                            physical.load = load
+                            totalLoad += load
+                            activeServers++
+                            physicalMatches++
+                        } else {
+                            physical.load = 0
+                        }
+                    }
+                    
+                    if (activeServers > 0) {
+                        logical.averageLoad = totalLoad / activeServers
+                        logicalWithLoad++
+                    } else {
+                        logical.averageLoad = 0
+                    }
+                }
+            }
+            Log.d(TAG, "Mapped loads for $logicalWithLoad logical servers (Total physical matches: $physicalMatches)")
+
+            Result.success(logicalServers)
         } catch (e: Exception) {
+            Log.e(TAG, "Error in getServers", e)
             Result.failure(e)
         }
     }
 
     /**
-     * Получить список серверов с таймаутом и обработкой ошибок сети.
-     * Используется для кэширования и фонового обновления.
-     * Обрабатывает timeout, EOF, ConnectionRefused ошибки.
+     * Fetch the list of servers with a timeout and network error handling.
      */
     suspend fun getServersWithTimeout(
         accessToken: String,
         sessionId: String,
-        timeoutSeconds: Long
+        timeoutSeconds: Long,
+        userTier: Int = 0
     ): Result<List<LogicalServer>> = withContext(Dispatchers.IO) {
         try {
-            val bearer = "Bearer $accessToken"
-
-            // Применяем таймаут для запроса
-            val response = withTimeout(timeoutSeconds * 1000) {
-                vpnApi.getLogicalServers(bearer, sessionId)
-            }
-
-            if (response.code == 1000) {
-                Log.d(TAG, "Servers fetched successfully")
-                Result.success(response.logicalServers.filter { it.tier == 0 })
-            } else {
-                Result.failure(Exception("API error: ${response.code}"))
+            withTimeout(timeoutSeconds * 1000) {
+                getServers(accessToken, sessionId, userTier)
             }
         } catch (e: TimeoutCancellationException) {
-            Log.e(TAG, "Request timeout after timeout seconds")
+            Log.e(TAG, "Request timeout")
             Result.failure(Exception("Request timeout"))
-        } catch (e: SocketTimeoutException) {
-            Log.e(TAG, "Socket timeout")
-            Result.failure(Exception("Socket timeout"))
-        } catch (e: ConnectException) {
-            Log.e(TAG, "Connection refused")
-            Result.failure(Exception("Connection refused"))
-        } catch (e: EOFException) {
-            Log.e(TAG, "EOF error - connection broken")
-            Result.failure(Exception("EOF error"))
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch servers: ${e.javaClass.simpleName}: ${e.message}")
+            Log.e(TAG, "Failed to fetch servers: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fetch the user's VPN profile information (including Tier).
+     */
+    suspend fun getVpnInfo(accessToken: String, sessionId: String): Result<VpnInfoResponse> = withContext(Dispatchers.IO) {
+        try {
+            val bearer = "Bearer $accessToken"
+            val response = vpnApi.getVpnInfo(bearer, sessionId)
+            val body = response.body()?.string()
+            
+            if (response.isSuccessful && body != null) {
+                Log.d(TAG, "Raw VPN Info Response: $body")
+                val vpnInfo = json.decodeFromString<VpnInfoResponse>(body)
+                Result.success(vpnInfo)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e(TAG, "Failed to fetch VPN info: ${response.code()}, body: $errorBody")
+                Result.failure(Exception("Failed to fetch VPN info: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching VPN info", e)
             Result.failure(e)
         }
     }
@@ -97,8 +186,6 @@ class VpnRepository @Inject constructor(
 
     /**
      * Registers the public key at /vpn/v1/certificate.
-     * Error 2001 "Invalid EC key" usually means the server expects a specific PEM
-     * or a raw Base64 without the ASN.1 prefix we tried before.
      */
     suspend fun registerWireGuardKey(
         accessToken: String,
@@ -107,12 +194,9 @@ class VpnRepository @Inject constructor(
     ): Result<CreateCertificateResponse> = withContext(Dispatchers.IO) {
         try {
             val bearer = "Bearer $accessToken"
-
-            // Мы больше не оборачиваем ключ вручную.
-            // AmneziaVpnManager передает готовый Ed25519 PKIX PEM, как ожидает сервер.
             val request = CreateCertificateRequest(clientPublicKey = publicKeyPem)
 
-            Log.d(TAG, "Registering key at /vpn/v1/certificate with PEM:\n$publicKeyPem")
+            Log.d(TAG, "Registering key at /vpn/v1/certificate")
             val response = vpnApi.registerVpnKey(bearer, sessionId, request)
 
             if (response.code == 1000) {
@@ -123,10 +207,7 @@ class VpnRepository @Inject constructor(
         } catch (e: Exception) {
             if (e is HttpException) {
                 val errorBody = e.response()?.errorBody()?.string()
-                Log.e(TAG, "Cert registration failed (${e.code()}): $errorBody")
-
-                // If it's still 400/2001, it's possible the server doesn't want PEM at all,
-                // but just the raw Base64 key.
+                Log.e(TAG, "Cert registration failed: $errorBody")
             }
             Result.failure(e)
         }

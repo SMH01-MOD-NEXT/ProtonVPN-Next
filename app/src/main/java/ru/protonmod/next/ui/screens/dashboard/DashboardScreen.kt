@@ -53,7 +53,7 @@ import ru.protonmod.next.ui.nav.MainTarget
 
 @Composable
 fun DashboardScreen(
-    onNavigateToMap: () -> Unit,
+    onNavigateToMap: (() -> Unit)? = null,
     onNavigateToCountries: (() -> Unit)? = null,
     onNavigateToSettings: (() -> Unit)? = null,
     onNavigateToProfiles: (() -> Unit)? = null,
@@ -82,11 +82,14 @@ fun DashboardScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            MapBackgroundPlaceholder(
+            // Interactive map replacing the static placeholder
+            HomeMap(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight(0.6f)
-                    .clickable { onNavigateToMap() }
+                    .clickable { onNavigateToMap?.invoke() }, // Added navigation to full map
+                connectedServer = (uiState as? DashboardUiState.Success)?.connectedServer,
+                isConnecting = (uiState as? DashboardUiState.Success)?.isConnecting ?: false
             )
 
             AnimatedContent(
@@ -162,6 +165,7 @@ fun DashboardContent(
         )
     ) {
         item {
+            // Invisible spacer to push the UI down, revealing the map underneath
             Spacer(modifier = Modifier.height(380.dp))
         }
 
@@ -210,30 +214,6 @@ fun DashboardContent(
                 )
             }
         }
-    }
-}
-
-@Composable
-fun MapBackgroundPlaceholder(modifier: Modifier = Modifier) {
-    val backgroundColor = MaterialTheme.colorScheme.background
-    Box(
-        modifier = modifier.background(
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color(0xFF1E293B),
-                    backgroundColor
-                ),
-                startY = 0f,
-                endY = Float.POSITIVE_INFINITY
-            )
-        ),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        Text(
-            text = stringResource(R.string.map_placeholder),
-            color = Color.White.copy(alpha = 0.5f),
-            modifier = Modifier.padding(top = 80.dp)
-        )
     }
 }
 
@@ -448,10 +428,12 @@ fun DashboardScreenPreview() {
 
     MaterialTheme {
         Box(modifier = Modifier.fillMaxSize()) {
-            MapBackgroundPlaceholder(
+            HomeMap(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .fillMaxHeight(0.6f)
+                    .fillMaxHeight(0.6f),
+                connectedServer = null,
+                isConnecting = false
             )
 
             DashboardContent(

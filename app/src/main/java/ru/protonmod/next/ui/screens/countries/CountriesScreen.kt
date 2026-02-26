@@ -40,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
@@ -75,7 +76,7 @@ fun CountriesScreen(
                 )
             )
         },
-        bottomBar = {} // We use Box alignment for LiquidGlassBottomBar
+        bottomBar = {} 
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -110,11 +111,11 @@ fun CountriesScreen(
                             countries = state.countries,
                             connectedServer = connectedServer,
                             onCountryClick = { country ->
-                                viewModel.selectCountry(country)
+                                viewModel.selectCountry(country.code)
                                 onNavigateToHome()
                             },
                             onCountryMore = { country ->
-                                viewModel.expandCitiesForCountry(country)
+                                viewModel.expandCitiesForCountry(country.code)
                             }
                         )
                     }
@@ -125,11 +126,11 @@ fun CountriesScreen(
                             connectedServer = connectedServer,
                             onBack = { viewModel.backToCountries() },
                             onCityClick = { city ->
-                                viewModel.selectCity(city)
+                                viewModel.selectCity(city.name)
                                 onNavigateToHome()
                             },
                             onCityMore = { city ->
-                                viewModel.expandServersForCity(city)
+                                viewModel.expandServersForCity(city.name)
                             }
                         )
                     }
@@ -156,7 +157,7 @@ fun CountriesScreen(
                         MainTarget.Home -> onNavigateToHome()
                         MainTarget.Settings -> onNavigateToSettings()
                         MainTarget.Profiles -> onNavigateToProfiles()
-                        MainTarget.Countries -> { /* Already here */ }
+                        MainTarget.Countries -> { }
                     }
                 },
                 modifier = Modifier
@@ -169,10 +170,10 @@ fun CountriesScreen(
 
 @Composable
 fun CountriesListContent(
-    countries: List<String>,
+    countries: List<CountryDisplayItem>,
     connectedServer: LogicalServer?,
-    onCountryClick: (String) -> Unit,
-    onCountryMore: (String) -> Unit
+    onCountryClick: (CountryDisplayItem) -> Unit,
+    onCountryMore: (CountryDisplayItem) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -185,7 +186,7 @@ fun CountriesListContent(
         items(countries) { country ->
             CountryCard(
                 country = country,
-                isConnected = connectedServer?.exitCountry == country,
+                isConnected = connectedServer?.exitCountry == country.code,
                 onClick = { onCountryClick(country) },
                 onMoreClick = { onCountryMore(country) }
             )
@@ -199,14 +200,14 @@ fun CountriesListContent(
 
 @Composable
 fun CountryCard(
-    country: String,
+    country: CountryDisplayItem,
     isConnected: Boolean = false,
     onClick: () -> Unit,
     onMoreClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val flag = CountryUtils.getFlagForCountry(country)
-    val localizedName = CountryUtils.getCountryName(context, country)
+    val flag = CountryUtils.getFlagForCountry(country.code)
+    val localizedName = CountryUtils.getCountryName(context, country.code)
     val interactionSource = remember { MutableInteractionSource() }
 
     Card(
@@ -222,50 +223,56 @@ fun CountryCard(
             containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(contentAlignment = Alignment.BottomEnd) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(contentAlignment = Alignment.BottomEnd) {
+                    Text(
+                        text = flag,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.width(40.dp)
+                    )
+                    if (isConnected) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(Color(0xFF3DDC84), CircleShape)
+                                .padding(2.dp)
+                                .background(MaterialTheme.colorScheme.surface, CircleShape)
+                                .padding(1.dp)
+                                .background(Color(0xFF3DDC84), CircleShape)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
                 Text(
-                    text = flag,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.width(40.dp)
+                    text = localizedName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
-                if (isConnected) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .background(Color(0xFF3DDC84), CircleShape)
-                            .padding(2.dp)
-                            .background(MaterialTheme.colorScheme.surface, CircleShape)
-                            .padding(1.dp)
-                            .background(Color(0xFF3DDC84), CircleShape)
+
+                LoadIndicator(load = country.averageLoad)
+
+                IconButton(
+                    onClick = onMoreClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.desc_more_options)
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Text(
-                text = localizedName,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
-
-            IconButton(
-                onClick = onMoreClick,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = stringResource(R.string.desc_more_options)
-                )
-            }
+            
+            LoadProgressBar(load = country.averageLoad)
         }
     }
 }
@@ -273,11 +280,11 @@ fun CountryCard(
 @Composable
 fun CitiesListContent(
     country: String,
-    cities: List<String>,
+    cities: List<CityDisplayItem>,
     connectedServer: LogicalServer?,
     onBack: () -> Unit,
-    onCityClick: (String) -> Unit,
-    onCityMore: (String) -> Unit
+    onCityClick: (CityDisplayItem) -> Unit,
+    onCityMore: (CityDisplayItem) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -320,7 +327,7 @@ fun CitiesListContent(
         items(cities) { city ->
             CityCard(
                 city = city,
-                isConnected = (connectedServer?.city == city && connectedServer.exitCountry == country),
+                isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == country),
                 onClick = { onCityClick(city) },
                 onMoreClick = { onCityMore(city) }
             )
@@ -334,7 +341,7 @@ fun CitiesListContent(
 
 @Composable
 fun CityCard(
-    city: String,
+    city: CityDisplayItem,
     isConnected: Boolean = false,
     onClick: () -> Unit,
     onMoreClick: () -> Unit
@@ -354,50 +361,56 @@ fun CityCard(
             containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(contentAlignment = Alignment.BottomEnd) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(contentAlignment = Alignment.BottomEnd) {
+                    Text(
+                        text = "🏙️",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.width(40.dp)
+                    )
+                    if (isConnected) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(Color(0xFF3DDC84), CircleShape)
+                                .padding(2.dp)
+                                .background(MaterialTheme.colorScheme.surface, CircleShape)
+                                .padding(1.dp)
+                                .background(Color(0xFF3DDC84), CircleShape)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
                 Text(
-                    text = "🏙️",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.width(40.dp)
+                    text = city.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
-                if (isConnected) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .background(Color(0xFF3DDC84), CircleShape)
-                            .padding(2.dp)
-                            .background(MaterialTheme.colorScheme.surface, CircleShape)
-                            .padding(1.dp)
-                            .background(Color(0xFF3DDC84), CircleShape)
+
+                LoadIndicator(load = city.averageLoad)
+
+                IconButton(
+                    onClick = onMoreClick,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = stringResource(R.string.desc_more_options)
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Text(
-                text = city,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
-
-            IconButton(
-                onClick = onMoreClick,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
-                    contentDescription = stringResource(R.string.desc_more_options)
-                )
-            }
+            
+            LoadProgressBar(load = city.averageLoad)
         }
     }
 }
@@ -415,7 +428,7 @@ fun ServersListContent(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             horizontal = 16.dp,
-            vertical = 16.dp
+            vertical = 16.dp,
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -491,53 +504,92 @@ fun ServerSelectionCard(
             containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
         )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(contentAlignment = Alignment.BottomEnd) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.secondaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Public,
-                        contentDescription = server.name,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
-                if (isConnected) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(contentAlignment = Alignment.BottomEnd) {
                     Box(
                         modifier = Modifier
-                            .size(10.dp)
-                            .background(Color(0xFF3DDC84), CircleShape)
-                            .padding(2.dp)
-                            .background(MaterialTheme.colorScheme.surface, CircleShape)
-                            .padding(1.dp)
-                            .background(Color(0xFF3DDC84), CircleShape)
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.secondaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Public,
+                            contentDescription = server.name,
+                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
+                    if (isConnected) {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .background(Color(0xFF3DDC84), CircleShape)
+                                .padding(2.dp)
+                                .background(MaterialTheme.colorScheme.surface, CircleShape)
+                                .padding(1.dp)
+                                .background(Color(0xFF3DDC84), CircleShape)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = server.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = server.city,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = server.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = server.city,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
+                LoadIndicator(load = server.averageLoad)
             }
+            
+            LoadProgressBar(load = server.averageLoad)
         }
+    }
+}
+
+@Composable
+fun LoadIndicator(load: Int) {
+    Surface(
+        color = CountryUtils.getColorForLoad(load).copy(alpha = 0.2f),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Text(
+            text = "$load%",
+            style = MaterialTheme.typography.labelMedium,
+            color = CountryUtils.getColorForLoad(load),
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+    }
+}
+
+@Composable
+fun LoadProgressBar(load: Int) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(4.dp)
+            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(load / 100f)
+                .fillMaxHeight()
+                .background(CountryUtils.getColorForLoad(load))
+        )
     }
 }

@@ -31,6 +31,7 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.RecentConnectionDao
+import javax.inject.Inject
 import javax.inject.Singleton
 
 @Module
@@ -40,8 +41,31 @@ object DatabaseModule {
     // Empty migration from 4 to 5, assuming no schema changes
     val MIGRATION_4_5 = object : Migration(4, 5) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // Since we are just trying to prevent data loss and assuming no schema changes,
-            // this can be empty. If there were schema changes, you would put ALTER TABLE statements here.
+        }
+    }
+
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE session ADD COLUMN userTier INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
+    val MIGRATION_6_7 = object : Migration(6, 7) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Check if column already exists to avoid crashes on some dev environments
+            val cursor = database.query("PRAGMA table_info(servers)")
+            var columnExists = false
+            while (cursor.moveToNext()) {
+                if (cursor.getString(cursor.getColumnIndexOrThrow("name")) == "averageLoad") {
+                    columnExists = true
+                    break
+                }
+            }
+            cursor.close()
+            
+            if (!columnExists) {
+                database.execSQL("ALTER TABLE servers ADD COLUMN averageLoad INTEGER NOT NULL DEFAULT 0")
+            }
         }
     }
 
@@ -53,7 +77,9 @@ object DatabaseModule {
             AppDatabase::class.java,
             "proton_next_db"
         )
-        .addMigrations(MIGRATION_4_5) // Add migration path
+        .addMigrations(MIGRATION_4_5)
+        .addMigrations(MIGRATION_5_6)
+        .addMigrations(MIGRATION_6_7)
         .build()
     }
 

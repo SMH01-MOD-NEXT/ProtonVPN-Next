@@ -17,6 +17,8 @@
 
 package ru.protonmod.next.data.network
 
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -31,6 +33,19 @@ interface ProtonVpnApi {
         @Header("x-pm-uid") sessionId: String,
         @Query("WithState") withState: Boolean = true
     ): LogicalServersResponse
+
+    @GET("vpn/v1/loads")
+    suspend fun getLoads(
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String,
+        @Query("Tier") userTier: Int? = null
+    ): Response<ResponseBody>
+
+    @GET("vpn/v2")
+    suspend fun getVpnInfo(
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String
+    ): Response<ResponseBody>
 
     /**
      * Registers the WireGuard public key and obtains the internal VPN IP.

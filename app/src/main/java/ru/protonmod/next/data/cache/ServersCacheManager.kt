@@ -41,7 +41,7 @@ class ServersCacheManager @Inject constructor(
         private const val CACHE_DURATION_HOURS = 1L
         private const val CACHE_DURATION_MILLIS = CACHE_DURATION_HOURS * 60 * 60 * 1000
         private const val RETRY_DELAY_MINUTES = 2L
-        private const val REQUEST_TIMEOUT_SECONDS = 10L
+        private const val REQUEST_TIMEOUT_SECONDS = 15L // Increased timeout
         private const val BACKGROUND_UPDATE_WORK_TAG = "servers_bg_update"
         private const val BACKGROUND_UPDATE_WORK_NAME = "servers_update_work"
     }
@@ -49,6 +49,7 @@ class ServersCacheManager @Inject constructor(
     suspend fun getServers(
         accessToken: String,
         sessionId: String,
+        userTier: Int,
         forceRefresh: Boolean = false
     ): Result<Unit> {
         return try {
@@ -56,40 +57,44 @@ class ServersCacheManager @Inject constructor(
             val cacheInfo = serversCacheDao.getCacheInfo()
 
             val shouldFetch = forceRefresh || cacheInfo == null || now > cacheInfo.expiresAt
+            Log.d(TAG, "getServers: userTier=$userTier, forceRefresh=$forceRefresh, hasCache=${cacheInfo != null}, expired=${if (cacheInfo != null) now > cacheInfo.expiresAt else "N/A"}")
 
             if (shouldFetch) {
-                val result: Result<List<ru.protonmod.next.data.network.LogicalServer>> =
-                    vpnRepository.getServersWithTimeout(accessToken, sessionId, REQUEST_TIMEOUT_SECONDS)
+                Log.d(TAG, "Fetching servers from API for tier $userTier...")
+                
+                val result = vpnRepository.getServersWithTimeout(accessToken, sessionId, REQUEST_TIMEOUT_SECONDS, userTier = userTier)
 
                 result.onSuccess { servers ->
-                    Log.d(TAG, "Servers fetched successfully, caching...")
-                    serverDao.insertServers(servers.map { server ->
+                    Log.d(TAG, "Servers fetched successfully: ${servers.size} logical servers")
+                    
+                    val entities = servers.map { server ->
                         ru.protonmod.next.data.local.ServerMapper.toEntity(server)
-                    })
+                    }
+                    
+                    val sample = servers.firstOrNull()
+                    Log.d(TAG, "Sample server load before saving: ${sample?.name} -> ${sample?.averageLoad}")
+
+                    serverDao.insertServers(entities)
 
                     val newCacheInfo = ServersCacheEntity(
                         cachedAt = now,
                         expiresAt = now + CACHE_DURATION_MILLIS
                     )
                     serversCacheDao.saveCacheInfo(newCacheInfo)
-                    Log.d(TAG, "Cache updated, expires in ${CACHE_DURATION_HOURS} hour(s)")
+                    Log.d(TAG, "Cache updated successfully")
                 }
 
                 result.onFailure { error ->
-                    Log.e(TAG, "Failed to fetch servers: ${error.message}")
+                    Log.e(TAG, "Failed to fetch servers from API", error)
                     if (cacheInfo != null) {
-                        Log.d(TAG, "Using stale cache, scheduling retry in ${RETRY_DELAY_MINUTES} minutes")
-                        scheduleBackgroundUpdate(accessToken, sessionId, RETRY_DELAY_MINUTES)
+                        Log.d(TAG, "Using stale cache, scheduling retry")
+                        scheduleBackgroundUpdate(accessToken, sessionId, userTier, RETRY_DELAY_MINUTES)
                     } else {
-                        throw error
+                        return Result.failure(error)
                     }
                 }
             } else {
-                val timeUntilExpiry = cacheInfo.expiresAt - now
-                if (timeUntilExpiry < 5 * 60 * 1000) { // Менее 5 минут до истечения
-                    Log.d(TAG, "Cache expiring soon, scheduling background update")
-                    scheduleBackgroundUpdate(accessToken, sessionId, 0L)
-                }
+                Log.d(TAG, "Using valid cache (expires in ${(cacheInfo!!.expiresAt - now) / 1000}s)")
             }
 
             Result.success(Unit)
@@ -102,9 +107,11 @@ class ServersCacheManager @Inject constructor(
 
     suspend fun getCachedServers(): List<ru.protonmod.next.data.network.LogicalServer> {
         return try {
-            serverDao.getAllServers().map { entity ->
+            val servers = serverDao.getAllServers().map { entity ->
                 ru.protonmod.next.data.local.ServerMapper.toDomain(entity)
             }
+            Log.d(TAG, "Retrieved ${servers.size} servers from DB")
+            servers
         } catch (e: Exception) {
             Log.e(TAG, "Error retrieving cached servers", e)
             emptyList()
@@ -124,6 +131,7 @@ class ServersCacheManager @Inject constructor(
     private fun scheduleBackgroundUpdate(
         accessToken: String,
         sessionId: String,
+        userTier: Int,
         delayMinutes: Long = 0L
     ) {
         val updateRequest = PeriodicWorkRequestBuilder<ru.protonmod.next.data.cache.ServersCacheUpdateWorker>(
@@ -136,7 +144,8 @@ class ServersCacheManager @Inject constructor(
             addTag(BACKGROUND_UPDATE_WORK_TAG)
             setInputData(workDataOf(
                 "access_token" to accessToken,
-                "session_id" to sessionId
+                "session_id" to sessionId,
+                "user_tier" to userTier
             ))
         }.build()
 
@@ -146,7 +155,7 @@ class ServersCacheManager @Inject constructor(
             updateRequest
         )
 
-        Log.d(TAG, "Background update scheduled with delay: ${delayMinutes}min")
+        Log.d(TAG, "Background update scheduled with userTier=$userTier")
     }
 
     fun cancelBackgroundUpdate() {
@@ -154,4 +163,3 @@ class ServersCacheManager @Inject constructor(
         Log.d(TAG, "Background update cancelled")
     }
 }
-

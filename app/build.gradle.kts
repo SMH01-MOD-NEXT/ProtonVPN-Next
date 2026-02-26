@@ -45,6 +45,8 @@ android {
         ndk {
             abiFilters.addAll(listOf("arm64-v8a", "x86_64", "armeabi-v7a"))
         }
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     flavorDimensions += "distribution"
@@ -100,7 +102,7 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
-        freeCompilerArgs = freeCompilerArgs + "-Xopt-in=kotlin.RequiresOptIn"
+        freeCompilerArgs = freeCompilerArgs + "-opt-in=kotlin.RequiresOptIn"
     }
 
     room {
@@ -116,11 +118,15 @@ android {
             excludes += "/META-INF/NOTICE*"
         }
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
     // 1. AndroidX & Core UI
-    implementation("androidx.core:core-ktx:1.15.0")
+    implementation(libs.androidx.core.ktx)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
@@ -129,7 +135,7 @@ dependencies {
     // 2. Jetpack Compose
     val composeBom = platform("androidx.compose:compose-bom:2024.10.01")
     implementation(composeBom)
-    implementation("com.google.android.material:material:1.11.0")
+    implementation(libs.material)
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
@@ -159,7 +165,7 @@ dependencies {
 
     // 6. VPN Protocols (Local modules)
     implementation(project(":amneziawg-android:tunnel"))
-    implementation("me.proton.vpn:go-vpn-lib:0.1.78")
+    implementation(libs.go.vpn.lib)
 
     // 7. Debug Tools
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
@@ -177,4 +183,16 @@ dependencies {
     // and if the library is missing from the classpath (e.g. in FOSS flavor),
     // it causes a NoClassDefFoundError at runtime.
     implementation("com.google.firebase:firebase-perf")
+
+    // 9. Testing
+    testImplementation(libs.junit)
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(composeBom)
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
 }

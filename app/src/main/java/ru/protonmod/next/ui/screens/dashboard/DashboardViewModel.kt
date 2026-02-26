@@ -133,7 +133,7 @@ class DashboardViewModel @Inject constructor(
                 return@launch
             }
 
-            serversCacheManager.getServers(session.accessToken, session.sessionId)
+            serversCacheManager.getServers(session.accessToken, session.sessionId, session.userTier)
                 .onSuccess {
                     _servers.value = serversCacheManager.getCachedServers()
                 }
@@ -161,6 +161,7 @@ class DashboardViewModel @Inject constructor(
                     serversCacheManager.getServers(
                         session.accessToken,
                         session.sessionId,
+                        session.userTier,
                         forceRefresh = true
                     ).onSuccess {
                         _servers.value = serversCacheManager.getCachedServers()

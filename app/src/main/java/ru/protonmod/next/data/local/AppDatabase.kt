@@ -20,7 +20,7 @@ package ru.protonmod.next.data.local
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
-@Database(entities = [SessionEntity::class, ServersCacheEntity::class, ServerEntity::class, RecentConnectionEntity::class], version = 5, exportSchema = false)
+@Database(entities = [SessionEntity::class, ServersCacheEntity::class, ServerEntity::class, RecentConnectionEntity::class], version = 7, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun serversCacheDao(): ServersCacheDao

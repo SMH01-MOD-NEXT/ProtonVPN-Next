@@ -33,6 +33,7 @@ data class SessionEntity(
     val refreshToken: String,
     val sessionId: String,
     val userId: String,
+    val userTier: Int = 0, // 0: Free, 1: Basic, 2: Plus
     val wgPrivateKey: String? = null,
     val wgPublicKeyPem: String? = null
 )
@@ -57,6 +58,9 @@ interface SessionDao {
 
     @Query("DELETE FROM session")
     suspend fun clearSession()
+    
+    @Query("UPDATE session SET userTier = :tier WHERE id = 1")
+    suspend fun updateUserTier(tier: Int)
 }
 
 @Dao

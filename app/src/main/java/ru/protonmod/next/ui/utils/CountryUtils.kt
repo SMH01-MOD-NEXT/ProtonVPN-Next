@@ -18,35 +18,53 @@
 package ru.protonmod.next.ui.utils
 
 import android.content.Context
+import androidx.compose.ui.graphics.Color
+import java.util.Locale
 
 object CountryUtils {
-    // Map of country codes to emoji flags
-    private val countryFlags = mapOf(
-        "AR" to "🇦🇷", "AU" to "🇦🇺", "AT" to "🇦🇹", "BE" to "🇧🇪", "BR" to "🇧🇷",
-        "CA" to "🇨🇦", "CH" to "🇨🇭", "CL" to "🇨🇱", "CZ" to "🇨🇿", "DE" to "🇩🇪",
-        "DK" to "🇩🇰", "ES" to "🇪🇸", "FI" to "🇫🇮", "FR" to "🇫🇷", "GB" to "🇬🇧",
-        "GR" to "🇬🇷", "HU" to "🇭🇺", "IE" to "🇮🇪", "IL" to "🇮🇱", "IT" to "🇮🇹",
-        "JP" to "🇯🇵", "KR" to "🇰🇷", "MX" to "🇲🇽", "NL" to "🇳🇱", "NZ" to "🇳🇿",
-        "NO" to "🇳🇴", "PL" to "🇵🇱", "PT" to "🇵🇹", "RO" to "🇷🇴", "RU" to "🇷🇺",
-        "SE" to "🇸🇪", "SG" to "🇸🇬", "SK" to "🇸🇰", "TR" to "🇹🇷", "UA" to "🇺🇦",
-        "US" to "🇺🇸", "VN" to "🇻🇳", "ZA" to "🇿🇦"
-    )
 
-    fun getFlagForCountry(countryCode: String): String {
-        return countryFlags[countryCode.uppercase()] ?: "🌍"
+    /**
+     * Generates an Emoji flag from an ISO country code (e.g., "US" -> 🇺🇸)
+     */
+    fun getFlagForCountry(countryCode: String?): String {
+        if (countryCode == null || countryCode.length != 2) return "🌍"
+        
+        val code = countryCode.uppercase()
+        val firstChar = Character.codePointAt(code, 0) - 0x41 + 0x1F1E6
+        val secondChar = Character.codePointAt(code, 1) - 0x41 + 0x1F1E6
+        
+        return String(Character.toChars(firstChar)) + String(Character.toChars(secondChar))
     }
 
-    fun getCountryName(context: Context, countryCode: String): String {
-        val resourceName = "country_${countryCode.lowercase()}"
-        val resourceId = context.resources.getIdentifier(resourceName, "string", context.packageName)
-
-        return if (resourceId != 0) {
-            context.getString(resourceId)
+    /**
+     * Returns the localized country name.
+     */
+    fun getCountryName(context: Context, countryCode: String?): String {
+        if (countryCode == null) return ""
+        
+        val locale = Locale("", countryCode)
+        val displayName = locale.getDisplayCountry(Locale.getDefault())
+        
+        return if (displayName.isNotEmpty() && displayName != countryCode) {
+            displayName
         } else {
-            countryCode
+            val resourceName = "country_${countryCode.lowercase()}"
+            val resourceId = context.resources.getIdentifier(resourceName, "string", context.packageName)
+            if (resourceId != 0) context.getString(resourceId) else countryCode
+        }
+    }
+
+    /**
+     * Returns a color based on the load:
+     * 0-60% -> Green (Low)
+     * 60-85% -> Yellow (Medium)
+     * 85-100% -> Red (High)
+     */
+    fun getColorForLoad(load: Int): Color {
+        return when {
+            load < 60 -> Color(0xFF4CAF50) // Green
+            load < 85 -> Color(0xFFFFC107) // Amber/Yellow
+            else -> Color(0xFFF44336)      // Red
         }
     }
 }
-
-
-

@@ -49,20 +49,22 @@ class ServersCacheUpdateWorker @AssistedInject constructor(
         try {
             val accessToken = inputData.getString("access_token") ?: return@withContext Result.failure()
             val sessionId = inputData.getString("session_id") ?: return@withContext Result.failure()
+            val userTier = inputData.getInt("user_tier", 0)
 
-            Log.d(TAG, "Background update worker started")
+            Log.d(TAG, "Background update worker started for tier $userTier")
 
-            val result = vpnRepository.getServersWithTimeout(accessToken, sessionId, 10L)
+            val result = vpnRepository.getServersWithTimeout(accessToken, sessionId, 15L, userTier = userTier)
 
             result.onSuccess { servers ->
-                Log.d(TAG, "Background update success")
+                Log.d(TAG, "Background update success: ${servers.size} servers")
                 serverDao.insertServers(servers.map { ServerMapper.toEntity(it) })
                 val now = System.currentTimeMillis()
                 serversCacheDao.saveCacheInfo(ServersCacheEntity(cachedAt = now, expiresAt = now + 3600000L))
+                return@withContext Result.success()
             }
 
             result.onFailure {
-                Log.e(TAG, "Background update failed")
+                Log.e(TAG, "Background update failed: ${it.message}")
                 return@withContext Result.retry()
             }
 
@@ -73,4 +75,3 @@ class ServersCacheUpdateWorker @AssistedInject constructor(
         }
     }
 }
-

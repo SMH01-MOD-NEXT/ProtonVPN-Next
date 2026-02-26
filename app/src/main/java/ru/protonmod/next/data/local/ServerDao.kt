@@ -34,7 +34,8 @@ data class ServerEntity(
     val exitCountry: String,
     val tier: Int,
     val features: Int,
-    val physicalServersJson: String // Сохраняем физические сервера как JSON-строку
+    val averageLoad: Int = 0,
+    val physicalServersJson: String // Save physical servers as a JSON string
 )
 
 // --- DAO ---
@@ -54,7 +55,6 @@ interface ServerDao {
     suspend fun clearAllServers()
 }
 
-// --- Type Converters ---
 object ServerMapper {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -66,6 +66,7 @@ object ServerMapper {
             exitCountry = server.exitCountry,
             tier = server.tier,
             features = server.features,
+            averageLoad = server.averageLoad,
             physicalServersJson = json.encodeToString(server.servers)
         )
     }
@@ -83,7 +84,8 @@ object ServerMapper {
                 json.decodeFromString<List<PhysicalServer>>(entity.physicalServersJson)
             } catch (e: Exception) {
                 emptyList()
-            }
+            },
+            averageLoad = entity.averageLoad
         )
     }
 }

@@ -35,7 +35,9 @@ data class LogicalServer(
     @SerialName("EntryCountry") val entryCountry: String,
     @SerialName("ExitCountry") val exitCountry: String,
     @SerialName("City") val city: String,
-    @SerialName("Servers") val servers: List<PhysicalServer> = emptyList()
+    @SerialName("Servers") val servers: List<PhysicalServer> = emptyList(),
+    // Added field for UI convenience, not directly from logicals API
+    var averageLoad: Int = 0
 )
 
 @Serializable
@@ -44,7 +46,9 @@ data class PhysicalServer(
     @SerialName("ExitIP") val exitIp: String? = null,
     @SerialName("Domain") val domain: String,
     @SerialName("Status") val status: Int,
-    @SerialName("X25519PublicKey") val wgPublicKey: String? = null
+    @SerialName("X25519PublicKey") val wgPublicKey: String? = null,
+    // Added field to store load fetched from vpn/v1/loads
+    var load: Int = 0
 )
 
 // --- Server-Generated EC Key Models ---

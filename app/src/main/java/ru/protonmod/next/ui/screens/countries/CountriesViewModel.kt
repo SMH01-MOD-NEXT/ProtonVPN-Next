@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.ui.screens.countries
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -34,13 +35,15 @@ import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 
+data class CountryDisplayItem(val code: String, val averageLoad: Int)
+data class CityDisplayItem(val name: String, val averageLoad: Int)
+
 sealed class CountriesUiState {
-    // Use data object for consistency
     data object Loading : CountriesUiState()
-    data class CountriesList(val countries: List<String>) : CountriesUiState()
+    data class CountriesList(val countries: List<CountryDisplayItem>) : CountriesUiState()
     data class CitiesList(
         val country: String,
-        val cities: List<String>
+        val cities: List<CityDisplayItem>
     ) : CountriesUiState()
     data class ServersList(
         val country: String,
@@ -57,6 +60,10 @@ class CountriesViewModel @Inject constructor(
     private val amneziaVpnManager: AmneziaVpnManager,
     private val connectedServerState: ConnectedServerState
 ) : ViewModel() {
+
+    companion object {
+        private const val TAG = "CountriesViewModel"
+    }
 
     private val _uiState = MutableStateFlow<CountriesUiState>(CountriesUiState.Loading)
     val uiState: StateFlow<CountriesUiState> = _uiState.asStateFlow()
@@ -81,16 +88,25 @@ class CountriesViewModel @Inject constructor(
             }
 
             try {
-                serversCacheManager.getServers(session.accessToken, session.sessionId)
+                Log.d(TAG, "Fetching servers for userTier: ${session.userTier}")
+                val fetchResult = serversCacheManager.getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = true)
+                if (fetchResult.isFailure) {
+                    Log.e(TAG, "Failed to fetch servers", fetchResult.exceptionOrNull())
+                }
+
                 allServers = serversCacheManager.getCachedServers()
+                Log.d(TAG, "Retrieved ${allServers.size} servers from cache")
 
                 if (allServers.isEmpty()) {
                     _uiState.value = CountriesUiState.Error("No servers available.")
                     return@launch
                 }
 
-                // Move heavy grouping and sorting operations to the background thread
-                // This prevents UI stutters when processing large server lists
+                // Log a sample server load
+                allServers.take(3).forEach { server ->
+                    Log.d(TAG, "Server: ${server.name}, Average Load: ${server.averageLoad}")
+                }
+
                 withContext(Dispatchers.Default) {
                     serversGroupedByCountry = allServers
                         .groupBy { it.exitCountry }
@@ -103,9 +119,15 @@ class CountriesViewModel @Inject constructor(
                     }
                 }
 
-                val countries = serversGroupedByCountry.keys.toList()
+                val countries = serversGroupedByCountry.map { (code, servers) ->
+                    val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
+                    CountryDisplayItem(code, avg)
+                }
+                
+                Log.d(TAG, "Processed ${countries.size} countries")
                 _uiState.value = CountriesUiState.CountriesList(countries)
             } catch (e: Exception) {
+                Log.e(TAG, "Error in loadServers", e)
                 _uiState.value = CountriesUiState.Error(e.localizedMessage ?: "Unknown error occurred.")
             }
         }
@@ -117,26 +139,20 @@ class CountriesViewModel @Inject constructor(
             return
         }
 
-        // Check if already connecting or connected to the same server
         val tunnelState = amneziaVpnManager.tunnelState.value
         if (tunnelState == Tunnel.State.TOGGLE || (tunnelState == Tunnel.State.UP && connectedServerState.connectedServer.value?.id == server.id)) {
             return
         }
 
-        // Pick the first active physical server inside the logical group
         val physicalServer = server.servers.firstOrNull { it.status == 1 }
 
         if (physicalServer != null) {
-            // Set shared state before connecting to show loading indicator in UI
             connectedServerState.setConnectedServer(server)
-
             val result = amneziaVpnManager.connect(server.id, physicalServer, session)
-
             if (result.isFailure) {
                 connectedServerState.setConnectedServer(null)
             }
         } else {
-            // Fail gracefully if no physical servers are available under this logical group
             _uiState.value = CountriesUiState.Error("Selected server is currently unavailable.")
         }
     }
@@ -153,7 +169,11 @@ class CountriesViewModel @Inject constructor(
 
     fun expandCitiesForCountry(country: String) {
         viewModelScope.launch {
-            val citiesInCountry = serversGroupedByCityInCountry[country]?.keys?.toList() ?: emptyList()
+            val citiesInCountry = serversGroupedByCityInCountry[country]?.map { (name, servers) ->
+                val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
+                CityDisplayItem(name, avg)
+            } ?: emptyList()
+            
             if (citiesInCountry.isNotEmpty()) {
                 _uiState.value = CountriesUiState.CitiesList(country, citiesInCountry)
             }
@@ -161,7 +181,10 @@ class CountriesViewModel @Inject constructor(
     }
 
     fun backToCountries() {
-        val countries = serversGroupedByCountry.keys.toList()
+        val countries = serversGroupedByCountry.map { (code, servers) ->
+            val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
+            CountryDisplayItem(code, avg)
+        }
         _uiState.value = CountriesUiState.CountriesList(countries)
     }
 
@@ -197,7 +220,11 @@ class CountriesViewModel @Inject constructor(
             val currentState = _uiState.value
             if (currentState !is CountriesUiState.ServersList) return@launch
 
-            val citiesInCountry = serversGroupedByCityInCountry[currentState.country]?.keys?.toList() ?: emptyList()
+            val citiesInCountry = serversGroupedByCityInCountry[currentState.country]?.map { (name, servers) ->
+                val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
+                CityDisplayItem(name, avg)
+            } ?: emptyList()
+
             _uiState.value = CountriesUiState.CitiesList(currentState.country, citiesInCountry)
         }
     }

@@ -104,14 +104,19 @@ class AuthRepository @Inject constructor(
             val finalUid = loginResponse.sessionId ?: anonUid
 
             if (!loginResponse.scopes.contains("twofactor")) {
-                Log.d(TAG, "[Login] Registering offline VPN certificate...")
+                Log.d(TAG, "[Login] Registering offline VPN certificate and fetching user tier...")
                 val keys = registerAndGetVpnKeys(finalAccessToken, finalUid)
+                
+                val vpnInfoResult = vpnRepository.getVpnInfo(finalAccessToken, finalUid)
+                val userTier = vpnInfoResult.getOrNull()?.vpnInfo?.maxTier ?: 0
+                Log.d(TAG, "[Login] Fetched User Tier: $userTier (Result: ${if (vpnInfoResult.isSuccess) "Success" else "Failure: " + vpnInfoResult.exceptionOrNull()?.message})")
 
                 saveSessionLocally(
                     accessToken = finalAccessToken,
                     refreshToken = finalRefreshToken,
                     sessionId = finalUid,
                     userId = loginResponse.userId ?: "",
+                    userTier = userTier,
                     wgPrivateKey = keys?.first,
                     wgPublicKeyPem = keys?.second
                 )
@@ -151,14 +156,19 @@ class AuthRepository @Inject constructor(
             val userResponse = authApi.getUser(fullBearer, sessionId)
             val finalUserId = userResponse.user?.id ?: ""
 
-            Log.d(TAG, "[2FA] Registering offline VPN certificate...")
+            Log.d(TAG, "[2FA] Registering offline VPN certificate and fetching user tier...")
             val keys = registerAndGetVpnKeys(fullToken, sessionId)
+            
+            val vpnInfoResult = vpnRepository.getVpnInfo(fullToken, sessionId)
+            val userTier = vpnInfoResult.getOrNull()?.vpnInfo?.maxTier ?: 0
+            Log.d(TAG, "[2FA] Fetched User Tier: $userTier (Result: ${if (vpnInfoResult.isSuccess) "Success" else "Failure: " + vpnInfoResult.exceptionOrNull()?.message})")
 
             saveSessionLocally(
                 accessToken = fullToken,
                 refreshToken = refreshToken,
                 sessionId = sessionId,
                 userId = finalUserId,
+                userTier = userTier,
                 wgPrivateKey = keys?.first,
                 wgPublicKeyPem = keys?.second
             )
@@ -205,6 +215,7 @@ class AuthRepository @Inject constructor(
         refreshToken: String,
         sessionId: String,
         userId: String,
+        userTier: Int,
         wgPrivateKey: String?,
         wgPublicKeyPem: String?
     ) {
@@ -214,6 +225,7 @@ class AuthRepository @Inject constructor(
                 refreshToken = refreshToken,
                 sessionId = sessionId,
                 userId = userId,
+                userTier = userTier,
                 wgPrivateKey = wgPrivateKey,
                 wgPublicKeyPem = wgPublicKeyPem
             )
