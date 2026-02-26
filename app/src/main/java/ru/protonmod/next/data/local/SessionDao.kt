@@ -1,13 +1,28 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.protonmod.next.data.local
 
 import androidx.room.Dao
-import androidx.room.Database
 import androidx.room.Entity
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
-import androidx.room.RoomDatabase
 
 // --- Entities ---
 
@@ -21,6 +36,14 @@ data class SessionEntity(
     val wgPrivateKey: String? = null,
     val wgPublicKeyPem: String? = null
 )
+
+@Entity(tableName = "servers_cache")
+data class ServersCacheEntity(
+    @PrimaryKey val id: Int = 1, // We only store one cache entry
+    val cachedAt: Long, // Timestamp in milliseconds
+    val expiresAt: Long // Timestamp when cache expires
+)
+
 
 // --- DAO ---
 
@@ -36,9 +59,14 @@ interface SessionDao {
     suspend fun clearSession()
 }
 
-// --- Database ---
+@Dao
+interface ServersCacheDao {
+    @Query("SELECT * FROM servers_cache WHERE id = 1")
+    suspend fun getCacheInfo(): ServersCacheEntity?
 
-@Database(entities = [SessionEntity::class], version = 2, exportSchema = false)
-abstract class AppDatabase : RoomDatabase() {
-    abstract fun sessionDao(): SessionDao
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveCacheInfo(cache: ServersCacheEntity)
+
+    @Query("DELETE FROM servers_cache")
+    suspend fun clearCacheInfo()
 }

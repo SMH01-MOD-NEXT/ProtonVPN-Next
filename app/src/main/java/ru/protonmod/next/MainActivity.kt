@@ -1,16 +1,39 @@
+/*
+ * Copyright (C) 2026 SMH01
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package ru.protonmod.next
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -24,9 +47,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.ui.nav.appNavGraph
 import ru.protonmod.next.ui.screens.LoginScreen
 import ru.protonmod.next.ui.screens.WelcomeScreen
-import ru.protonmod.next.ui.screens.dashboard.DashboardScreen
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import javax.inject.Inject
 
@@ -44,7 +67,7 @@ class MainViewModel @Inject constructor(
             // Check for active session in Room DB
             val session = sessionDao.getSession()
             if (session != null && session.accessToken.isNotEmpty()) {
-                _startDestination.value = "dashboard"
+                _startDestination.value = "home"
             } else {
                 _startDestination.value = "welcome"
             }
@@ -52,10 +75,20 @@ class MainViewModel @Inject constructor(
     }
 }
 
-// --- Main Activity ---
-
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // Permission is granted. Continue the action or workflow in your app.
+        } else {
+            // Explain to the user that the feature is unavailable because the
+            // features requires a permission that the user has denied.
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -68,8 +101,23 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    LaunchedEffect(Unit) {
+                        checkAndRequestNotificationPermission()
+                    }
                     ProtonNextAppNavHost()
                 }
+            }
+        }
+    }
+
+    private fun checkAndRequestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
     }
@@ -95,19 +143,15 @@ fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
             LoginScreen(
                 onBackClick = { navController.popBackStack() },
                 onLoginSuccess = {
-                    // Clear the entire backstack and navigate to dashboard
-                    navController.navigate("dashboard") {
+                    // Clear the entire backstack and navigate to home (dashboard)
+                    navController.navigate("home") {
                         popUpTo(0)
                     }
                 }
             )
         }
 
-        composable("dashboard") {
-            // No need to pass tokens here anymore, ViewModel gets them from Room
-            DashboardScreen(
-                onNavigateToSettings = { /* TODO: Create Settings Screen */ }
-            )
-        }
+        // Add all app navigation routes
+        appNavGraph(navController = navController)
     }
 }

@@ -1,4 +1,20 @@
 <resources>
+  <!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
@@ -29,17 +45,93 @@
     <string name="error_loading_servers">Ошибка при загрузке серверов</string>
     <string name="btn_retry">Повторить</string>
     <string name="error_system_appops">Системная ошибка: пожалуйста, переустановите приложение.</string>
-    <string name="title_free_servers">Бесплатные серверы</string>
+    <string name="title_recent_connections">Недавние подключения</string>
     <string name="status_connected">Подключено</string>
     <string name="status_connecting">Подключение…</string>
     <string name="status_disconnected">Отключено</string>
+    <string name="status_not_connected">Нет подключения</string>
     <string name="msg_traffic_not_protected">Ваш трафик не защищен</string>
     <string name="desc_toggle_connection">Переключить соединение</string>
     <string name="desc_country">Страна</string>
+    <string name="map_placeholder">Интерактивная карта (заглушка)</string>
+    <string name="label_fastest_server">Самый быстрый сервер</string>
+    <string name="label_select_location">Выберите локацию</string>
+    <string name="desc_change_server">Сменить сервер</string>
+    <string name="btn_disconnect">Отключить</string>
+    <string name="btn_quick_connect">Быстрое подключение</string>
 
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Активная сессия не найдена. Пожалуйста, войдите снова.</string>
     <string name="error_unknown">Неизвестная ошибка</string>
     <string name="error_auth_failed">Произошла непредвиденная ошибка аутентификации</string>
-    <string name="error_2fa_failed">Ошибка двухфакторной проверки</string>
+    <string name="error_2fa_failed">Ошибка двухфакторной аутентификации</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Настройки</string>
+    <string name="settings_connection">Настройки соединения</string>
+    <string name="settings_kill_switch">Kill Switch</string>
+    <string name="settings_kill_switch_desc">Отключиться при разрыве соединения VPN</string>
+    <string name="settings_auto_connect">Автоподключение</string>
+    <string name="settings_auto_connect_desc">Подключаться к VPN при запуске</string>
+    <string name="settings_split_tunneling">Раздельное туннелирование</string>
+    <string name="settings_split_tunneling_desc">Исключить приложения или IP-адреса из VPN</string>
+    <string name="settings_excluded_apps">Исключенные приложения</string>
+    <string name="settings_excluded_ips">Исключенные IP-адреса</string>
+    <string name="settings_privacy">Конфиденциальность и уведомления</string>
+    <string name="settings_notifications">Уведомления</string>
+    <string name="settings_notifications_desc">Получать уведомления о статусе VPN</string>
+    <string name="settings_about">О приложении</string>
+    <string name="settings_version">Версия 12.0.0</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">Статус VPN</string>
+    <string name="notification_channel_desc">Показывает текущий статус подключения VPN</string>
+    <string name="notification_title_connected">Подключено к %1$s</string>
+    <string name="notification_title_disconnected">Отключено</string>
+    <string name="notification_title_connecting">Подключение…</string>
+    <string name="notification_action_disconnect">Отключить</string>
+
+    <!-- Countries Screen -->
+    <string name="countries_title">Выбрать страну</string>
+    <string name="desc_more_options">Ещё опции</string>
+
+    <!-- Country Names -->
+    <string name="country_ar">Аргентина</string>
+    <string name="country_au">Австралия</string>
+    <string name="country_at">Австрия</string>
+    <string name="country_be">Бельгия</string>
+    <string name="country_br">Бразилия</string>
+    <string name="country_ca">Канада</string>
+    <string name="country_ch">Швейцария</string>
+    <string name="country_cl">Чили</string>
+    <string name="country_cz">Чехия</string>
+    <string name="country_de">Германия</string>
+    <string name="country_dk">Дания</string>
+    <string name="country_es">Испания</string>
+    <string name="country_fi">Финляндия</string>
+    <string name="country_fr">Франция</string>
+    <string name="country_gb">Великобритания</string>
+    <string name="country_gr">Греция</string>
+    <string name="country_hu">Венгрия</string>
+    <string name="country_ie">Ирландия</string>
+    <string name="country_il">Израиль</string>
+    <string name="country_it">Италия</string>
+    <string name="country_jp">Япония</string>
+    <string name="country_kr">Южная Корея</string>
+    <string name="country_mx">Мексика</string>
+    <string name="country_nl">Нидерланды</string>
+    <string name="country_nz">Новая Зеландия</string>
+    <string name="country_no">Норвегия</string>
+    <string name="country_pl">Польша</string>
+    <string name="country_pt">Португалия</string>
+    <string name="country_ro">Румыния</string>
+    <string name="country_ru">Россия</string>
+    <string name="country_se">Швеция</string>
+    <string name="country_sg">Сингапур</string>
+    <string name="country_sk">Словакия</string>
+    <string name="country_tr">Турция</string>
+    <string name="country_ua">Украина</string>
+    <string name="country_us">Соединённые Штаты</string>
+    <string name="country_vn">Вьетнам</string>
+    <string name="country_za">Южная Африка</string>
 </resources>

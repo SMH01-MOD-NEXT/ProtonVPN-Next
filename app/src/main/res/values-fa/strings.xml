@@ -1,4 +1,20 @@
 <resources>
+  <!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
@@ -29,13 +45,89 @@
     <string name="error_loading_servers">خطا در بارگذاری سرورها</string>
     <string name="btn_retry">تلاش مجدد</string>
     <string name="error_system_appops">خطای سیستم: لطفا برنامه را دوباره نصب کنید.</string>
-    <string name="title_free_servers">سرورهای رایگان</string>
+    <string name="title_recent_connections">اتصالات اخیر</string>
     <string name="status_connected">متصل</string>
     <string name="status_connecting">در حال اتصال…</string>
     <string name="status_disconnected">قطع شد</string>
+    <string name="status_not_connected">متصل نیست</string>
     <string name="msg_traffic_not_protected">ترافیک شما محافظت نمی‌شود</string>
     <string name="desc_toggle_connection">تغییر وضعیت اتصال</string>
     <string name="desc_country">کشور</string>
+    <string name="map_placeholder">محل نقشه تعاملی</string>
+    <string name="label_fastest_server">سریع‌ترین سرور</string>
+    <string name="label_select_location">انتخاب مکان</string>
+    <string name="desc_change_server">تغییر سرور</string>
+    <string name="btn_disconnect">قطع اتصال</string>
+    <string name="btn_quick_connect">اتصال سریع</string>
+
+    <!-- Countries Screen -->
+    <string name="countries_title">انتخاب کشور</string>
+    <string name="desc_more_options">گزینه‌های بیشتر</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_connection">تنظیمات اتصال</string>
+    <string name="settings_kill_switch">Kill Switch</string>
+    <string name="settings_kill_switch_desc">در صورت قطع اتصال VPN، اینترنت را قطع کن</string>
+    <string name="settings_auto_connect">اتصال خودکار</string>
+    <string name="settings_auto_connect_desc">اتصال به VPN هنگام راه‎‌اندازی</string>
+    <string name="settings_split_tunneling">Split Tunneling</string>
+    <string name="settings_split_tunneling_desc">برنامه‌ها یا IPها را از VPN مستثنی کنید</string>
+    <string name="settings_excluded_apps">برنامه‌های مستثنی شده</string>
+    <string name="settings_excluded_ips">آدرس‌های IP مستثنی شده</string>
+    <string name="settings_privacy">حریم خصوصی و اعلان‌ها</string>
+    <string name="settings_notifications">اعلان‌ها</string>
+    <string name="settings_notifications_desc">دریافت اعلان‌های وضعیت VPN</string>
+    <string name="settings_about">درباره</string>
+    <string name="settings_version">نسخه 12.0.0</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">وضعیت VPN</string>
+    <string name="notification_channel_desc">وضعیت فعلی اتصال VPN را نشان می‌دهد</string>
+    <string name="notification_title_connected">متصل به %1$s</string>
+    <string name="notification_title_disconnected">قطع شد</string>
+    <string name="notification_title_connecting">در حال اتصال…</string>
+    <string name="notification_action_disconnect">قطع اتصال</string>
+
+    <!-- Country Names -->
+    <string name="country_ar">آرژانتین</string>
+    <string name="country_au">استرالیا</string>
+    <string name="country_at">اتریش</string>
+    <string name="country_be">بلژیک</string>
+    <string name="country_br">برزیل</string>
+    <string name="country_ca">کانادا</string>
+    <string name="country_ch">سوئیس</string>
+    <string name="country_cl">شیلی</string>
+    <string name="country_cz">جمهوری چک</string>
+    <string name="country_de">آلمان</string>
+    <string name="country_dk">دانمارک</string>
+    <string name="country_es">اسپانیا</string>
+    <string name="country_fi">فنلاند</string>
+    <string name="country_fr">فرانسه</string>
+    <string name="country_gb">بریتانیا</string>
+    <string name="country_gr">یونان</string>
+    <string name="country_hu">مجارستان</string>
+    <string name="country_ie">ایرلند</string>
+    <string name="country_il">اسرائیل</string>
+    <string name="country_it">ایتالیا</string>
+    <string name="country_jp">ژاپن</string>
+    <string name="country_kr">کره جنوبی</string>
+    <string name="country_mx">مکزیک</string>
+    <string name="country_nl">هلند</string>
+    <string name="country_nz">نیوزیلند</string>
+    <string name="country_no">نروژ</string>
+    <string name="country_pl">لهستان</string>
+    <string name="country_pt">پرتغال</string>
+    <string name="country_ro">رومانی</string>
+    <string name="country_ru">روسیه</string>
+    <string name="country_se">سوئد</string>
+    <string name="country_sg">سنگاپور</string>
+    <string name="country_sk">اسلواکی</string>
+    <string name="country_tr">ترکیه</string>
+    <string name="country_ua">اوکراین</string>
+    <string name="country_us">ایالات متحده</string>
+    <string name="country_vn">ویتنام</string>
+    <string name="country_za">آفریقای جنوبی</string>
 
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">نشست فعال یافت نشد. لطفا دوباره وارد شوید.</string>

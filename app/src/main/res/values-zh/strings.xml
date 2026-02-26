@@ -1,4 +1,20 @@
 <resources>
+  <!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
@@ -29,13 +45,89 @@
     <string name="error_loading_servers">加载服务器时出错</string>
     <string name="btn_retry">重试</string>
     <string name="error_system_appops">系统错误：请重新安装应用。</string>
-    <string name="title_free_servers">免费服务器</string>
+    <string name="title_recent_connections">最近连接</string>
     <string name="status_connected">已连接</string>
     <string name="status_connecting">正在连接…</string>
     <string name="status_disconnected">未连接</string>
+    <string name="status_not_connected">未连接</string>
     <string name="msg_traffic_not_protected">您的流量未受保护</string>
     <string name="desc_toggle_connection">切换连接状态</string>
     <string name="desc_country">国家</string>
+    <string name="map_placeholder">交互式地图占位符</string>
+    <string name="label_fastest_server">最快服务器</string>
+    <string name="label_select_location">选择位置</string>
+    <string name="desc_change_server">更改服务器</string>
+    <string name="btn_disconnect">断开连接</string>
+    <string name="btn_quick_connect">快速连接</string>
+
+    <!-- Countries Screen -->
+    <string name="countries_title">选择国家</string>
+    <string name="desc_more_options">更多选项</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">设置</string>
+    <string name="settings_connection">连接设置</string>
+    <string name="settings_kill_switch">终止开关 (Kill Switch)</string>
+    <string name="settings_kill_switch_desc">如果 VPN 连接断开，则断开网络连接</string>
+    <string name="settings_auto_connect">自动连接</string>
+    <string name="settings_auto_connect_desc">启动时连接到 VPN</string>
+    <string name="settings_split_tunneling">分流隧道 (Split Tunneling)</string>
+    <string name="settings_split_tunneling_desc">在 VPN 中排除特定应用或 IP</string>
+    <string name="settings_excluded_apps">排除的应用</string>
+    <string name="settings_excluded_ips">排除的 IP 地址</string>
+    <string name="settings_privacy">隐私与通知</string>
+    <string name="settings_notifications">通知</string>
+    <string name="settings_notifications_desc">接收 VPN 状态通知</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_version">版本 12.0.0</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_name">VPN 状态</string>
+    <string name="notification_channel_desc">显示 VPN 的当前连接状态</string>
+    <string name="notification_title_connected">已连接到 %1$s</string>
+    <string name="notification_title_disconnected">未连接</string>
+    <string name="notification_title_connecting">正在连接…</string>
+    <string name="notification_action_disconnect">断开连接</string>
+
+    <!-- Country Names -->
+    <string name="country_ar">阿根廷</string>
+    <string name="country_au">澳大利亚</string>
+    <string name="country_at">奥地利</string>
+    <string name="country_be">比利时</string>
+    <string name="country_br">巴西</string>
+    <string name="country_ca">加拿大</string>
+    <string name="country_ch">瑞士</string>
+    <string name="country_cl">智利</string>
+    <string name="country_cz">捷克共和国</string>
+    <string name="country_de">德国</string>
+    <string name="country_dk">丹麦</string>
+    <string name="country_es">西班牙</string>
+    <string name="country_fi">芬兰</string>
+    <string name="country_fr">法国</string>
+    <string name="country_gb">英国</string>
+    <string name="country_gr">希腊</string>
+    <string name="country_hu">匈牙利</string>
+    <string name="country_ie">爱尔兰</string>
+    <string name="country_il">以色列</string>
+    <string name="country_it">意大利</string>
+    <string name="country_jp">日本</string>
+    <string name="country_kr">韩国</string>
+    <string name="country_mx">墨西哥</string>
+    <string name="country_nl">荷兰</string>
+    <string name="country_nz">新西兰</string>
+    <string name="country_no">挪威</string>
+    <string name="country_pl">波兰</string>
+    <string name="country_pt">葡萄牙</string>
+    <string name="country_ro">罗马尼亚</string>
+    <string name="country_ru">俄罗斯</string>
+    <string name="country_se">瑞典</string>
+    <string name="country_sg">新加坡</string>
+    <string name="country_sk">斯洛伐克</string>
+    <string name="country_tr">土耳其</string>
+    <string name="country_ua">乌克兰</string>
+    <string name="country_us">美国</string>
+    <string name="country_vn">越南</string>
+    <string name="country_za">南非</string>
 
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">未找到活动会话。请重新登录。</string>

@@ -2,29 +2,62 @@
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="85.84757"
-                android:endY="92.4963"
-                android:startX="42.9492"
-                android:startY="49.59793"
-                android:type="linear">
-                <item
-                    android:color="#44000000"
-                    android:offset="0.0" />
-                <item
-                    android:color="#00000000"
-                    android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+    android:viewportWidth="552"
+    android:viewportHeight="552">
+  <group android:scaleX="0.75"
+      android:scaleY="0.75"
+      android:translateX="69"
+      android:translateY="69">
+      
+    <!-- AMOLED Black Background -->
     <path
-        android:fillColor="#FFFFFF"
-        android:fillType="nonZero"
-        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
-        android:strokeWidth="1"
-        android:strokeColor="#00000000" />
+        android:pathData="M0,130C0,58.203 58.203,0 130,0H422C493.797,0 552,58.203 552,130V422C552,493.797 493.797,552 422,552H130C58.203,552 0,493.797 0,422V130Z"
+        android:fillColor="#000000"/>
+
+    <!-- Base Ribbon with White Stroke and Vibrant Gradient -->
+    <path
+        android:pathData="M243.637,419.72C256.738,443.455 290.38,444.741 305.254,422.075L443.94,210.727C458.647,188.314 444.575,158.264 417.942,155.21L145.351,123.952C116.289,120.62 95.596,151.503 109.732,177.114L243.637,419.72Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="16"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillType="evenOdd">
+      <aapt:attr name="android:fillColor">
+        <gradient 
+            android:startY="-66.9807"
+            android:startX="294.571"
+            android:endY="331.785"
+            android:endX="306.3"
+            android:type="linear">
+          <!-- Red to Purple to Blue -->
+          <item android:offset="0.0" android:color="#FF1E56"/>
+          <item android:offset="0.5" android:color="#8A2BE2"/>
+          <item android:offset="1.0" android:color="#2D74FF"/>
+        </gradient>
+      </aapt:attr>
+    </path>
+
+    <!-- Top Fold Ribbon with White Stroke and Reversed Gradient for contrast -->
+    <path
+        android:pathData="M263.756,379.083L251.447,397.584C246.46,405.081 235.301,404.619 230.95,396.736L243.637,419.722C245.899,423.821 248.774,427.25 252.059,430.002L252.06,430C267.797,443.184 292.949,440.825 305.254,422.073L443.94,210.726C458.647,188.313 444.575,158.264 417.942,155.21L145.351,123.951C116.289,120.619 95.596,151.503 109.732,177.113L110.808,179.063L342.83,205.909C357.619,207.62 365.421,224.313 357.247,236.756L263.756,379.083Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="16"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillType="evenOdd">
+      <aapt:attr name="android:fillColor">
+        <gradient 
+            android:startY="453.838"
+            android:startX="329.102"
+            android:endY="84.2833"
+            android:endX="113.001"
+            android:type="linear">
+          <!-- Blue to Purple to Red (Reversed so overlap stands out) -->
+          <item android:offset="0.0" android:color="#2D74FF"/>
+          <item android:offset="0.5" android:color="#8A2BE2"/>
+          <item android:offset="1.0" android:color="#FF1E56"/>
+        </gradient>
+      </aapt:attr>
+    </path>
+  </group>
 </vector>
