@@ -16,7 +16,7 @@
  */
 
 plugins {
-    // Android plugins - Updated to 8.8.0 for Gradle 8.10+ / 9.x and compileSdk 35 compatibility
+    // Android plugins
     id("com.android.application") version "8.8.0" apply false
     id("com.android.library") version "8.8.0" apply false
 
@@ -31,6 +31,11 @@ plugins {
 
     // Room
     id("androidx.room") version "2.7.2" apply false
+
+    // Google Services & Firebase
+    id("com.google.gms.google-services") version "4.4.2" apply false
+    id("com.google.firebase.crashlytics") version "3.0.2" apply false
+    id("com.google.firebase.firebase-perf") version "1.4.2" apply false
 }
 
 // Global cleanup task
