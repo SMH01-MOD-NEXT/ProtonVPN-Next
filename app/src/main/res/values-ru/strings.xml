@@ -83,6 +83,19 @@
     <string name="settings_about">О приложении</string>
     <string name="settings_version">Версия 12.0.0</string>
 
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="one">%1$d приложение исключено</item>
+        <item quantity="few">%1$d приложения исключено</item>
+        <item quantity="many">%1$d приложений исключено</item>
+        <item quantity="other">%1$d приложений исключено</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="one">%1$d IP-адрес исключен</item>
+        <item quantity="few">%1$d IP-адреса исключено</item>
+        <item quantity="many">%1$d IP-адресов исключено</item>
+        <item quantity="other">%1$d IP-адресов исключено</item>
+    </plurals>
+
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>
     <string name="notification_channel_desc">Показывает текущий статус подключения VPN</string>

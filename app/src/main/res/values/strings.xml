@@ -81,6 +81,15 @@
     <string name="settings_about">About</string>
     <string name="settings_version">Version 12.0.0</string>
 
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="one">%1$d app excluded</item>
+        <item quantity="other">%1$d apps excluded</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="one">%1$d IP excluded</item>
+        <item quantity="other">%1$d IPs excluded</item>
+    </plurals>
+
     <!-- Notification -->
     <string name="notification_channel_name">VPN Status</string>
     <string name="notification_channel_desc">Shows the current connection status of the VPN</string>

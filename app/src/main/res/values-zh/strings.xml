@@ -81,6 +81,13 @@
     <string name="settings_about">关于</string>
     <string name="settings_version">版本 12.0.0</string>
 
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="other">%1$d 个应用已排除</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="other">%1$d 个 IP 地址已排除</item>
+    </plurals>
+
     <!-- Notification -->
     <string name="notification_channel_name">VPN 状态</string>
     <string name="notification_channel_desc">显示 VPN 的当前连接状态</string>

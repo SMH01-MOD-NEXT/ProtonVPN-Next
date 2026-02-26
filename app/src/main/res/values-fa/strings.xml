@@ -42,7 +42,7 @@
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="desc_settings">تنظیمات</string>
-    <string name="error_loading_servers">خطا در بارگذاری سرورها</string>
+    <string name="error_loading_servers">خطا в بارگذاری سرورها</string>
     <string name="btn_retry">تلاش مجدد</string>
     <string name="error_system_appops">خطای سیستم: لطفا برنامه را دوباره نصب کنید.</string>
     <string name="title_recent_connections">اتصالات اخیر</string>
@@ -80,6 +80,15 @@
     <string name="settings_notifications_desc">دریافت اعلان‌های وضعیت VPN</string>
     <string name="settings_about">درباره</string>
     <string name="settings_version">نسخه 12.0.0</string>
+
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="one">%1$d برنامه مستثنی شده است</item>
+        <item quantity="other">%1$d برنامه مستثنی شده است</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="one">%1$d آدرس IP مستثنی شده است</item>
+        <item quantity="other">%1$d آدرس IP مستثنی شده است</item>
+    </plurals>
 
     <!-- Notification -->
     <string name="notification_channel_name">وضعیت VPN</string>

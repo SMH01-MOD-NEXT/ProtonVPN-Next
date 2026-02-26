@@ -52,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -206,7 +207,11 @@ fun SettingsContent(
                     )
                     SettingClickableItem(
                         title = stringResource(R.string.settings_excluded_apps),
-                        description = "${state.excludedApps.size} apps excluded",
+                        description = pluralStringResource(
+                            R.plurals.settings_apps_excluded_count,
+                            state.excludedApps.size,
+                            state.excludedApps.size
+                        ),
                         onClick = { onNavigateToSplitTunnelingApps?.invoke() }
                     )
                     HorizontalDivider(
@@ -215,7 +220,11 @@ fun SettingsContent(
                     )
                     SettingClickableItem(
                         title = stringResource(R.string.settings_excluded_ips),
-                        description = "${state.excludedIps.size} IPs excluded",
+                        description = pluralStringResource(
+                            R.plurals.settings_ips_excluded_count,
+                            state.excludedIps.size,
+                            state.excludedIps.size
+                        ),
                         onClick = { onNavigateToSplitTunnelingIps?.invoke() }
                     )
                 }
