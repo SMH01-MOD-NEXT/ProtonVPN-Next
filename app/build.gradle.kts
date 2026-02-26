@@ -164,12 +164,17 @@ dependencies {
     // 7. Debug Tools
     debugImplementation("com.squareup.leakcanary:leakcanary-android:2.14")
 
-    // 8. Firebase (Only for 'google' flavor)
+    // 8. Firebase
     val firebaseBom = platform("com.google.firebase:firebase-bom:33.7.0")
-    "googleImplementation"(firebaseBom)
+    implementation(firebaseBom)
     "googleImplementation"("com.google.firebase:firebase-analytics")
     "googleImplementation"("com.google.firebase:firebase-crashlytics")
     "googleImplementation"("com.google.firebase:firebase-messaging")
     "googleImplementation"("com.google.firebase:firebase-config")
-    "googleImplementation"("com.google.firebase:firebase-perf")
+    
+    // We use implementation instead of googleImplementation for firebase-perf.
+    // The Firebase Performance plugin instruments all variants when applied,
+    // and if the library is missing from the classpath (e.g. in FOSS flavor),
+    // it causes a NoClassDefFoundError at runtime.
+    implementation("com.google.firebase:firebase-perf")
 }
