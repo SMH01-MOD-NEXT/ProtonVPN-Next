@@ -86,7 +86,8 @@
     <string name="settings_off">Off</string>
     <string name="settings_connection_protocol">Protocol</string>
     <string name="settings_port">Port</string>
-    <string name="settings_port_desc">Manual port selection for WireGuard</string>
+    <string name="settings_port_desc">Selection of connection port</string>
+    <string name="settings_port_auto">Auto</string>
     <string name="settings_obfuscation">Obfuscation (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Modify packet headers to bypass DPI</string>
     <string name="settings_reset_obfuscation">Reset to Standard ProtonVPN-Next</string>

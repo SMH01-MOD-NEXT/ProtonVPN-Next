@@ -60,11 +60,9 @@
     <string name="btn_disconnect">断开连接</string>
     <string name="btn_quick_connect">快速连接</string>
 
-    <!-- Errors and ViewModels -->
-    <string name="error_session_not_found">未找到活动会话。请重新登录。</string>
-    <string name="error_unknown">未知错误</string>
-    <string name="error_auth_failed">发生意外的身份验证错误</string>
-    <string name="error_2fa_failed">双重验证失败</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">选择国家</string>
+    <string name="desc_more_options">更多选项</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">设置</string>
@@ -86,6 +84,26 @@
     <string name="settings_licenses_desc">应用中使用的第三方软件</string>
     <string name="settings_on">开启</string>
     <string name="settings_off">关闭</string>
+    <string name="settings_connection_protocol">协议</string>
+    <string name="settings_port">端口</string>
+    <string name="settings_port_desc">连接端口选择</string>
+    <string name="settings_port_auto">自动</string>
+    <string name="settings_obfuscation">混淆 (AmneziaWG)</string>
+    <string name="settings_obfuscation_desc">修改数据包头以绕过 DPI</string>
+    <string name="settings_reset_obfuscation">重置为标准 ProtonVPN-Next</string>
+
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_title">混淆设置</string>
+    <string name="obfuscation_jc">垃圾包数量 (Jc)</string>
+    <string name="obfuscation_jmin">垃圾包最小大小 (Jmin)</string>
+    <string name="obfuscation_jmax">垃圾包最大大小 (Jmax)</string>
+    <string name="obfuscation_s1">初始包垃圾大小 (S1)</string>
+    <string name="obfuscation_s2">响应包垃圾大小 (S2)</string>
+    <string name="obfuscation_h1">初始包 Magic (H1)</string>
+    <string name="obfuscation_h2">响应包 Magic (H2)</string>
+    <string name="obfuscation_h3">低负载包 Magic (H3)</string>
+    <string name="obfuscation_h4">传输包 Magic (H4)</string>
+    <string name="obfuscation_i1">特殊垃圾 (I1)</string>
 
     <!-- About App Screen -->
     <string name="about_community">社区</string>
@@ -130,7 +148,9 @@
     <string name="notification_title_connecting">正在连接…</string>
     <string name="notification_action_disconnect">断开连接</string>
 
-    <!-- Countries Screen -->
-    <string name="countries_title">选择国家</string>
-    <string name="desc_more_options">更多选项</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">未找到活动会话。请重新登录。</string>
+    <string name="error_unknown">未知错误</string>
+    <string name="error_auth_failed">发生意外的身份验证错误</string>
+    <string name="error_2fa_failed">双重验证失败</string>
 </resources>

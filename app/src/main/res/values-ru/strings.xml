@@ -1,4 +1,6 @@
 <resources>
+    <string name="app_name">Proton VPN-Next</string>
+
     <!-- Welcome Screen -->
     <string name="welcome_title">Добро пожаловать в Proton VPN-Next</string>
     <string name="welcome_subtitle">Возьмите под контроль свою цифровую жизнь с безопасным, приватным и быстрым VPN. Без логов и слежки.</string>
@@ -68,7 +70,8 @@
     <string name="settings_off">Выкл</string>
     <string name="settings_connection_protocol">Протокол</string>
     <string name="settings_port">Порт</string>
-    <string name="settings_port_desc">Ручной выбор порта для WireGuard</string>
+    <string name="settings_port_desc">Выбор порта подключения</string>
+    <string name="settings_port_auto">Авто</string>
     <string name="settings_obfuscation">Обфускация (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Изменение заголовков пакетов для обхода DPI</string>
     <string name="settings_reset_obfuscation">Сброс: стандартный ProtonVPN-Next</string>
@@ -86,6 +89,24 @@
     <string name="obfuscation_h4">Magic Transport пакета (H4)</string>
     <string name="obfuscation_i1">Спец. мусор (I1)</string>
 
+    <!-- About App Screen -->
+    <string name="about_community">Сообщество</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+
+    <!-- Licenses Screen -->
+    <string name="licenses_title">Лицензии</string>
+    <string name="license_app_title">Proton VPN-Next</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">Библиотеки AndroidX</string>
+    <string name="license_apache_2">Apache License 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">Стандартная библиотека Kotlin</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit и OkHttp</string>
+    <string name="license_proton_go_vpn_title">Библиотека Proton GO VPN</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
+
     <!-- Split Tunneling -->
     <string name="st_enabled_subtitle">VPN будет работать в обход выбранных приложений и IP</string>
     <string name="st_disabled_subtitle">Весь трафик идет через VPN</string>
@@ -95,10 +116,37 @@
         <item quantity="many">Выбрано %1$d приложений</item>
         <item quantity="other">Выбрано %1$d приложений</item>
     </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">Выбран %1$d IP-адрес</item>
+        <item quantity="few">Выбрано %1$d IP-адреса</item>
+        <item quantity="many">Выбрано %1$d IP-адресов</item>
+        <item quantity="other">Выбрано %1$d IP-адресов</item>
+    </plurals>
+
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="one">Исключено %1$d приложение</item>
+        <item quantity="few">Исключено %1$d приложения</item>
+        <item quantity="many">Исключено %1$d приложений</item>
+        <item quantity="other">Исключено %1$d приложений</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="one">Исключен %1$d IP-адрес</item>
+        <item quantity="few">Исключено %1$d IP-адреса</item>
+        <item quantity="many">Исключено %1$d IP-адресов</item>
+        <item quantity="other">Исключено %1$d IP-адресов</item>
+    </plurals>
 
     <!-- Notification -->
+    <string name="notification_channel_name">Статус VPN</string>
+    <string name="notification_channel_desc">Показывает текущий статус подключения VPN</string>
     <string name="notification_title_connected">Подключено к %1$s</string>
     <string name="notification_title_disconnected">Отключено</string>
     <string name="notification_title_connecting">Подключение…</string>
     <string name="notification_action_disconnect">Отключить</string>
+
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">Активная сессия не найдена. Пожалуйста, войдите снова.</string>
+    <string name="error_unknown">Неизвестная ошибка</string>
+    <string name="error_auth_failed">Произошла непредвиденная ошибка аутентификации</string>
+    <string name="error_2fa_failed">Ошибка двухфакторной аутентификации</string>
 </resources>

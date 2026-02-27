@@ -60,11 +60,9 @@
     <string name="btn_disconnect">قطع اتصال</string>
     <string name="btn_quick_connect">اتصال سریع</string>
 
-    <!-- Errors and ViewModels -->
-    <string name="error_session_not_found">نشست فعال یافت نشد. لطفا دوباره وارد شوید.</string>
-    <string name="error_unknown">خطای ناشناخته</string>
-    <string name="error_auth_failed">یک خطای احراز هویت غیرمنتظره رخ داد</string>
-    <string name="error_2fa_failed">تایید دو مرحله‌ای ناموفق بود</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">انتخاب کشور</string>
+    <string name="desc_more_options">گزینه‌های بیشتر</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">تنظیمات</string>
@@ -86,6 +84,26 @@
     <string name="settings_licenses_desc">نرم‌افزار شخص ثالث مورد استفاده در برنامه</string>
     <string name="settings_on">روشن</string>
     <string name="settings_off">خاموش</string>
+    <string name="settings_connection_protocol">پروتکل</string>
+    <string name="settings_port">پورت</string>
+    <string name="settings_port_desc">انتخاب پورت اتصال</string>
+    <string name="settings_port_auto">خودکار</string>
+    <string name="settings_obfuscation">مبهم‌سازی (AmneziaWG)</string>
+    <string name="settings_obfuscation_desc">تغییر هدر بسته‌ها برای دور زدن DPI</string>
+    <string name="settings_reset_obfuscation">بازنشانی به استاندارد ProtonVPN-Next</string>
+
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_title">تنظیمات مبهم‌سازی</string>
+    <string name="obfuscation_jc">تعداد بسته‌های زباله (Jc)</string>
+    <string name="obfuscation_jmin">حداقل اندازه زباله (Jmin)</string>
+    <string name="obfuscation_jmax">حداکثر اندازه زباله (Jmax)</string>
+    <string name="obfuscation_s1">اندازه زباله بسته اولیه (S1)</string>
+    <string name="obfuscation_s2">اندازه زباله بسته پاسخ (S2)</string>
+    <string name="obfuscation_h1">جادوی بسته اولیه (H1)</string>
+    <string name="obfuscation_h2">جادوی بسته پاسخ (H2)</string>
+    <string name="obfuscation_h3">جادوی بسته بار کم (H3)</string>
+    <string name="obfuscation_h4">جادوی بسته انتقال (H4)</string>
+    <string name="obfuscation_i1">زباله خاص (I1)</string>
 
     <!-- About App Screen -->
     <string name="about_community">انجمن</string>
@@ -134,7 +152,9 @@
     <string name="notification_title_connecting">در حال اتصال…</string>
     <string name="notification_action_disconnect">قطع اتصال</string>
 
-    <!-- Countries Screen -->
-    <string name="countries_title">انتخاب کشور</string>
-    <string name="desc_more_options">گزینه‌های بیشتر</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">نشست فعال یافت نشد. لطفا دوباره وارد شوید.</string>
+    <string name="error_unknown">خطای ناشناخته</string>
+    <string name="error_auth_failed">یک خطای احراز هویت غیرمنتظره رخ داد</string>
+    <string name="error_2fa_failed">تایید دو مرحله‌ای ناموفق بود</string>
 </resources>

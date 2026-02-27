@@ -153,6 +153,14 @@ class AmneziaVpnManager @Inject constructor(
             val excludedIps = if (splitTunnelingEnabled) settingsManager.excludedIps.first() else emptySet()
 
             // 6. Build Config
+            val selectedPort = settingsManager.vpnPort.first().let { port ->
+                if (port == 0) {
+                    listOf(443, 123, 1194, 51820).random()
+                } else {
+                    port
+                }
+            }
+
             val config = buildAwgConfig(
                 serverPublicKey = serverPubKey,
                 privateKey = wgPrivateKeyB64,
@@ -161,7 +169,7 @@ class AmneziaVpnManager @Inject constructor(
                 targetIp = targetIp,
                 excludedApps = excludedApps,
                 excludedIps = excludedIps,
-                port = settingsManager.vpnPort.first(),
+                port = selectedPort,
                 jc = settingsManager.awgJc.first(),
                 jmin = settingsManager.awgJmin.first(),
                 jmax = settingsManager.awgJmax.first(),

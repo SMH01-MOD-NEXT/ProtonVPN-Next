@@ -22,9 +22,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
@@ -40,7 +40,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -96,7 +95,10 @@ fun SettingsScreen(
         bottomBar = {}
     ) { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                // Apply scaffold padding so the bottom bar won't draw behind the system navigation bar
+                .padding(paddingValues)
         ) {
             Box(
                 modifier = Modifier
@@ -115,9 +117,7 @@ fun SettingsScreen(
             AnimatedContent(
                 targetState = uiState,
                 label = "settings_state",
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+                modifier = Modifier.fillMaxSize()
             ) { state ->
                 SettingsContent(
                     state = state,
@@ -143,7 +143,10 @@ fun SettingsScreen(
                         MainTarget.Settings -> { /* Already here */ }
                     }
                 },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                // Added fillMaxWidth to be consistent with CountriesScreen layout
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
             )
         }
     }
@@ -165,7 +168,13 @@ fun SettingsContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp)
+        contentPadding = PaddingValues(
+            start = 16.dp,
+            end = 16.dp,
+            // Reduced top padding as it's now handled by the parent Box paddingValues
+            top = 8.dp,
+            bottom = 120.dp
+        )
     ) {
         // Features Category
         item {
@@ -189,7 +198,7 @@ fun SettingsContent(
                 SettingRowWithIcon(
                     icon = Icons.Rounded.Numbers,
                     title = stringResource(R.string.settings_port),
-                    subtitle = state.vpnPort.toString(),
+                    subtitle = if (state.vpnPort == 0) stringResource(R.string.settings_port_auto) else state.vpnPort.toString(),
                     onClick = { showPortDialog = true }
                 )
                 SettingRowWithIcon(
@@ -246,7 +255,7 @@ fun PortSelectionDialog(
     onPortSelected: (Int) -> Unit
 ) {
     val colors = ProtonNextTheme.colors
-    var portText by remember { mutableStateOf(currentPort.toString()) }
+    val portOptions = listOf(0, 443, 123, 1194, 51820)
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -254,41 +263,54 @@ fun PortSelectionDialog(
             colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier
+                    .padding(vertical = 16.dp)
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = stringResource(R.string.settings_port),
                     style = MaterialTheme.typography.titleLarge,
-                    color = colors.textNorm
+                    color = colors.textNorm,
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                OutlinedTextField(
-                    value = portText,
-                    onValueChange = { if (it.length <= 5) portText = it.filter { c -> c.isDigit() } },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = colors.textNorm,
-                        unfocusedTextColor = colors.textNorm,
-                        focusedBorderColor = colors.brandNorm,
-                        unfocusedBorderColor = colors.shade20
-                    )
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
+
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    TextButton(onClick = onDismiss) {
-                        Text("Cancel", color = colors.brandNorm)
+                    items(portOptions) { port ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onPortSelected(port) }
+                                .padding(vertical = 12.dp, horizontal = 24.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (port == 0) stringResource(R.string.settings_port_auto) else port.toString(),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = colors.textNorm,
+                                modifier = Modifier.weight(1f)
+                            )
+                            RadioButton(
+                                selected = (port == currentPort),
+                                onClick = { onPortSelected(port) },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = colors.brandNorm,
+                                    unselectedColor = colors.shade60
+                                )
+                            )
+                        }
                     }
-                    Button(
-                        onClick = { portText.toIntOrNull()?.let { onPortSelected(it) } },
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
-                    ) {
-                        Text("Save", color = Color.White)
-                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TextButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.align(Alignment.End).padding(end = 16.dp)
+                ) {
+                    Text("Cancel", color = colors.brandNorm)
                 }
             }
         }
