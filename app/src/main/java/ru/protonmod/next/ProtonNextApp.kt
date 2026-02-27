@@ -19,6 +19,8 @@ package ru.protonmod.next
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp
+import ru.protonmod.next.data.cache.ServersCacheManager
+import javax.inject.Inject
 
 /**
  * Main Application class for Proton VPN-Next.
@@ -28,9 +30,21 @@ import dagger.hilt.android.HiltAndroidApp
  */
 @HiltAndroidApp
 class ProtonNextApp : Application() {
+
+    @Inject
+    lateinit var serversCacheManager: ServersCacheManager
+
     override fun onCreate() {
         super.onCreate()
         // Initialize flavor-specific components (e.g., Firebase for Google flavor)
         FlavorInitializer.initialize(this)
+
+        // Start background server load updates
+        serversCacheManager.startAutoUpdate()
+    }
+
+    override fun onTerminate() {
+        super.onTerminate()
+        serversCacheManager.stopAutoUpdate()
     }
 }

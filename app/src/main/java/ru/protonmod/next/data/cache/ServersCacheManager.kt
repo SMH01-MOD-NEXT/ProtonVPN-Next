@@ -21,9 +21,13 @@ import android.content.Context
 import android.util.Log
 import androidx.work.*
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.ServersCacheEntity
+import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.repository.VpnRepository
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -34,16 +38,63 @@ class ServersCacheManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val serversCacheDao: ServersCacheDao,
     private val serverDao: ServerDao,
-    private val vpnRepository: VpnRepository
+    private val vpnRepository: VpnRepository,
+    private val sessionDao: SessionDao
 ) {
     companion object {
         private const val TAG = "ServersCacheManager"
         private const val CACHE_DURATION_HOURS = 1L
         private const val CACHE_DURATION_MILLIS = CACHE_DURATION_HOURS * 60 * 60 * 1000
         private const val RETRY_DELAY_MINUTES = 2L
-        private const val REQUEST_TIMEOUT_SECONDS = 15L // Increased timeout
+        private const val REQUEST_TIMEOUT_SECONDS = 15L
         private const val BACKGROUND_UPDATE_WORK_TAG = "servers_bg_update"
         private const val BACKGROUND_UPDATE_WORK_NAME = "servers_update_work"
+        private const val AUTO_UPDATE_INTERVAL_MINUTES = 2L
+    }
+
+    private val managerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var autoUpdateJob: Job? = null
+
+    /**
+     * Starts a periodic background update that runs while the app process is alive.
+     * Updates server loads every 2 minutes.
+     */
+    fun startAutoUpdate() {
+        if (autoUpdateJob?.isActive == true) return
+        
+        autoUpdateJob = managerScope.launch {
+            Log.d(TAG, "Starting auto-update loop (every $AUTO_UPDATE_INTERVAL_MINUTES minutes)")
+            while (isActive) {
+                val session = sessionDao.getSession()
+                if (session != null) {
+                    Log.d(TAG, "Auto-update: triggering server fetch...")
+                    getServers(
+                        session.accessToken,
+                        session.sessionId,
+                        session.userTier,
+                        forceRefresh = true
+                    )
+                } else {
+                    Log.d(TAG, "Auto-update: no active session found")
+                }
+                delay(TimeUnit.MINUTES.toMillis(AUTO_UPDATE_INTERVAL_MINUTES))
+            }
+        }
+    }
+
+    fun stopAutoUpdate() {
+        autoUpdateJob?.cancel()
+        autoUpdateJob = null
+        Log.d(TAG, "Auto-update loop stopped")
+    }
+
+    /**
+     * Returns a Flow of servers that ViewModels can observe for real-time updates.
+     */
+    fun getServersFlow(): Flow<List<ru.protonmod.next.data.network.LogicalServer>> {
+        return serverDao.getServersFlow().map { entities ->
+            entities.map { ru.protonmod.next.data.local.ServerMapper.toDomain(it) }
+        }
     }
 
     suspend fun getServers(

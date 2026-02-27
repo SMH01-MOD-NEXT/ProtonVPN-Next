@@ -42,7 +42,7 @@
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="desc_settings">تنظیمات</string>
-    <string name="error_loading_servers">خطا в بارگذاری سرورها</string>
+    <string name="error_loading_servers">خطا در بارگذاری سرورها</string>
     <string name="btn_retry">تلاش مجدد</string>
     <string name="error_system_appops">خطای سیستم: لطفا برنامه را دوباره نصب کنید.</string>
     <string name="title_recent_connections">اتصالات اخیر</string>
@@ -81,6 +81,18 @@
     <string name="settings_about">درباره</string>
     <string name="settings_version">نسخه 12.0.0</string>
 
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">اتصال VPN از برنامه‌ها و آدرس‌های IP انتخابی عبور نخواهد کرد</string>
+    <string name="st_disabled_subtitle">تمام ترافیک از طریق VPN عبور می‌کند</string>
+    <plurals name="st_apps_selected">
+        <item quantity="one">%1$d برنامه انتخاب شده است</item>
+        <item quantity="other">%1$d برنامه انتخاب شده است</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">%1$d آدرس IP انتخاب شده است</item>
+        <item quantity="other">%1$d آدرس IP انتخاب شده است</item>
+    </plurals>
+
     <plurals name="settings_apps_excluded_count">
         <item quantity="one">%1$d برنامه مستثنی شده است</item>
         <item quantity="other">%1$d برنامه مستثنی شده است</item>
@@ -97,46 +109,6 @@
     <string name="notification_title_disconnected">قطع شد</string>
     <string name="notification_title_connecting">در حال اتصال…</string>
     <string name="notification_action_disconnect">قطع اتصال</string>
-
-    <!-- Country Names -->
-    <string name="country_ar">آرژانتین</string>
-    <string name="country_au">استرالیا</string>
-    <string name="country_at">اتریش</string>
-    <string name="country_be">بلژیک</string>
-    <string name="country_br">برزیل</string>
-    <string name="country_ca">کانادا</string>
-    <string name="country_ch">سوئیس</string>
-    <string name="country_cl">شیلی</string>
-    <string name="country_cz">جمهوری چک</string>
-    <string name="country_de">آلمان</string>
-    <string name="country_dk">دانمارک</string>
-    <string name="country_es">اسپانیا</string>
-    <string name="country_fi">فنلاند</string>
-    <string name="country_fr">فرانسه</string>
-    <string name="country_gb">بریتانیا</string>
-    <string name="country_gr">یونان</string>
-    <string name="country_hu">مجارستان</string>
-    <string name="country_ie">ایرلند</string>
-    <string name="country_il">اسرائیل</string>
-    <string name="country_it">ایتالیا</string>
-    <string name="country_jp">ژاپن</string>
-    <string name="country_kr">کره جنوبی</string>
-    <string name="country_mx">مکزیک</string>
-    <string name="country_nl">هلند</string>
-    <string name="country_nz">نیوزیلند</string>
-    <string name="country_no">نروژ</string>
-    <string name="country_pl">لهستان</string>
-    <string name="country_pt">پرتغال</string>
-    <string name="country_ro">رومانی</string>
-    <string name="country_ru">روسیه</string>
-    <string name="country_se">سوئد</string>
-    <string name="country_sg">سنگاپور</string>
-    <string name="country_sk">اسلواکی</string>
-    <string name="country_tr">ترکیه</string>
-    <string name="country_ua">اوکراین</string>
-    <string name="country_us">ایالات متحده</string>
-    <string name="country_vn">ویتنام</string>
-    <string name="country_za">آفریقای جنوبی</string>
 
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">نشست فعال یافت نشد. لطفا دوباره وارد شوید.</string>

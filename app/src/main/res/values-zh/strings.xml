@@ -81,6 +81,16 @@
     <string name="settings_about">关于</string>
     <string name="settings_version">版本 12.0.0</string>
 
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">VPN 连接将绕过选定的应用和 IP 地址</string>
+    <string name="st_disabled_subtitle">所有流量都通过 VPN</string>
+    <plurals name="st_apps_selected">
+        <item quantity="other">已选择 %1$d 个应用</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="other">已选择 %1$d 个 IP 地址</item>
+    </plurals>
+
     <plurals name="settings_apps_excluded_count">
         <item quantity="other">%1$d 个应用已排除</item>
     </plurals>
@@ -95,46 +105,6 @@
     <string name="notification_title_disconnected">未连接</string>
     <string name="notification_title_connecting">正在连接…</string>
     <string name="notification_action_disconnect">断开连接</string>
-
-    <!-- Country Names -->
-    <string name="country_ar">阿根廷</string>
-    <string name="country_au">澳大利亚</string>
-    <string name="country_at">奥地利</string>
-    <string name="country_be">比利时</string>
-    <string name="country_br">巴西</string>
-    <string name="country_ca">加拿大</string>
-    <string name="country_ch">瑞士</string>
-    <string name="country_cl">智利</string>
-    <string name="country_cz">捷克共和国</string>
-    <string name="country_de">德国</string>
-    <string name="country_dk">丹麦</string>
-    <string name="country_es">西班牙</string>
-    <string name="country_fi">芬兰</string>
-    <string name="country_fr">法国</string>
-    <string name="country_gb">英国</string>
-    <string name="country_gr">希腊</string>
-    <string name="country_hu">匈牙利</string>
-    <string name="country_ie">爱尔兰</string>
-    <string name="country_il">以色列</string>
-    <string name="country_it">意大利</string>
-    <string name="country_jp">日本</string>
-    <string name="country_kr">韩国</string>
-    <string name="country_mx">墨西哥</string>
-    <string name="country_nl">荷兰</string>
-    <string name="country_nz">新西兰</string>
-    <string name="country_no">挪威</string>
-    <string name="country_pl">波兰</string>
-    <string name="country_pt">葡萄牙</string>
-    <string name="country_ro">罗马尼亚</string>
-    <string name="country_ru">俄罗斯</string>
-    <string name="country_se">瑞典</string>
-    <string name="country_sg">新加坡</string>
-    <string name="country_sk">斯洛伐克</string>
-    <string name="country_tr">土耳其</string>
-    <string name="country_ua">乌克兰</string>
-    <string name="country_us">美国</string>
-    <string name="country_vn">越南</string>
-    <string name="country_za">南非</string>
 
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">未找到活动会话。请重新登录。</string>

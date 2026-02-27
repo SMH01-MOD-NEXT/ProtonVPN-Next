@@ -26,6 +26,7 @@ import ru.protonmod.next.ui.screens.map.MapScreen
 import ru.protonmod.next.ui.screens.settings.SettingsScreen
 import ru.protonmod.next.ui.screens.settings.SplitTunnelingAppsScreen
 import ru.protonmod.next.ui.screens.settings.SplitTunnelingIpsScreen
+import ru.protonmod.next.ui.screens.settings.SplitTunnelingMainScreen
 
 // TODO: Add future screens here (Profiles, etc.)
 sealed class Screen(val route: String) {
@@ -34,6 +35,9 @@ sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
     data object Profiles : Screen("profiles")
     data object Countries : Screen("countries")
+
+    // Split Tunneling Screens
+    data object SplitTunnelingMain : Screen("split_tunneling_main")
     data object SplitTunnelingApps : Screen("split_tunneling_apps")
     data object SplitTunnelingIps : Screen("split_tunneling_ips")
 }
@@ -82,15 +86,23 @@ fun NavGraphBuilder.appNavGraph(
                     launchSingleTop = true
                 }
             },
-            onNavigateToSplitTunnelingApps = {
-                navController.navigate(Screen.SplitTunnelingApps.route)
-            },
-            onNavigateToSplitTunnelingIps = {
-                navController.navigate(Screen.SplitTunnelingIps.route)
+            // Route to the new Split Tunneling Hub
+            onNavigateToSplitTunnelingMain = {
+                navController.navigate(Screen.SplitTunnelingMain.route)
             }
         )
     }
 
+    // Main Split Tunneling Hub
+    composable(Screen.SplitTunnelingMain.route) {
+        SplitTunnelingMainScreen(
+            onBack = { navController.popBackStack() },
+            onNavigateToApps = { navController.navigate(Screen.SplitTunnelingApps.route) },
+            onNavigateToIps = { navController.navigate(Screen.SplitTunnelingIps.route) }
+        )
+    }
+
+    // Specific Apps and IPs screens
     composable(Screen.SplitTunnelingApps.route) {
         SplitTunnelingAppsScreen(
             onBack = { navController.popBackStack() }

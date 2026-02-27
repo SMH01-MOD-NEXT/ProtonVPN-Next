@@ -24,22 +24,25 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.dnsoverhttps.DnsOverHttps
 import retrofit2.Retrofit
 import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
+import java.net.InetAddress
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
-import javax.inject.Named
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val PROTON_API_BASE_URL = "https://vpn-api.proton.me/"
+    // Pointing to the deployed Netlify proxy.
+    private const val PROTON_API_BASE_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
     private const val APP_VERSION_STRING = "5.15.95.5"
 
     @Provides
@@ -70,7 +73,7 @@ object NetworkModule {
             "$capManufacturer $model"
         }
 
-        // CRITICAL: Strip any non-ASCII characters.
+        // Strip any non-ASCII characters.
         // Some obscure custom ROMs include emojis or unicode characters in the device name.
         // OkHttp will crash if it tries to add non-ASCII characters to HTTP headers.
         val safeDeviceName = deviceName.replace(Regex("[^\\x20-\\x7E]"), "").trim()
@@ -80,10 +83,23 @@ object NetworkModule {
     }
 
     /**
-     * IMPORTANT: We should ideally use the same OkHttpClient that supports VLESS proxy
-     * if the user is in a restricted region.
-     * For now, we fix the headers and rely on the manifest security config.
+     * Creates a DNS over HTTPS (DoH) client to bypass local DNS poisoning.
+     * This ensures that even if the ISP tries to block the worker URL via DNS,
+     * the app will resolve it securely via Cloudflare's 1.1.1.1.
      */
+    private fun buildDnsOverHttps(bootstrapClient: OkHttpClient): DnsOverHttps {
+        return DnsOverHttps.Builder().client(bootstrapClient)
+            .url("https://cloudflare-dns.com/dns-query".toHttpUrl())
+            // Bootstrap IPs for Cloudflare DNS so it doesn't need DNS to find the DoH server
+            .bootstrapDnsHosts(
+                InetAddress.getByName("1.1.1.1"),
+                InetAddress.getByName("1.0.0.1"),
+                InetAddress.getByName("2606:4700:4700::1111"),
+                InetAddress.getByName("2606:4700:4700::1001")
+            )
+            .build()
+    }
+
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
@@ -99,10 +115,13 @@ object NetworkModule {
             chain.proceed(request)
         }
 
+        // We create a basic client first to use for the DoH connection
+        val bootstrapClient = OkHttpClient.Builder().build()
+        val dns = buildDnsOverHttps(bootstrapClient)
+
         return OkHttpClient.Builder()
             .addInterceptor(headerInterceptor)
-            // If you want API to follow the VLESS proxy,
-            // you should inject and set the ProxySelector here as well.
+            .dns(dns) // Apply secure DNS to bypass local restrictions
             .connectTimeout(15, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
             .build()
@@ -111,7 +130,7 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
-        val contentType = MediaType.get("application/json")
+        val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
             .baseUrl(PROTON_API_BASE_URL)
             .client(okHttpClient)

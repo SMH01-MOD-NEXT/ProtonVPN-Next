@@ -17,24 +17,32 @@
 
 package ru.protonmod.next.ui.screens.settings
 
+import android.widget.ImageView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
 
@@ -78,7 +86,7 @@ fun SplitTunnelingAppsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Background gradient
+            // Background gradient matching settings
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -93,60 +101,91 @@ fun SplitTunnelingAppsScreen(
                     )
             )
 
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+            ) {
+                // Search Bar
+                TextField(
+                    value = uiState.searchQuery,
+                    onValueChange = viewModel::setSearchQuery,
                     modifier = Modifier
-                        .size(48.dp)
-                        .align(Alignment.Center)
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 16.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                    placeholder = {
+                        Text(
+                            "Search apps",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                    ),
+                    singleLine = true
                 )
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(vertical = 20.dp, horizontal = 0.dp)
-                ) {
-                    // Header with Select All / Deselect All buttons
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+
+                if (uiState.isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxSize(),
+                        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(vertical = 8.dp)
                         ) {
-                            Button(
-                                onClick = { viewModel.selectAll() },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(40.dp),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text("Select All", fontSize = MaterialTheme.typography.labelSmall.fontSize)
+
+                            // Selected Apps Section
+                            if (uiState.selectedApps.isNotEmpty()) {
+                                item {
+                                    SectionHeader("Selected Apps (${uiState.selectedApps.size})")
+                                }
+                                items(uiState.selectedApps, key = { it.packageName }) { app ->
+                                    AppListItem(
+                                        app = app,
+                                        isAdded = true,
+                                        onClick = { viewModel.toggleApp(app.packageName, false) }
+                                    )
+                                }
                             }
-                            Button(
-                                onClick = { viewModel.deselectAll() },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(40.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.secondary
-                                )
-                            ) {
-                                Text("Deselect All", fontSize = MaterialTheme.typography.labelSmall.fontSize)
+
+                            // Available Apps Section
+                            if (uiState.availableApps.isNotEmpty()) {
+                                item {
+                                    SectionHeader("Available Apps (${uiState.availableApps.size})")
+                                }
+                                items(uiState.availableApps, key = { it.packageName }) { app ->
+                                    AppListItem(
+                                        app = app,
+                                        isAdded = false,
+                                        onClick = { viewModel.toggleApp(app.packageName, true) }
+                                    )
+                                }
+                            }
+
+                            // Bottom Spacer
+                            item {
+                                Spacer(modifier = Modifier.height(24.dp))
                             }
                         }
-                    }
-
-                    items(uiState.apps) { app ->
-                        AppListItem(
-                            app = app,
-                            onToggle = { viewModel.toggleApp(app.packageName, !app.isSelected) }
-                        )
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
             }
@@ -155,46 +194,111 @@ fun SplitTunnelingAppsScreen(
 }
 
 @Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    )
+}
+
+@Composable
 fun AppListItem(
     app: AppInfo,
-    onToggle: () -> Unit
+    isAdded: Boolean,
+    onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onToggle
-            )
-            .padding(vertical = 12.dp),
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp, horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // App Icon
+        AppIconWrapper(packageName = app.packageName)
+
+        Spacer(modifier = Modifier.width(16.dp))
+
+        // App Details
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                app.appName,
-                style = MaterialTheme.typography.bodyMedium,
+                text = app.appName,
+                style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                modifier = Modifier.fillMaxWidth(0.9f)
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1
             )
             Text(
-                app.packageName,
-                style = MaterialTheme.typography.labelSmall,
+                text = app.packageName,
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                modifier = Modifier.fillMaxWidth(0.9f)
+                maxLines = 1
             )
         }
-        Checkbox(
-            checked = app.isSelected,
-            onCheckedChange = { onToggle() },
-            modifier = Modifier.size(24.dp)
-        )
+
+        // Action Icon (Plus / Cross)
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(CircleShape)
+                .background(
+                    if (isAdded) MaterialTheme.colorScheme.surfaceVariant
+                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = if (isAdded) Icons.Default.Close else Icons.Default.Add,
+                contentDescription = null,
+                tint = if (isAdded) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
-    HorizontalDivider(
-        modifier = Modifier.padding(vertical = 8.dp),
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
-    )
 }
 
+@Composable
+fun AppIconWrapper(packageName: String) {
+    val context = LocalContext.current
+
+    // Fetch drawable safely
+    val drawable = remember(packageName) {
+        try {
+            context.packageManager.getApplicationIcon(packageName)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    Box(
+        modifier = Modifier.size(40.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (drawable != null) {
+            // Render Android Drawable inside Compose natively
+            AndroidView(
+                modifier = Modifier.size(36.dp),
+                factory = { ctx ->
+                    ImageView(ctx).apply {
+                        setImageDrawable(drawable)
+                    }
+                },
+                update = { imageView ->
+                    imageView.setImageDrawable(drawable)
+                }
+            )
+        } else {
+            // Fallback icon
+            Icon(
+                imageVector = Icons.Rounded.Android,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(32.dp)
+            )
+        }
+    }
+}

@@ -57,14 +57,13 @@ class DashboardViewModel @Inject constructor(
     private val recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao
 ) : ViewModel() {
 
-    private val _servers = MutableStateFlow<List<LogicalServer>>(emptyList())
     private val _isLoading = MutableStateFlow(true)
     private val _errorMessage = MutableStateFlow<String?>(null)
 
     // Combine flows cleanly without using Array<Any?> and unsafe casts
     // Nesting `combine` allows us to bypass the 5-argument limit gracefully.
     val uiState: StateFlow<DashboardUiState> = combine(
-        combine(_servers, _isLoading, _errorMessage) { servers, isLoading, error ->
+        combine(serversCacheManager.getServersFlow(), _isLoading, _errorMessage) { servers, isLoading, error ->
             Triple(servers, isLoading, error)
         },
         amneziaVpnManager.tunnelState,
@@ -99,7 +98,7 @@ class DashboardViewModel @Inject constructor(
     init {
         loadServers()
 
-        // Listen to AmneziaWG tunnel state changes to save history and refresh servers
+        // Listen to AmneziaWG tunnel state changes to save history
         viewModelScope.launch {
             amneziaVpnManager.tunnelState.collect { state ->
                 if (state == Tunnel.State.UP) {
@@ -114,7 +113,6 @@ class DashboardViewModel @Inject constructor(
                             )
                         )
                     }
-                    refreshServersIfExpired()
                 } else if (state == Tunnel.State.DOWN) {
                     connectedServerState.setConnectedServer(null)
                 }
@@ -133,41 +131,15 @@ class DashboardViewModel @Inject constructor(
                 return@launch
             }
 
+            // Ensure we have initial data. The periodic update is handled in Application class.
             serversCacheManager.getServers(session.accessToken, session.sessionId, session.userTier)
-                .onSuccess {
-                    _servers.value = serversCacheManager.getCachedServers()
-                }
                 .onFailure { error ->
                     val cachedServers = serversCacheManager.getCachedServers()
-                    if (cachedServers.isNotEmpty()) {
-                        // Fallback to cached servers if network fails
-                        _servers.value = cachedServers
-                    } else {
+                    if (cachedServers.isEmpty()) {
                         _errorMessage.value = error.localizedMessage ?: "Unknown error occurred"
                     }
                 }
             _isLoading.value = false
-        }
-    }
-
-    /**
-     * Refresh the servers cache upon VPN connection if it's older than 1 hour.
-     */
-    private fun refreshServersIfExpired() {
-        viewModelScope.launch {
-            if (serversCacheManager.isCacheExpired()) {
-                val session = sessionDao.getSession()
-                if (session != null) {
-                    serversCacheManager.getServers(
-                        session.accessToken,
-                        session.sessionId,
-                        session.userTier,
-                        forceRefresh = true
-                    ).onSuccess {
-                        _servers.value = serversCacheManager.getCachedServers()
-                    }
-                }
-            }
         }
     }
 

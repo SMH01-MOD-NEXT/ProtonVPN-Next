@@ -26,6 +26,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -38,11 +39,13 @@ import javax.inject.Inject
 data class AppInfo(
     val packageName: String,
     val appName: String,
-    val isSelected: Boolean
+    val isSelected: Boolean = false
 )
 
 data class SplitTunnelingAppsUiState(
-    val apps: List<AppInfo> = emptyList(),
+    val selectedApps: List<AppInfo> = emptyList(),
+    val availableApps: List<AppInfo> = emptyList(),
+    val searchQuery: String = "",
     val isLoading: Boolean = true
 )
 
@@ -52,15 +55,43 @@ class SplitTunnelingAppsViewModel @Inject constructor(
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 
+    // Cache all apps in memory so we don't query PackageManager on every toggle
+    private val _allApps = MutableStateFlow<List<AppInfo>>(emptyList())
+    private val _searchQuery = MutableStateFlow("")
+
     val uiState: StateFlow<SplitTunnelingAppsUiState> = combine(
-        settingsManager.excludedApps
-    ) { args ->
-        val excludedApps = args[0]
-        val installedApps = getInstalledApps(excludedApps)
+        _allApps,
+        settingsManager.excludedApps,
+        _searchQuery
+    ) { allApps, excludedApps, query ->
+        val isLoading = allApps.isEmpty()
+
+        // Filter apps by search query
+        val filteredApps = if (query.isBlank()) {
+            allApps
+        } else {
+            allApps.filter {
+                it.appName.contains(query, ignoreCase = true) ||
+                        it.packageName.contains(query, ignoreCase = true)
+            }
+        }
+
+        // Split into Selected and Available lists (like original Proton app)
+        val selected = filteredApps
+            .filter { it.packageName in excludedApps }
+            .map { it.copy(isSelected = true) }
+            .sortedBy { it.appName.lowercase() }
+
+        val available = filteredApps
+            .filter { it.packageName !in excludedApps }
+            .map { it.copy(isSelected = false) }
+            .sortedBy { it.appName.lowercase() }
 
         SplitTunnelingAppsUiState(
-            apps = installedApps,
-            isLoading = false
+            selectedApps = selected,
+            availableApps = available,
+            searchQuery = query,
+            isLoading = isLoading
         )
     }.stateIn(
         scope = viewModelScope,
@@ -68,42 +99,47 @@ class SplitTunnelingAppsViewModel @Inject constructor(
         initialValue = SplitTunnelingAppsUiState()
     )
 
-    private suspend fun getInstalledApps(excludedApps: Set<String>): List<AppInfo> =
-        withContext(Dispatchers.IO) {
-            try {
-                // Handle API changes for fetching installed packages safely
-                val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    context.packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(0L))
-                } else {
-                    @Suppress("DEPRECATION")
-                    context.packageManager.getInstalledPackages(0)
-                }
-
-                packages
-                    .filter { packageInfo ->
-                        val appInfo = packageInfo.applicationInfo
-                        // Filter out system apps, we only want user-installed applications
-                        appInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) == 0
-                    }
-                    .mapNotNull { packageInfo ->
-                        val appInfo = packageInfo.applicationInfo ?: return@mapNotNull null
-                        val appLabel = try {
-                            context.packageManager.getApplicationLabel(appInfo).toString()
-                        } catch (_: Exception) {
-                            packageInfo.packageName
-                        }
-                        AppInfo(
-                            packageName = packageInfo.packageName,
-                            appName = appLabel,
-                            isSelected = packageInfo.packageName in excludedApps
-                        )
-                    }
-                    .sortedBy { it.appName.lowercase() }
-            } catch (_: Exception) {
-                // Return an empty list if querying packages fails (e.g., due to missing permissions)
-                emptyList()
-            }
+    init {
+        // Fetch installed apps once on init
+        viewModelScope.launch(Dispatchers.IO) {
+            _allApps.value = fetchInstalledApps()
         }
+    }
+
+    private fun fetchInstalledApps(): List<AppInfo> {
+        return try {
+            val packages = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getInstalledPackages(PackageManager.PackageInfoFlags.of(0L))
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getInstalledPackages(0)
+            }
+
+            packages
+                .filter { packageInfo ->
+                    val appInfo = packageInfo.applicationInfo
+                    appInfo?.flags?.and(ApplicationInfo.FLAG_SYSTEM) == 0
+                }
+                .mapNotNull { packageInfo ->
+                    val appInfo = packageInfo.applicationInfo ?: return@mapNotNull null
+                    val appLabel = try {
+                        context.packageManager.getApplicationLabel(appInfo).toString()
+                    } catch (_: Exception) {
+                        packageInfo.packageName
+                    }
+                    AppInfo(
+                        packageName = packageInfo.packageName,
+                        appName = appLabel
+                    )
+                }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
 
     fun toggleApp(packageName: String, isSelected: Boolean) {
         viewModelScope.launch {
@@ -119,7 +155,7 @@ class SplitTunnelingAppsViewModel @Inject constructor(
 
     fun selectAll() {
         viewModelScope.launch {
-            val allPackages = uiState.value.apps.map { it.packageName }.toSet()
+            val allPackages = _allApps.value.map { it.packageName }.toSet()
             settingsManager.setExcludedApps(allPackages)
         }
     }

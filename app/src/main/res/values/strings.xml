@@ -81,6 +81,18 @@
     <string name="settings_about">About</string>
     <string name="settings_version">Version 12.0.0</string>
 
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">VPN connection will bypass selected apps and IPs</string>
+    <string name="st_disabled_subtitle">All traffic goes through VPN</string>
+    <plurals name="st_apps_selected">
+        <item quantity="one">%1$d app selected</item>
+        <item quantity="other">%1$d apps selected</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">%1$d IP selected</item>
+        <item quantity="other">%1$d IPs selected</item>
+    </plurals>
+
     <plurals name="settings_apps_excluded_count">
         <item quantity="one">%1$d app excluded</item>
         <item quantity="other">%1$d apps excluded</item>
@@ -97,46 +109,6 @@
     <string name="notification_title_disconnected">Disconnected</string>
     <string name="notification_title_connecting">Connecting…</string>
     <string name="notification_action_disconnect">Disconnect</string>
-
-    <!-- Country Names -->
-    <string name="country_ar">Argentina</string>
-    <string name="country_au">Australia</string>
-    <string name="country_at">Austria</string>
-    <string name="country_be">Belgium</string>
-    <string name="country_br">Brazil</string>
-    <string name="country_ca">Canada</string>
-    <string name="country_ch">Switzerland</string>
-    <string name="country_cl">Chile</string>
-    <string name="country_cz">Czech Republic</string>
-    <string name="country_de">Germany</string>
-    <string name="country_dk">Denmark</string>
-    <string name="country_es">Spain</string>
-    <string name="country_fi">Finland</string>
-    <string name="country_fr">France</string>
-    <string name="country_gb">United Kingdom</string>
-    <string name="country_gr">Greece</string>
-    <string name="country_hu">Hungary</string>
-    <string name="country_ie">Ireland</string>
-    <string name="country_il">Israel</string>
-    <string name="country_it">Italy</string>
-    <string name="country_jp">Japan</string>
-    <string name="country_kr">South Korea</string>
-    <string name="country_mx">Mexico</string>
-    <string name="country_nl">Netherlands</string>
-    <string name="country_nz">New Zealand</string>
-    <string name="country_no">Norway</string>
-    <string name="country_pl">Poland</string>
-    <string name="country_pt">Portugal</string>
-    <string name="country_ro">Romania</string>
-    <string name="country_ru">Russia</string>
-    <string name="country_se">Sweden</string>
-    <string name="country_sg">Singapore</string>
-    <string name="country_sk">Slovakia</string>
-    <string name="country_tr">Turkey</string>
-    <string name="country_ua">Ukraine</string>
-    <string name="country_us">United States</string>
-    <string name="country_vn">Vietnam</string>
-    <string name="country_za">South Africa</string>
 
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Active session not found. Please log in again.</string>

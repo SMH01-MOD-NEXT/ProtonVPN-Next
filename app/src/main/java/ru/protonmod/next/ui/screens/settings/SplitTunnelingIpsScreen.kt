@@ -18,21 +18,31 @@
 package ru.protonmod.next.ui.screens.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
@@ -46,6 +56,7 @@ fun SplitTunnelingIpsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var inputValue by remember { mutableStateOf("") }
     var inputError by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -94,133 +105,143 @@ fun SplitTunnelingIpsScreen(
                     )
             )
 
-            LazyColumn(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(vertical = 20.dp, horizontal = 0.dp)
+                    .padding(horizontal = 16.dp)
             ) {
-                // Input section
-                item {
-                    Card(
+                // IP Input Row matching Proton Design
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextField(
+                        value = inputValue,
+                        onValueChange = {
+                            inputValue = it
+                            inputError = false
+                        },
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp)),
+                        placeholder = {
                             Text(
-                                "Add IP Address or CIDR",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Medium,
-                                modifier = Modifier.padding(bottom = 12.dp)
+                                "e.g., 192.168.1.0/24",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                OutlinedTextField(
-                                    value = inputValue,
-                                    onValueChange = {
-                                        inputValue = it
-                                        inputError = false
-                                    },
-                                    placeholder = { Text("e.g., 192.168.1.0/24") },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(56.dp),
-                                    isError = inputError,
-                                    singleLine = true,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                Button(
-                                    onClick = {
-                                        if (inputValue.isNotBlank()) {
-                                            viewModel.addIp(inputValue)
-                                            inputValue = ""
-                                        } else {
-                                            inputError = true
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .height(56.dp)
-                                        .width(60.dp),
-                                    shape = RoundedCornerShape(8.dp)
-                                ) {
-                                    Text("Add")
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Done,
+                            keyboardType = KeyboardType.Uri
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = {
+                                if (inputValue.isNotBlank()) {
+                                    viewModel.addIp(inputValue)
+                                    inputValue = ""
+                                    focusManager.clearFocus()
+                                } else {
+                                    inputError = true
                                 }
                             }
-                            if (inputError) {
-                                Text(
-                                    "Invalid IP address format",
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
-                            }
-                        }
-                    }
-                }
+                        ),
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                            errorContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            errorIndicatorColor = Color.Transparent
+                        ),
+                        singleLine = true,
+                        isError = inputError
+                    )
 
-                // Action buttons
-                item {
-                    Row(
+                    Spacer(Modifier.width(12.dp))
+
+                    // Add Button
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (uiState.ips.isNotEmpty()) {
-                            Button(
-                                onClick = { viewModel.removeAll() },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(40.dp),
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                Text("Remove All", fontSize = MaterialTheme.typography.labelSmall.fontSize)
-                            }
-                        }
-                    }
-                }
-
-                // IP list
-                if (uiState.ips.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 32.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "No IP addresses added yet",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyMedium
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (inputValue.isNotBlank()) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.surfaceVariant
                             )
-                        }
-                    }
-                } else {
-                    items(uiState.ips) { ipEntry ->
-                        IpListItem(
-                            ip = ipEntry.ip,
-                            isValid = ipEntry.isValid,
-                            onRemove = { viewModel.removeIp(ipEntry.ip) }
+                            .clickable(enabled = inputValue.isNotBlank()) {
+                                viewModel.addIp(inputValue)
+                                inputValue = ""
+                                focusManager.clearFocus()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add IP",
+                            tint = if (inputValue.isNotBlank()) MaterialTheme.colorScheme.onPrimary
+                            else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
 
-                item {
-                    Spacer(modifier = Modifier.height(20.dp))
+                if (inputError) {
+                    Text(
+                        text = "Invalid IP address format",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // List Card
+                Card(
+                    modifier = Modifier.fillMaxSize(),
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                    )
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(vertical = 12.dp)
+                    ) {
+                        if (uiState.ips.isNotEmpty()) {
+                            item {
+                                Text(
+                                    text = "Excluded IPs (${uiState.ips.size})",
+                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
+                            }
+
+                            items(uiState.ips) { ipEntry ->
+                                IpListItem(
+                                    ip = ipEntry.ip,
+                                    onRemove = { viewModel.removeIp(ipEntry.ip) }
+                                )
+                            }
+                        } else {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 32.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "No IP addresses added yet",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -230,46 +251,46 @@ fun SplitTunnelingIpsScreen(
 @Composable
 fun IpListItem(
     ip: String,
-    isValid: Boolean,
     onRemove: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .clickable(onClick = onRemove)
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                ip,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1
-            )
-            if (!isValid) {
-                Text(
-                    "Invalid IP address",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.labelSmall
-                )
-            }
-        }
-        IconButton(
-            onClick = onRemove,
-            modifier = Modifier.size(32.dp)
+        // Globe Icon
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.Clear,
-                contentDescription = "Remove IP",
-                tint = MaterialTheme.colorScheme.error,
+                imageVector = Icons.Rounded.Public,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }
-    }
-    HorizontalDivider(
-        modifier = Modifier.padding(vertical = 8.dp),
-        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
-    )
-}
 
+        Spacer(Modifier.width(16.dp))
+
+        Text(
+            text = ip,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f)
+        )
+
+        // Remove Icon
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = "Remove IP",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(24.dp)
+        )
+    }
+}

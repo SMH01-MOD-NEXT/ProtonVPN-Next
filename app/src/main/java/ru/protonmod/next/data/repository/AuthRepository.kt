@@ -235,7 +235,7 @@ class AuthRepository @Inject constructor(
     private fun handleHttpError(e: Exception): Result<LoginResponse> {
         if (e is HttpException) {
             val errorBody = e.response()?.errorBody()?.string()
-            val url = e.response()?.raw()?.request()?.url()
+            val url = e.response()?.raw()?.request?.url
             Log.e(TAG, "HTTP Error ${e.code()} at URL: $url")
             Log.e(TAG, "Error body: $errorBody")
 

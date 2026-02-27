@@ -83,6 +83,22 @@
     <string name="settings_about">О приложении</string>
     <string name="settings_version">Версия 12.0.0</string>
 
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">VPN-соединение будет обходить выбранные приложения и IP-адреса</string>
+    <string name="st_disabled_subtitle">Весь трафик идет через VPN</string>
+    <plurals name="st_apps_selected">
+        <item quantity="one">Выбрано %1$d приложение</item>
+        <item quantity="few">Выбрано %1$d приложения</item>
+        <item quantity="many">Выбрано %1$d приложений</item>
+        <item quantity="other">Выбрано %1$d приложений</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">Выбран %1$d IP-адрес</item>
+        <item quantity="few">Выбрано %1$d IP-адреса</item>
+        <item quantity="many">Выбрано %1$d IP-адресов</item>
+        <item quantity="other">Выбрано %1$d IP-адресов</item>
+    </plurals>
+
     <plurals name="settings_apps_excluded_count">
         <item quantity="one">%1$d приложение исключено</item>
         <item quantity="few">%1$d приложения исключено</item>
@@ -107,44 +123,4 @@
     <!-- Countries Screen -->
     <string name="countries_title">Выбрать страну</string>
     <string name="desc_more_options">Ещё опции</string>
-
-    <!-- Country Names -->
-    <string name="country_ar">Аргентина</string>
-    <string name="country_au">Австралия</string>
-    <string name="country_at">Австрия</string>
-    <string name="country_be">Бельгия</string>
-    <string name="country_br">Бразилия</string>
-    <string name="country_ca">Канада</string>
-    <string name="country_ch">Швейцария</string>
-    <string name="country_cl">Чили</string>
-    <string name="country_cz">Чехия</string>
-    <string name="country_de">Германия</string>
-    <string name="country_dk">Дания</string>
-    <string name="country_es">Испания</string>
-    <string name="country_fi">Финляндия</string>
-    <string name="country_fr">Франция</string>
-    <string name="country_gb">Великобритания</string>
-    <string name="country_gr">Греция</string>
-    <string name="country_hu">Венгрия</string>
-    <string name="country_ie">Ирландия</string>
-    <string name="country_il">Израиль</string>
-    <string name="country_it">Италия</string>
-    <string name="country_jp">Япония</string>
-    <string name="country_kr">Южная Корея</string>
-    <string name="country_mx">Мексика</string>
-    <string name="country_nl">Нидерланды</string>
-    <string name="country_nz">Новая Зеландия</string>
-    <string name="country_no">Норвегия</string>
-    <string name="country_pl">Польша</string>
-    <string name="country_pt">Португалия</string>
-    <string name="country_ro">Румыния</string>
-    <string name="country_ru">Россия</string>
-    <string name="country_se">Швеция</string>
-    <string name="country_sg">Сингапур</string>
-    <string name="country_sk">Словакия</string>
-    <string name="country_tr">Турция</string>
-    <string name="country_ua">Украина</string>
-    <string name="country_us">Соединённые Штаты</string>
-    <string name="country_vn">Вьетнам</string>
-    <string name="country_za">Южная Африка</string>
 </resources>

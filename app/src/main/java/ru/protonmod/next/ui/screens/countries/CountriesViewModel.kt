@@ -75,61 +75,58 @@ class CountriesViewModel @Inject constructor(
     private var serversGroupedByCityInCountry: Map<String, Map<String, List<LogicalServer>>> = emptyMap()
 
     init {
-        loadServers()
+        observeServers()
+        initialFetch()
+    }
+
+    private fun observeServers() {
+        viewModelScope.launch {
+            serversCacheManager.getServersFlow().collect { servers ->
+                if (servers.isNotEmpty()) {
+                    allServers = servers
+                    processServers(servers)
+                }
+            }
+        }
+    }
+
+    private fun initialFetch() {
+        viewModelScope.launch {
+            val session = sessionDao.getSession() ?: return@launch
+            // Just ensure we have initial data if cache is empty or expired, but don't force.
+            // The auto-update loop in App class will handle the periodic refresh.
+            serversCacheManager.getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = false)
+        }
+    }
+
+    private suspend fun processServers(servers: List<LogicalServer>) {
+        withContext(Dispatchers.Default) {
+            serversGroupedByCountry = servers
+                .groupBy { it.exitCountry }
+                .toSortedMap()
+
+            serversGroupedByCityInCountry = serversGroupedByCountry.mapValues { (_, serversByCountry) ->
+                serversByCountry
+                    .groupBy { it.city }
+                    .toSortedMap()
+            }
+        }
+
+        // Only update UI if we are in the CountriesList state or initial Loading
+        if (_uiState.value is CountriesUiState.Loading || _uiState.value is CountriesUiState.CountriesList) {
+            val countries = serversGroupedByCountry.map { (code, servers) ->
+                val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
+                CountryDisplayItem(code, avg)
+            }
+            _uiState.value = CountriesUiState.CountriesList(countries)
+        }
     }
 
     fun loadServers() {
-        viewModelScope.launch {
+        // Now mostly a no-op or a retry if in error state
+        if (_uiState.value is CountriesUiState.Error) {
             _uiState.value = CountriesUiState.Loading
-            val session = sessionDao.getSession()
-            if (session == null) {
-                _uiState.value = CountriesUiState.Error("Active session not found.")
-                return@launch
-            }
-
-            try {
-                Log.d(TAG, "Fetching servers for userTier: ${session.userTier}")
-                val fetchResult = serversCacheManager.getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = true)
-                if (fetchResult.isFailure) {
-                    Log.e(TAG, "Failed to fetch servers", fetchResult.exceptionOrNull())
-                }
-
-                allServers = serversCacheManager.getCachedServers()
-                Log.d(TAG, "Retrieved ${allServers.size} servers from cache")
-
-                if (allServers.isEmpty()) {
-                    _uiState.value = CountriesUiState.Error("No servers available.")
-                    return@launch
-                }
-
-                // Log a sample server load
-                allServers.take(3).forEach { server ->
-                    Log.d(TAG, "Server: ${server.name}, Average Load: ${server.averageLoad}")
-                }
-
-                withContext(Dispatchers.Default) {
-                    serversGroupedByCountry = allServers
-                        .groupBy { it.exitCountry }
-                        .toSortedMap()
-
-                    serversGroupedByCityInCountry = serversGroupedByCountry.mapValues { (_, serversByCountry) ->
-                        serversByCountry
-                            .groupBy { it.city }
-                            .toSortedMap()
-                    }
-                }
-
-                val countries = serversGroupedByCountry.map { (code, servers) ->
-                    val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
-                    CountryDisplayItem(code, avg)
-                }
-                
-                Log.d(TAG, "Processed ${countries.size} countries")
-                _uiState.value = CountriesUiState.CountriesList(countries)
-            } catch (e: Exception) {
-                Log.e(TAG, "Error in loadServers", e)
-                _uiState.value = CountriesUiState.Error(e.localizedMessage ?: "Unknown error occurred.")
-            }
+            initialFetch()
         }
     }
 
