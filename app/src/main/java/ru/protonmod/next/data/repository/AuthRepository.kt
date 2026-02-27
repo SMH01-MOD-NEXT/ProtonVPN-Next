@@ -29,6 +29,7 @@ import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.network.*
 import ru.protonmod.next.ui.screens.CaptchaRequiredException
 import ru.protonmod.next.ui.screens.ProtonErrorResponse
+import ru.protonmod.next.utils.DeviceInfoProvider
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,7 +37,8 @@ import javax.inject.Singleton
 class AuthRepository @Inject constructor(
     private val authApi: ProtonAuthApi,
     private val vpnRepository: VpnRepository, // Injecting VpnRepository to register certs during auth
-    private val sessionDao: SessionDao
+    private val sessionDao: SessionDao,
+    private val deviceInfoProvider: DeviceInfoProvider
 ) {
     companion object {
         private const val TAG = "AuthRepository"
@@ -50,21 +52,18 @@ class AuthRepository @Inject constructor(
             val challengePayload = buildJsonObject {
                 putJsonObject("Payload") {
                     putJsonObject("vpn-android-v4-challenge-0") {
-                        put("v", "2.0.7")
-                        put("appLang", "ru")
-                        put("timezone", "Europe/Volgograd")
-                        put("deviceName", 53319294142L)
-                        put("regionCode", "KZ")
-                        put("timezoneOffset", -180)
-                        put("isJailbreak", false)
-                        put("preferredContentSize", "1.0")
-                        put("storageCapacity", 256.0)
-                        put("isDarkmodeOn", true)
+                        put("v", deviceInfoProvider.getAppVersion())
+                        put("appLang", deviceInfoProvider.getAppLanguage())
+                        put("timezone", deviceInfoProvider.getTimezone())
+                        put("deviceName", deviceInfoProvider.getDeviceName())
+                        put("regionCode", deviceInfoProvider.getRegionCode())
+                        put("timezoneOffset", deviceInfoProvider.getTimezoneOffset())
+                        put("isJailbreak", deviceInfoProvider.isJailbreak())
+                        put("preferredContentSize", deviceInfoProvider.getPreferredContentSize())
+                        put("storageCapacity", deviceInfoProvider.getStorageCapacity())
+                        put("isDarkmodeOn", deviceInfoProvider.isDarkModeOn())
                         putJsonArray("keyboards") {
-                            add("com.huawei.ohos.inputmethod")
-                            add("com.google.android.googlequicksearchbox")
-                            add("org.futo.inputmethod.latin")
-                            add("com.touchtype.swiftkey")
+                            deviceInfoProvider.getInstalledKeyboards().forEach { add(it) }
                         }
                     }
                 }
