@@ -77,7 +77,12 @@ Returns the hierarchy of locations.
 - **PhysicalServer:** Represents a specific node with an `ExitIP` and `Domain`.
 - **Key Field:** `X25519PublicKey` – The server's public key for WireGuard.
 
-#### B. Registering WireGuard Keys (`POST /vpn/v1/certificate`)
+#### B. Server Loads (`GET /vpn/v2/loads`)
+Returns current load data for all servers.
+- **Response Structure:** The load data is returned in a list named `"LogicalServers"`.
+- **Mapping Logic:** Loads are primarily associated with Logical Server IDs. To ensure UI consistency, the load value from a logical server should be propagated to all its child physical servers.
+
+#### C. Registering WireGuard Keys (`POST /vpn/v1/certificate`)
 This endpoint is used to register your local public key on the Proton backend.
 - **Request:** `{"ClientPublicKey": "YOUR_BASE64_PUBLIC_KEY"}`
 - **Response:** Returns the internal IP assigned to your tunnel and DNS settings.
@@ -158,7 +163,12 @@ Proton использует **Secure Remote Password (SRP)**. Это позво�
 - **PhysicalServer:** Конкретный узел с `ExitIP` и `Domain`.
 - **Важное поле:** `X25519PublicKey` – Публичный ключ сервера для WireGuard.
 
-#### B. Регистрация ключей WireGuard (`POST /vpn/v1/certificate`)
+#### B. Загрузка серверов (`GET /vpn/v2/loads`)
+Получение данных о текущей нагрузке на сервера.
+- **Структура ответа:** Список нагрузок возвращается в поле `"LogicalServers"`.
+- **Логика сопоставления:** Нагрузки привязаны в первую очередь к ID логических серверов. Для корректного отображения в интерфейсе, значение нагрузки от логического сервера должно распространяться на все дочерние физические сервера.
+
+#### C. Регистрация ключей WireGuard (`POST /vpn/v1/certificate`)
 Эндпоинт для "привязки" вашего локального публичного ключа к бэкенду Proton.
 - **Запрос:** `{"ClientPublicKey": "ВАШ_BASE64_ПУБЛИЧНЫЙ_КЛЮЧ"}`
 - **Ответ:** Содержит назначенный внутренний IP для туннеля и настройки DNS.
