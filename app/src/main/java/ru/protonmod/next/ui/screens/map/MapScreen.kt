@@ -26,23 +26,31 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import ru.protonmod.next.ui.screens.dashboard.HomeMap
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
     onBack: () -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Map") },
+                title = { Text("Map", color = colors.textNorm) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = "Back",
+                            tint = colors.textNorm
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.backgroundNorm)
             )
-        }
+        },
+        containerColor = colors.backgroundNorm
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
             HomeMap(

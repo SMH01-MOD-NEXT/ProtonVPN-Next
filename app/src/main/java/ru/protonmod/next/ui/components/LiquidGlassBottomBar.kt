@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.ui.nav.MainTarget
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @Composable
 fun LiquidGlassBottomBar(
@@ -62,13 +63,14 @@ fun LiquidGlassBottomBar(
     navigateTo: (MainTarget) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = ProtonNextTheme.colors
     // Styling matching the exact visual design of Proton Next Liquid Glass
     val glassShape = RoundedCornerShape(32.dp)
-    val glassBackgroundColor = Color(0xFF1C1C1E).copy(alpha = 0.75f)
+    val glassBackgroundColor = colors.backgroundNorm.copy(alpha = 0.85f)
 
     val glassBorderBrush = Brush.verticalGradient(
         colors = listOf(
-            Color.White.copy(alpha = 0.3f),
+            Color.White.copy(alpha = 0.2f),
             Color.White.copy(alpha = 0.05f)
         )
     )
@@ -105,9 +107,8 @@ fun LiquidGlassBottomBar(
             targets.forEach { target ->
                 val isSelected = target == selectedTarget
 
-                // Fallback to Material colors since we removed ProtonTheme
-                val activeColor = MaterialTheme.colorScheme.primary
-                val inactiveColor = Color.Gray
+                val activeColor = colors.brandNorm
+                val inactiveColor = colors.iconWeak
 
                 val iconColor by animateColorAsState(
                     targetValue = if (isSelected) activeColor else inactiveColor,
@@ -151,7 +152,7 @@ fun LiquidGlassBottomBar(
                             Box(
                                 modifier = Modifier
                                     .size(8.dp)
-                                    .background(MaterialTheme.colorScheme.error, CircleShape)
+                                    .background(colors.notificationError, CircleShape)
                                     .align(Alignment.TopEnd)
                             )
                         }

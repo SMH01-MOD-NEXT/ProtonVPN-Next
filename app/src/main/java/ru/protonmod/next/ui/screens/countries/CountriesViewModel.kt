@@ -93,8 +93,6 @@ class CountriesViewModel @Inject constructor(
     private fun initialFetch() {
         viewModelScope.launch {
             val session = sessionDao.getSession() ?: return@launch
-            // Just ensure we have initial data if cache is empty or expired, but don't force.
-            // The auto-update loop in App class will handle the periodic refresh.
             serversCacheManager.getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = false)
         }
     }
@@ -112,7 +110,6 @@ class CountriesViewModel @Inject constructor(
             }
         }
 
-        // Only update UI if we are in the CountriesList state or initial Loading
         if (_uiState.value is CountriesUiState.Loading || _uiState.value is CountriesUiState.CountriesList) {
             val countries = serversGroupedByCountry.map { (code, servers) ->
                 val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
@@ -123,7 +120,6 @@ class CountriesViewModel @Inject constructor(
     }
 
     fun loadServers() {
-        // Now mostly a no-op or a retry if in error state
         if (_uiState.value is CountriesUiState.Error) {
             _uiState.value = CountriesUiState.Loading
             initialFetch()
@@ -133,11 +129,7 @@ class CountriesViewModel @Inject constructor(
     private suspend fun connectToServer(server: LogicalServer) {
         val session = sessionDao.getSession()
         if (session == null) {
-            return
-        }
-
-        val tunnelState = amneziaVpnManager.tunnelState.value
-        if (tunnelState == Tunnel.State.TOGGLE || (tunnelState == Tunnel.State.UP && connectedServerState.connectedServer.value?.id == server.id)) {
+            Log.e(TAG, "Cannot connect: No session found")
             return
         }
 
@@ -145,9 +137,11 @@ class CountriesViewModel @Inject constructor(
 
         if (physicalServer != null) {
             connectedServerState.setConnectedServer(server)
-            val result = amneziaVpnManager.connect(server.id, physicalServer, session)
-            if (result.isFailure) {
-                connectedServerState.setConnectedServer(null)
+            val tunnelState = amneziaVpnManager.tunnelState.value
+            if (tunnelState == Tunnel.State.UP || tunnelState == Tunnel.State.TOGGLE) {
+                amneziaVpnManager.reconnect(server.id, physicalServer, session)
+            } else {
+                amneziaVpnManager.connect(server.id, physicalServer, session)
             }
         } else {
             _uiState.value = CountriesUiState.Error("Selected server is currently unavailable.")
@@ -170,7 +164,7 @@ class CountriesViewModel @Inject constructor(
                 val avg = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
                 CityDisplayItem(name, avg)
             } ?: emptyList()
-            
+
             if (citiesInCountry.isNotEmpty()) {
                 _uiState.value = CountriesUiState.CitiesList(country, citiesInCountry)
             }

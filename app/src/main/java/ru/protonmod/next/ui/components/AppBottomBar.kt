@@ -28,11 +28,13 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.ui.nav.Screen
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 data class NavItem(
     val screen: Screen,
@@ -46,6 +48,7 @@ fun AppBottomBar(
     currentRoute: String?,
     onNavigate: (String) -> Unit,
 ) {
+    val colors = ProtonNextTheme.colors
     val navItems = listOf(
         NavItem(
             screen = Screen.Home,
@@ -67,14 +70,18 @@ fun AppBottomBar(
         ),
     )
 
-    NavigationBar {
+    NavigationBar(
+        containerColor = colors.backgroundNorm,
+        contentColor = colors.textNorm
+    ) {
         navItems.forEach { item ->
+            val isSelected = currentRoute == item.screen.route
             NavigationBarItem(
-                selected = currentRoute == item.screen.route,
+                selected = isSelected,
                 onClick = { onNavigate(item.screen.route) },
                 icon = {
                     Icon(
-                        imageVector = if (currentRoute == item.screen.route) {
+                        imageVector = if (isSelected) {
                             item.selectedIcon
                         } else {
                             item.unselectedIcon
@@ -83,9 +90,15 @@ fun AppBottomBar(
                         modifier = Modifier.size(24.dp)
                     )
                 },
-                label = { Text(item.label) }
+                label = { Text(item.label) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = colors.brandNorm,
+                    selectedTextColor = colors.brandNorm,
+                    indicatorColor = colors.brandNorm.copy(alpha = 0.1f),
+                    unselectedIconColor = colors.iconWeak,
+                    unselectedTextColor = colors.textWeak
+                )
             )
         }
     }
 }
-

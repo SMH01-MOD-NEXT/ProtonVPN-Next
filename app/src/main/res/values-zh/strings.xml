@@ -18,7 +18,7 @@
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
-    <string name="welcome_title">隐私是一项基本人权</string>
+    <string name="welcome_title">欢迎使用 Proton VPN-Next</string>
     <string name="welcome_subtitle">通过安全、私密且快速的 VPN 控制您的数字生活。无日志，无追踪。</string>
     <string name="btn_create_account">创建账户</string>
     <string name="btn_login">登录</string>
@@ -60,9 +60,11 @@
     <string name="btn_disconnect">断开连接</string>
     <string name="btn_quick_connect">快速连接</string>
 
-    <!-- Countries Screen -->
-    <string name="countries_title">选择国家</string>
-    <string name="desc_more_options">更多选项</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">未找到活动会话。请重新登录。</string>
+    <string name="error_unknown">未知错误</string>
+    <string name="error_auth_failed">发生意外的身份验证错误</string>
+    <string name="error_2fa_failed">双重验证失败</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">设置</string>
@@ -79,7 +81,29 @@
     <string name="settings_notifications">通知</string>
     <string name="settings_notifications_desc">接收 VPN 状态通知</string>
     <string name="settings_about">关于</string>
-    <string name="settings_version">版本 12.0.0</string>
+    <string name="settings_version">版本 %1$s</string>
+    <string name="settings_licenses">开源许可</string>
+    <string name="settings_licenses_desc">应用中使用的第三方软件</string>
+    <string name="settings_on">开启</string>
+    <string name="settings_off">关闭</string>
+
+    <!-- About App Screen -->
+    <string name="about_community">社区</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+
+    <!-- Licenses Screen -->
+    <string name="licenses_title">许可证</string>
+    <string name="license_app_title">Proton VPN-Next</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">AndroidX 库</string>
+    <string name="license_apache_2">Apache License 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">Kotlin 标准库</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit 和 OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN 库</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
     <string name="st_enabled_subtitle">VPN 连接将绕过选定的应用和 IP 地址</string>
@@ -106,9 +130,7 @@
     <string name="notification_title_connecting">正在连接…</string>
     <string name="notification_action_disconnect">断开连接</string>
 
-    <!-- Errors and ViewModels -->
-    <string name="error_session_not_found">未找到活动会话。请重新登录。</string>
-    <string name="error_unknown">未知错误</string>
-    <string name="error_auth_failed">发生意外的身份验证错误</string>
-    <string name="error_2fa_failed">双重验证失败</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">选择国家</string>
+    <string name="desc_more_options">更多选项</string>
 </resources>

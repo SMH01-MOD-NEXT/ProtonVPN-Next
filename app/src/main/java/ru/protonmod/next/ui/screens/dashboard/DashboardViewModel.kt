@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.ui.screens.dashboard
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,7 +37,6 @@ import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 
 sealed class DashboardUiState {
-    // Use data object for better toString representation and consistency
     data object Loading : DashboardUiState()
     data class Success(
         val servers: List<LogicalServer>,
@@ -60,8 +60,6 @@ class DashboardViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     private val _errorMessage = MutableStateFlow<String?>(null)
 
-    // Combine flows cleanly without using Array<Any?> and unsafe casts
-    // Nesting `combine` allows us to bypass the 5-argument limit gracefully.
     val uiState: StateFlow<DashboardUiState> = combine(
         combine(serversCacheManager.getServersFlow(), _isLoading, _errorMessage) { servers, isLoading, error ->
             Triple(servers, isLoading, error)
@@ -80,7 +78,6 @@ class DashboardViewModel @Inject constructor(
             val isConnected = tunnelState == Tunnel.State.UP
             val isConnecting = tunnelState == Tunnel.State.TOGGLE
 
-            // Map recent connections entities back to domain models
             val recentServers = recentEntities.mapNotNull { entity ->
                 servers.find { it.id == entity.serverId }
             }
@@ -98,7 +95,6 @@ class DashboardViewModel @Inject constructor(
     init {
         loadServers()
 
-        // Listen to AmneziaWG tunnel state changes to save history
         viewModelScope.launch {
             amneziaVpnManager.tunnelState.collect { state ->
                 if (state == Tunnel.State.UP) {
@@ -114,6 +110,8 @@ class DashboardViewModel @Inject constructor(
                         )
                     }
                 } else if (state == Tunnel.State.DOWN) {
+                    // Теперь мы можем смело обнулять стейт, так как AmneziaVpnManager
+                    // надежно подавляет DOWN стейты во время реконнекта.
                     connectedServerState.setConnectedServer(null)
                 }
             }
@@ -121,6 +119,9 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun loadServers() {
+        if (uiState.value is DashboardUiState.Error) {
+            _isLoading.value = true
+        }
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -131,7 +132,6 @@ class DashboardViewModel @Inject constructor(
                 return@launch
             }
 
-            // Ensure we have initial data. The periodic update is handled in Application class.
             serversCacheManager.getServers(session.accessToken, session.sessionId, session.userTier)
                 .onFailure { error ->
                     val cachedServers = serversCacheManager.getCachedServers()
@@ -143,39 +143,53 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun disconnect() {
+        viewModelScope.launch {
+            amneziaVpnManager.disconnect()
+            // We don't clear connectedServer here anymore.
+            // It will be cleared in the tunnelState collector when state becomes DOWN.
+        }
+    }
+
     fun toggleConnection(server: LogicalServer) {
-        val currentState = uiState.value
-        if (currentState is DashboardUiState.Success) {
-            viewModelScope.launch {
-                if (currentState.isConnected || currentState.isConnecting) {
-                    amneziaVpnManager.disconnect()
+        viewModelScope.launch {
+            val currentState = uiState.value
+            if (currentState !is DashboardUiState.Success) return@launch
+
+            val isConnectedToAny = currentState.isConnected || currentState.isConnecting
+            val isTargetServerConnected = currentState.connectedServer?.id == server.id
+
+            if (isConnectedToAny) {
+                if (isTargetServerConnected) {
+                    disconnect()
                 } else {
-                    connectedServerState.setConnectedServer(server)
-
-                    val session = sessionDao.getSession()
-                    if (session == null) {
-                        connectedServerState.setConnectedServer(null)
-                        return@launch
-                    }
-
-                    // Pick the first active physical server inside the logical group
-                    val physicalServer = server.servers.firstOrNull { it.status == 1 }
-                    if (physicalServer != null) {
-                        // Pass logical server ID as the first parameter
-                        val result = amneziaVpnManager.connect(server.id, physicalServer, session)
-
-                        // Handle potential connection failure to avoid infinite loading state
-                        if (result.isFailure) {
-                            connectedServerState.setConnectedServer(null)
-                            // State will naturally revert to disconnected
-                        }
-                    } else {
-                        // Revert state if no active physical server is available
-                        connectedServerState.setConnectedServer(null)
-                        _errorMessage.value = "Selected server is currently unavailable."
-                    }
+                    // Switching to a different server
+                    initiateConnection(server)
                 }
+            } else {
+                initiateConnection(server)
             }
+        }
+    }
+
+    private suspend fun initiateConnection(server: LogicalServer) {
+        val session = sessionDao.getSession()
+        if (session == null) {
+            _errorMessage.value = "Active session not found. Please log in again."
+            return
+        }
+
+        val physicalServer = server.servers.firstOrNull { it.status == 1 }
+        if (physicalServer != null) {
+            connectedServerState.setConnectedServer(server)
+            val tunnelState = amneziaVpnManager.tunnelState.value
+            if (tunnelState == Tunnel.State.UP || tunnelState == Tunnel.State.TOGGLE) {
+                amneziaVpnManager.reconnect(server.id, physicalServer, session)
+            } else {
+                amneziaVpnManager.connect(server.id, physicalServer, session)
+            }
+        } else {
+            _errorMessage.value = "Selected server is currently unavailable."
         }
     }
 }

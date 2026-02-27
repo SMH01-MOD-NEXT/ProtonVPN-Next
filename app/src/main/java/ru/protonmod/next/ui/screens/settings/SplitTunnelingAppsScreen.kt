@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +53,7 @@ fun SplitTunnelingAppsScreen(
     onBack: () -> Unit = {},
     viewModel: SplitTunnelingAppsViewModel = hiltViewModel()
 ) {
+    val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
@@ -62,7 +64,7 @@ fun SplitTunnelingAppsScreen(
                     Text(
                         stringResource(R.string.settings_excluded_apps),
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = colors.textNorm
                     )
                 },
                 navigationIcon = {
@@ -70,7 +72,7 @@ fun SplitTunnelingAppsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.desc_back_button),
-                            tint = Color.White
+                            tint = colors.textNorm
                         )
                     }
                 },
@@ -79,7 +81,7 @@ fun SplitTunnelingAppsScreen(
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = colors.backgroundNorm
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -94,8 +96,8 @@ fun SplitTunnelingAppsScreen(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color(0xFF1E293B),
-                                MaterialTheme.colorScheme.background
+                                colors.brandNorm.copy(alpha = 0.2f),
+                                colors.backgroundNorm
                             )
                         )
                     )
@@ -117,35 +119,37 @@ fun SplitTunnelingAppsScreen(
                     placeholder = {
                         Text(
                             "Search apps",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = colors.textWeak
                         )
                     },
                     leadingIcon = {
                         Icon(
                             Icons.Default.Search,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = colors.iconWeak
                         )
                     },
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                        focusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.7f),
+                        unfocusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.7f),
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = colors.textNorm,
+                        unfocusedTextColor = colors.textNorm
                     ),
                     singleLine = true
                 )
 
                 if (uiState.isLoading) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = colors.brandNorm)
                     }
                 } else {
                     Card(
                         modifier = Modifier.fillMaxSize(),
                         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                            containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)
                         )
                     ) {
                         LazyColumn(
@@ -195,10 +199,11 @@ fun SplitTunnelingAppsScreen(
 
 @Composable
 private fun SectionHeader(text: String) {
+    val colors = ProtonNextTheme.colors
     Text(
         text = text,
         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-        color = MaterialTheme.colorScheme.primary,
+        color = colors.brandNorm,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -211,6 +216,7 @@ fun AppListItem(
     isAdded: Boolean,
     onClick: () -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -229,13 +235,13 @@ fun AppListItem(
                 text = app.appName,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = colors.textNorm,
                 maxLines = 1
             )
             Text(
                 text = app.packageName,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = colors.textWeak,
                 maxLines = 1
             )
         }
@@ -246,15 +252,15 @@ fun AppListItem(
                 .size(32.dp)
                 .clip(CircleShape)
                 .background(
-                    if (isAdded) MaterialTheme.colorScheme.surfaceVariant
-                    else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    if (isAdded) colors.shade20
+                    else colors.brandNorm.copy(alpha = 0.15f)
                 ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = if (isAdded) Icons.Default.Close else Icons.Default.Add,
                 contentDescription = null,
-                tint = if (isAdded) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                tint = if (isAdded) colors.iconWeak else colors.brandNorm,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -264,6 +270,7 @@ fun AppListItem(
 @Composable
 fun AppIconWrapper(packageName: String) {
     val context = LocalContext.current
+    val colors = ProtonNextTheme.colors
 
     // Fetch drawable safely
     val drawable = remember(packageName) {
@@ -296,7 +303,7 @@ fun AppIconWrapper(packageName: String) {
             Icon(
                 imageVector = Icons.Rounded.Android,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = colors.iconWeak,
                 modifier = Modifier.size(32.dp)
             )
         }

@@ -87,10 +87,14 @@ class ProtonVpnService : GoBackend.VpnService() {
     }
 
     private lateinit var backend: GoBackend
+    private var currentTunnelState: Tunnel.State = Tunnel.State.DOWN
 
     private val tunnel = object : Tunnel {
         override fun getName() = TUNNEL_NAME
         override fun onStateChange(newState: Tunnel.State) {
+            if (currentTunnelState == newState) return
+            currentTunnelState = newState
+
             Log.d(TAG, "State changed to $newState")
             updateNotification(newState)
             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
@@ -101,7 +105,6 @@ class ProtonVpnService : GoBackend.VpnService() {
 
             if (newState == Tunnel.State.DOWN) {
                 stopTrafficUpdates()
-                stopForeground(true)
             } else if (newState == Tunnel.State.UP) {
                 startTrafficUpdates()
             }
@@ -158,6 +161,8 @@ class ProtonVpnService : GoBackend.VpnService() {
             ACTION_DISCONNECT -> {
                 try {
                     backend.setState(tunnel, Tunnel.State.DOWN, null)
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to stop tunnel", e)
                 }

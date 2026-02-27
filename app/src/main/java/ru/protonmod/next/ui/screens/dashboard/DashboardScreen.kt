@@ -43,13 +43,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @Composable
 fun DashboardScreen(
@@ -59,14 +59,37 @@ fun DashboardScreen(
     onNavigateToProfiles: (() -> Unit)? = null,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
+    val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var pendingServer by remember { mutableStateOf<LogicalServer?>(null) }
 
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             Log.d("DashboardScreen", "VPN permission granted")
+            pendingServer?.let {
+                viewModel.toggleConnection(it)
+                pendingServer = null
+            }
+        } else {
+            pendingServer = null
+        }
+    }
+
+    val checkVpnAndConnect: (LogicalServer) -> Unit = { server ->
+        try {
+            val intent = VpnService.prepare(context)
+            if (intent != null) {
+                pendingServer = server
+                vpnPermissionLauncher.launch(intent)
+            } else {
+                viewModel.toggleConnection(server)
+            }
+        } catch (_: SecurityException) {
+            android.widget.Toast.makeText(context, context.getString(R.string.error_system_appops), android.widget.Toast.LENGTH_LONG).show()
+            viewModel.toggleConnection(server)
         }
     }
 
@@ -80,14 +103,13 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
+                .background(colors.backgroundNorm)
         ) {
-            // Interactive map replacing the static placeholder
             HomeMap(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight(0.6f)
-                    .clickable { onNavigateToMap?.invoke() }, // Added navigation to full map
+                    .clickable { onNavigateToMap?.invoke() },
                 connectedServer = (uiState as? DashboardUiState.Success)?.connectedServer,
                 isConnecting = (uiState as? DashboardUiState.Success)?.isConnecting ?: false
             )
@@ -100,16 +122,19 @@ fun DashboardScreen(
                 when (state) {
                     is DashboardUiState.Loading -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(color = colors.brandNorm)
                         }
                     }
                     is DashboardUiState.Error -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(state.message, color = MaterialTheme.colorScheme.error)
+                                Text(state.message, color = colors.notificationError)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Button(onClick = { viewModel.loadServers() }) {
-                                    Text(stringResource(R.string.btn_retry))
+                                Button(
+                                    onClick = { viewModel.loadServers() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
+                                ) {
+                                    Text(stringResource(R.string.btn_retry), color = colors.textInverted)
                                 }
                             }
                         }
@@ -118,18 +143,9 @@ fun DashboardScreen(
                         DashboardContent(
                             state = state,
                             onServerClick = { server ->
-                                try {
-                                    val intent = VpnService.prepare(context)
-                                    if (intent != null) {
-                                        vpnPermissionLauncher.launch(intent)
-                                    } else {
-                                        viewModel.toggleConnection(server)
-                                    }
-                                } catch (_: SecurityException) {
-                                    android.widget.Toast.makeText(context, context.getString(R.string.error_system_appops), android.widget.Toast.LENGTH_LONG).show()
-                                    viewModel.toggleConnection(server)
-                                }
-                            }
+                                checkVpnAndConnect(server)
+                            },
+                            onDisconnect = { viewModel.disconnect() }
                         )
                     }
                 }
@@ -156,8 +172,10 @@ fun DashboardScreen(
 @Composable
 fun DashboardContent(
     state: DashboardUiState.Success,
-    onServerClick: (LogicalServer) -> Unit
+    onServerClick: (LogicalServer) -> Unit,
+    onDisconnect: () -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -165,7 +183,6 @@ fun DashboardContent(
         )
     ) {
         item {
-            // Invisible spacer to push the UI down, revealing the map underneath
             Spacer(modifier = Modifier.height(380.dp))
         }
 
@@ -174,44 +191,51 @@ fun DashboardContent(
                 isConnected = state.isConnected,
                 isConnecting = state.isConnecting,
                 connectedServer = state.connectedServer,
-                onQuickConnect = {
-                    state.servers.firstOrNull()?.let { onServerClick(it) }
+                onToggleConnection = {
+                    if (state.isConnected) {
+                        onDisconnect()
+                    } else {
+                        state.servers.firstOrNull()?.let { onServerClick(it) }
+                    }
                 }
             )
         }
 
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                MaterialTheme.colorScheme.background
+        if (state.recentConnections.isNotEmpty()) {
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Transparent,
+                                    colors.backgroundNorm
+                                )
                             )
                         )
+                        .padding(top = 24.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.title_recent_connections),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm,
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                     )
-                    .padding(top = 24.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.title_recent_connections),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-                )
+                }
             }
-        }
 
-        items(if (state.recentConnections.isNotEmpty()) state.recentConnections else state.servers) { server ->
-            Box(modifier = Modifier.background(MaterialTheme.colorScheme.background)) {
-                ServerCard(
-                    server = server,
-                    isConnected = state.connectedServer?.id == server.id,
-                    isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
-                    onClick = { onServerClick(server) },
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
-                )
+            items(state.recentConnections) { server ->
+                Box(modifier = Modifier.background(colors.backgroundNorm)) {
+                    ServerCard(
+                        server = server,
+                        isConnected = state.connectedServer?.id == server.id,
+                        isConnecting = state.isConnecting && state.connectedServer?.id == server.id,
+                        onClick = { onServerClick(server) },
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                    )
+                }
             }
         }
     }
@@ -222,15 +246,16 @@ fun ConnectionStatusCard(
     isConnected: Boolean,
     isConnecting: Boolean,
     connectedServer: LogicalServer?,
-    onQuickConnect: () -> Unit
+    onToggleConnection: () -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     val cardContainerColor = when {
-        isConnected -> Color(0xFF3DDC84).copy(alpha = 0.15f)
-        isConnecting -> MaterialTheme.colorScheme.secondaryContainer
-        else -> MaterialTheme.colorScheme.surfaceVariant
+        isConnected -> colors.notificationSuccess.copy(alpha = 0.15f)
+        isConnecting -> colors.backgroundSecondary
+        else -> colors.backgroundSecondary.copy(alpha = 0.5f)
     }
 
-    val contentColor = MaterialTheme.colorScheme.onSurface
+    val contentColor = colors.textNorm
 
     Card(
         modifier = Modifier
@@ -251,7 +276,7 @@ fun ConnectionStatusCard(
                     else -> stringResource(R.string.status_not_connected)
                 },
                 style = MaterialTheme.typography.labelLarge,
-                color = if (isConnected) Color(0xFF3DDC84) else contentColor.copy(alpha = 0.7f),
+                color = if (isConnected) colors.notificationSuccess else contentColor.copy(alpha = 0.7f),
                 fontWeight = FontWeight.Bold
             )
 
@@ -269,13 +294,13 @@ fun ConnectionStatusCard(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface),
+                        .background(colors.backgroundNorm),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.Public,
                         contentDescription = stringResource(R.string.desc_country),
-                        tint = contentColor
+                        tint = colors.iconNorm
                     )
                 }
 
@@ -291,35 +316,35 @@ fun ConnectionStatusCard(
                     Text(
                         text = if (isConnected || isConnecting) "${connectedServer?.city}, ${connectedServer?.exitCountry}" else stringResource(R.string.label_select_location),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = contentColor.copy(alpha = 0.7f)
+                        color = colors.textWeak
                     )
                 }
 
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = stringResource(R.string.desc_change_server),
-                    tint = contentColor.copy(alpha = 0.5f)
+                    tint = colors.iconWeak.copy(alpha = 0.5f)
                 )
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = onQuickConnect,
+                onClick = onToggleConnection,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isConnected) Color.Black.copy(alpha = 0.2f) else MaterialTheme.colorScheme.primary,
-                    contentColor = if (isConnected) contentColor else MaterialTheme.colorScheme.onPrimary
+                    containerColor = if (isConnected) colors.shade20 else colors.brandNorm,
+                    contentColor = if (isConnected) colors.textNorm else colors.textInverted
                 ),
                 enabled = !isConnecting
             ) {
                 if (isConnecting) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = colors.textInverted,
                         strokeWidth = 2.dp
                     )
                 } else {
@@ -342,13 +367,14 @@ fun ServerCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = ProtonNextTheme.colors
     Card(
         modifier = modifier
             .fillMaxWidth()
             .clickable(enabled = !isConnecting) { onClick() },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
+            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary.copy(alpha = 0.5f)
         )
     ) {
         Row(
@@ -361,13 +387,13 @@ fun ServerCard(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                    .background(colors.backgroundNorm),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Rounded.Public,
                     contentDescription = stringResource(R.string.desc_country),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    tint = colors.iconNorm
                 )
             }
 
@@ -377,77 +403,15 @@ fun ServerCard(
                 Text(
                     text = server.name,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textNorm
                 )
                 Text(
                     text = "${server.city}, ${server.exitCountry}",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    color = colors.textWeak
                 )
             }
-
-            if (isConnecting) {
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-            }
-        }
-    }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF121212)
-@Composable
-fun DashboardScreenPreview() {
-    val mockServer = LogicalServer(
-        id = "1",
-        name = "CH-US 1",
-        tier = 0,
-        features = 0,
-        entryCountry = "Switzerland",
-        exitCountry = "Switzerland",
-        city = "Zurich",
-        servers = emptyList()
-    )
-
-    val mockState = DashboardUiState.Success(
-        servers = listOf(
-            mockServer,
-            LogicalServer(
-                id = "2",
-                name = "NL-FREE 2",
-                tier = 0,
-                features = 0,
-                entryCountry = "Netherlands",
-                exitCountry = "Netherlands",
-                city = "Amsterdam",
-                servers = emptyList()
-            )
-        ),
-        isConnected = false,
-        isConnecting = false,
-        connectedServer = null
-    )
-
-    MaterialTheme {
-        Box(modifier = Modifier.fillMaxSize()) {
-            HomeMap(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.6f),
-                connectedServer = null,
-                isConnecting = false
-            )
-
-            DashboardContent(
-                state = mockState,
-                onServerClick = {}
-            )
-
-            LiquidGlassBottomBar(
-                selectedTarget = MainTarget.Home,
-                showCountries = true,
-                showGateways = true,
-                navigateTo = {},
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
         }
     }
 }

@@ -46,6 +46,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +54,7 @@ fun SplitTunnelingIpsScreen(
     onBack: () -> Unit = {},
     viewModel: SplitTunnelingIpsViewModel = hiltViewModel()
 ) {
+    val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
     var inputValue by remember { mutableStateOf("") }
     var inputError by remember { mutableStateOf(false) }
@@ -66,7 +68,7 @@ fun SplitTunnelingIpsScreen(
                     Text(
                         stringResource(R.string.settings_excluded_ips),
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = colors.textNorm
                     )
                 },
                 navigationIcon = {
@@ -74,7 +76,7 @@ fun SplitTunnelingIpsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.desc_back_button),
-                            tint = Color.White
+                            tint = colors.textNorm
                         )
                     }
                 },
@@ -83,7 +85,7 @@ fun SplitTunnelingIpsScreen(
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = colors.backgroundNorm
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -98,8 +100,8 @@ fun SplitTunnelingIpsScreen(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color(0xFF1E293B),
-                                MaterialTheme.colorScheme.background
+                                colors.brandNorm.copy(alpha = 0.2f),
+                                colors.backgroundNorm
                             )
                         )
                     )
@@ -129,7 +131,7 @@ fun SplitTunnelingIpsScreen(
                         placeholder = {
                             Text(
                                 "e.g., 192.168.1.0/24",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = colors.textWeak
                             )
                         },
                         keyboardOptions = KeyboardOptions(
@@ -148,12 +150,14 @@ fun SplitTunnelingIpsScreen(
                             }
                         ),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                            errorContainerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                            focusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.7f),
+                            unfocusedContainerColor = colors.backgroundSecondary.copy(alpha = 0.7f),
+                            errorContainerColor = colors.backgroundSecondary.copy(alpha = 0.7f),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            errorIndicatorColor = Color.Transparent
+                            errorIndicatorColor = Color.Transparent,
+                            focusedTextColor = colors.textNorm,
+                            unfocusedTextColor = colors.textNorm
                         ),
                         singleLine = true,
                         isError = inputError
@@ -167,8 +171,8 @@ fun SplitTunnelingIpsScreen(
                             .size(56.dp)
                             .clip(RoundedCornerShape(12.dp))
                             .background(
-                                if (inputValue.isNotBlank()) MaterialTheme.colorScheme.primary
-                                else MaterialTheme.colorScheme.surfaceVariant
+                                if (inputValue.isNotBlank()) colors.brandNorm
+                                else colors.backgroundSecondary.copy(alpha = 0.3f)
                             )
                             .clickable(enabled = inputValue.isNotBlank()) {
                                 viewModel.addIp(inputValue)
@@ -180,8 +184,8 @@ fun SplitTunnelingIpsScreen(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Add IP",
-                            tint = if (inputValue.isNotBlank()) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (inputValue.isNotBlank()) colors.textInverted
+                            else colors.iconWeak
                         )
                     }
                 }
@@ -189,7 +193,7 @@ fun SplitTunnelingIpsScreen(
                 if (inputError) {
                     Text(
                         text = "Invalid IP address format",
-                        color = MaterialTheme.colorScheme.error,
+                        color = colors.notificationError,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(start = 16.dp, bottom = 16.dp)
                     )
@@ -202,7 +206,7 @@ fun SplitTunnelingIpsScreen(
                     modifier = Modifier.fillMaxSize(),
                     shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                        containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)
                     )
                 ) {
                     LazyColumn(
@@ -214,7 +218,7 @@ fun SplitTunnelingIpsScreen(
                                 Text(
                                     text = "Excluded IPs (${uiState.ips.size})",
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.primary,
+                                    color = colors.brandNorm,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                                 )
                             }
@@ -235,7 +239,7 @@ fun SplitTunnelingIpsScreen(
                                 ) {
                                     Text(
                                         text = "No IP addresses added yet",
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        color = colors.textWeak,
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
@@ -253,6 +257,7 @@ fun IpListItem(
     ip: String,
     onRemove: () -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -265,13 +270,13 @@ fun IpListItem(
             modifier = Modifier
                 .size(36.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
+                .background(colors.backgroundNorm.copy(alpha = 0.3f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Rounded.Public,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                tint = colors.iconWeak,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -281,7 +286,7 @@ fun IpListItem(
         Text(
             text = ip,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = colors.textNorm,
             modifier = Modifier.weight(1f)
         )
 
@@ -289,7 +294,7 @@ fun IpListItem(
         Icon(
             imageVector = Icons.Default.Close,
             contentDescription = "Remove IP",
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            tint = colors.iconWeak,
             modifier = Modifier.size(24.dp)
         )
     }

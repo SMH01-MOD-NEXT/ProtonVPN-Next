@@ -20,13 +20,11 @@ package ru.protonmod.next.ui.nav
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.ui.screens.countries.CountriesScreen
 import ru.protonmod.next.ui.screens.dashboard.DashboardScreen
 import ru.protonmod.next.ui.screens.map.MapScreen
-import ru.protonmod.next.ui.screens.settings.SettingsScreen
-import ru.protonmod.next.ui.screens.settings.SplitTunnelingAppsScreen
-import ru.protonmod.next.ui.screens.settings.SplitTunnelingIpsScreen
-import ru.protonmod.next.ui.screens.settings.SplitTunnelingMainScreen
+import ru.protonmod.next.ui.screens.settings.*
 
 // TODO: Add future screens here (Profiles, etc.)
 sealed class Screen(val route: String) {
@@ -40,6 +38,12 @@ sealed class Screen(val route: String) {
     data object SplitTunnelingMain : Screen("split_tunneling_main")
     data object SplitTunnelingApps : Screen("split_tunneling_apps")
     data object SplitTunnelingIps : Screen("split_tunneling_ips")
+
+    // Connection Screens
+    data object ObfuscationSettings : Screen("obfuscation_settings")
+
+    data object AboutApp : Screen("about_app")
+    data object Licenses : Screen("licenses")
 }
 
 // Enum representing the bottom navigation targets, matching Proton Next style
@@ -86,10 +90,35 @@ fun NavGraphBuilder.appNavGraph(
                     launchSingleTop = true
                 }
             },
-            // Route to the new Split Tunneling Hub
             onNavigateToSplitTunnelingMain = {
                 navController.navigate(Screen.SplitTunnelingMain.route)
+            },
+            onNavigateToObfuscation = {
+                navController.navigate(Screen.ObfuscationSettings.route)
+            },
+            onNavigateToAbout = {
+                navController.navigate(Screen.AboutApp.route)
             }
+        )
+    }
+
+    composable(Screen.ObfuscationSettings.route) {
+        ObfuscationSettingsScreen(
+            onBack = { navController.popBackStack() }
+        )
+    }
+
+    composable(Screen.AboutApp.route) {
+        AboutAppScreen(
+            onBack = { navController.popBackStack() },
+            appVersion = BuildConfig.VERSION_NAME,
+            onNavigateToLicenses = { navController.navigate(Screen.Licenses.route) }
+        )
+    }
+
+    composable(Screen.Licenses.route) {
+        LicensesScreen(
+            onBack = { navController.popBackStack() }
         )
     }
 

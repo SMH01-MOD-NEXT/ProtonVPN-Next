@@ -19,6 +19,7 @@ package ru.protonmod.next.ui.utils
 
 import android.content.Context
 import androidx.compose.ui.graphics.Color
+import ru.protonmod.next.ui.theme.ProtonPalette
 import java.util.Locale
 
 object CountryUtils {
@@ -62,9 +63,9 @@ object CountryUtils {
      */
     fun getColorForLoad(load: Int): Color {
         return when {
-            load < 60 -> Color(0xFF4CAF50) // Green
-            load < 85 -> Color(0xFFFFC107) // Amber/Yellow
-            else -> Color(0xFFF44336)      // Red
+            load < 60 -> ProtonPalette.Apple
+            load < 85 -> ProtonPalette.Sunglow
+            else -> ProtonPalette.Pomegranate
         }
     }
 }

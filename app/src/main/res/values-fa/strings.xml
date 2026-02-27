@@ -18,7 +18,7 @@
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
-    <string name="welcome_title">حریم خصوصی یک حق انسانی است</string>
+    <string name="welcome_title">به Proton VPN-Next خوش آمدید</string>
     <string name="welcome_subtitle">کنترل زندگی دیجیتال خود را با VPN امن، خصوصی و سریع به دست بگیرید. بدون گزارش، بدون ردیابی.</string>
     <string name="btn_create_account">ایجاد حساب کاربری</string>
     <string name="btn_login">ورود</string>
@@ -60,9 +60,11 @@
     <string name="btn_disconnect">قطع اتصال</string>
     <string name="btn_quick_connect">اتصال سریع</string>
 
-    <!-- Countries Screen -->
-    <string name="countries_title">انتخاب کشور</string>
-    <string name="desc_more_options">گزینه‌های بیشتر</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">نشست فعال یافت نشد. لطفا دوباره وارد شوید.</string>
+    <string name="error_unknown">خطای ناشناخته</string>
+    <string name="error_auth_failed">یک خطای احراز هویت غیرمنتظره رخ داد</string>
+    <string name="error_2fa_failed">تایید دو مرحله‌ای ناموفق بود</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">تنظیمات</string>
@@ -79,7 +81,29 @@
     <string name="settings_notifications">اعلان‌ها</string>
     <string name="settings_notifications_desc">دریافت اعلان‌های وضعیت VPN</string>
     <string name="settings_about">درباره</string>
-    <string name="settings_version">نسخه 12.0.0</string>
+    <string name="settings_version">نسخه %1$s</string>
+    <string name="settings_licenses">مجوزهای منبع باز</string>
+    <string name="settings_licenses_desc">نرم‌افزار شخص ثالث مورد استفاده در برنامه</string>
+    <string name="settings_on">روشن</string>
+    <string name="settings_off">خاموش</string>
+
+    <!-- About App Screen -->
+    <string name="about_community">انجمن</string>
+    <string name="about_github">گیت‌هاب</string>
+    <string name="about_telegram">تلگرام</string>
+
+    <!-- Licenses Screen -->
+    <string name="licenses_title">مجوزها</string>
+    <string name="license_app_title">Proton VPN-Next</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">کتابخانه‌های AndroidX</string>
+    <string name="license_apache_2">Apache License 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">کتابخانه استاندارد Kotlin</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit و OkHttp</string>
+    <string name="license_proton_go_vpn_title">کتابخانه Proton GO VPN</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
     <string name="st_enabled_subtitle">اتصال VPN از برنامه‌ها و آدرس‌های IP انتخابی عبور نخواهد کرد</string>
@@ -110,9 +134,7 @@
     <string name="notification_title_connecting">در حال اتصال…</string>
     <string name="notification_action_disconnect">قطع اتصال</string>
 
-    <!-- Errors and ViewModels -->
-    <string name="error_session_not_found">نشست فعال یافت نشد. لطفا دوباره وارد شوید.</string>
-    <string name="error_unknown">خطای ناشناخته</string>
-    <string name="error_auth_failed">یک خطای احراز هویت غیرمنتظره رخ داد</string>
-    <string name="error_2fa_failed">تایید دو مرحله‌ای ناموفق بود</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">انتخاب کشور</string>
+    <string name="desc_more_options">گزینه‌های بیشتر</string>
 </resources>

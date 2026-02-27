@@ -43,7 +43,7 @@ object NetworkModule {
 
     // Pointing to the deployed Netlify proxy.
     private const val PROTON_API_BASE_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
-    private const val APP_VERSION_STRING = "5.15.95.5"
+    private const val APP_VERSION_STRING = "5.16.31.0"
 
     @Provides
     @Singleton

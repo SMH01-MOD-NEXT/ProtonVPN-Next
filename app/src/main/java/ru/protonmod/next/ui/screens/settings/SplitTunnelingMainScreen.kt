@@ -49,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 /**
  * Main Hub for Split Tunneling settings.
@@ -63,6 +64,7 @@ fun SplitTunnelingMainScreen(
     // We reuse SettingsViewModel because it already holds the splitTunneling state perfectly
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
@@ -73,7 +75,7 @@ fun SplitTunnelingMainScreen(
                     Text(
                         stringResource(R.string.settings_split_tunneling), // e.g. "Split Tunneling"
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = colors.textNorm
                     )
                 },
                 navigationIcon = {
@@ -81,7 +83,7 @@ fun SplitTunnelingMainScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.desc_back_button),
-                            tint = Color.White
+                            tint = colors.textNorm
                         )
                     }
                 },
@@ -90,7 +92,7 @@ fun SplitTunnelingMainScreen(
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = colors.backgroundNorm
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize()) {
             // Background gradient
@@ -101,8 +103,8 @@ fun SplitTunnelingMainScreen(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color(0xFF1E293B),
-                                MaterialTheme.colorScheme.background
+                                colors.brandNorm.copy(alpha = 0.2f),
+                                colors.backgroundNorm
                             )
                         )
                     )
@@ -126,14 +128,14 @@ fun SplitTunnelingMainScreen(
                         modifier = Modifier
                             .size(120.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                            .background(colors.brandNorm.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.AltRoute,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = colors.brandNorm
                         )
                     }
                 }
@@ -142,7 +144,7 @@ fun SplitTunnelingMainScreen(
                 Text(
                     text = stringResource(R.string.settings_split_tunneling),
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White,
+                    color = colors.textNorm,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -153,7 +155,7 @@ fun SplitTunnelingMainScreen(
                 Text(
                     text = stringResource(R.string.settings_split_tunneling_desc),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = colors.textWeak,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -166,7 +168,7 @@ fun SplitTunnelingMainScreen(
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                        containerColor = colors.backgroundSecondary.copy(alpha = 0.8f)
                     ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -193,7 +195,7 @@ fun SplitTunnelingMainScreen(
                             Column {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                                    color = colors.separatorNorm.copy(alpha = 0.5f)
                                 )
 
                                 SettingRowWithIcon(
@@ -209,7 +211,7 @@ fun SplitTunnelingMainScreen(
 
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                                    color = colors.separatorNorm.copy(alpha = 0.5f)
                                 )
 
                                 SettingRowWithIcon(

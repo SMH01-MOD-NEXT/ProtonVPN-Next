@@ -17,6 +17,11 @@
 
 package ru.protonmod.next.ui.screens.countries
 
+import android.app.Activity
+import android.net.VpnService
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,6 +51,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,31 +63,66 @@ fun CountriesScreen(
     onBack: () -> Unit,
     viewModel: CountriesViewModel = hiltViewModel()
 ) {
+    val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsState()
     val connectedServer by viewModel.connectedServer.collectAsState()
+    val context = LocalContext.current
     val currentTarget = MainTarget.Countries
+
+    var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+    val vpnPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            Log.d("CountriesScreen", "VPN permission granted")
+            pendingAction?.invoke()
+            pendingAction = null
+        } else {
+            pendingAction = null
+        }
+    }
+
+    val checkVpnAndConnect: (() -> Unit) -> Unit = { connectAction ->
+        try {
+            val intent = VpnService.prepare(context)
+            if (intent != null) {
+                pendingAction = connectAction
+                vpnPermissionLauncher.launch(intent)
+            } else {
+                connectAction()
+            }
+        } catch (_: SecurityException) {
+            android.widget.Toast.makeText(context, context.getString(R.string.error_system_appops), android.widget.Toast.LENGTH_LONG).show()
+            connectAction()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.countries_title), fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.countries_title), fontWeight = FontWeight.Bold, color = colors.textNorm) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.desc_back_button))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = stringResource(R.string.desc_back_button),
+                            tint = colors.textNorm
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = colors.backgroundNorm
                 )
             )
         },
-        bottomBar = {} 
+        bottomBar = {}
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+                .background(colors.backgroundNorm)
                 .padding(paddingValues)
         ) {
             AnimatedContent(
@@ -92,16 +133,19 @@ fun CountriesScreen(
                 when (state) {
                     is CountriesUiState.Loading -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
+                            CircularProgressIndicator(color = colors.brandNorm)
                         }
                     }
                     is CountriesUiState.Error -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(state.message, color = MaterialTheme.colorScheme.error)
+                                Text(state.message, color = colors.notificationError)
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Button(onClick = { viewModel.loadServers() }) {
-                                    Text(stringResource(R.string.btn_retry))
+                                Button(
+                                    onClick = { viewModel.loadServers() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
+                                ) {
+                                    Text(stringResource(R.string.btn_retry), color = colors.textInverted)
                                 }
                             }
                         }
@@ -111,8 +155,10 @@ fun CountriesScreen(
                             countries = state.countries,
                             connectedServer = connectedServer,
                             onCountryClick = { country ->
-                                viewModel.selectCountry(country.code)
-                                onNavigateToHome()
+                                checkVpnAndConnect {
+                                    viewModel.selectCountry(country.code)
+                                    onNavigateToHome()
+                                }
                             },
                             onCountryMore = { country ->
                                 viewModel.expandCitiesForCountry(country.code)
@@ -126,8 +172,10 @@ fun CountriesScreen(
                             connectedServer = connectedServer,
                             onBack = { viewModel.backToCountries() },
                             onCityClick = { city ->
-                                viewModel.selectCity(city.name)
-                                onNavigateToHome()
+                                checkVpnAndConnect {
+                                    viewModel.selectCity(city.name)
+                                    onNavigateToHome()
+                                }
                             },
                             onCityMore = { city ->
                                 viewModel.expandServersForCity(city.name)
@@ -142,8 +190,10 @@ fun CountriesScreen(
                             connectedServer = connectedServer,
                             onBack = { viewModel.backToCities() },
                             onServerClick = { server ->
-                                viewModel.selectServer(server)
-                                onNavigateToHome()
+                                checkVpnAndConnect {
+                                    viewModel.selectServer(server)
+                                    onNavigateToHome()
+                                }
                             }
                         )
                     }
@@ -205,6 +255,7 @@ fun CountryCard(
     onClick: () -> Unit,
     onMoreClick: () -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     val context = LocalContext.current
     val flag = CountryUtils.getFlagForCountry(country.code)
     val localizedName = CountryUtils.getCountryName(context, country.code)
@@ -220,7 +271,7 @@ fun CountryCard(
             ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
+            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary.copy(alpha = 0.5f)
         )
     ) {
         Column {
@@ -241,11 +292,11 @@ fun CountryCard(
                         Box(
                             modifier = Modifier
                                 .size(10.dp)
-                                .background(Color(0xFF3DDC84), CircleShape)
+                                .background(colors.notificationSuccess, CircleShape)
                                 .padding(2.dp)
-                                .background(MaterialTheme.colorScheme.surface, CircleShape)
+                                .background(colors.backgroundNorm, CircleShape)
                                 .padding(1.dp)
-                                .background(Color(0xFF3DDC84), CircleShape)
+                                .background(colors.notificationSuccess, CircleShape)
                         )
                     }
                 }
@@ -256,6 +307,7 @@ fun CountryCard(
                     text = localizedName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    color = colors.textNorm,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -267,11 +319,12 @@ fun CountryCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.desc_more_options)
+                        contentDescription = stringResource(R.string.desc_more_options),
+                        tint = colors.iconWeak
                     )
                 }
             }
-            
+
             LoadProgressBar(load = country.averageLoad)
         }
     }
@@ -296,6 +349,7 @@ fun CitiesListContent(
     ) {
         item {
             val backInteractionSource = remember { MutableInteractionSource() }
+            val colors = ProtonNextTheme.colors
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -312,13 +366,15 @@ fun CitiesListContent(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.desc_back_button)
+                        contentDescription = stringResource(R.string.desc_back_button),
+                        tint = colors.textNorm
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = country,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm
                     )
                 }
             }
@@ -346,6 +402,7 @@ fun CityCard(
     onClick: () -> Unit,
     onMoreClick: () -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
 
     Card(
@@ -358,7 +415,7 @@ fun CityCard(
             ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
+            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary.copy(alpha = 0.5f)
         )
     ) {
         Column {
@@ -379,11 +436,11 @@ fun CityCard(
                         Box(
                             modifier = Modifier
                                 .size(10.dp)
-                                .background(Color(0xFF3DDC84), CircleShape)
+                                .background(colors.notificationSuccess, CircleShape)
                                 .padding(2.dp)
-                                .background(MaterialTheme.colorScheme.surface, CircleShape)
+                                .background(colors.backgroundNorm, CircleShape)
                                 .padding(1.dp)
-                                .background(Color(0xFF3DDC84), CircleShape)
+                                .background(colors.notificationSuccess, CircleShape)
                         )
                     }
                 }
@@ -394,6 +451,7 @@ fun CityCard(
                     text = city.name,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
+                    color = colors.textNorm,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -405,11 +463,12 @@ fun CityCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.MoreVert,
-                        contentDescription = stringResource(R.string.desc_more_options)
+                        contentDescription = stringResource(R.string.desc_more_options),
+                        tint = colors.iconWeak
                     )
                 }
             }
-            
+
             LoadProgressBar(load = city.averageLoad)
         }
     }
@@ -424,6 +483,7 @@ fun ServersListContent(
     onBack: () -> Unit,
     onServerClick: (LogicalServer) -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -450,19 +510,21 @@ fun ServersListContent(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.desc_back_button)
+                        contentDescription = stringResource(R.string.desc_back_button),
+                        tint = colors.textNorm
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
                             text = country,
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textNorm
                         )
                         Text(
                             text = city,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                            color = colors.textWeak
                         )
                     }
                 }
@@ -489,6 +551,7 @@ fun ServerSelectionCard(
     isConnected: Boolean = false,
     onClick: () -> Unit
 ) {
+    val colors = ProtonNextTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
 
     Card(
@@ -501,7 +564,7 @@ fun ServerSelectionCard(
             ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f) else MaterialTheme.colorScheme.surface
+            containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary.copy(alpha = 0.5f)
         )
     ) {
         Column {
@@ -516,24 +579,24 @@ fun ServerSelectionCard(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondaryContainer),
+                            .background(colors.backgroundNorm),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Public,
                             contentDescription = server.name,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
+                            tint = colors.iconNorm
                         )
                     }
                     if (isConnected) {
                         Box(
                             modifier = Modifier
                                 .size(10.dp)
-                                .background(Color(0xFF3DDC84), CircleShape)
+                                .background(colors.notificationSuccess, CircleShape)
                                 .padding(2.dp)
-                                .background(MaterialTheme.colorScheme.surface, CircleShape)
+                                .background(colors.backgroundNorm, CircleShape)
                                 .padding(1.dp)
-                                .background(Color(0xFF3DDC84), CircleShape)
+                                .background(colors.notificationSuccess, CircleShape)
                         )
                     }
                 }
@@ -544,18 +607,19 @@ fun ServerSelectionCard(
                     Text(
                         text = server.name,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm
                     )
                     Text(
                         text = server.city,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                        color = colors.textWeak
                     )
                 }
 
                 LoadIndicator(load = server.averageLoad)
             }
-            
+
             LoadProgressBar(load = server.averageLoad)
         }
     }
@@ -563,14 +627,15 @@ fun ServerSelectionCard(
 
 @Composable
 fun LoadIndicator(load: Int) {
+    val loadColor = CountryUtils.getColorForLoad(load)
     Surface(
-        color = CountryUtils.getColorForLoad(load).copy(alpha = 0.2f),
+        color = loadColor.copy(alpha = 0.2f),
         shape = RoundedCornerShape(8.dp)
     ) {
         Text(
             text = "$load%",
             style = MaterialTheme.typography.labelMedium,
-            color = CountryUtils.getColorForLoad(load),
+            color = loadColor,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
@@ -579,11 +644,12 @@ fun LoadIndicator(load: Int) {
 
 @Composable
 fun LoadProgressBar(load: Int) {
+    val colors = ProtonNextTheme.colors
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(4.dp)
-            .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f))
+            .background(colors.textNorm.copy(alpha = 0.05f))
     ) {
         Box(
             modifier = Modifier

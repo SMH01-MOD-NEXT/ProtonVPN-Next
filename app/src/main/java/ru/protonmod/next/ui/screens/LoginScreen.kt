@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
@@ -55,6 +56,7 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
+    val colors = ProtonNextTheme.colors
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var totpCode by remember { mutableStateOf("") }
@@ -86,12 +88,17 @@ fun LoginScreen(
                 title = { },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.desc_back_button))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack, 
+                            contentDescription = stringResource(R.string.desc_back_button),
+                            tint = colors.textNorm
+                        )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = colors.backgroundNorm)
             )
-        }
+        },
+        containerColor = colors.backgroundNorm
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -107,7 +114,12 @@ fun LoginScreen(
                     is LoginUiState.RequiresCaptcha -> {
                         // --- CAPTCHA WebView ---
                         Column(modifier = Modifier.fillMaxSize()) {
-                            Text(stringResource(R.string.title_security_check), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                            Text(
+                                stringResource(R.string.title_security_check), 
+                                style = MaterialTheme.typography.headlineMedium, 
+                                fontWeight = FontWeight.Bold,
+                                color = colors.textNorm
+                            )
                             Spacer(modifier = Modifier.height(16.dp))
 
                             AndroidView(
@@ -162,9 +174,9 @@ fun LoginScreen(
                     is LoginUiState.Requires2FA -> {
                         // --- 2FA Input View ---
                         Column {
-                            Text(stringResource(R.string.title_2fa), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                            Text(stringResource(R.string.title_2fa), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = colors.textNorm)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(stringResource(R.string.msg_2fa_instruction), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+                            Text(stringResource(R.string.msg_2fa_instruction), style = MaterialTheme.typography.bodyLarge, color = colors.textWeak)
                             Spacer(modifier = Modifier.height(32.dp))
                             OutlinedTextField(
                                 value = totpCode,
@@ -174,16 +186,28 @@ fun LoginScreen(
                                 singleLine = true,
                                 shape = MaterialTheme.shapes.medium,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                enabled = !isLoading
+                                enabled = !isLoading,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colors.brandNorm,
+                                    unfocusedBorderColor = colors.separatorNorm,
+                                    focusedLabelColor = colors.brandNorm,
+                                    unfocusedLabelColor = colors.textWeak,
+                                    focusedTextColor = colors.textNorm,
+                                    unfocusedTextColor = colors.textNorm
+                                )
                             )
                             Spacer(modifier = Modifier.height(32.dp))
                             Button(
                                 onClick = { viewModel.submit2FA(state.sessionId, state.tempAccessToken, state.refreshToken, totpCode) },
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = MaterialTheme.shapes.large,
-                                enabled = totpCode.isNotBlank() && !isLoading
+                                enabled = totpCode.isNotBlank() && !isLoading,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.interactionNorm,
+                                    contentColor = colors.textInverted
+                                )
                             ) {
-                                if (isLoading) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                                if (isLoading) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = colors.textInverted, strokeWidth = 2.dp)
                                 else Text(stringResource(R.string.btn_verify), style = MaterialTheme.typography.labelLarge)
                             }
                         }
@@ -192,9 +216,9 @@ fun LoginScreen(
                     // --- Standard Login View ---
                     else -> {
                         Column {
-                            Text(stringResource(R.string.login_title), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+                            Text(stringResource(R.string.login_title), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold, color = colors.textNorm)
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text(stringResource(R.string.login_subtitle), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+                            Text(stringResource(R.string.login_subtitle), style = MaterialTheme.typography.bodyLarge, color = colors.textWeak)
                             Spacer(modifier = Modifier.height(32.dp))
                             OutlinedTextField(
                                 value = username,
@@ -204,7 +228,15 @@ fun LoginScreen(
                                 singleLine = true,
                                 shape = MaterialTheme.shapes.medium,
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                                enabled = !isLoading
+                                enabled = !isLoading,
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colors.brandNorm,
+                                    unfocusedBorderColor = colors.separatorNorm,
+                                    focusedLabelColor = colors.brandNorm,
+                                    unfocusedLabelColor = colors.textWeak,
+                                    focusedTextColor = colors.textNorm,
+                                    unfocusedTextColor = colors.textNorm
+                                )
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedTextField(
@@ -219,17 +251,35 @@ fun LoginScreen(
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                                 trailingIcon = {
                                     val image = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) { Icon(imageVector = image, contentDescription = stringResource(R.string.desc_toggle_password)) }
-                                }
+                                    IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) { 
+                                        Icon(
+                                            imageVector = image, 
+                                            contentDescription = stringResource(R.string.desc_toggle_password),
+                                            tint = colors.iconWeak
+                                        ) 
+                                    }
+                                },
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = colors.brandNorm,
+                                    unfocusedBorderColor = colors.separatorNorm,
+                                    focusedLabelColor = colors.brandNorm,
+                                    unfocusedLabelColor = colors.textWeak,
+                                    focusedTextColor = colors.textNorm,
+                                    unfocusedTextColor = colors.textNorm
+                                )
                             )
                             Spacer(modifier = Modifier.height(32.dp))
                             Button(
                                 onClick = { viewModel.login(username, password) },
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = MaterialTheme.shapes.large,
-                                enabled = username.isNotBlank() && password.isNotBlank() && !isLoading
+                                enabled = username.isNotBlank() && password.isNotBlank() && !isLoading,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.interactionNorm,
+                                    contentColor = colors.textInverted
+                                )
                             ) {
-                                if (isLoading) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                                if (isLoading) CircularProgressIndicator(modifier = Modifier.size(24.dp), color = colors.textInverted, strokeWidth = 2.dp)
                                 else Text(stringResource(R.string.btn_login), style = MaterialTheme.typography.labelLarge)
                             }
                         }

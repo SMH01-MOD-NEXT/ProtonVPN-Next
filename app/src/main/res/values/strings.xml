@@ -79,7 +79,48 @@
     <string name="settings_notifications">Notifications</string>
     <string name="settings_notifications_desc">Receive VPN status notifications</string>
     <string name="settings_about">About</string>
-    <string name="settings_version">Version 12.0.0</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_licenses">Open Source Licenses</string>
+    <string name="settings_licenses_desc">Third-party software used in the app</string>
+    <string name="settings_on">On</string>
+    <string name="settings_off">Off</string>
+    <string name="settings_connection_protocol">Protocol</string>
+    <string name="settings_port">Port</string>
+    <string name="settings_port_desc">Manual port selection for WireGuard</string>
+    <string name="settings_obfuscation">Obfuscation (AmneziaWG)</string>
+    <string name="settings_obfuscation_desc">Modify packet headers to bypass DPI</string>
+    <string name="settings_reset_obfuscation">Reset to Standard ProtonVPN-Next</string>
+
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_title">Obfuscation Settings</string>
+    <string name="obfuscation_jc">Junk Packet Count (Jc)</string>
+    <string name="obfuscation_jmin">Junk Packet Min Size (Jmin)</string>
+    <string name="obfuscation_jmax">Junk Packet Max Size (Jmax)</string>
+    <string name="obfuscation_s1">Init Packet Junk Size (S1)</string>
+    <string name="obfuscation_s2">Response Packet Junk Size (S2)</string>
+    <string name="obfuscation_h1">Init Packet Magic (H1)</string>
+    <string name="obfuscation_h2">Response Packet Magic (H2)</string>
+    <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
+    <string name="obfuscation_h4">Transport Packet Magic (H4)</string>
+    <string name="obfuscation_i1">Special Junk (I1)</string>
+
+    <!-- About App Screen -->
+    <string name="about_community">Community</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+
+    <!-- Licenses Screen -->
+    <string name="licenses_title">Licenses</string>
+    <string name="license_app_title">Proton VPN-Next</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">AndroidX Libraries</string>
+    <string name="license_apache_2">Apache License 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">Kotlin Standard Library</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
     <string name="st_enabled_subtitle">VPN connection will bypass selected apps and IPs</string>

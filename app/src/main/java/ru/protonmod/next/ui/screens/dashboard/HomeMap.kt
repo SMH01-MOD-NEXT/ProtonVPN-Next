@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 /**
  * Maps country codes to relative X, Y coordinates on a standard equirectangular/Mercator world map.
@@ -49,13 +50,14 @@ fun HomeMap(
     connectedServer: LogicalServer?,
     isConnecting: Boolean
 ) {
+    val colors = ProtonNextTheme.colors
     // Determine the state of the connection to set the appropriate colors
     val isConnected = connectedServer != null && !isConnecting
 
     val pinColor by animateColorAsState(
         targetValue = when {
-            isConnected -> Color(0xFF3DDC84) // VPN Green
-            isConnecting -> MaterialTheme.colorScheme.primary // Connecting color
+            isConnected -> colors.notificationSuccess // VPN Green
+            isConnecting -> colors.brandNorm // Connecting color
             else -> Color.Transparent // Hidden when disconnected
         },
         animationSpec = tween(durationMillis = 500),
@@ -94,8 +96,8 @@ fun HomeMap(
         modifier = modifier.background(
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    Color(0xFF1E293B), // Dark slate blue (sky/space)
-                    MaterialTheme.colorScheme.background
+                    colors.brandNorm.copy(alpha = 0.2f), // Subtle brand color glow
+                    colors.backgroundNorm
                 )
             )
         ),
