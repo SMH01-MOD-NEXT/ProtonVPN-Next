@@ -33,7 +33,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.amnezia.awg.backend.AbstractBackend
@@ -71,6 +70,10 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private var statsJob: Job? = null
     private var lastRx: Long = 0L
     private var lastTx: Long = 0L
+    private var lastSpeedText: String? = null
+    private var notificationsEnabled: Boolean = true
+    private var killSwitchEnabled: Boolean = false
+    private var isManualDisconnect: Boolean = false
 
     companion object {
         private const val TAG = "ProtonVpnService"
@@ -81,16 +84,22 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         const val EXTRA_EXCLUDED_IPS = "excluded_ips"
         const val ACTION_STATE_CHANGED = "ru.protonmod.next.vpn.STATE_CHANGED"
         const val EXTRA_STATE = "state"
+        
+        const val ACTION_UPDATE_SETTINGS = "ru.protonmod.next.vpn.UPDATE_SETTINGS"
+        const val EXTRA_NOTIFICATIONS_ENABLED = "notifications_enabled"
+        const val EXTRA_KILL_SWITCH_ENABLED = "kill_switch_enabled"
+
         const val TUNNEL_NAME = "proton_awg"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "vpn_status_channel"
+        private const val CHANNEL_SILENT_ID = "vpn_status_channel_silent"
         
-        // Custom connecting state for internal use since TOGGLE was removed from library
         const val STATE_CONNECTING = "CONNECTING"
     }
 
     private lateinit var backend: GoBackend
     private var currentTunnelState: Tunnel.State = Tunnel.State.DOWN
+    private var isCurrentlyConnecting: Boolean = false
 
     private val tunnel = object : Tunnel {
         override fun getName() = TUNNEL_NAME
@@ -98,9 +107,10 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         override fun onStateChange(newState: Tunnel.State) {
             if (currentTunnelState == newState) return
             currentTunnelState = newState
+            isCurrentlyConnecting = false
 
             Log.d(TAG, "State changed to $newState")
-            updateNotification(newState.name)
+            
             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
                 putExtra(EXTRA_STATE, newState.name)
                 setPackage(packageName)
@@ -109,7 +119,11 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
             if (newState == Tunnel.State.DOWN) {
                 stopTrafficUpdates()
-            } else if (newState == Tunnel.State.UP) {
+            }
+            
+            updateNotification(newState.name)
+            
+            if (newState == Tunnel.State.UP) {
                 startTrafficUpdates()
             }
         }
@@ -130,8 +144,8 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         }
 
         super.onCreate()
-        createNotificationChannel()
-        
+        createNotificationChannels()
+
         backend = GoBackend(this, object : TunnelActionHandler {
             override fun runPreUp(scripts: Collection<String>) {}
             override fun runPostUp(scripts: Collection<String>) {}
@@ -145,31 +159,27 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
         when (intent?.action) {
             ACTION_CONNECT -> {
+                isManualDisconnect = false
                 val configStr = intent.getStringExtra(EXTRA_CONFIG)
+                notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, true)
+                killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, false)
+
                 if (configStr != null) {
                     serviceScope.launch {
                         try {
-                            val killSwitch = settingsManager.killSwitchEnabled.first()
-
                             val configStream = ByteArrayInputStream(configStr.toByteArray())
                             val config = Config.parse(configStream)
 
-                            // Apply settings if needed
-                            if (killSwitch) {
-                                Log.d(TAG, "Kill Switch is enabled")
-                            }
-
-                            // Broadcast connecting state before starting
                             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
                                 putExtra(EXTRA_STATE, STATE_CONNECTING)
                                 setPackage(packageName)
                             }
                             sendBroadcast(broadcast)
                             
+                            isCurrentlyConnecting = true
                             updateNotification(STATE_CONNECTING)
 
                             backend.setState(tunnel, Tunnel.State.UP, config)
-                            startForeground(NOTIFICATION_ID, createNotification(Tunnel.State.UP.name, null))
                         } catch (e: Exception) {
                             Log.e(TAG, "Failed to start tunnel", e)
                             tunnel.onStateChange(Tunnel.State.DOWN)
@@ -178,13 +188,27 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 }
             }
             ACTION_DISCONNECT -> {
+                isManualDisconnect = true
+                isCurrentlyConnecting = false
                 try {
                     backend.setState(tunnel, Tunnel.State.DOWN, null)
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    stopSelf()
                 } catch (e: Exception) {
                     Log.e(TAG, "Failed to stop tunnel", e)
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
                 }
+            }
+            ACTION_UPDATE_SETTINGS -> {
+                notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
+                killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+                Log.d(TAG, "Settings updated: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled")
+                
+                val label = when {
+                    isCurrentlyConnecting -> STATE_CONNECTING
+                    else -> currentTunnelState.name
+                }
+                
+                updateNotification(label)
             }
             else -> {
                 return super.onStartCommand(intent, flags, startId)
@@ -193,18 +217,25 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         return START_STICKY
     }
 
-    private fun createNotificationChannel() {
+    private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = getString(R.string.notification_channel_name)
-            val descriptionText = getString(R.string.notification_channel_desc)
-            val importance = NotificationManager.IMPORTANCE_LOW
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-                setShowBadge(false)
-            }
             val notificationManager: NotificationManager =
                 getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            
+            val name = getString(R.string.notification_channel_name)
+            
+            // Standard channel
+            val channel = NotificationChannel(CHANNEL_ID, name, NotificationManager.IMPORTANCE_LOW).apply {
+                description = getString(R.string.notification_channel_desc)
+                setShowBadge(false)
+            }
             notificationManager.createNotificationChannel(channel)
+
+            // Silent channel
+            val silentChannel = NotificationChannel(CHANNEL_SILENT_ID, "$name (Silent)", NotificationManager.IMPORTANCE_MIN).apply {
+                setShowBadge(false)
+            }
+            notificationManager.createNotificationChannel(silentChannel)
         }
     }
 
@@ -228,11 +259,13 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
                         val upStr = formatSpeed(deltaTx)
                         val downStr = formatSpeed(deltaRx)
-                        val speedText = "↑ $upStr ↓ $downStr"
+                        lastSpeedText = "↑ $upStr ↓ $downStr"
 
-                        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                        val notification = createNotification(Tunnel.State.UP.name, speedText)
-                        notificationManager.notify(NOTIFICATION_ID, notification)
+                        if (notificationsEnabled) {
+                            serviceScope.launch {
+                                updateNotification(Tunnel.State.UP.name)
+                            }
+                        }
                     } catch (e: Exception) {
                         Log.e(TAG, "Error while fetching stats", e)
                     }
@@ -247,6 +280,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private fun stopTrafficUpdates() {
         statsJob?.cancel()
         statsJob = null
+        lastSpeedText = null
     }
 
     private fun formatSpeed(bytesPerSec: Long): String {
@@ -284,12 +318,15 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             this, 0, launchIntent, PendingIntent.FLAG_IMMUTABLE
         )
 
-        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+        val activeChannelId = if (notificationsEnabled) CHANNEL_ID else CHANNEL_SILENT_ID
+
+        val builder = NotificationCompat.Builder(this, activeChannelId)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(if (notificationsEnabled) NotificationCompat.PRIORITY_LOW else NotificationCompat.PRIORITY_MIN)
             .setOngoing(stateName != Tunnel.State.DOWN.name)
             .setContentIntent(contentPendingIntent)
+            .setShowWhen(false)
 
         if (stateName == Tunnel.State.UP.name) {
             builder.addAction(
@@ -297,7 +334,7 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 getString(R.string.notification_action_disconnect),
                 disconnectPendingIntent
             )
-            if (!speedText.isNullOrEmpty()) {
+            if (!speedText.isNullOrEmpty() && notificationsEnabled) {
                 builder.setContentText(speedText)
             }
         }
@@ -306,12 +343,29 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     }
 
     private fun updateNotification(stateName: String) {
-        serviceScope.launch {
-            val notificationsEnabled = settingsManager.notificationsEnabled.first()
-            if (notificationsEnabled) {
-                val notification = createNotification(stateName)
-                val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.notify(NOTIFICATION_ID, notification)
+        val isDown = stateName == Tunnel.State.DOWN.name
+        val isConnecting = isCurrentlyConnecting || stateName == STATE_CONNECTING
+        
+        // Decide if we should show a notification.
+        val shouldShow = when {
+            isConnecting -> true
+            isDown -> killSwitchEnabled && !isManualDisconnect
+            else -> notificationsEnabled
+        }
+
+        if (shouldShow) {
+            val notification = createNotification(stateName, lastSpeedText)
+            startForeground(NOTIFICATION_ID, notification)
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            } else {
+                @Suppress("DEPRECATION")
+                stopForeground(true)
+            }
+
+            if (isDown) {
+                stopSelf()
             }
         }
     }

@@ -100,6 +100,23 @@ class AmneziaVpnManager @Inject constructor(
                 }
             }
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
+
+        // Sync settings to service
+        applicationScope.launch {
+            settingsManager.notificationsEnabled.collect { updateServiceSettings() }
+        }
+        applicationScope.launch {
+            settingsManager.killSwitchEnabled.collect { updateServiceSettings() }
+        }
+    }
+
+    private suspend fun updateServiceSettings() {
+        val intent = Intent(context, ProtonVpnService::class.java).apply {
+            action = ProtonVpnService.ACTION_UPDATE_SETTINGS
+            putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, settingsManager.notificationsEnabled.first())
+            putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, settingsManager.killSwitchEnabled.first())
+        }
+        context.startService(intent)
     }
 
     fun connect(
@@ -181,6 +198,8 @@ class AmneziaVpnManager @Inject constructor(
             val intent = Intent(context, ProtonVpnService::class.java).apply {
                 action = ProtonVpnService.ACTION_CONNECT
                 putExtra(ProtonVpnService.EXTRA_CONFIG, configStr)
+                putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, settingsManager.notificationsEnabled.first())
+                putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, settingsManager.killSwitchEnabled.first())
                 putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_APPS, ArrayList(excludedApps))
                 putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_IPS, ArrayList(excludedIps))
             }

@@ -17,7 +17,6 @@
 
 package ru.protonmod.next.ui.screens.settings
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -26,7 +25,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.*
@@ -68,36 +66,12 @@ fun SettingsScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        stringResource(R.string.settings_title),
-                        fontWeight = FontWeight.Bold,
-                        color = colors.textNorm
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.desc_back_button),
-                            tint = colors.textNorm
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        },
         containerColor = colors.backgroundNorm,
         bottomBar = {}
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                // Apply scaffold padding so the bottom bar won't draw behind the system navigation bar
                 .padding(paddingValues)
         ) {
             Box(
@@ -114,22 +88,17 @@ fun SettingsScreen(
                     )
             )
 
-            AnimatedContent(
-                targetState = uiState,
-                label = "settings_state",
+            SettingsContent(
+                state = uiState,
+                onKillSwitchChange = viewModel::setKillSwitch,
+                onAutoConnectChange = viewModel::setAutoConnect,
+                onNotificationsChange = viewModel::setNotifications,
+                onPortChange = viewModel::setVpnPort,
+                onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
+                onNavigateToObfuscation = onNavigateToObfuscation,
+                onNavigateToAbout = onNavigateToAbout,
                 modifier = Modifier.fillMaxSize()
-            ) { state ->
-                SettingsContent(
-                    state = state,
-                    onKillSwitchChange = viewModel::setKillSwitch,
-                    onAutoConnectChange = viewModel::setAutoConnect,
-                    onNotificationsChange = viewModel::setNotifications,
-                    onPortChange = viewModel::setVpnPort,
-                    onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                    onNavigateToObfuscation = onNavigateToObfuscation,
-                    onNavigateToAbout = onNavigateToAbout
-                )
-            }
+            )
 
             LiquidGlassBottomBar(
                 selectedTarget = currentTarget,
@@ -143,7 +112,6 @@ fun SettingsScreen(
                         MainTarget.Settings -> { /* Already here */ }
                     }
                 },
-                // Added fillMaxWidth to be consistent with CountriesScreen layout
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
@@ -161,34 +129,49 @@ fun SettingsContent(
     onPortChange: (Int) -> Unit,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
     onNavigateToObfuscation: (() -> Unit)? = null,
-    onNavigateToAbout: (() -> Unit)? = null
+    onNavigateToAbout: (() -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
     var showPortDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
         contentPadding = PaddingValues(
             start = 16.dp,
             end = 16.dp,
-            // Reduced top padding as it's now handled by the parent Box paddingValues
-            top = 8.dp,
+            top = 16.dp,
             bottom = 120.dp
         )
     ) {
-        // Features Category
+        item {
+            Text(
+                text = stringResource(R.string.settings_title),
+                style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                color = colors.textNorm,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 24.dp)
+            )
+        }
+
+        // Features Grid (Now 1x2 as requested)
         item {
             FeatureCategory(
                 state = state,
-                onAutoConnectChange = onAutoConnectChange,
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                onKillSwitchChange = onKillSwitchChange
+                onNavigateToObfuscation = onNavigateToObfuscation
             )
         }
 
         // Connection Settings
         item {
             Category(title = stringResource(R.string.settings_connection)) {
+                SettingToggleRow(
+                    icon = Icons.Rounded.Autorenew,
+                    title = stringResource(R.string.settings_auto_connect),
+                    subtitle = stringResource(R.string.settings_auto_connect_desc),
+                    checked = state.autoConnectEnabled,
+                    onCheckedChange = onAutoConnectChange
+                )
                 SettingRowWithIcon(
                     icon = Icons.Rounded.SettingsEthernet,
                     title = stringResource(R.string.settings_connection_protocol),
@@ -201,18 +184,19 @@ fun SettingsContent(
                     subtitle = if (state.vpnPort == 0) stringResource(R.string.settings_port_auto) else state.vpnPort.toString(),
                     onClick = { showPortDialog = true }
                 )
-                SettingRowWithIcon(
-                    icon = Icons.Rounded.Security,
-                    title = stringResource(R.string.settings_obfuscation),
-                    subtitle = stringResource(R.string.settings_obfuscation_desc),
-                    onClick = onNavigateToObfuscation
-                )
             }
         }
 
         // Privacy & Notifications
         item {
             Category(title = stringResource(R.string.settings_privacy)) {
+                SettingToggleRow(
+                    icon = Icons.Rounded.GppMaybe,
+                    title = stringResource(R.string.settings_kill_switch),
+                    subtitle = stringResource(R.string.settings_kill_switch_desc),
+                    checked = state.killSwitchEnabled,
+                    onCheckedChange = onKillSwitchChange
+                )
                 SettingToggleRow(
                     icon = Icons.Rounded.Notifications,
                     title = stringResource(R.string.settings_notifications),
@@ -310,7 +294,7 @@ fun PortSelectionDialog(
                     onClick = onDismiss,
                     modifier = Modifier.align(Alignment.End).padding(end = 16.dp)
                 ) {
-                    Text("Cancel", color = colors.brandNorm)
+                    Text(stringResource(id = android.R.string.cancel), color = colors.brandNorm)
                 }
             }
         }
@@ -321,29 +305,26 @@ fun PortSelectionDialog(
 private fun FeatureCategory(
     modifier: Modifier = Modifier,
     state: SettingsUiState,
-    onAutoConnectChange: (Boolean) -> Unit,
     onNavigateToSplitTunnelingMain: (() -> Unit)?,
-    onKillSwitchChange: (Boolean) -> Unit,
+    onNavigateToObfuscation: (() -> Unit)?
 ) {
-    val colors = ProtonNextTheme.colors
-    // Row with two square tiles
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 16.dp, bottom = 12.dp),
+            .padding(bottom = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Auto Connect Tile
+        // Obfuscation Tile (Left)
         FeatureTile(
             modifier = Modifier.weight(1f),
-            title = stringResource(id = R.string.settings_auto_connect),
-            subtitle = if (state.autoConnectEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
-            icon = Icons.Rounded.Autorenew,
-            isActive = state.autoConnectEnabled,
-            onClick = { onAutoConnectChange(!state.autoConnectEnabled) }
+            title = stringResource(id = R.string.settings_obfuscation),
+            subtitle = stringResource(R.string.settings_obfuscation_desc),
+            icon = Icons.Rounded.Security,
+            isActive = true,
+            onClick = { onNavigateToObfuscation?.invoke() }
         )
 
-        // Split Tunneling
+        // Split Tunneling (Right)
         FeatureTile(
             modifier = Modifier.weight(1f),
             title = stringResource(id = R.string.settings_split_tunneling),
@@ -351,24 +332,6 @@ private fun FeatureCategory(
             icon = Icons.AutoMirrored.Rounded.AltRoute,
             isActive = state.splitTunnelingEnabled,
             onClick = { onNavigateToSplitTunnelingMain?.invoke() }
-        )
-    }
-
-    // Kill Switch
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colors.backgroundSecondary.copy(alpha = 0.8f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        SettingToggleRow(
-            icon = Icons.Rounded.GppBad,
-            title = stringResource(id = R.string.settings_kill_switch),
-            subtitle = stringResource(id = R.string.settings_kill_switch_desc),
-            checked = state.killSwitchEnabled,
-            onCheckedChange = onKillSwitchChange
         )
     }
 }
@@ -435,7 +398,9 @@ fun FeatureTile(
                     text = subtitle,
                     style = MaterialTheme.typography.bodySmall,
                     color = colors.textWeak,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
