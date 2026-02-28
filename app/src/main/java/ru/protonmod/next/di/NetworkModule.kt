@@ -26,6 +26,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
+import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaType
@@ -35,6 +36,8 @@ import okhttp3.dnsoverhttps.DnsOverHttps
 import retrofit2.Retrofit
 import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
+import ru.protonmod.next.vpn.AmneziaVpnManager
+import org.amnezia.awg.backend.Tunnel
 import java.net.InetAddress
 import java.util.Locale
 import java.util.concurrent.TimeUnit
@@ -44,8 +47,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // Pointing to the deployed Netlify proxy.
-    private const val PROTON_API_BASE_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
+    private const val PROTON_PROXY_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
+    private const val PROTON_DIRECT_URL = "https://vpn-api.proton.me/"
     private const val APP_VERSION_STRING = "5.16.31.0"
 
     @Provides
@@ -55,45 +58,26 @@ object NetworkModule {
         isLenient = true
     }
 
-    /**
-     * Helper function to build a safe, device-specific User-Agent.
-     * Proton API is very strict, so we maintain the exact structure of the official app.
-     */
     private fun generateUserAgent(): String {
         val androidVersion = Build.VERSION.RELEASE ?: "12"
         val manufacturer = Build.MANUFACTURER ?: "Unknown"
         val model = Build.MODEL ?: "Device"
-
-        // Capitalize manufacturer to look natural (e.g., "samsung" -> "Samsung")
         val capManufacturer = manufacturer.replaceFirstChar {
             if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString()
         }
-
-        // Sometimes the model already starts with the manufacturer name (e.g. "HTC One")
         val deviceName = if (model.lowercase(Locale.US).startsWith(manufacturer.lowercase(Locale.US))) {
             model.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
         } else {
             "$capManufacturer $model"
         }
-
-        // Strip any non-ASCII characters.
-        // Some obscure custom ROMs include emojis or unicode characters in the device name.
-        // OkHttp will crash if it tries to add non-ASCII characters to HTTP headers.
         val safeDeviceName = deviceName.replace(Regex("[^\\x20-\\x7E]"), "").trim()
         val safeAndroidVersion = androidVersion.replace(Regex("[^\\x20-\\x7E]"), "").trim()
-
         return "ProtonVPN/$APP_VERSION_STRING (Android $safeAndroidVersion; $safeDeviceName)"
     }
 
-    /**
-     * Creates a DNS over HTTPS (DoH) client to bypass local DNS poisoning.
-     * This ensures that even if the ISP tries to block the worker URL via DNS,
-     * the app will resolve it securely via Cloudflare's 1.1.1.1.
-     */
     private fun buildDnsOverHttps(bootstrapClient: OkHttpClient): DnsOverHttps {
         return DnsOverHttps.Builder().client(bootstrapClient)
             .url("https://cloudflare-dns.com/dns-query".toHttpUrl())
-            // Bootstrap IPs for Cloudflare DNS so it doesn't need DNS to find the DoH server
             .bootstrapDnsHosts(
                 InetAddress.getByName("1.1.1.1"),
                 InetAddress.getByName("1.0.0.1"),
@@ -105,36 +89,64 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
-        // Explicitly initialize OkHttp with context.
-        // This is needed for AssetPublicSuffixList in multi-process environments.
+    fun provideOkHttpClient(
+        @ApplicationContext context: Context,
+        vpnManager: AmneziaVpnManager
+    ): OkHttpClient {
         try {
             OkHttp.initialize(context)
-        } catch (e: Throwable) {
-            // Log or ignore if already initialized/missing
-        }
+        } catch (e: Throwable) {}
 
-        val headerInterceptor = Interceptor { chain ->
+        val dynamicBaseUrlInterceptor = Interceptor { chain ->
+            var request = chain.request()
             val userAgent = generateUserAgent()
+            
+            // Determine which base URL to use
+            val isVpnUp = vpnManager.tunnelState.value == Tunnel.State.UP
+            val newBaseUrl = if (isVpnUp) PROTON_DIRECT_URL.toHttpUrl() else PROTON_PROXY_URL.toHttpUrl()
+            
+            val newUrl = request.url.newBuilder()
+                .scheme(newBaseUrl.scheme)
+                .host(newBaseUrl.host)
+                .port(newBaseUrl.port)
+                .build()
 
-            val request = chain.request().newBuilder()
+            request = request.newBuilder()
+                .url(newUrl)
                 .addHeader("User-Agent", userAgent)
                 .addHeader("x-pm-appversion", "android-vpn@$APP_VERSION_STRING-dev+play")
                 .addHeader("x-pm-apiversion", "4")
                 .addHeader("Accept", "application/vnd.protonmail.v1+json")
                 .build()
+            
             chain.proceed(request)
         }
 
-        // We create a basic client first to use for the DoH connection
         val bootstrapClient = OkHttpClient.Builder().build()
-        val dns = buildDnsOverHttps(bootstrapClient)
+        val doh = buildDnsOverHttps(bootstrapClient)
+
+        // Dynamic DNS: Disable DoH when VPN is active
+        val dynamicDns = Dns { hostname ->
+            val isVpnUp = vpnManager.tunnelState.value == Tunnel.State.UP
+            if (isVpnUp) {
+                // Use system DNS when VPN is UP to respect tunnel DNS settings
+                Dns.SYSTEM.lookup(hostname)
+            } else {
+                // Use DoH when VPN is DOWN to circumvent censorship
+                try {
+                    doh.lookup(hostname)
+                } catch (e: Exception) {
+                    Dns.SYSTEM.lookup(hostname)
+                }
+            }
+        }
 
         return OkHttpClient.Builder()
-            .addInterceptor(headerInterceptor)
-            .dns(dns) // Apply secure DNS to bypass local restrictions
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(15, TimeUnit.SECONDS)
+            .addInterceptor(dynamicBaseUrlInterceptor)
+            .dns(dynamicDns)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .build()
     }
 
@@ -143,7 +155,7 @@ object NetworkModule {
     fun provideRetrofit(okHttpClient: OkHttpClient, json: Json): Retrofit {
         val contentType = "application/json".toMediaType()
         return Retrofit.Builder()
-            .baseUrl(PROTON_API_BASE_URL)
+            .baseUrl(PROTON_PROXY_URL)
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()

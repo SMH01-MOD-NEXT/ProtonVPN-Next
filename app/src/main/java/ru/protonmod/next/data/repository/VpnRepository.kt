@@ -35,6 +35,9 @@ import javax.inject.Singleton
 class VpnRepository @Inject constructor(
     private val vpnApi: ProtonVpnApi
 ) {
+    private var lastServersUpdate: String? = null
+    private var cachedServers: List<LogicalServer> = emptyList()
+
     companion object {
         private const val TAG = "VpnRepository"
         private val json = Json { ignoreUnknownKeys = true }
@@ -42,34 +45,47 @@ class VpnRepository @Inject constructor(
 
     /**
      * Fetch the list of servers considering their current load.
+     * Optimized with protocol filtering and If-Modified-Since caching.
      */
     suspend fun getServers(accessToken: String, sessionId: String, userTier: Int = 0): Result<List<LogicalServer>> = withContext(Dispatchers.IO) {
         try {
             val bearer = "Bearer $accessToken"
             
-            // 1. Fetch logical servers list
-            val serversResponse = vpnApi.getLogicalServers(bearer, sessionId)
-            Log.d(TAG, "getLogicalServers response code: ${serversResponse.code}, total: ${serversResponse.logicalServers.size}")
+            // 1. Fetch logical servers list with optimizations
+            val response = vpnApi.getLogicalServers(
+                authorization = bearer, 
+                sessionId = sessionId,
+                lastModified = lastServersUpdate,
+                protocols = "wireguard" // Only fetch what we need
+            )
 
-            if (serversResponse.code != 1000) {
-                return@withContext Result.failure(Exception("Failed to fetch servers: ${serversResponse.code}"))
+            val serversList = when (response.code()) {
+                304 -> {
+                    Log.d(TAG, "Servers not modified, using cache")
+                    cachedServers
+                }
+                200 -> {
+                    val body = response.body()
+                    if (body?.code == 1000) {
+                        lastServersUpdate = response.headers()["Last-Modified"]
+                        cachedServers = body.logicalServers
+                        body.logicalServers
+                    } else {
+                        return@withContext Result.failure(Exception("API error: ${body?.code}"))
+                    }
+                }
+                else -> return@withContext Result.failure(Exception("Network error: ${response.code()}"))
             }
 
-            val logicalServers = serversResponse.logicalServers.filter { it.tier <= userTier }
+            Log.d(TAG, "Servers received: ${serversList.size} (Source: ${if (response.code() == 304) "Cache" else "Network"})")
+
+            val logicalServers = serversList.filter { it.tier <= userTier }
             Log.d(TAG, "Filtered servers (userTier=$userTier): ${logicalServers.size}")
             
-            if (logicalServers.isNotEmpty()) {
-                Log.d(TAG, "Sample LogicalServer ID: ${logicalServers[0].id}")
-                if (logicalServers[0].servers.isNotEmpty()) {
-                    Log.d(TAG, "Sample PhysicalServer ID: ${logicalServers[0].servers[0].id}")
-                }
-            }
-
             // 2. Fetch server loads
             Log.d(TAG, "Fetching loads for tier: $userTier")
             val loadsResponse = vpnApi.getLoads(bearer, sessionId, userTier)
             val loadsBody = loadsResponse.body()?.string()
-            Log.d(TAG, "Loads API response code: ${loadsResponse.code()}, body: $loadsBody")
             
             val loadsData = if (loadsResponse.isSuccessful && loadsBody != null) {
                 try {
@@ -83,28 +99,16 @@ class VpnRepository @Inject constructor(
             }
 
             val loadsMap = loadsData?.loads?.associate { it.id to it.load } ?: emptyMap()
-            Log.d(TAG, "Mapped loads count: ${loadsMap.size}")
-            if (loadsMap.isNotEmpty()) {
-                Log.d(TAG, "Sample load ID: ${loadsMap.keys.first()}")
-            }
 
             // 3. Map loads to servers
-            var logicalWithLoad = 0
-            var physicalMatches = 0
             logicalServers.forEach { logical ->
-                // First, try to match the logical server directly
                 val logicalLoad = loadsMap[logical.id]
                 if (logicalLoad != null) {
                     logical.averageLoad = logicalLoad
-                    logicalWithLoad++
-                    
-                    // If we have logical load, maybe physical servers should also have it?
-                    // Or maybe the API returns physical server loads in that same list?
                     logical.servers.forEach { physical ->
                         physical.load = loadsMap[physical.id] ?: logicalLoad
                     }
                 } else {
-                    // Fallback to physical server matching
                     var totalLoad = 0
                     var activeServers = 0
                     
@@ -114,25 +118,35 @@ class VpnRepository @Inject constructor(
                             physical.load = load
                             totalLoad += load
                             activeServers++
-                            physicalMatches++
                         } else {
                             physical.load = 0
                         }
                     }
                     
-                    if (activeServers > 0) {
-                        logical.averageLoad = totalLoad / activeServers
-                        logicalWithLoad++
-                    } else {
-                        logical.averageLoad = 0
-                    }
+                    logical.averageLoad = if (activeServers > 0) totalLoad / activeServers else 0
                 }
             }
-            Log.d(TAG, "Mapped loads for $logicalWithLoad logical servers (Total physical matches: $physicalMatches)")
 
             Result.success(logicalServers)
         } catch (e: Exception) {
             Log.e(TAG, "Error in getServers", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fetch the user's current location as seen by the VPN API.
+     */
+    suspend fun getUserLocation(accessToken: String, sessionId: String): Result<String> = withContext(Dispatchers.IO) {
+        try {
+            val response = vpnApi.getUserLocation("Bearer $accessToken", sessionId)
+            val body = response.body()?.string()
+            if (response.isSuccessful && body != null) {
+                Result.success(body)
+            } else {
+                Result.failure(Exception("Failed to get location: ${response.code()}"))
+            }
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }
@@ -169,20 +183,15 @@ class VpnRepository @Inject constructor(
             val body = response.body()?.string()
             
             if (response.isSuccessful && body != null) {
-                Log.d(TAG, "Raw VPN Info Response: $body")
                 val vpnInfo = json.decodeFromString<VpnInfoResponse>(body)
                 Result.success(vpnInfo)
             } else {
-                val errorBody = response.errorBody()?.string()
-                Log.e(TAG, "Failed to fetch VPN info: ${response.code()}, body: $errorBody")
                 Result.failure(Exception("Failed to fetch VPN info: ${response.code()}"))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching VPN info", e)
             Result.failure(e)
         }
     }
-
 
     /**
      * Registers the public key at /vpn/v1/certificate.
@@ -195,8 +204,6 @@ class VpnRepository @Inject constructor(
         try {
             val bearer = "Bearer $accessToken"
             val request = CreateCertificateRequest(clientPublicKey = publicKeyPem)
-
-            Log.d(TAG, "Registering key at /vpn/v1/certificate")
             val response = vpnApi.registerVpnKey(bearer, sessionId, request)
 
             if (response.code == 1000) {
@@ -205,10 +212,6 @@ class VpnRepository @Inject constructor(
                 Result.failure(Exception("Proton Cert Error: ${response.code}"))
             }
         } catch (e: Exception) {
-            if (e is HttpException) {
-                val errorBody = e.response()?.errorBody()?.string()
-                Log.e(TAG, "Cert registration failed: $errorBody")
-            }
             Result.failure(e)
         }
     }

@@ -31,17 +31,14 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.RecentConnectionDao
-import javax.inject.Inject
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object DatabaseModule {
 
-    // Empty migration from 4 to 5, assuming no schema changes
     val MIGRATION_4_5 = object : Migration(4, 5) {
-        override fun migrate(database: SupportSQLiteDatabase) {
-        }
+        override fun migrate(database: SupportSQLiteDatabase) {}
     }
 
     val MIGRATION_5_6 = object : Migration(5, 6) {
@@ -52,7 +49,6 @@ object DatabaseModule {
 
     val MIGRATION_6_7 = object : Migration(6, 7) {
         override fun migrate(database: SupportSQLiteDatabase) {
-            // Check if column already exists to avoid crashes on some dev environments
             val cursor = database.query("PRAGMA table_info(servers)")
             var columnExists = false
             while (cursor.moveToNext()) {
@@ -69,6 +65,12 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE servers_cache ADD COLUMN lastModified TEXT")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -80,6 +82,7 @@ object DatabaseModule {
         .addMigrations(MIGRATION_4_5)
         .addMigrations(MIGRATION_5_6)
         .addMigrations(MIGRATION_6_7)
+        .addMigrations(MIGRATION_7_8)
         .build()
     }
 

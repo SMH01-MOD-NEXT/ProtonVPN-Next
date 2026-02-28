@@ -23,16 +23,25 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ProtonVpnApi {
 
+    /**
+     * Optimized server list retrieval.
+     * @param lastModified RFC 1123 date string for If-Modified-Since header.
+     * @param protocols Comma-separated list of protocols (e.g., "wireguard").
+     */
     @GET("vpn/v2/logicals")
     suspend fun getLogicalServers(
         @Header("Authorization") authorization: String,
         @Header("x-pm-uid") sessionId: String,
+        @Header("If-Modified-Since") lastModified: String? = null,
+        @Header("x-pm-locale") locale: String? = null,
+        @Query("WithEntriesForProtocols") protocols: String? = "wireguard",
         @Query("WithState") withState: Boolean = true
-    ): LogicalServersResponse
+    ): Response<LogicalServersResponse>
 
     @GET("vpn/v1/loads")
     suspend fun getLoads(
@@ -45,6 +54,40 @@ interface ProtonVpnApi {
     suspend fun getVpnInfo(
         @Header("Authorization") authorization: String,
         @Header("x-pm-uid") sessionId: String
+    ): Response<ResponseBody>
+
+    /**
+     * Get user's current location and IP as seen by the API.
+     */
+    @GET("vpn/v1/location")
+    suspend fun getUserLocation(
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String
+    ): Response<ResponseBody>
+
+    /**
+     * Get streaming services availability per server.
+     */
+    @GET("vpn/v1/streamingservices")
+    suspend fun getStreamingServices(
+        @Header("Authorization") authorization: String,
+        @Header("x-pm-uid") sessionId: String
+    ): Response<ResponseBody>
+
+    /**
+     * Quick binary status check for a server.
+     */
+    @GET("vpn/v2/status/{id}/binary")
+    suspend fun getServerBinaryStatus(
+        @Path("id") serverId: String
+    ): Response<ByteArray>
+
+    /**
+     * Localized city names.
+     */
+    @GET("vpn/v1/cities/names")
+    suspend fun getServerCities(
+        @Header("x-pm-locale") locale: String
     ): Response<ResponseBody>
 
     /**

@@ -19,11 +19,21 @@ package ru.protonmod.next.data.local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [SessionEntity::class, ServersCacheEntity::class, ServerEntity::class, RecentConnectionEntity::class], version = 7, exportSchema = false)
+@Database(entities = [SessionEntity::class, ServersCacheEntity::class, ServerEntity::class, RecentConnectionEntity::class], version = 8, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
     abstract fun serversCacheDao(): ServersCacheDao
     abstract fun serverDao(): ServerDao
     abstract fun recentConnectionDao(): RecentConnectionDao
+
+    companion object {
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE servers_cache ADD COLUMN lastModified TEXT")
+            }
+        }
+    }
 }

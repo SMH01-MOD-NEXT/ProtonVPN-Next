@@ -42,7 +42,8 @@ data class SessionEntity(
 data class ServersCacheEntity(
     @PrimaryKey val id: Int = 1, // We only store one cache entry
     val cachedAt: Long, // Timestamp in milliseconds
-    val expiresAt: Long // Timestamp when cache expires
+    val expiresAt: Long, // Timestamp when cache expires
+    val lastModified: String? = null // RFC 1123 header from server
 )
 
 

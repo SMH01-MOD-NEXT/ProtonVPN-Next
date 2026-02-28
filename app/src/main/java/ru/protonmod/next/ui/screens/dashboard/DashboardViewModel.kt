@@ -20,6 +20,7 @@ package ru.protonmod.next.ui.screens.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -97,6 +98,9 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             amneziaVpnManager.tunnelState.collect { state ->
                 if (state == Tunnel.State.UP) {
+                    // Give the tunnel 3 seconds to stabilize routing before updating servers/load
+                    delay(3000)
+                    
                     connectedServerState.connectedServer.value?.let { server ->
                         recentConnectionDao.addRecentConnection(
                             RecentConnectionEntity(
@@ -108,6 +112,8 @@ class DashboardViewModel @Inject constructor(
                             )
                         )
                     }
+                    // Refresh server loads after connection is established
+                    loadServers()
                 } else if (state == Tunnel.State.DOWN) {
                     connectedServerState.setConnectedServer(null)
                 }
