@@ -56,7 +56,7 @@ fun SettingsScreen(
     onNavigateToCountries: (() -> Unit)? = null,
     onNavigateToProfiles: (() -> Unit)? = null,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
-    onNavigateToObfuscation: (() -> Unit)? = null,
+    onNavigateToProtocol: (() -> Unit)? = null, // Added navigation for Protocol Screen
     onNavigateToAbout: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -74,6 +74,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Background gradient decoration
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -95,7 +96,7 @@ fun SettingsScreen(
                 onNotificationsChange = viewModel::setNotifications,
                 onPortChange = viewModel::setVpnPort,
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                onNavigateToObfuscation = onNavigateToObfuscation,
+                onNavigateToProtocol = onNavigateToProtocol,
                 onNavigateToAbout = onNavigateToAbout,
                 modifier = Modifier.fillMaxSize()
             )
@@ -128,7 +129,7 @@ fun SettingsContent(
     onNotificationsChange: (Boolean) -> Unit,
     onPortChange: (Int) -> Unit,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
-    onNavigateToObfuscation: (() -> Unit)? = null,
+    onNavigateToProtocol: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
@@ -153,30 +154,25 @@ fun SettingsContent(
             )
         }
 
-        // Features Grid (Now 1x2 as requested)
+        // Feature Tiles: Split Tunneling & Protocol
         item {
             FeatureCategory(
                 state = state,
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                onNavigateToObfuscation = onNavigateToObfuscation
+                onNavigateToProtocol = onNavigateToProtocol
             )
         }
 
         // Connection Settings
         item {
             Category(title = stringResource(R.string.settings_connection)) {
+                // Protocol item removed from here as it is now a FeatureTile
                 SettingToggleRow(
                     icon = Icons.Rounded.Autorenew,
                     title = stringResource(R.string.settings_auto_connect),
                     subtitle = stringResource(R.string.settings_auto_connect_desc),
                     checked = state.autoConnectEnabled,
                     onCheckedChange = onAutoConnectChange
-                )
-                SettingRowWithIcon(
-                    icon = Icons.Rounded.SettingsEthernet,
-                    title = stringResource(R.string.settings_connection_protocol),
-                    subtitle = "AmneziaWG (WireGuard)",
-                    onClick = null
                 )
                 SettingRowWithIcon(
                     icon = Icons.Rounded.Numbers,
@@ -220,6 +216,7 @@ fun SettingsContent(
         }
     }
 
+    // Dialog for selecting VPN port
     if (showPortDialog) {
         PortSelectionDialog(
             currentPort = state.vpnPort,
@@ -306,7 +303,7 @@ private fun FeatureCategory(
     modifier: Modifier = Modifier,
     state: SettingsUiState,
     onNavigateToSplitTunnelingMain: (() -> Unit)?,
-    onNavigateToObfuscation: (() -> Unit)?
+    onNavigateToProtocol: (() -> Unit)? // Added parameter
 ) {
     Row(
         modifier = modifier
@@ -314,17 +311,7 @@ private fun FeatureCategory(
             .padding(bottom = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Obfuscation Tile (Left)
-        FeatureTile(
-            modifier = Modifier.weight(1f),
-            title = stringResource(id = R.string.settings_obfuscation),
-            subtitle = stringResource(R.string.settings_obfuscation_desc),
-            icon = Icons.Rounded.Security,
-            isActive = true,
-            onClick = { onNavigateToObfuscation?.invoke() }
-        )
-
-        // Split Tunneling (Right)
+        // Split Tunneling Tile
         FeatureTile(
             modifier = Modifier.weight(1f),
             title = stringResource(id = R.string.settings_split_tunneling),
@@ -332,6 +319,16 @@ private fun FeatureCategory(
             icon = Icons.AutoMirrored.Rounded.AltRoute,
             isActive = state.splitTunnelingEnabled,
             onClick = { onNavigateToSplitTunnelingMain?.invoke() }
+        )
+
+        // Protocol Tile
+        FeatureTile(
+            modifier = Modifier.weight(1f),
+            title = stringResource(id = R.string.settings_protocol),
+            subtitle = "AmneziaWG", // You can get this from SettingsUiState later if multiple protocols exist
+            icon = Icons.Rounded.Security,
+            isActive = true, // Always active or based on state
+            onClick = { onNavigateToProtocol?.invoke() }
         )
     }
 }
@@ -479,7 +476,6 @@ fun SettingRowWithIcon(
                 )
             }
         } else {
-            // Padding to align text if no icon is provided
             Spacer(modifier = Modifier.width(8.dp))
         }
 

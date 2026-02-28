@@ -93,7 +93,6 @@
     <string name="settings_reset_obfuscation">重置为标准 ProtonVPN-Next</string>
 
     <!-- Obfuscation Params -->
-    <string name="obfuscation_title">混淆设置</string>
     <string name="obfuscation_jc">垃圾包数量 (Jc)</string>
     <string name="obfuscation_jmin">垃圾包最小大小 (Jmin)</string>
     <string name="obfuscation_jmax">垃圾包最大大小 (Jmax)</string>
@@ -104,6 +103,24 @@
     <string name="obfuscation_h3">低负载包 Magic (H3)</string>
     <string name="obfuscation_h4">传输包 Magic (H4)</string>
     <string name="obfuscation_i1">特殊垃圾 (I1)</string>
+
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">协议</string>
+    <string name="protocol_title">协议</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">带有混淆功能的高级 WireGuard 协议</string>
+    <string name="obfuscation_title">混淆</string>
+    <string name="obfuscation_enable">启用混淆</string>
+    <string name="obfuscation_enable_desc">绕过 DPI 和 VPN 封锁</string>
+    <string name="obfuscation_info_desc">调整 AmneziaWG 参数以隐藏 VPN 流量，并绕过受限网络中的连接封锁。</string>
+    <string name="obfuscation_config">配置</string>
+    <string name="obfuscation_config_standard">标准 Proton VPN-Next 配置</string>
+    <string name="obfuscation_save_config">另存为新配置</string>
+    <string name="obfuscation_config_name">配置名称</string>
+    <string name="obfuscation_category_junk">Junk 参数</string>
+    <string name="obfuscation_category_magic">数据包大小 (Magic)</string>
+    <string name="obfuscation_category_headers">标头 (Header)</string>
+    <string name="obfuscation_category_advanced">高级</string>
 
     <!-- About App Screen -->
     <string name="about_community">社区</string>

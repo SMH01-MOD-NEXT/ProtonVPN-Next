@@ -40,6 +40,7 @@ sealed class Screen(val route: String) {
     data object SplitTunnelingIps : Screen("split_tunneling_ips")
 
     // Connection Screens
+    data object Protocol : Screen("protocol")
     data object ObfuscationSettings : Screen("obfuscation_settings")
 
     data object AboutApp : Screen("about_app")
@@ -93,12 +94,19 @@ fun NavGraphBuilder.appNavGraph(
             onNavigateToSplitTunnelingMain = {
                 navController.navigate(Screen.SplitTunnelingMain.route)
             },
-            onNavigateToObfuscation = {
-                navController.navigate(Screen.ObfuscationSettings.route)
+            onNavigateToProtocol = {
+                navController.navigate(Screen.Protocol.route)
             },
             onNavigateToAbout = {
                 navController.navigate(Screen.AboutApp.route)
             }
+        )
+    }
+
+    composable(Screen.Protocol.route) {
+        ProtocolScreen(
+            onBack = { navController.popBackStack() },
+            onNavigateToObfuscation = { navController.navigate(Screen.ObfuscationSettings.route) }
         )
     }
 

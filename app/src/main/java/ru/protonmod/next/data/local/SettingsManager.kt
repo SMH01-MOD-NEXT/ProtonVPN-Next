@@ -27,6 +27,9 @@ import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import org.json.JSONArray
+import org.json.JSONObject
+import ru.protonmod.next.ui.screens.settings.ObfuscationProfile
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,16 +43,17 @@ class SettingsManager @Inject constructor(
         private val KILL_SWITCH = booleanPreferencesKey("kill_switch")
         private val AUTO_CONNECT = booleanPreferencesKey("auto_connect")
         private val NOTIFICATIONS = booleanPreferencesKey("notifications")
-        
-        // Split Tunneling
+
         private val SPLIT_TUNNELING_ENABLED = booleanPreferencesKey("split_tunneling_enabled")
         private val EXCLUDED_APPS = stringSetPreferencesKey("excluded_apps")
         private val EXCLUDED_IPS = stringSetPreferencesKey("excluded_ips")
 
-        // Connection Settings
         private val VPN_PORT = intPreferencesKey("vpn_port")
-        
-        // AmneziaWG Obfuscation
+
+        private val OBFUSCATION_ENABLED = booleanPreferencesKey("obfuscation_enabled")
+        private val SELECTED_PROFILE_ID = stringPreferencesKey("selected_profile_id")
+        private val CUSTOM_PROFILES = stringPreferencesKey("custom_profiles")
+
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
         private val AWG_JMAX = intPreferencesKey("awg_jmax")
@@ -67,15 +71,47 @@ class SettingsManager @Inject constructor(
     val killSwitchEnabled: Flow<Boolean> = context.dataStore.data.map { it[KILL_SWITCH] ?: false }
     val autoConnectEnabled: Flow<Boolean> = context.dataStore.data.map { it[AUTO_CONNECT] ?: true }
     val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS] ?: true }
-    
+
     val splitTunnelingEnabled: Flow<Boolean> = context.dataStore.data.map { it[SPLIT_TUNNELING_ENABLED] ?: false }
     val excludedApps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_APPS] ?: emptySet() }
     val excludedIps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_IPS] ?: emptySet() }
 
-    // Connection Flow
     val vpnPort: Flow<Int> = context.dataStore.data.map { it[VPN_PORT] ?: 1194 }
-    
-    // Obfuscation Flow (Default values for "Standard ProtonVPN-Next")
+
+    val obfuscationEnabled: Flow<Boolean> = context.dataStore.data.map { it[OBFUSCATION_ENABLED] ?: false }
+    val selectedProfileId: Flow<String> = context.dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
+
+    val customProfiles: Flow<List<ObfuscationProfile>> = context.dataStore.data.map { preferences ->
+        val jsonString = preferences[CUSTOM_PROFILES] ?: "[]"
+        try {
+            val array = JSONArray(jsonString)
+            val list = mutableListOf<ObfuscationProfile>()
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                list.add(
+                    ObfuscationProfile(
+                        id = obj.getString("id"),
+                        name = obj.getString("name"),
+                        isReadOnly = obj.optBoolean("isReadOnly", false),
+                        jc = obj.optInt("jc", 3),
+                        jmin = obj.optInt("jmin", 1),
+                        jmax = obj.optInt("jmax", 3),
+                        s1 = obj.optInt("s1", 0),
+                        s2 = obj.optInt("s2", 0),
+                        h1 = obj.optString("h1", "1"),
+                        h2 = obj.optString("h2", "2"),
+                        h3 = obj.optString("h3", "3"),
+                        h4 = obj.optString("h4", "4"),
+                        i1 = obj.optString("i1", DEFAULT_I1)
+                    )
+                )
+            }
+            list
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
     val awgJc: Flow<Int> = context.dataStore.data.map { it[AWG_JC] ?: 3 }
     val awgJmin: Flow<Int> = context.dataStore.data.map { it[AWG_JMIN] ?: 1 }
     val awgJmax: Flow<Int> = context.dataStore.data.map { it[AWG_JMAX] ?: 3 }
@@ -98,21 +134,52 @@ class SettingsManager @Inject constructor(
     suspend fun setNotifications(enabled: Boolean) {
         context.dataStore.edit { it[NOTIFICATIONS] = enabled }
     }
-    
+
     suspend fun setSplitTunnelingEnabled(enabled: Boolean) {
         context.dataStore.edit { it[SPLIT_TUNNELING_ENABLED] = enabled }
     }
-    
+
     suspend fun setExcludedApps(apps: Set<String>) {
         context.dataStore.edit { it[EXCLUDED_APPS] = apps }
     }
-    
+
     suspend fun setExcludedIps(ips: Set<String>) {
         context.dataStore.edit { it[EXCLUDED_IPS] = ips }
     }
 
     suspend fun setVpnPort(port: Int) {
         context.dataStore.edit { it[VPN_PORT] = port }
+    }
+
+    suspend fun setObfuscationEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[OBFUSCATION_ENABLED] = enabled }
+    }
+
+    suspend fun setSelectedProfileId(id: String) {
+        context.dataStore.edit { it[SELECTED_PROFILE_ID] = id }
+    }
+
+    suspend fun saveCustomProfiles(profiles: List<ObfuscationProfile>) {
+        val array = JSONArray()
+        profiles.forEach { p ->
+            val obj = JSONObject().apply {
+                put("id", p.id)
+                put("name", p.name)
+                put("isReadOnly", p.isReadOnly)
+                put("jc", p.jc)
+                put("jmin", p.jmin)
+                put("jmax", p.jmax)
+                put("s1", p.s1)
+                put("s2", p.s2)
+                put("h1", p.h1)
+                put("h2", p.h2)
+                put("h3", p.h3)
+                put("h4", p.h4)
+                put("i1", p.i1)
+            }
+            array.put(obj)
+        }
+        context.dataStore.edit { it[CUSTOM_PROFILES] = array.toString() }
     }
 
     suspend fun setAwgParams(

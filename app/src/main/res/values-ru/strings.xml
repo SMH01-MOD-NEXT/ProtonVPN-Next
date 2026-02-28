@@ -1,4 +1,20 @@
 <resources>
+    <!--
+    ~ Copyright (C) 2026 SMH01
+    ~
+    ~ This program is free software: you can redistribute it and/or modify
+    ~ it under the terms of the GNU General Public License as published by
+    ~ the Free Software Foundation, either version 3 of the License, or
+    ~ (at your option) any later version.
+    ~
+    ~ This program is distributed in the hope that it will be useful,
+    ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+    ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    ~ GNU General Public License for more details.
+    ~
+    ~ You should have received a copy of the GNU General Public License
+    ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    -->
     <string name="app_name">Proton VPN-Next</string>
 
     <!-- Welcome Screen -->
@@ -77,7 +93,6 @@
     <string name="settings_reset_obfuscation">Сброс: стандартный ProtonVPN-Next</string>
 
     <!-- Obfuscation Params -->
-    <string name="obfuscation_title">Настройки обфускации</string>
     <string name="obfuscation_jc">Количество мусорных пакетов (Jc)</string>
     <string name="obfuscation_jmin">Мин. размер мусора (Jmin)</string>
     <string name="obfuscation_jmax">Макс. размер мусора (Jmax)</string>
@@ -88,6 +103,24 @@
     <string name="obfuscation_h3">Magic Underload пакета (H3)</string>
     <string name="obfuscation_h4">Magic Transport пакета (H4)</string>
     <string name="obfuscation_i1">Спец. мусор (I1)</string>
+
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">Протокол</string>
+    <string name="protocol_title">Протокол</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">WireGuard с продвинутой обфускацией</string>
+    <string name="obfuscation_title">Обфускация</string>
+    <string name="obfuscation_enable">Включить обфускацию</string>
+    <string name="obfuscation_enable_desc">Обход DPI и блокировок VPN</string>
+    <string name="obfuscation_info_desc">Настройте параметры AmneziaWG для скрытия VPN-трафика и обхода блокировок в ограниченных сетях.</string>
+    <string name="obfuscation_config">Конфигурация</string>
+    <string name="obfuscation_config_standard">Стандартный конфиг Proton VPN-Next</string>
+    <string name="obfuscation_save_config">Сохранить как новый конфиг</string>
+    <string name="obfuscation_config_name">Имя конфигурации</string>
+    <string name="obfuscation_category_junk">Параметры Junk</string>
+    <string name="obfuscation_category_magic">Размеры пакетов (Magic)</string>
+    <string name="obfuscation_category_headers">Заголовки (Header)</string>
+    <string name="obfuscation_category_advanced">Дополнительно</string>
 
     <!-- About App Screen -->
     <string name="about_community">Сообщество</string>

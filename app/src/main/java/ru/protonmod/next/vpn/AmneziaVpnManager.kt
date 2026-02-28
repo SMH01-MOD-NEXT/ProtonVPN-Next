@@ -111,12 +111,13 @@ class AmneziaVpnManager @Inject constructor(
     }
 
     private suspend fun updateServiceSettings() {
-        val intent = Intent(context, ProtonVpnService::class.java).apply {
-            action = ProtonVpnService.ACTION_UPDATE_SETTINGS
+        // Use broadcast instead of startService to avoid BackgroundServiceStartNotAllowedException
+        val intent = Intent(ProtonVpnService.ACTION_UPDATE_SETTINGS).apply {
+            setPackage(context.packageName)
             putExtra(ProtonVpnService.EXTRA_NOTIFICATIONS_ENABLED, settingsManager.notificationsEnabled.first())
             putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, settingsManager.killSwitchEnabled.first())
         }
-        context.startService(intent)
+        context.sendBroadcast(intent)
     }
 
     fun connect(

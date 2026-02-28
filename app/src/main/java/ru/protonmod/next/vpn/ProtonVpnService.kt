@@ -20,12 +20,15 @@ package ru.protonmod.next.vpn
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
 import android.system.Os
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -133,6 +136,23 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         override fun isMetered(): Boolean = false
     }
 
+    private val settingsReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == ACTION_UPDATE_SETTINGS) {
+                notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
+                killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+                Log.d(TAG, "Settings updated via broadcast: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled")
+                
+                val label = when {
+                    isCurrentlyConnecting -> STATE_CONNECTING
+                    else -> currentTunnelState.name
+                }
+                
+                updateNotification(label)
+            }
+        }
+    }
+
     override fun onCreate() {
         Log.d(TAG, "VPN Service creating in isolated :vpn process")
 
@@ -145,6 +165,9 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
         super.onCreate()
         createNotificationChannels()
+
+        val filter = IntentFilter(ACTION_UPDATE_SETTINGS)
+        ContextCompat.registerReceiver(this, settingsReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
 
         backend = GoBackend(this, object : TunnelActionHandler {
             override fun runPreUp(scripts: Collection<String>) {}
@@ -199,9 +222,9 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 }
             }
             ACTION_UPDATE_SETTINGS -> {
+                // Keep for compatibility if still called via startService in some cases
                 notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
                 killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
-                Log.d(TAG, "Settings updated: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled")
                 
                 val label = when {
                     isCurrentlyConnecting -> STATE_CONNECTING
@@ -372,6 +395,11 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
 
     override fun onDestroy() {
         Log.d(TAG, "VPN Service destroyed")
+        try {
+            unregisterReceiver(settingsReceiver)
+        } catch (e: Exception) {
+            // Ignore
+        }
         serviceScope.cancel()
         try {
             backend.setState(tunnel, Tunnel.State.DOWN, null)

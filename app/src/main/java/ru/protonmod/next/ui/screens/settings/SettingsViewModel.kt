@@ -30,6 +30,35 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 
+// Represents a saved obfuscation configuration
+data class ObfuscationProfile(
+    val id: String,
+    val name: String,
+    val isReadOnly: Boolean,
+    val jc: Int,
+    val jmin: Int,
+    val jmax: Int,
+    val s1: Int,
+    val s2: Int,
+    val h1: String,
+    val h2: String,
+    val h3: String,
+    val h4: String,
+    val i1: String
+) {
+    companion object {
+        fun getStandardProfile(translatedName: String = "Standard Proton VPN-Next Config") = ObfuscationProfile(
+            id = "standard_1",
+            name = translatedName,
+            isReadOnly = true,
+            jc = 3, jmin = 1, jmax = 3, // Proton VPN-Next default bypass values
+            s1 = 0, s2 = 0,
+            h1 = "1", h2 = "2", h3 = "3", h4 = "4",
+            i1 = SettingsManager.DEFAULT_I1
+        )
+    }
+}
+
 data class SettingsUiState(
     val killSwitchEnabled: Boolean = false,
     val autoConnectEnabled: Boolean = true,
@@ -48,7 +77,12 @@ data class SettingsUiState(
     val awgH3: String = "3",
     val awgH4: String = "4",
     val awgI1: String = SettingsManager.DEFAULT_I1,
-    val isVpnConnected: Boolean = false
+    val isVpnConnected: Boolean = false,
+
+    // Obfuscation configuration state
+    val isObfuscationEnabled: Boolean = false,
+    val customObfuscationProfiles: List<ObfuscationProfile> = emptyList(),
+    val selectedProfileId: String = "standard_1"
 )
 
 @HiltViewModel
@@ -57,6 +91,7 @@ class SettingsViewModel @Inject constructor(
     private val settingsManager: SettingsManager
 ) : ViewModel() {
 
+    // Using array combine to bypass the 5 Flow limit in coroutines
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsManager.killSwitchEnabled,
         settingsManager.autoConnectEnabled,
@@ -75,7 +110,11 @@ class SettingsViewModel @Inject constructor(
         settingsManager.awgH3,
         settingsManager.awgH4,
         settingsManager.awgI1,
-        amneziaVpnManager.tunnelState
+        amneziaVpnManager.tunnelState,
+        // Added properties for obfuscation configs
+        settingsManager.obfuscationEnabled,
+        settingsManager.customProfiles,
+        settingsManager.selectedProfileId
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -95,7 +134,10 @@ class SettingsViewModel @Inject constructor(
             awgH3 = args[14] as String,
             awgH4 = args[15] as String,
             awgI1 = args[16] as String,
-            isVpnConnected = args[17] == Tunnel.State.UP
+            isVpnConnected = args[17] == Tunnel.State.UP,
+            isObfuscationEnabled = args[18] as Boolean,
+            customObfuscationProfiles = args[19] as List<ObfuscationProfile>,
+            selectedProfileId = args[20] as String
         )
     }.stateIn(
         scope = viewModelScope,
@@ -133,6 +175,14 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    // Master switch for obfuscation
+    fun setObfuscationEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setObfuscationEnabled(enabled)
+        }
+    }
+
+    // Used strictly to update currently active params
     fun setAwgParams(
         jc: Int, jmin: Int, jmax: Int, s1: Int, s2: Int,
         h1: String, h2: String, h3: String, h4: String, i1: String
@@ -142,10 +192,37 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun resetToStandard() {
+    // Selects a profile and applies its settings immediately
+    fun selectObfuscationProfile(profile: ObfuscationProfile) {
         viewModelScope.launch {
-            settingsManager.setAwgParams(3, 1, 3, 0, 0, "1", "2", "3", "4", SettingsManager.DEFAULT_I1)
+            settingsManager.setSelectedProfileId(profile.id)
+            setAwgParams(
+                jc = profile.jc, jmin = profile.jmin, jmax = profile.jmax,
+                s1 = profile.s1, s2 = profile.s2,
+                h1 = profile.h1, h2 = profile.h2, h3 = profile.h3, h4 = profile.h4,
+                i1 = profile.i1
+            )
         }
+    }
+
+    // Upserts a profile (add new or update existing)
+    fun saveObfuscationProfile(profile: ObfuscationProfile) {
+        viewModelScope.launch {
+            val currentList = uiState.value.customObfuscationProfiles
+            val index = currentList.indexOfFirst { it.id == profile.id }
+            val newList = if (index != -1) {
+                currentList.toMutableList().apply { this[index] = profile }
+            } else {
+                currentList + profile
+            }
+            settingsManager.saveCustomProfiles(newList)
+            selectObfuscationProfile(profile) // Auto-select on save
+        }
+    }
+
+    fun resetToStandard() {
+        val standard = ObfuscationProfile.getStandardProfile()
+        selectObfuscationProfile(standard)
     }
 
     fun addExcludedApp(packageName: String) {

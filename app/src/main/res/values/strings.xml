@@ -93,7 +93,6 @@
     <string name="settings_reset_obfuscation">Reset to Standard ProtonVPN-Next</string>
 
     <!-- Obfuscation Params -->
-    <string name="obfuscation_title">Obfuscation Settings</string>
     <string name="obfuscation_jc">Junk Packet Count (Jc)</string>
     <string name="obfuscation_jmin">Junk Packet Min Size (Jmin)</string>
     <string name="obfuscation_jmax">Junk Packet Max Size (Jmax)</string>
@@ -104,6 +103,24 @@
     <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
     <string name="obfuscation_h4">Transport Packet Magic (H4)</string>
     <string name="obfuscation_i1">Special Junk (I1)</string>
+
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">Protocol</string>
+    <string name="protocol_title">Protocol</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">Advanced WireGuard protocol with obfuscation</string>
+    <string name="obfuscation_title">Obfuscation</string>
+    <string name="obfuscation_enable">Enable Obfuscation</string>
+    <string name="obfuscation_enable_desc">Bypass DPI and VPN blocking</string>
+    <string name="obfuscation_info_desc">Adjust AmneziaWG parameters to hide VPN traffic and bypass connection blocks in restricted networks.</string>
+    <string name="obfuscation_config">Configuration</string>
+    <string name="obfuscation_config_standard">Standard Proton VPN-Next Config</string>
+    <string name="obfuscation_save_config">Save as new config</string>
+    <string name="obfuscation_config_name">Configuration name</string>
+    <string name="obfuscation_category_junk">Junk Parameters</string>
+    <string name="obfuscation_category_magic">Packet Sizes (Magic)</string>
+    <string name="obfuscation_category_headers">Headers</string>
+    <string name="obfuscation_category_advanced">Advanced</string>
 
     <!-- About App Screen -->
     <string name="about_community">Community</string>

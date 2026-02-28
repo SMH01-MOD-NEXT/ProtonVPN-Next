@@ -93,7 +93,6 @@
     <string name="settings_reset_obfuscation">بازنشانی به استاندارد ProtonVPN-Next</string>
 
     <!-- Obfuscation Params -->
-    <string name="obfuscation_title">تنظیمات مبهم‌سازی</string>
     <string name="obfuscation_jc">تعداد بسته‌های زباله (Jc)</string>
     <string name="obfuscation_jmin">حداقل اندازه زباله (Jmin)</string>
     <string name="obfuscation_jmax">حداکثر اندازه زباله (Jmax)</string>
@@ -104,6 +103,24 @@
     <string name="obfuscation_h3">جادوی بسته بار کم (H3)</string>
     <string name="obfuscation_h4">جادوی بسته انتقال (H4)</string>
     <string name="obfuscation_i1">زباله خاص (I1)</string>
+
+    <!-- Settings: Protocol & Obfuscation -->
+  <string name="settings_protocol">پروتکل</string>
+  <string name="protocol_title">پروتکل</string>
+  <string name="protocol_amneziawg">AmneziaWG</string>
+  <string name="protocol_amneziawg_desc">پروتکل پیشرفته WireGuard با قابلیت مبهم‌سازی</string>
+  <string name="obfuscation_title">مبهم‌سازی</string>
+  <string name="obfuscation_enable">فعال‌سازی مبهم‌سازی</string>
+  <string name="obfuscation_enable_desc">دور زدن DPI و مسدودسازی VPN</string>
+  <string name="obfuscation_info_desc">پارامترهای AmneziaWG را برای پنهان کردن ترافیک VPN و دور زدن محدودیت‌های اتصال در شبکه‌های محدود تنظیم کنید.</string>
+  <string name="obfuscation_config">پیکربندی</string>
+  <string name="obfuscation_config_standard">پیکربندی استاندارد Proton VPN-Next</string>
+  <string name="obfuscation_save_config">ذخیره به عنوان پیکربندی جدید</string>
+  <string name="obfuscation_config_name">نام پیکربندی</string>
+  <string name="obfuscation_category_junk">پارامترهای Junk</string>
+  <string name="obfuscation_category_magic">اندازه‌های بسته (Magic)</string>
+  <string name="obfuscation_category_headers">هدرها (Header)</string>
+  <string name="obfuscation_category_advanced">پیشرفته</string>
 
     <!-- About App Screen -->
     <string name="about_community">انجمن</string>
