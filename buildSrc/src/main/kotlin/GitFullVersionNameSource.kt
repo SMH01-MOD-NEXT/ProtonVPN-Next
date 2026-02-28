@@ -50,14 +50,14 @@ abstract class GitFullVersionNameSource : ValueSource<String, GitFullVersionName
         val onMaster = System.getenv("CI_COMMIT_BRANCH") == "master" ||
             exec("git", "rev-parse", "--abbrev-ref", "HEAD").trim() == "master"
         // On master or public repo just use last tag for version name
-        if (!onMaster && execOrNull("git", "rev-parse", "--verify", "origin/protonmod-next") != null) {
+        if (!onMaster && execOrNull("git", "rev-parse", "--verify", "origin/fork") != null) {
             // Tag is on development
-            if (execOrNull("git", "merge-base", "--is-ancestor", "$tag", "origin/protonmod-next") != null) {
-                val branchPoint = exec("git", "merge-base", "origin/protonmod-next", "HEAD").trim()
+            if (execOrNull("git", "merge-base", "--is-ancestor", "$tag", "origin/fork") != null) {
+                val branchPoint = exec("git", "merge-base", "origin/fork", "HEAD").trim()
                 // add #commits from tag to branch point with development to dev
                 dev += exec("git", "rev-list", "--count", "${tag}..${branchPoint}").trim().toInt()
                 // add #commits from branch point to HEAD to release
-                release += exec("git", "rev-list", "--count", "origin/protonmod-next..HEAD").trim().toInt()
+                release += exec("git", "rev-list", "--count", "origin/fork..HEAD").trim().toInt()
             } else { // Tag is on current branch
                 release += exec("git", "rev-list", "--count", "${tag}..HEAD").trim().toInt()
             }
