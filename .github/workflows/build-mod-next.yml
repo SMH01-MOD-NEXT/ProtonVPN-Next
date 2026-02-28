@@ -15,7 +15,7 @@ on:
 jobs:
   # JOB 1: BUILD
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: write
 
@@ -29,11 +29,23 @@ jobs:
       changelog_md: ${{ steps.changelog.outputs.changelog_md }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'gradle'
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
       - name: Grant execute permission for gradlew
-        run: chmod +x "$PROJECT_ROOT/gradlew"
+        run: chmod +x gradlew
 
       - name: Check for signing secrets
         id: check_secrets
@@ -53,7 +65,7 @@ jobs:
         env:
           SIGNING_KEY_BASE64: ${{ secrets.SIGNING_KEY_BASE64 }}
         run: |
-          echo $SIGNING_KEY_BASE64 | base64 --decode > "$PROJECT_ROOT/app/release-key.jks"
+          echo $SIGNING_KEY_BASE64 | base64 --decode > app/release-key.jks
 
       - name: Build APKs
         env:
@@ -61,8 +73,7 @@ jobs:
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
-          cd "$PROJECT_ROOT"
-          export SIGNING_STORE_FILE="$PROJECT_ROOT/app/release-key.jks"
+          export SIGNING_STORE_FILE="$(pwd)/app/release-key.jks"
           # Building all 4 variants
           ./gradlew assembleProductionGooglePlayStoreDebug \
                     assembleProductionGooglePlayStoreRelease \
@@ -72,7 +83,6 @@ jobs:
       - name: Generate changelog from commits
         id: changelog
         run: |
-          cd "$PROJECT_ROOT"
           REPO_URL="https://github.com/${{ github.repository }}"
           
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
@@ -84,7 +94,7 @@ jobs:
           
           LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$LAST_TAG" ]; then
-            PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD)
+            PREVIOUS_TAG=$(git rev-list --max-parents=0 HEAD | head -n 1)
             CHANGELOG_MD="*Initial commit*"
           else
             PREVIOUS_TAG="$LAST_TAG"
@@ -114,8 +124,6 @@ jobs:
           REPO: ${{ github.repository }}
           R2_DOMAIN: ${{ secrets.R2_PUBLIC_DOMAIN }}
         run: |
-          cd "$PROJECT_ROOT"
-          
           echo "Extracting version info via Gradle..."
           VERSION_CODE=$(./gradlew -q :app:getVersionCode | tail -n 1)
           VERSION_NAME=$(./gradlew -q :app:getVersionName | tail -n 1)
@@ -163,12 +171,11 @@ jobs:
 
       - name: Deploy update.json to Web Branch
         run: |
-          cd "$PROJECT_ROOT"
           git config --global user.name "ProtonMOD Bot"
           git config --global user.email "bot@protonmod.next"
           
           rm -rf web_deploy_temp
-          git clone --depth 1 --branch web "https://oauth2:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" web_deploy_temp
+          git clone --depth 1 --branch web "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" web_deploy_temp
           
           cp update.json web_deploy_temp/
           
@@ -185,11 +192,11 @@ jobs:
           rm -rf artifacts
           mkdir -p artifacts
           
-          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/release/*.apk "artifacts/ProtonMOD-Next-release.apk" || true
-          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionGooglePlayStore/debug/*.apk "artifacts/ProtonMOD-Next-debug.apk" || true
-          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionVanillaOpenSource/release/*.apk "artifacts/ProtonMOD-Next-FOSS-release.apk" || true
-          cp "$PROJECT_ROOT"/app/build/outputs/apk/productionVanillaOpenSource/debug/*.apk "artifacts/ProtonMOD-Next-FOSS-debug.apk" || true
-          cp "$PROJECT_ROOT/update.json" "artifacts/update.json" || true
+          cp app/build/outputs/apk/productionGooglePlayStore/release/*.apk "artifacts/ProtonMOD-Next-release.apk" || true
+          cp app/build/outputs/apk/productionGooglePlayStore/debug/*.apk "artifacts/ProtonMOD-Next-debug.apk" || true
+          cp app/build/outputs/apk/productionVanillaOpenSource/release/*.apk "artifacts/ProtonMOD-Next-FOSS-release.apk" || true
+          cp app/build/outputs/apk/productionVanillaOpenSource/debug/*.apk "artifacts/ProtonMOD-Next-FOSS-debug.apk" || true
+          cp update.json "artifacts/update.json" || true
 
       - name: Upload Artifacts to GitHub Storage
         uses: actions/upload-artifact@v4
@@ -351,18 +358,13 @@ jobs:
           body: |
             ## 🔨 Build Info
             - **Branch**: `${{ github.ref_name }}`
+            - **Commit**: [`${{ needs.build.outputs.current_commit }}`](https://github.com/${{ github.repository }}/commit/${{ needs.build.outputs.current_commit_full }})
             - **Author**: ${{ needs.build.outputs.commit_author }}
             - **Date**: ${{ needs.build.outputs.commit_date }}
-            - **Latest commit**: [${{ needs.build.outputs.current_commit }}](https://github.com/${{ github.repository }}/commit/${{ needs.build.outputs.current_commit_full }}) - ${{ needs.build.outputs.commit_message }}
             
-            ## 📋 Changes
+            ## 📋 Changelog
             ${{ needs.build.outputs.changelog_md }}
-            
-            ---
-            *Automated build by GitHub Actions*
-          artifacts: "artifacts/*"
-          prerelease: true
+          artifacts: "artifacts/*.apk,artifacts/update.json"
           allowUpdates: true
-          removeArtifacts: true
-          replacesArtifacts: true
-          omitBodyDuringUpdate: false
+          makeLatest: true
+          prerelease: true
