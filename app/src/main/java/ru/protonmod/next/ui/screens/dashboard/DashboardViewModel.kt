@@ -17,7 +17,6 @@
 
 package ru.protonmod.next.ui.screens.dashboard
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,9 +64,10 @@ class DashboardViewModel @Inject constructor(
             Triple(servers, isLoading, error)
         },
         amneziaVpnManager.tunnelState,
+        amneziaVpnManager.isConnecting,
         connectedServerState.connectedServer,
         recentConnectionDao.getRecentConnections()
-    ) { localState, tunnelState, connectedServer, recentEntities ->
+    ) { localState, tunnelState, isConnecting, connectedServer, recentEntities ->
         val (servers, isLoading, error) = localState
 
         if (isLoading && servers.isEmpty()) {
@@ -76,7 +76,6 @@ class DashboardViewModel @Inject constructor(
             DashboardUiState.Error(error)
         } else {
             val isConnected = tunnelState == Tunnel.State.UP
-            val isConnecting = tunnelState == Tunnel.State.TOGGLE
 
             val recentServers = recentEntities.mapNotNull { entity ->
                 servers.find { it.id == entity.serverId }
@@ -110,8 +109,6 @@ class DashboardViewModel @Inject constructor(
                         )
                     }
                 } else if (state == Tunnel.State.DOWN) {
-                    // Теперь мы можем смело обнулять стейт, так как AmneziaVpnManager
-                    // надежно подавляет DOWN стейты во время реконнекта.
                     connectedServerState.setConnectedServer(null)
                 }
             }
@@ -146,8 +143,6 @@ class DashboardViewModel @Inject constructor(
     fun disconnect() {
         viewModelScope.launch {
             amneziaVpnManager.disconnect()
-            // We don't clear connectedServer here anymore.
-            // It will be cleared in the tunnelState collector when state becomes DOWN.
         }
     }
 
@@ -163,7 +158,6 @@ class DashboardViewModel @Inject constructor(
                 if (isTargetServerConnected) {
                     disconnect()
                 } else {
-                    // Switching to a different server
                     initiateConnection(server)
                 }
             } else {
@@ -183,7 +177,8 @@ class DashboardViewModel @Inject constructor(
         if (physicalServer != null) {
             connectedServerState.setConnectedServer(server)
             val tunnelState = amneziaVpnManager.tunnelState.value
-            if (tunnelState == Tunnel.State.UP || tunnelState == Tunnel.State.TOGGLE) {
+            val isConnecting = amneziaVpnManager.isConnecting.value
+            if (tunnelState == Tunnel.State.UP || isConnecting) {
                 amneziaVpnManager.reconnect(server.id, physicalServer, session)
             } else {
                 amneziaVpnManager.connect(server.id, physicalServer, session)

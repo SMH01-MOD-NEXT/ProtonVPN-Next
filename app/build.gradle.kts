@@ -159,13 +159,14 @@ dependencies {
     ksp("androidx.room:room-compiler:2.7.2")
 
     // 5. Network & Serialization
-    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.12.0")
+    // Align OkHttp version with amneziawg-android (which uses 5.x)
+    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:5.3.0")
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     // 6. VPN Protocols (Local modules)
-    implementation(project(":amneziawg-android:tunnel"))
+    implementation("com.zaneschepke:amneziawg-android:2.3.4")
     implementation(libs.go.vpn.lib)
 
     // 7. Debug Tools

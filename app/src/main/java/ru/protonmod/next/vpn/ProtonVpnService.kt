@@ -36,8 +36,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.amnezia.awg.backend.AbstractBackend
 import org.amnezia.awg.backend.GoBackend
 import org.amnezia.awg.backend.Tunnel
+import org.amnezia.awg.backend.TunnelActionHandler
 import org.amnezia.awg.config.Config
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
@@ -47,18 +49,16 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
+ * Intermediate base class to help Hilt/KSP resolve the Service inheritance 
+ * from the library's nested class.
+ */
+open class AmneziaVpnServiceBase : AbstractBackend.VpnService()
+
+/**
  * Service implementation for AmneziaWG tunnel.
- *
- * This VPN Service is declared with foregroundServiceType="specialUse" to comply with Android 14+ requirements.
- * According to Android VPN framework documentation, VpnService class is specifically designed for apps
- * that provide core VPN functionality and fall under VPN use case exceptions.
- *
- * The service runs in an isolated :vpn process to prevent Go runtime conflicts with SRP authentication.
- *
- * For Android 14+, the PROPERTY_SPECIAL_USE_FGS_SUBTYPE is set to "VPN" to declare the special use case.
  */
 @AndroidEntryPoint
-class ProtonVpnService : GoBackend.VpnService() {
+class ProtonVpnService : AmneziaVpnServiceBase() {
 
     @Inject
     lateinit var settingsManager: SettingsManager
@@ -84,6 +84,9 @@ class ProtonVpnService : GoBackend.VpnService() {
         const val TUNNEL_NAME = "proton_awg"
         private const val NOTIFICATION_ID = 1001
         private const val CHANNEL_ID = "vpn_status_channel"
+        
+        // Custom connecting state for internal use since TOGGLE was removed from library
+        const val STATE_CONNECTING = "CONNECTING"
     }
 
     private lateinit var backend: GoBackend
@@ -91,12 +94,13 @@ class ProtonVpnService : GoBackend.VpnService() {
 
     private val tunnel = object : Tunnel {
         override fun getName() = TUNNEL_NAME
+        
         override fun onStateChange(newState: Tunnel.State) {
             if (currentTunnelState == newState) return
             currentTunnelState = newState
 
             Log.d(TAG, "State changed to $newState")
-            updateNotification(newState)
+            updateNotification(newState.name)
             val broadcast = Intent(ACTION_STATE_CHANGED).apply {
                 putExtra(EXTRA_STATE, newState.name)
                 setPackage(packageName)
@@ -109,17 +113,31 @@ class ProtonVpnService : GoBackend.VpnService() {
                 startTrafficUpdates()
             }
         }
+
+        override fun isIpv4ResolutionPreferred(): Boolean = true
+
+        override fun isMetered(): Boolean = false
     }
 
     override fun onCreate() {
         Log.d(TAG, "VPN Service creating in isolated :vpn process")
 
-        Os.setenv("TMPDIR", cacheDir.absolutePath, true)
-        Os.setenv("WG_TUN_DIR", cacheDir.absolutePath, true)
+        try {
+            Os.setenv("TMPDIR", cacheDir.absolutePath, true)
+            Os.setenv("WG_TUN_DIR", cacheDir.absolutePath, true)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to set environment variables", e)
+        }
 
         super.onCreate()
         createNotificationChannel()
-        backend = GoBackend(this)
+        
+        backend = GoBackend(this, object : TunnelActionHandler {
+            override fun runPreUp(scripts: Collection<String>) {}
+            override fun runPostUp(scripts: Collection<String>) {}
+            override fun runPreDown(scripts: Collection<String>) {}
+            override fun runPostDown(scripts: Collection<String>) {}
+        })
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -136,21 +154,22 @@ class ProtonVpnService : GoBackend.VpnService() {
                             val configStream = ByteArrayInputStream(configStr.toByteArray())
                             val config = Config.parse(configStream)
 
-                            // Get split tunneling excluded apps
-                            val excludedApps = intent.getStringArrayListExtra(EXTRA_EXCLUDED_APPS)?.toSet() ?: emptySet()
-                            val excludedIps = intent.getStringArrayListExtra(EXTRA_EXCLUDED_IPS)?.toSet() ?: emptySet()
-
-                            Log.d(TAG, "Split Tunneling - Excluded Apps: ${excludedApps.size}, Excluded IPs: ${excludedIps.size}")
-
-                            // Apply Kill Switch if enabled
+                            // Apply settings if needed
                             if (killSwitch) {
                                 Log.d(TAG, "Kill Switch is enabled")
                             }
 
-                            // GoBackend will apply excluded/included applications from the Interface inside Config
-                            backend.setState(tunnel, Tunnel.State.UP, config)
+                            // Broadcast connecting state before starting
+                            val broadcast = Intent(ACTION_STATE_CHANGED).apply {
+                                putExtra(EXTRA_STATE, STATE_CONNECTING)
+                                setPackage(packageName)
+                            }
+                            sendBroadcast(broadcast)
+                            
+                            updateNotification(STATE_CONNECTING)
 
-                            startForeground(NOTIFICATION_ID, createNotification(Tunnel.State.TOGGLE))
+                            backend.setState(tunnel, Tunnel.State.UP, config)
+                            startForeground(NOTIFICATION_ID, createNotification(Tunnel.State.UP.name, null))
                         } catch (e: Exception) {
                             Log.e(TAG, "Failed to start tunnel", e)
                             tunnel.onStateChange(Tunnel.State.DOWN)
@@ -184,7 +203,7 @@ class ProtonVpnService : GoBackend.VpnService() {
                 setShowBadge(false)
             }
             val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
     }
@@ -211,9 +230,8 @@ class ProtonVpnService : GoBackend.VpnService() {
                         val downStr = formatSpeed(deltaRx)
                         val speedText = "↑ $upStr ↓ $downStr"
 
-                        // Update notification with speeds
-                        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                        val notification = createNotification(Tunnel.State.UP, speedText)
+                        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                        val notification = createNotification(Tunnel.State.UP.name, speedText)
                         notificationManager.notify(NOTIFICATION_ID, notification)
                     } catch (e: Exception) {
                         Log.e(TAG, "Error while fetching stats", e)
@@ -245,12 +263,12 @@ class ProtonVpnService : GoBackend.VpnService() {
         }
     }
 
-    private fun createNotification(state: Tunnel.State, speedText: String? = null): android.app.Notification {
+    private fun createNotification(stateName: String, speedText: String? = null): android.app.Notification {
         val serverName = connectedServerState.connectedServer.value?.name ?: "Proton VPN"
 
-        val title = when (state) {
-            Tunnel.State.UP -> getString(R.string.notification_title_connected, serverName)
-            Tunnel.State.TOGGLE -> getString(R.string.notification_title_connecting)
+        val title = when (stateName) {
+            Tunnel.State.UP.name -> getString(R.string.notification_title_connected, serverName)
+            STATE_CONNECTING -> getString(R.string.notification_title_connecting)
             else -> getString(R.string.notification_title_disconnected)
         }
 
@@ -261,20 +279,19 @@ class ProtonVpnService : GoBackend.VpnService() {
             this, 0, disconnectIntent, PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Intent to open the app
         val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
         val contentPendingIntent = PendingIntent.getActivity(
             this, 0, launchIntent, PendingIntent.FLAG_IMMUTABLE
         )
 
         val builder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification) // Ensure this exists or use a default
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(state != Tunnel.State.DOWN)
+            .setOngoing(stateName != Tunnel.State.DOWN.name)
             .setContentIntent(contentPendingIntent)
 
-        if (state == Tunnel.State.UP) {
+        if (stateName == Tunnel.State.UP.name) {
             builder.addAction(
                 0,
                 getString(R.string.notification_action_disconnect),
@@ -288,12 +305,12 @@ class ProtonVpnService : GoBackend.VpnService() {
         return builder.build()
     }
 
-    private fun updateNotification(state: Tunnel.State) {
+    private fun updateNotification(stateName: String) {
         serviceScope.launch {
             val notificationsEnabled = settingsManager.notificationsEnabled.first()
             if (notificationsEnabled) {
-                val notification = createNotification(state)
-                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                val notification = createNotification(stateName)
+                val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.notify(NOTIFICATION_ID, notification)
             }
         }

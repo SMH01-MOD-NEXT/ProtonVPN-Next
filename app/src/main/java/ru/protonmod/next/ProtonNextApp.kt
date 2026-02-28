@@ -21,6 +21,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import okhttp3.OkHttp
 import ru.protonmod.next.data.cache.ServersCacheManager
 import javax.inject.Inject
 
@@ -46,6 +47,15 @@ class ProtonNextApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        
+        // Initialize OkHttp with context to avoid "Unable to load PublicSuffixDatabase"
+        // in multi-process environments when using DnsOverHttps.
+        try {
+            OkHttp.initialize(this)
+        } catch (e: Exception) {
+            // Fallback for OkHttp 4.x where this method doesn't exist
+        }
+
         // Initialize flavor-specific components (e.g., Firebase for Google flavor)
         FlavorInitializer.initialize(this)
 

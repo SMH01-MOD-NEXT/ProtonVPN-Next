@@ -138,7 +138,8 @@ class CountriesViewModel @Inject constructor(
         if (physicalServer != null) {
             connectedServerState.setConnectedServer(server)
             val tunnelState = amneziaVpnManager.tunnelState.value
-            if (tunnelState == Tunnel.State.UP || tunnelState == Tunnel.State.TOGGLE) {
+            val isConnecting = amneziaVpnManager.isConnecting.value
+            if (tunnelState == Tunnel.State.UP || isConnecting) {
                 amneziaVpnManager.reconnect(server.id, physicalServer, session)
             } else {
                 amneziaVpnManager.connect(server.id, physicalServer, session)

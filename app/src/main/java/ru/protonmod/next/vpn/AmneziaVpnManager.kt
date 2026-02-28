@@ -58,42 +58,50 @@ class AmneziaVpnManager @Inject constructor(
         private const val PROTON_DNS_IP = "10.2.0.1"
         private const val DNS_RETRY_COUNT = 5
         private const val DNS_RETRY_DELAY_MS = 1000L
+        
+        // Internal connecting state
+        private const val STATE_CONNECTING = "CONNECTING"
     }
+
+    /**
+     * UI-facing state. Can be UP, DOWN or null (for CONNECTING)
+     */
+    private val _isConnecting = MutableStateFlow(false)
+    val isConnecting: StateFlow<Boolean> = _isConnecting
 
     private val _tunnelState = MutableStateFlow(Tunnel.State.DOWN)
     val tunnelState: StateFlow<Tunnel.State> = _tunnelState
 
-    // Track the raw internal state separately from the UI state to handle reconnects gracefully
     private val _rawTunnelState = MutableStateFlow(Tunnel.State.DOWN)
     private var isReconnecting = false
     private var connectionJob: Job? = null
 
     init {
-        // Listen for state changes coming from the isolated :vpn process
         val filter = IntentFilter(ProtonVpnService.ACTION_STATE_CHANGED)
         ContextCompat.registerReceiver(context, object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, intent: Intent?) {
                 val stateStr = intent?.getStringExtra(ProtonVpnService.EXTRA_STATE)
                 stateStr?.let {
-                    val newState = Tunnel.State.valueOf(it)
-                    Log.d(TAG, "Syncing state from :vpn process -> $newState (isReconnecting=$isReconnecting)")
+                    Log.d(TAG, "Syncing state from :vpn process -> $it (isReconnecting=$isReconnecting)")
 
-                    _rawTunnelState.value = newState
-
-                    if (isReconnecting && newState == Tunnel.State.DOWN) {
-                        // Suppress the DOWN state for the UI while we are actively reconnecting
-                        Log.d(TAG, "Suppressing DOWN state for UI during reconnect")
+                    if (it == STATE_CONNECTING) {
+                        _isConnecting.value = true
                     } else {
-                        _tunnelState.value = newState
+                        val newState = Tunnel.State.valueOf(it)
+                        _rawTunnelState.value = newState
+                        _isConnecting.value = false
+
+                        if (isReconnecting && newState == Tunnel.State.DOWN) {
+                            Log.d(TAG, "Suppressing DOWN state for UI during reconnect")
+                        } else {
+                            _tunnelState.value = newState
+                        }
                     }
                 }
             }
         }, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
     }
 
-    /**
-     * Connect to a server. If already connected or connecting, it cancels the previous job.
-     */
     fun connect(
         logicalServerId: String,
         server: PhysicalServer,
@@ -112,16 +120,12 @@ class AmneziaVpnManager @Inject constructor(
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             Log.d(TAG, "Starting AWG connection to ${server.domain}")
-            _tunnelState.value = Tunnel.State.TOGGLE
+            _isConnecting.value = true
 
-            // 1. Retrieve the pre-generated offline private key
             val wgPrivateKeyB64 = session.wgPrivateKey ?: throw Exception("Offline VPN certificate missing!")
-
-            // 2. Set internal IPs
             val localIp = PROTON_CLIENT_IP
             val dnsServer = PROTON_DNS_IP
 
-            // 3. Resolve the target Node IP with retries
             var targetIp: String? = null
             var lastError: Exception? = null
 
@@ -138,27 +142,18 @@ class AmneziaVpnManager @Inject constructor(
 
             if (targetIp == null) {
                 Log.e(TAG, "Failed to resolve domain after $DNS_RETRY_COUNT attempts: ${server.domain}")
+                _isConnecting.value = false
                 _tunnelState.value = Tunnel.State.DOWN
                 throw lastError ?: Exception("DNS resolution failed")
             }
 
-            Log.d(TAG, "Resolved ${server.domain} to $targetIp")
-
-            // 4. Use the static Server Public Key from the server list
             val serverPubKey = server.wgPublicKey ?: throw Exception("Missing WG Public Key for Server")
-
-            // 5. Get split tunneling configuration
             val splitTunnelingEnabled = settingsManager.splitTunnelingEnabled.first()
             val excludedApps = if (splitTunnelingEnabled) settingsManager.excludedApps.first() else emptySet()
             val excludedIps = if (splitTunnelingEnabled) settingsManager.excludedIps.first() else emptySet()
 
-            // 6. Build Config
             val selectedPort = settingsManager.vpnPort.first().let { port ->
-                if (port == 0) {
-                    listOf(443, 123, 1194, 51820).random()
-                } else {
-                    port
-                }
+                if (port == 0) listOf(443, 123, 1194, 51820).random() else port
             }
 
             val config = buildAwgConfig(
@@ -181,9 +176,8 @@ class AmneziaVpnManager @Inject constructor(
                 h4 = settingsManager.awgH4.first(),
                 i1 = settingsManager.awgI1.first()
             )
-            val configStr = config.toAwgQuickString()
+            val configStr = config.toAwgQuickString(false, false)
 
-            // 7. Send config to isolated VPN process
             val intent = Intent(context, ProtonVpnService::class.java).apply {
                 action = ProtonVpnService.ACTION_CONNECT
                 putExtra(ProtonVpnService.EXTRA_CONFIG, configStr)
@@ -195,14 +189,12 @@ class AmneziaVpnManager @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Log.e(TAG, "Connection failed", e)
+            _isConnecting.value = false
             _tunnelState.value = Tunnel.State.DOWN
             Result.failure(e)
         }
     }
 
-    /**
-     * Performs a clean reconnect: disconnects, waits for DOWN state, and then connects.
-     */
     fun reconnect(
         logicalServerId: String,
         server: PhysicalServer,
@@ -212,7 +204,7 @@ class AmneziaVpnManager @Inject constructor(
         connectionJob = applicationScope.launch {
             Log.d(TAG, "Initiating clean reconnect...")
             isReconnecting = true
-            _tunnelState.value = Tunnel.State.TOGGLE // Show loading immediately in UI
+            _isConnecting.value = true
 
             disconnectInternal()
 
@@ -225,7 +217,7 @@ class AmneziaVpnManager @Inject constructor(
             }
 
             delay(500)
-            isReconnecting = false // Re-enable normal UI state updates
+            isReconnecting = false 
             connectInternal(logicalServerId, server, session)
         }
     }
@@ -233,7 +225,7 @@ class AmneziaVpnManager @Inject constructor(
     fun disconnect() {
         connectionJob?.cancel()
         applicationScope.launch {
-            isReconnecting = false // Make sure we don't suppress the disconnect event
+            isReconnecting = false
             disconnectInternal()
         }
     }
