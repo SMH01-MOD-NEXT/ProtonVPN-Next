@@ -38,6 +38,3 @@ rootProject.name = "ProtonVpnNext"
 
 // Include main application module
 include(":app")
-
-// Include modern VPN tunnels (AmneziaWG for DPI evasion)
-include(":amneziawg-android:tunnel")
