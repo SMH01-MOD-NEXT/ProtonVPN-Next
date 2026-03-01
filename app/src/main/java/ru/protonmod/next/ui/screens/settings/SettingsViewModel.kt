@@ -27,37 +27,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.amnezia.awg.backend.Tunnel
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
-
-// Represents a saved obfuscation configuration
-data class ObfuscationProfile(
-    val id: String,
-    val name: String,
-    val isReadOnly: Boolean,
-    val jc: Int,
-    val jmin: Int,
-    val jmax: Int,
-    val s1: Int,
-    val s2: Int,
-    val h1: String,
-    val h2: String,
-    val h3: String,
-    val h4: String,
-    val i1: String
-) {
-    companion object {
-        fun getStandardProfile(translatedName: String = "Standard Proton VPN-Next Config") = ObfuscationProfile(
-            id = "standard_1",
-            name = translatedName,
-            isReadOnly = true,
-            jc = 3, jmin = 1, jmax = 3, // Proton VPN-Next default bypass values
-            s1 = 0, s2 = 0,
-            h1 = "1", h2 = "2", h3 = "3", h4 = "4",
-            i1 = SettingsManager.DEFAULT_I1
-        )
-    }
-}
 
 data class SettingsUiState(
     val killSwitchEnabled: Boolean = false,

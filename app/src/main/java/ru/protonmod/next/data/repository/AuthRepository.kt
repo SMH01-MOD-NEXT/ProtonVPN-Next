@@ -30,6 +30,11 @@ import ru.protonmod.next.data.network.*
 import ru.protonmod.next.ui.screens.CaptchaRequiredException
 import ru.protonmod.next.ui.screens.ProtonErrorResponse
 import ru.protonmod.next.utils.DeviceInfoProvider
+import java.io.ByteArrayInputStream
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.text.SimpleDateFormat
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -107,8 +112,10 @@ class AuthRepository @Inject constructor(
                 val keys = registerAndGetVpnKeys(finalAccessToken, finalUid)
                 
                 val vpnInfoResult = vpnRepository.getVpnInfo(finalAccessToken, finalUid)
-                val userTier = vpnInfoResult.getOrNull()?.vpnInfo?.maxTier ?: 0
-                Log.d(TAG, "[Login] Fetched User Tier: $userTier (Result: ${if (vpnInfoResult.isSuccess) "Success" else "Failure: " + vpnInfoResult.exceptionOrNull()?.message})")
+                val vpnInfo = vpnInfoResult.getOrNull()?.vpnInfo
+                val userTier = vpnInfo?.maxTier ?: 0
+                val expiration = vpnInfo?.expirationTime ?: 0L
+                Log.d(TAG, "[Login] Fetched User Tier: $userTier, API Expiration: $expiration")
 
                 saveSessionLocally(
                     accessToken = finalAccessToken,
@@ -117,7 +124,8 @@ class AuthRepository @Inject constructor(
                     userId = loginResponse.userId ?: "",
                     userTier = userTier,
                     wgPrivateKey = keys?.first,
-                    wgPublicKeyPem = keys?.second
+                    wgPublicKeyPem = keys?.second,
+                    wgCertificate = keys?.third
                 )
             }
 
@@ -159,8 +167,10 @@ class AuthRepository @Inject constructor(
             val keys = registerAndGetVpnKeys(fullToken, sessionId)
             
             val vpnInfoResult = vpnRepository.getVpnInfo(fullToken, sessionId)
-            val userTier = vpnInfoResult.getOrNull()?.vpnInfo?.maxTier ?: 0
-            Log.d(TAG, "[2FA] Fetched User Tier: $userTier (Result: ${if (vpnInfoResult.isSuccess) "Success" else "Failure: " + vpnInfoResult.exceptionOrNull()?.message})")
+            val vpnInfo = vpnInfoResult.getOrNull()?.vpnInfo
+            val userTier = vpnInfo?.maxTier ?: 0
+            val expiration = vpnInfo?.expirationTime ?: 0L
+            Log.d(TAG, "[2FA] Fetched User Tier: $userTier, API Expiration: $expiration")
 
             saveSessionLocally(
                 accessToken = fullToken,
@@ -169,7 +179,8 @@ class AuthRepository @Inject constructor(
                 userId = finalUserId,
                 userTier = userTier,
                 wgPrivateKey = keys?.first,
-                wgPublicKeyPem = keys?.second
+                wgPublicKeyPem = keys?.second,
+                wgCertificate = keys?.third
             )
 
             Log.d(TAG, "[2FA] Complete. Final UserID: $finalUserId")
@@ -183,9 +194,9 @@ class AuthRepository @Inject constructor(
     /**
      * Generates Ed25519 KeyPair, converts it to proper X.509/WireGuard formats,
      * and registers it with the Proton API to be used later completely offline.
-     * Returns Pair(PrivateKeyB64, PublicKeyPem).
+     * Returns Triple(PrivateKeyB64, PublicKeyPem, CertificatePem).
      */
-    private suspend fun registerAndGetVpnKeys(accessToken: String, sessionId: String): Pair<String, String>? {
+    private suspend fun registerAndGetVpnKeys(accessToken: String, sessionId: String): Triple<String, String, String>? {
         return try {
             val keyPair = com.proton.gopenpgp.ed25519.KeyPair()
             val publicKeyPem = keyPair.publicKeyPKIXPem()
@@ -198,7 +209,24 @@ class AuthRepository @Inject constructor(
             )
 
             if (regResult.isSuccess) {
-                Pair(wgPrivateKeyB64, publicKeyPem)
+                val cert = regResult.getOrNull()?.certificate
+                if (!cert.isNullOrEmpty()) {
+                    try {
+                        val cf = CertificateFactory.getInstance("X.509")
+                        val certBytes = cert.trim().toByteArray()
+                        val inputStream = ByteArrayInputStream(certBytes)
+                        val x509 = cf.generateCertificate(inputStream) as X509Certificate
+                        
+                        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+                        Log.w(TAG, "!!! WG CERTIFICATE EXPIRES AT: ${sdf.format(x509.notAfter)} !!!")
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Failed to parse X509 certificate: ${e.message}")
+                        // Log a bit of the cert to see its format
+                        Log.d(TAG, "Cert snippet: ${cert.take(50)}...")
+                    }
+                }
+
+                Triple(wgPrivateKeyB64, publicKeyPem, cert ?: "")
             } else {
                 Log.e(TAG, "Failed to register offline certificate: ${regResult.exceptionOrNull()}")
                 null
@@ -216,7 +244,8 @@ class AuthRepository @Inject constructor(
         userId: String,
         userTier: Int,
         wgPrivateKey: String?,
-        wgPublicKeyPem: String?
+        wgPublicKeyPem: String?,
+        wgCertificate: String?
     ) {
         sessionDao.saveSession(
             SessionEntity(
@@ -226,7 +255,8 @@ class AuthRepository @Inject constructor(
                 userId = userId,
                 userTier = userTier,
                 wgPrivateKey = wgPrivateKey,
-                wgPublicKeyPem = wgPublicKeyPem
+                wgPublicKeyPem = wgPublicKeyPem,
+                wgCertificate = wgCertificate
             )
         )
     }

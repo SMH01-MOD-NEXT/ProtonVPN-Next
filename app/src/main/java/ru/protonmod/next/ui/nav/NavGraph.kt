@@ -19,19 +19,25 @@ package ru.protonmod.next.ui.nav
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.ui.screens.countries.CountriesScreen
 import ru.protonmod.next.ui.screens.dashboard.DashboardScreen
 import ru.protonmod.next.ui.screens.map.MapScreen
+import ru.protonmod.next.ui.screens.profiles.*
 import ru.protonmod.next.ui.screens.settings.*
 
-// TODO: Add future screens here (Profiles, etc.)
 sealed class Screen(val route: String) {
     data object Home : Screen("home")
     data object Map : Screen("map")
     data object Settings : Screen("settings")
     data object Profiles : Screen("profiles")
+    data object EditProfile : Screen("edit_profile?profileId={profileId}") {
+        fun createRoute(profileId: String? = null) = if (profileId != null) "edit_profile?profileId=$profileId" else "edit_profile"
+    }
     data object Countries : Screen("countries")
 
     // Split Tunneling Screens
@@ -176,8 +182,48 @@ fun NavGraphBuilder.appNavGraph(
         )
     }
 
-    // TODO: Implement ProfilesScreen
     composable(Screen.Profiles.route) {
-        // ProfilesScreen()
+        ProfilesScreen(
+            onNavigateToHome = {
+                navController.navigate(Screen.Home.route) {
+                    popUpTo(Screen.Home.route) { inclusive = false }
+                    launchSingleTop = true
+                }
+            },
+            onNavigateToCountries = {
+                navController.navigate(Screen.Countries.route) {
+                    popUpTo(Screen.Home.route)
+                    launchSingleTop = true
+                }
+            },
+            onNavigateToSettings = {
+                navController.navigate(Screen.Settings.route) {
+                    popUpTo(Screen.Home.route)
+                    launchSingleTop = true
+                }
+            },
+            onCreateNewProfile = {
+                navController.navigate(Screen.EditProfile.createRoute())
+            },
+            onEditProfile = { profileId ->
+                navController.navigate(Screen.EditProfile.createRoute(profileId))
+            }
+        )
+    }
+
+    composable(
+        route = Screen.EditProfile.route,
+        arguments = listOf(navArgument("profileId") {
+            type = NavType.StringType
+            nullable = true
+            defaultValue = null
+        })
+    ) { backStackEntry ->
+        val profileId = backStackEntry.arguments?.getString("profileId")
+        EditProfileScreen(
+            profileId = profileId,
+            viewModel = hiltViewModel(),
+            onNavigateBack = { navController.popBackStack() }
+        )
     }
 }

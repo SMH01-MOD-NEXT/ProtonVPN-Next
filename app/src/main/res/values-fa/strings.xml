@@ -174,4 +174,50 @@
     <string name="error_unknown">خطای ناشناخته</string>
     <string name="error_auth_failed">یک خطای احراز هویت غیرمنتظره رخ داد</string>
     <string name="error_2fa_failed">تایید دو مرحله‌ای ناموفق بود</string>
+
+    <!-- Profiles Screen -->
+    <string name="profiles_title">پروفایل‌ها</string>
+    <string name="desc_create_profile">ایجاد پروفایل</string>
+    <string name="desc_edit_profile">ویرایش پروفایل</string>
+    <string name="profiles_empty_title">هنوز پروفایلی وجود ندارد</string>
+    <string name="profiles_empty_desc">یک پروفایل ایجاد کنید تا سریعاً با تنظیمات خاص متصل شوید.</string>
+    <string name="profile_feature_obfuscation">مبهم‌سازی</string>
+    <string name="profile_feature_connect_go">اتصال و رفتن</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">ایجاد پروفایل</string>
+    <string name="title_edit_profile">ویرایش پروفایل</string>
+    <string name="btn_save">ذخیره</string>
+    <string name="btn_cancel">لغو</string>
+    <string name="default_profile_name">پروفایل من</string>
+    <string name="category_general">عمومی</string>
+    <string name="label_profile_name">نام پروفایل</string>
+    <string name="category_location">مکان</string>
+    <string name="location_server">سرور: %1$s</string>
+    <string name="location_fastest">سریع‌ترین</string>
+    <string name="label_target_location">مکان هدف</string>
+    <string name="category_connection">اتصال</string>
+    <string name="label_protocol">پروتکل</string>
+    <string name="label_port">پورت</string>
+    <string name="category_advanced">پیشرفته</string>
+    <string name="label_obfuscation">مبهم‌سازی</string>
+    <string name="obfuscation_desc">دور زدن بازرسی عمیق بسته‌ها (DPI)</string>
+    <string name="label_obfuscation_config">پیکربندی مبهم‌سازی</string>
+    <string name="category_automation">اتوماسیون</string>
+    <string name="label_connect_go_website">اتصال و رفتن (وب‌سایت)</string>
+    <string name="label_not_configured">پیکربندی نشده</string>
+    <string name="automation_desc">پس از برقراری اتصال VPN، این وب‌سایت را به‌طور خودکار در مرورگر خود باز کنید.</string>
+    <string name="title_select_country">انتخاب کشور</string>
+    <string name="title_select_city">انتخاب شهر</string>
+    <string name="title_select_server">انتخاب سرور</string>
+    <string name="location_best_in_country">بهترین در %1$s</string>
+    <string name="location_best_in_city">بهترین در %1$s</string>
+    <string name="location_load">بار: %1$d%%</string>
+    <string name="title_select_obfuscation_config">انتخاب پیکربندی مبهم‌سازی</string>
+    <string name="btn_create_new_config">ایجاد پیکربندی جدید</string>
+    <string name="connect_go_title">اتصال و رفتن</string>
+    <string name="connect_go_desc">URL را برای باز شدن پس از اتصال وارد کنید (مثلاً https://example.com)</string>
+    <string name="hint_url_placeholder">https://</string>
+    <string name="title_select_protocol">انتخاب پروتکل</string>
+    <string name="custom_config_name">پیکربندی سفارشی %1$d</string>
 </resources>

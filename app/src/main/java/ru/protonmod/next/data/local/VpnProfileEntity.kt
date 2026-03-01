@@ -17,24 +17,21 @@
 
 package ru.protonmod.next.data.local
 
-import androidx.room.Database
-import androidx.room.RoomDatabase
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-@Database(
-    entities = [
-        SessionEntity::class,
-        ServersCacheEntity::class,
-        ServerEntity::class,
-        RecentConnectionEntity::class,
-        VpnProfileEntity::class
-    ],
-    version = 11,
-    exportSchema = false
+@Entity(tableName = "profiles")
+data class VpnProfileEntity(
+    @PrimaryKey
+    val id: String,
+    val name: String,
+    val protocol: String,
+    val port: Int,
+    val isObfuscationEnabled: Boolean,
+    val obfuscationProfileId: String?, // Link to a custom obfuscation config
+    val autoOpenUrl: String?,
+    val targetServerId: String?,
+    val targetCountry: String?,
+    val targetCity: String?,
+    val createdAt: Long = System.currentTimeMillis()
 )
-abstract class AppDatabase : RoomDatabase() {
-    abstract fun sessionDao(): SessionDao
-    abstract fun serversCacheDao(): ServersCacheDao
-    abstract fun serverDao(): ServerDao
-    abstract fun recentConnectionDao(): RecentConnectionDao
-    abstract fun profileDao(): ProfileDao
-}

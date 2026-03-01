@@ -170,4 +170,50 @@
     <string name="error_unknown">未知错误</string>
     <string name="error_auth_failed">发生意外的身份验证错误</string>
     <string name="error_2fa_failed">双重验证失败</string>
+
+    <!-- Profiles Screen -->
+    <string name="profiles_title">配置文件</string>
+    <string name="desc_create_profile">创建配置文件</string>
+    <string name="desc_edit_profile">编辑配置文件</string>
+    <string name="profiles_empty_title">暂无配置文件</string>
+    <string name="profiles_empty_desc">创建一个配置文件以使用特定设置快速连接。</string>
+    <string name="profile_feature_obfuscation">混淆</string>
+    <string name="profile_feature_connect_go">一键开启</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">创建配置文件</string>
+    <string name="title_edit_profile">编辑配置文件</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_cancel">取消</string>
+    <string name="default_profile_name">我的配置文件</string>
+    <string name="category_general">通用</string>
+    <string name="label_profile_name">配置文件名称</string>
+    <string name="category_location">位置</string>
+    <string name="location_server">服务器: %1$s</string>
+    <string name="location_fastest">最快</string>
+    <string name="label_target_location">目标位置</string>
+    <string name="category_connection">连接</string>
+    <string name="label_protocol">协议</string>
+    <string name="label_port">端口</string>
+    <string name="category_advanced">高级</string>
+    <string name="label_obfuscation">混淆</string>
+    <string name="obfuscation_desc">绕过深度数据包检测 (DPI)</string>
+    <string name="label_obfuscation_config">混淆配置</string>
+    <string name="category_automation">自动化</string>
+    <string name="label_connect_go_website">一键开启 (网站)</string>
+    <string name="label_not_configured">未配置</string>
+    <string name="automation_desc">VPN 连接建立后，在浏览器中自动打开此网站。</string>
+    <string name="title_select_country">选择国家</string>
+    <string name="title_select_city">选择城市</string>
+    <string name="title_select_server">选择服务器</string>
+    <string name="location_best_in_country">%1$s 中最佳</string>
+    <string name="location_best_in_city">%1$s 中最佳</string>
+    <string name="location_load">负载: %1$d%%</string>
+    <string name="title_select_obfuscation_config">选择混淆配置</string>
+    <string name="btn_create_new_config">创建新配置</string>
+    <string name="connect_go_title">一键开启</string>
+    <string name="connect_go_desc">输入连接后要打开的 URL (例如 https://example.com)</string>
+    <string name="hint_url_placeholder">https://</string>
+    <string name="title_select_protocol">选择协议</string>
+    <string name="custom_config_name">自定义配置 %1$d</string>
 </resources>

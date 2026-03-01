@@ -35,7 +35,8 @@ data class SessionEntity(
     val userId: String,
     val userTier: Int = 0, // 0: Free, 1: Basic, 2: Plus
     val wgPrivateKey: String? = null,
-    val wgPublicKeyPem: String? = null
+    val wgPublicKeyPem: String? = null,
+    val wgCertificate: String? = null
 )
 
 @Entity(tableName = "servers_cache")
@@ -62,6 +63,9 @@ interface SessionDao {
     
     @Query("UPDATE session SET userTier = :tier WHERE id = 1")
     suspend fun updateUserTier(tier: Int)
+
+    @Query("UPDATE session SET wgCertificate = :certificate WHERE id = 1")
+    suspend fun updateCertificate(certificate: String)
 }
 
 @Dao

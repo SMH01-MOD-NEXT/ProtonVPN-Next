@@ -45,6 +45,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import java.util.UUID
 
@@ -230,8 +231,7 @@ fun ObfuscationSettingsScreen(
                             ) {
                                 Icon(Icons.Rounded.Save, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.textNorm)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                // Can be moved to strings.xml later: "Update Current Profile"
-                                Text("Update Current Config", color = colors.textNorm)
+                                Text(stringResource(R.string.btn_save), color = colors.textNorm)
                             }
                         }
 

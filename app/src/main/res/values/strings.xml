@@ -60,6 +60,12 @@
     <string name="btn_disconnect">Disconnect</string>
     <string name="btn_quick_connect">Quick Connect</string>
 
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expired">Your VPN certificate has expired and needs to be renewed.</string>
+    <string name="cert_msg_refreshing">Refreshing VPN certificate…</string>
+    <string name="cert_msg_refresh_failed">Failed to refresh certificate: %1$s. Retrying in 15 minutes.</string>
+    <string name="cert_btn_refresh_now">Refresh Now</string>
+
     <!-- Countries Screen -->
     <string name="countries_title">Select Country</string>
     <string name="desc_more_options">More options</string>
@@ -174,4 +180,55 @@
     <string name="error_unknown">Unknown error</string>
     <string name="error_auth_failed">An unexpected authentication error occurred</string>
     <string name="error_2fa_failed">Two-factor verification failed</string>
+
+    <!-- Profiles Screen -->
+    <string name="profiles_title">Profiles</string>
+    <string name="desc_create_profile">Create Profile</string>
+    <string name="desc_edit_profile">Edit Profile</string>
+    <string name="profiles_empty_title">No profiles yet</string>
+    <string name="profiles_empty_desc">Create a profile to quickly connect with specific settings.</string>
+    <string name="profile_feature_obfuscation">Obfuscation</string>
+    <string name="profile_feature_connect_go">Connect &amp; Go</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">Create Profile</string>
+    <string name="title_edit_profile">Edit Profile</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_delete">Delete</string>
+    <string name="desc_delete_profile">Delete Profile</string>
+    <string name="default_profile_name">My Profile</string>
+    <string name="category_general">General</string>
+    <string name="label_profile_name">Profile Name</string>
+    <string name="category_location">Location</string>
+    <string name="location_server">Server: %1$s</string>
+    <string name="location_fastest">Fastest</string>
+    <string name="label_target_location">Target Location</string>
+    <string name="label_location">Location</string>
+    <string name="category_connection">Connection</string>
+    <string name="label_protocol">Protocol</string>
+    <string name="label_port">Port</string>
+    <string name="category_advanced">Advanced</string>
+    <string name="label_obfuscation">Obfuscation</string>
+    <string name="obfuscation_desc">Bypass deep packet inspection</string>
+    <string name="label_obfuscation_config">Obfuscation Config</string>
+    <string name="category_automation">Automation</string>
+    <string name="label_connect_go_website">Connect &amp; Go (Website)</string>
+    <string name="label_not_configured">Not configured</string>
+    <string name="automation_desc">Automatically open this website in your browser once the VPN connection is established.</string>
+    <string name="title_select_country">Select Country</string>
+    <string name="title_select_city">Select City</string>
+    <string name="title_select_server">Select Server</string>
+    <string name="location_fastest_in_country">Fastest in %1$s</string>
+    <string name="location_fastest_in_city">Fastest in %1$s</string>
+    <string name="location_load">Load: %1$d%%</string>
+    <string name="title_select_obfuscation_config">Select Obfuscation Config</string>
+    <string name="btn_create_new_config">Create New Config</string>
+    <string name="connect_go_title">Connect &amp; Go</string>
+    <string name="connect_go_desc">Enter the URL to open upon connection (e.g., https://example.com)</string>
+    <string name="hint_url_placeholder">https://</string>
+    <string name="title_select_protocol">Select Protocol</string>
+    <string name="custom_config_name">Custom Config %1$d</string>
+    <string name="title_edit_obfuscation_config">Edit Obfuscation Config</string>
+    <string name="error_empty_profile_name">Profile name cannot be empty</string>
 </resources>

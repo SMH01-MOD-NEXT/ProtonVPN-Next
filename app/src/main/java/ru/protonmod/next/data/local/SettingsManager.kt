@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.json.JSONArray
 import org.json.JSONObject
-import ru.protonmod.next.ui.screens.settings.ObfuscationProfile
+import ru.protonmod.next.data.model.ObfuscationProfile
 import javax.inject.Inject
 import javax.inject.Singleton
 

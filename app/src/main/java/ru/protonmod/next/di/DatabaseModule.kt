@@ -31,6 +31,7 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.RecentConnectionDao
+import ru.protonmod.next.data.local.ProfileDao
 import javax.inject.Singleton
 
 @Module
@@ -71,6 +72,49 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL(
+                "CREATE TABLE IF NOT EXISTS `profiles` (" +
+                        "`id` TEXT NOT NULL, " +
+                        "`name` TEXT NOT NULL, " +
+                        "`protocol` TEXT NOT NULL, " +
+                        "`port` INTEGER NOT NULL, " +
+                        "`isObfuscationEnabled` INTEGER NOT NULL, " +
+                        "`autoOpenUrl` TEXT, " +
+                        "`targetServerId` TEXT, " +
+                        "`targetCountry` TEXT, " +
+                        "`createdAt` INTEGER NOT NULL, " +
+                        "PRIMARY KEY(`id`))"
+            )
+        }
+    }
+
+    val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Check if column exists before adding to prevent crashes on partial migrations
+            val cursor = database.query("PRAGMA table_info(profiles)")
+            val columns = mutableListOf<String>()
+            while (cursor.moveToNext()) {
+                columns.add(cursor.getString(cursor.getColumnIndexOrThrow("name")))
+            }
+            cursor.close()
+
+            if (!columns.contains("targetCity")) {
+                database.execSQL("ALTER TABLE profiles ADD COLUMN targetCity TEXT")
+            }
+            if (!columns.contains("obfuscationProfileId")) {
+                database.execSQL("ALTER TABLE profiles ADD COLUMN obfuscationProfileId TEXT")
+            }
+        }
+    }
+
+    val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE session ADD COLUMN wgCertificate TEXT")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -83,6 +127,9 @@ object DatabaseModule {
         .addMigrations(MIGRATION_5_6)
         .addMigrations(MIGRATION_6_7)
         .addMigrations(MIGRATION_7_8)
+        .addMigrations(MIGRATION_8_9)
+        .addMigrations(MIGRATION_9_10)
+        .addMigrations(MIGRATION_10_11)
         .build()
     }
 
@@ -108,5 +155,11 @@ object DatabaseModule {
     @Singleton
     fun provideRecentConnectionDao(database: AppDatabase): RecentConnectionDao {
         return database.recentConnectionDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideProfileDao(database: AppDatabase): ProfileDao {
+        return database.profileDao()
     }
 }

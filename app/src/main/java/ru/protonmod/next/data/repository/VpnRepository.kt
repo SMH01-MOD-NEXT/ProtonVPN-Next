@@ -25,6 +25,9 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
 import ru.protonmod.next.data.network.*
+import ru.protonmod.next.data.local.ServerDao
+import ru.protonmod.next.data.local.ServerMapper
+import ru.protonmod.next.data.local.SessionDao
 import java.io.EOFException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -33,7 +36,9 @@ import javax.inject.Singleton
 
 @Singleton
 class VpnRepository @Inject constructor(
-    private val vpnApi: ProtonVpnApi
+    private val vpnApi: ProtonVpnApi,
+    private val serverDao: ServerDao,
+    private val sessionDao: SessionDao
 ) {
     private var lastServersUpdate: String? = null
     private var cachedServers: List<LogicalServer> = emptyList()
@@ -43,26 +48,29 @@ class VpnRepository @Inject constructor(
         private val json = Json { ignoreUnknownKeys = true }
     }
 
-    /**
-     * Fetch the list of servers considering their current load.
-     * Optimized with protocol filtering and If-Modified-Since caching.
-     */
     suspend fun getServers(accessToken: String, sessionId: String, userTier: Int = 0): Result<List<LogicalServer>> = withContext(Dispatchers.IO) {
         try {
             val bearer = "Bearer $accessToken"
             
-            // 1. Fetch logical servers list with optimizations
+            // 1. Try to fetch from API
             val response = vpnApi.getLogicalServers(
                 authorization = bearer, 
                 sessionId = sessionId,
                 lastModified = lastServersUpdate,
-                protocols = "wireguard" // Only fetch what we need
+                protocols = "wireguard"
             )
 
             val serversList = when (response.code()) {
                 304 -> {
-                    Log.d(TAG, "Servers not modified, using cache")
-                    cachedServers
+                    Log.d(TAG, "Servers not modified (304), using in-memory or DB cache")
+                    if (cachedServers.isNotEmpty()) {
+                        cachedServers
+                    } else {
+                        // If memory is empty (e.g. app restart), load from DB
+                        val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
+                        cachedServers = dbServers
+                        dbServers
+                    }
                 }
                 200 -> {
                     val body = response.body()
@@ -77,66 +85,56 @@ class VpnRepository @Inject constructor(
                 else -> return@withContext Result.failure(Exception("Network error: ${response.code()}"))
             }
 
-            Log.d(TAG, "Servers received: ${serversList.size} (Source: ${if (response.code() == 304) "Cache" else "Network"})")
-
-            val logicalServers = serversList.filter { it.tier <= userTier }
-            Log.d(TAG, "Filtered servers (userTier=$userTier): ${logicalServers.size}")
-            
-            // 2. Fetch server loads
-            Log.d(TAG, "Fetching loads for tier: $userTier")
-            val loadsResponse = vpnApi.getLoads(bearer, sessionId, userTier)
-            val loadsBody = loadsResponse.body()?.string()
-            
-            val loadsData = if (loadsResponse.isSuccessful && loadsBody != null) {
-                try {
-                    json.decodeFromString<LoadsResponse>(loadsBody)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Failed to decode LoadsResponse", e)
-                    null
-                }
-            } else {
-                null
+            if (serversList.isEmpty()) {
+                // Last ditch effort: try DB if API failed or returned empty
+                val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
+                if (dbServers.isNotEmpty()) return@withContext Result.success(dbServers.filter { it.tier <= userTier })
+                return@withContext Result.failure(Exception("No servers available"))
             }
 
-            val loadsMap = loadsData?.loads?.associate { it.id to it.load } ?: emptyMap()
+            val logicalServers = serversList.filter { it.tier <= userTier }
+            
+            // 2. Fetch server loads (always fresh if possible)
+            val loadsResponse = vpnApi.getLoads(bearer, sessionId, userTier)
+            if (loadsResponse.isSuccessful) {
+                val loadsBody = loadsResponse.body()?.string()
+                val loadsData = loadsBody?.let { 
+                    try { json.decodeFromString<LoadsResponse>(it) } catch (e: Exception) { null }
+                }
+                
+                val loadsMap = loadsData?.loads?.associate { it.id to it.load } ?: emptyMap()
 
-            // 3. Map loads to servers
-            logicalServers.forEach { logical ->
-                val logicalLoad = loadsMap[logical.id]
-                if (logicalLoad != null) {
-                    logical.averageLoad = logicalLoad
-                    logical.servers.forEach { physical ->
-                        physical.load = loadsMap[physical.id] ?: logicalLoad
-                    }
-                } else {
-                    var totalLoad = 0
-                    var activeServers = 0
-                    
-                    logical.servers.forEach { physical ->
-                        val load = loadsMap[physical.id]
-                        if (load != null) {
-                            physical.load = load
-                            totalLoad += load
-                            activeServers++
-                        } else {
-                            physical.load = 0
+                logicalServers.forEach { logical ->
+                    val logicalLoad = loadsMap[logical.id]
+                    if (logicalLoad != null) {
+                        logical.averageLoad = logicalLoad
+                        logical.servers.forEach { it.load = loadsMap[it.id] ?: logicalLoad }
+                    } else {
+                        var totalLoad = 0
+                        var activeServers = 0
+                        logical.servers.forEach { physical ->
+                            val load = loadsMap[physical.id]
+                            if (load != null) {
+                                physical.load = load
+                                totalLoad += load
+                                activeServers++
+                            }
                         }
+                        logical.averageLoad = if (activeServers > 0) totalLoad / activeServers else 0
                     }
-                    
-                    logical.averageLoad = if (activeServers > 0) totalLoad / activeServers else 0
                 }
             }
 
             Result.success(logicalServers)
         } catch (e: Exception) {
             Log.e(TAG, "Error in getServers", e)
+            // Fallback to DB on network failure
+            val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
+            if (dbServers.isNotEmpty()) return@withContext Result.success(dbServers.filter { it.tier <= userTier })
             Result.failure(e)
         }
     }
 
-    /**
-     * Fetch the user's current location as seen by the VPN API.
-     */
     suspend fun getUserLocation(accessToken: String, sessionId: String): Result<String> = withContext(Dispatchers.IO) {
         try {
             val response = vpnApi.getUserLocation("Bearer $accessToken", sessionId)
@@ -151,9 +149,6 @@ class VpnRepository @Inject constructor(
         }
     }
 
-    /**
-     * Fetch the list of servers with a timeout and network error handling.
-     */
     suspend fun getServersWithTimeout(
         accessToken: String,
         sessionId: String,
@@ -165,26 +160,25 @@ class VpnRepository @Inject constructor(
                 getServers(accessToken, sessionId, userTier)
             }
         } catch (e: TimeoutCancellationException) {
-            Log.e(TAG, "Request timeout")
-            Result.failure(Exception("Request timeout"))
+            Log.e(TAG, "Request timeout, trying cache")
+            val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
+            if (dbServers.isNotEmpty()) Result.success(dbServers.filter { it.tier <= userTier })
+            else Result.failure(Exception("Request timeout"))
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to fetch servers: ${e.message}")
             Result.failure(e)
         }
     }
 
-    /**
-     * Fetch the user's VPN profile information (including Tier).
-     */
     suspend fun getVpnInfo(accessToken: String, sessionId: String): Result<VpnInfoResponse> = withContext(Dispatchers.IO) {
         try {
             val bearer = "Bearer $accessToken"
             val response = vpnApi.getVpnInfo(bearer, sessionId)
             val body = response.body()?.string()
             
+            Log.d(TAG, "getVpnInfo raw body: $body")
+            
             if (response.isSuccessful && body != null) {
-                val vpnInfo = json.decodeFromString<VpnInfoResponse>(body)
-                Result.success(vpnInfo)
+                Result.success(json.decodeFromString<VpnInfoResponse>(body))
             } else {
                 Result.failure(Exception("Failed to fetch VPN info: ${response.code()}"))
             }
@@ -193,9 +187,6 @@ class VpnRepository @Inject constructor(
         }
     }
 
-    /**
-     * Registers the public key at /vpn/v1/certificate.
-     */
     suspend fun registerWireGuardKey(
         accessToken: String,
         sessionId: String,
@@ -206,12 +197,19 @@ class VpnRepository @Inject constructor(
             val request = CreateCertificateRequest(clientPublicKey = publicKeyPem)
             val response = vpnApi.registerVpnKey(bearer, sessionId, request)
 
+            Log.d(TAG, "registerWireGuardKey response code: ${response.code}, cert length: ${response.certificate?.length ?: 0}")
+
             if (response.code == 1000) {
+                val cert = response.certificate
+                if (cert != null) {
+                    sessionDao.updateCertificate(cert)
+                }
                 Result.success(response)
             } else {
                 Result.failure(Exception("Proton Cert Error: ${response.code}"))
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error in registerWireGuardKey", e)
             Result.failure(e)
         }
     }

@@ -19,7 +19,7 @@
 
     <!-- Welcome Screen -->
     <string name="welcome_title">Добро пожаловать в Proton VPN-Next</string>
-    <string name="welcome_subtitle">Возьмите под контроль свою цифровую жизнь с безопасным, приватным и быстрым VPN. Без логов и слежки.</string>
+    <string name="welcome_subtitle">Управляйте своей цифровой жизнью с помощью безопасного, приватного и быстрого VPN. Без логов и слежки.</string>
     <string name="btn_create_account">Создать аккаунт</string>
     <string name="btn_login">Войти</string>
 
@@ -29,13 +29,13 @@
     <string name="hint_username">Email или имя пользователя</string>
     <string name="hint_password">Пароль</string>
     <string name="forgot_password">Забыли пароль?</string>
-    <string name="desc_back_button">Назад</string>
+    <string name="desc_back_button">Вернуться назад</string>
     <string name="desc_toggle_password">Показать/скрыть пароль</string>
     <string name="login_success">Вход выполнен!</string>
     <string name="login_error">Ошибка: %1$s</string>
     <string name="title_security_check">Проверка безопасности</string>
     <string name="title_2fa">Двухфакторная аутентификация</string>
-    <string name="msg_2fa_instruction">Введите 6-значный код TOTP из вашего приложения для аутентификации.</string>
+    <string name="msg_2fa_instruction">Введите 6-значный код TOTP из вашего приложения-аутентификатора.</string>
     <string name="hint_2fa_code">6-значный код</string>
     <string name="btn_verify">Проверить</string>
 
@@ -51,36 +51,42 @@
     <string name="status_disconnected">Отключено</string>
     <string name="status_not_connected">Не подключено</string>
     <string name="msg_traffic_not_protected">Ваш трафик не защищен</string>
-    <string name="desc_toggle_connection">Переключить подключение</string>
+    <string name="desc_toggle_connection">Переключить соединение</string>
     <string name="desc_country">Страна</string>
-    <string name="map_placeholder">Интерактивная карта</string>
+    <string name="map_placeholder">Заглушка интерактивной карты</string>
     <string name="label_fastest_server">Самый быстрый сервер</string>
     <string name="label_select_location">Выберите локацию</string>
     <string name="desc_change_server">Сменить сервер</string>
     <string name="btn_disconnect">Отключить</string>
     <string name="btn_quick_connect">Быстрое подключение</string>
 
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expired">Ваш VPN-сертификат истек и требует обновления.</string>
+    <string name="cert_msg_refreshing">Обновление VPN-сертификата…</string>
+    <string name="cert_msg_refresh_failed">Не удалось обновить сертификат: %1$s. Повтор через 15 минут.</string>
+    <string name="cert_btn_refresh_now">Обновить сейчас</string>
+
     <!-- Countries Screen -->
     <string name="countries_title">Выберите страну</string>
-    <string name="desc_more_options">Больше опций</string>
+    <string name="desc_more_options">Дополнительные опции</string>
 
     <!-- Settings Screen -->
     <string name="settings_title">Настройки</string>
     <string name="settings_connection">Настройки подключения</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">Отключать интернет при разрыве VPN</string>
+    <string name="settings_kill_switch_desc">Отключать интернет при разрыве VPN-соединения</string>
     <string name="settings_auto_connect">Автоподключение</string>
     <string name="settings_auto_connect_desc">Подключаться к VPN при запуске</string>
     <string name="settings_split_tunneling">Раздельное туннелирование</string>
     <string name="settings_split_tunneling_desc">Исключить приложения или IP из VPN</string>
     <string name="settings_excluded_apps">Исключенные приложения</string>
     <string name="settings_excluded_ips">Исключенные IP-адреса</string>
-    <string name="settings_privacy">Конфиденциальность и уведомления</string>
+    <string name="settings_privacy">Приватность и уведомления</string>
     <string name="settings_notifications">Уведомления</string>
     <string name="settings_notifications_desc">Получать уведомления о статусе VPN</string>
     <string name="settings_about">О приложении</string>
     <string name="settings_version">Версия %1$s</string>
-    <string name="settings_licenses">Лицензии ПО</string>
+    <string name="settings_licenses">Лицензии открытого ПО</string>
     <string name="settings_licenses_desc">Стороннее ПО, используемое в приложении</string>
     <string name="settings_on">Вкл</string>
     <string name="settings_off">Выкл</string>
@@ -90,7 +96,7 @@
     <string name="settings_port_auto">Авто</string>
     <string name="settings_obfuscation">Обфускация (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Изменение заголовков пакетов для обхода DPI</string>
-    <string name="settings_reset_obfuscation">Сброс: стандартный ProtonVPN-Next</string>
+    <string name="settings_reset_obfuscation">Сбросить до стандартного ProtonVPN-Next</string>
 
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">Количество мусорных пакетов (Jc)</string>
@@ -102,24 +108,24 @@
     <string name="obfuscation_h2">Magic Response пакета (H2)</string>
     <string name="obfuscation_h3">Magic Underload пакета (H3)</string>
     <string name="obfuscation_h4">Magic Transport пакета (H4)</string>
-    <string name="obfuscation_i1">Спец. мусор (I1)</string>
+    <string name="obfuscation_i1">Специальный мусор (I1)</string>
 
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Протокол</string>
     <string name="protocol_title">Протокол</string>
     <string name="protocol_amneziawg">AmneziaWG</string>
-    <string name="protocol_amneziawg_desc">WireGuard с продвинутой обфускацией</string>
+    <string name="protocol_amneziawg_desc">Улучшенный протокол WireGuard с обфускацией</string>
     <string name="obfuscation_title">Обфускация</string>
     <string name="obfuscation_enable">Включить обфускацию</string>
     <string name="obfuscation_enable_desc">Обход DPI и блокировок VPN</string>
-    <string name="obfuscation_info_desc">Настройте параметры AmneziaWG для скрытия VPN-трафика и обхода блокировок в ограниченных сетях.</string>
+    <string name="obfuscation_info_desc">Настройте параметры AmneziaWG, чтобы скрыть трафик VPN и обойти блокировки в сетях с ограничениями.</string>
     <string name="obfuscation_config">Конфигурация</string>
     <string name="obfuscation_config_standard">Стандартный конфиг Proton VPN-Next</string>
     <string name="obfuscation_save_config">Сохранить как новый конфиг</string>
-    <string name="obfuscation_config_name">Имя конфигурации</string>
-    <string name="obfuscation_category_junk">Параметры Junk</string>
+    <string name="obfuscation_config_name">Название конфигурации</string>
+    <string name="obfuscation_category_junk">Параметры мусора</string>
     <string name="obfuscation_category_magic">Размеры пакетов (Magic)</string>
-    <string name="obfuscation_category_headers">Заголовки (Header)</string>
+    <string name="obfuscation_category_headers">Заголовки</string>
     <string name="obfuscation_category_advanced">Дополнительно</string>
 
     <!-- About App Screen -->
@@ -137,41 +143,41 @@
     <string name="license_kotlin_title">Стандартная библиотека Kotlin</string>
     <string name="license_hilt_title">Dagger Hilt</string>
     <string name="license_retrofit_title">Retrofit и OkHttp</string>
-    <string name="license_proton_go_vpn_title">Библиотека Proton GO VPN</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN библиотека</string>
     <string name="license_amneziawg_title">AmneziaWG Android</string>
 
     <!-- Split Tunneling -->
-    <string name="st_enabled_subtitle">VPN будет работать в обход выбранных приложений и IP</string>
+    <string name="st_enabled_subtitle">VPN будет обходить выбранные приложения и IP</string>
     <string name="st_disabled_subtitle">Весь трафик идет через VPN</string>
     <plurals name="st_apps_selected">
-        <item quantity="one">Выбрано %1$d приложение</item>
-        <item quantity="few">Выбрано %1$d приложения</item>
-        <item quantity="many">Выбрано %1$d приложений</item>
-        <item quantity="other">Выбрано %1$d приложений</item>
+        <item quantity="one">%1$d приложение выбрано</item>
+        <item quantity="few">%1$d приложения выбрано</item>
+        <item quantity="many">%1$d приложений выбрано</item>
+        <item quantity="other">%1$d приложения выбрано</item>
     </plurals>
     <plurals name="st_ips_selected">
-        <item quantity="one">Выбран %1$d IP-адрес</item>
-        <item quantity="few">Выбрано %1$d IP-адреса</item>
-        <item quantity="many">Выбрано %1$d IP-адресов</item>
-        <item quantity="other">Выбрано %1$d IP-адресов</item>
+        <item quantity="one">%1$d IP выбран</item>
+        <item quantity="few">%1$d IP выбрано</item>
+        <item quantity="many">%1$d IP выбрано</item>
+        <item quantity="other">%1$d IP выбрано</item>
     </plurals>
 
     <plurals name="settings_apps_excluded_count">
-        <item quantity="one">Исключено %1$d приложение</item>
-        <item quantity="few">Исключено %1$d приложения</item>
-        <item quantity="many">Исключено %1$d приложений</item>
-        <item quantity="other">Исключено %1$d приложений</item>
+        <item quantity="one">%1$d приложение исключено</item>
+        <item quantity="few">%1$d приложения исключено</item>
+        <item quantity="many">%1$d приложений исключено</item>
+        <item quantity="other">%1$d приложения исключено</item>
     </plurals>
     <plurals name="settings_ips_excluded_count">
-        <item quantity="one">Исключен %1$d IP-адрес</item>
-        <item quantity="few">Исключено %1$d IP-адреса</item>
-        <item quantity="many">Исключено %1$d IP-адресов</item>
-        <item quantity="other">Исключено %1$d IP-адресов</item>
+        <item quantity="one">%1$d IP исключен</item>
+        <item quantity="few">%1$d IP исключено</item>
+        <item quantity="many">%1$d IP выбрано</item>
+        <item quantity="other">%1$d IP выбрано</item>
     </plurals>
 
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>
-    <string name="notification_channel_desc">Показывает текущий статус подключения VPN</string>
+    <string name="notification_channel_desc">Отображает текущий статус подключения VPN</string>
     <string name="notification_title_connected">Подключено к %1$s</string>
     <string name="notification_title_disconnected">Отключено</string>
     <string name="notification_title_connecting">Подключение…</string>
@@ -181,5 +187,54 @@
     <string name="error_session_not_found">Активная сессия не найдена. Пожалуйста, войдите снова.</string>
     <string name="error_unknown">Неизвестная ошибка</string>
     <string name="error_auth_failed">Произошла непредвиденная ошибка аутентификации</string>
-    <string name="error_2fa_failed">Ошибка двухфакторной аутентификации</string>
+    <string name="error_2fa_failed">Ошибка двухфакторной проверки</string>
+
+    <!-- Profiles Screen -->
+    <string name="profiles_title">Профили</string>
+    <string name="desc_create_profile">Создать профиль</string>
+    <string name="desc_edit_profile">Редактировать профиль</string>
+    <string name="profiles_empty_title">Пока нет профилей</string>
+    <string name="profiles_empty_desc">Создайте профиль для быстрого подключения с определенными настройками.</string>
+    <string name="profile_feature_obfuscation">Обфускация</string>
+    <string name="profile_feature_connect_go">Connect &amp; Go</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">Создать профиль</string>
+    <string name="title_edit_profile">Редактировать профиль</string>
+    <string name="btn_save">Сохранить</string>
+    <string name="btn_cancel">Отмена</string>
+    <string name="btn_delete">Удалить</string>
+    <string name="desc_delete_profile">Удалить профиль</string>
+    <string name="default_profile_name">Мой профиль</string>
+    <string name="category_general">Общее</string>
+    <string name="label_profile_name">Название профиля</string>
+    <string name="category_location">Локация</string>
+    <string name="location_server">Сервер: %1$s</string>
+    <string name="location_fastest">Самый быстрый</string>
+    <string name="label_target_location">Целевая локация</string>
+    <string name="category_connection">Подключение</string>
+    <string name="label_protocol">Протокол</string>
+    <string name="label_port">Порт</string>
+    <string name="category_advanced">Дополнительно</string>
+    <string name="label_obfuscation">Обфускация</string>
+    <string name="obfuscation_desc">Обход глубокого анализа пакетов (DPI)</string>
+    <string name="label_obfuscation_config">Конфиг обфускации</string>
+    <string name="category_automation">Автоматизация</string>
+    <string name="label_connect_go_website">Connect &amp; Go (Веб-сайт)</string>
+    <string name="label_not_configured">Не настроено</string>
+    <string name="automation_desc">Автоматически открывать этот сайт в браузере после установления VPN-соединения.</string>
+    <string name="title_select_country">Выберите страну</string>
+    <string name="title_select_city">Выберите город</string>
+    <string name="title_select_server">Выберите сервер</string>
+    <string name="location_fastest_in_country">Самый быстрый в %1$s</string>
+    <string name="location_fastest_in_city">Самый быстрый в %1$s</string>
+    <string name="location_load">Нагрузка: %1$d%%</string>
+    <string name="title_select_obfuscation_config">Выберите конфиг обфускации</string>
+    <string name="btn_create_new_config">Создать новый конфиг</string>
+    <string name="connect_go_title">Connect &amp; Go</string>
+    <string name="connect_go_desc">Введите URL для открытия при подключении (напр., https://example.com)</string>
+    <string name="hint_url_placeholder">https://</string>
+    <string name="title_select_protocol">Выберите протокол</string>
+    <string name="custom_config_name">Свой конфиг %1$d</string>
+    <string name="title_edit_obfuscation_config">Редактировать конфиг обфускации</string>
 </resources>

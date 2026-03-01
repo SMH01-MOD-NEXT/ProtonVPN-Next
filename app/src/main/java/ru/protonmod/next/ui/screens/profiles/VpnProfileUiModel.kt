@@ -15,26 +15,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package ru.protonmod.next.data.local
+package ru.protonmod.next.ui.screens.profiles
 
-import androidx.room.Database
-import androidx.room.RoomDatabase
+import java.util.UUID
 
-@Database(
-    entities = [
-        SessionEntity::class,
-        ServersCacheEntity::class,
-        ServerEntity::class,
-        RecentConnectionEntity::class,
-        VpnProfileEntity::class
-    ],
-    version = 11,
-    exportSchema = false
+data class VpnProfileUiModel(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String = "",
+    val protocol: String = "AmneziaWG", // Default protocol
+    val port: Int = 0,                 // 0 = Auto
+    val isObfuscationEnabled: Boolean = false,
+    val obfuscationProfileId: String? = null,
+    val autoOpenUrl: String? = null,
+    val targetServerId: String? = null,
+    val targetCountry: String? = null,
+    val targetCity: String? = null
 )
-abstract class AppDatabase : RoomDatabase() {
-    abstract fun sessionDao(): SessionDao
-    abstract fun serversCacheDao(): ServersCacheDao
-    abstract fun serverDao(): ServerDao
-    abstract fun recentConnectionDao(): RecentConnectionDao
-    abstract fun profileDao(): ProfileDao
-}
