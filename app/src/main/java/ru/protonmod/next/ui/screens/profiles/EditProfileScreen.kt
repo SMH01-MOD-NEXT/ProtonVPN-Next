@@ -27,9 +27,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,6 +42,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -123,7 +125,7 @@ fun EditProfileScreen(
                 title = { Text(if (profileId == null) stringResource(R.string.title_create_profile) else stringResource(R.string.title_edit_profile)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = colors.textNorm)
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Back", tint = colors.textNorm)
                     }
                 },
                 actions = {
@@ -243,7 +245,7 @@ fun EditProfileScreen(
                     SettingRowWithIcon(
                         icon = Icons.Rounded.OpenInBrowser,
                         title = stringResource(R.string.label_connect_go_website),
-                        subtitle = if (autoOpenUrl.isEmpty()) stringResource(R.string.label_not_configured) else autoOpenUrl,
+                        subtitle = autoOpenUrl.ifEmpty { stringResource(R.string.label_not_configured) },
                         onClick = { showUrlDialog = true }
                     )
                 }
@@ -519,78 +521,82 @@ fun LocationSelectionDialog(
                             )
                         }
 
-                        if (currentStep == 0) {
-                            items(countries) { country ->
-                                val localizedName = CountryUtils.getCountryName(context, country)
-                                SelectionCard(
-                                    title = localizedName,
-                                    icon = {
-                                        Text(
-                                            text = CountryUtils.getFlagForCountry(country),
-                                            fontSize = 24.sp
-                                        )
-                                    },
-                                    onClick = {
-                                        if (!isTransitioning) {
-                                            scope.launch {
-                                                isTransitioning = true
-                                                cities = viewModel.getCitiesForCountry(country)
-                                                currentCountry = country
-                                                step = 1
-                                                isTransitioning = false
-                                            }
-                                        }
-                                    }
-                                )
-                            }
-                        } else if (currentStep == 1) {
-                            items(cities) { city ->
-                                val localizedCityName = getLocalizedCityName(context, city)
-                                SelectionCard(
-                                    title = localizedCityName,
-                                    icon = {
-                                        Text(text = "🏙️", fontSize = 24.sp)
-                                    },
-                                    onClick = {
-                                        if (!isTransitioning) {
-                                            scope.launch {
-                                                isTransitioning = true
-                                                servers = viewModel.getServersForCity(currentCountry!!, city)
-                                                currentCity = city
-                                                step = 2
-                                                isTransitioning = false
-                                            }
-                                        }
-                                    }
-                                )
-                            }
-                        } else {
-                            items(servers) { server ->
-                                SelectionCard(
-                                    title = server.name,
-                                    icon = {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .clip(CircleShape)
-                                                .background(colors.backgroundNorm), // Match CountriesScreen styling
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Rounded.Public,
-                                                contentDescription = null,
-                                                tint = colors.iconNorm,
-                                                modifier = Modifier.size(18.dp)
+                        when (currentStep) {
+                            0 -> {
+                                items(countries) { country ->
+                                    val localizedName = CountryUtils.getCountryName(context, country)
+                                    SelectionCard(
+                                        title = localizedName,
+                                        icon = {
+                                            Text(
+                                                text = CountryUtils.getFlagForCountry(country),
+                                                fontSize = 24.sp
                                             )
+                                        },
+                                        onClick = {
+                                            if (!isTransitioning) {
+                                                scope.launch {
+                                                    isTransitioning = true
+                                                    cities = viewModel.getCitiesForCountry(country)
+                                                    currentCountry = country
+                                                    step = 1
+                                                    isTransitioning = false
+                                                }
+                                            }
                                         }
-                                    },
-                                    load = server.averageLoad,
-                                    onClick = {
-                                        if (!isTransitioning) {
-                                            onLocationSelected(currentCountry, currentCity, server.id)
+                                    )
+                                }
+                            }
+                            1 -> {
+                                items(cities) { city ->
+                                    val localizedCityName = getLocalizedCityName(context, city)
+                                    SelectionCard(
+                                        title = localizedCityName,
+                                        icon = {
+                                            Text(text = "🏙️", fontSize = 24.sp)
+                                        },
+                                        onClick = {
+                                            if (!isTransitioning) {
+                                                scope.launch {
+                                                    isTransitioning = true
+                                                    servers = viewModel.getServersForCity(currentCountry!!, city)
+                                                    currentCity = city
+                                                    step = 2
+                                                    isTransitioning = false
+                                                }
+                                            }
                                         }
-                                    }
-                                )
+                                    )
+                                }
+                            }
+                            else -> {
+                                items(servers) { server ->
+                                    SelectionCard(
+                                        title = server.name,
+                                        icon = {
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(CircleShape)
+                                                    .background(colors.backgroundNorm), // Match CountriesScreen styling
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Rounded.Public,
+                                                    contentDescription = null,
+                                                    tint = colors.iconNorm,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        },
+                                        load = server.averageLoad,
+                                        onClick = {
+                                            if (!isTransitioning) {
+                                                onLocationSelected(currentCountry, currentCity, server.id)
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -616,8 +622,6 @@ fun LocationSelectionDialog(
     }
 }
 
-// ... rest of the file (Category, SettingRowWithIcon, ObfuscationConfigSelectionDialog, etc.) ...
-// keeping standard functions unchanged to save space, but ensuring everything compiles together
 @Composable
 fun Category(
     modifier: Modifier = Modifier,
@@ -914,7 +918,7 @@ fun AutoOpenUrlDialog(
     onSave: (String) -> Unit
 ) {
     val colors = ProtonNextTheme.colors
-    var text by remember { mutableStateOf(currentUrl) }
+    var url by remember { mutableStateOf(currentUrl) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -922,31 +926,28 @@ fun AutoOpenUrlDialog(
             colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp).fillMaxWidth()
+                modifier = Modifier
+                    .padding(24.dp)
+                    .fillMaxWidth()
             ) {
                 Text(
-                    text = stringResource(R.string.connect_go_title),
+                    text = stringResource(R.string.title_auto_open_url),
                     style = MaterialTheme.typography.titleLarge,
                     color = colors.textNorm
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.connect_go_desc),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.textWeak
-                )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    placeholder = { Text(stringResource(R.string.hint_url_placeholder)) },
+                    value = url,
+                    onValueChange = { url = it },
+                    label = { Text(stringResource(R.string.label_enter_url)) },
+                    placeholder = { Text("https://example.com") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = colors.textNorm,
-                        unfocusedTextColor = colors.textNorm,
-                        focusedBorderColor = colors.brandNorm
-                    )
+                        focusedBorderColor = colors.brandNorm,
+                        unfocusedBorderColor = colors.shade20
+                    ),
+                    singleLine = true
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Row(
@@ -956,9 +957,11 @@ fun AutoOpenUrlDialog(
                     TextButton(onClick = onDismiss) {
                         Text(stringResource(android.R.string.cancel), color = colors.textWeak)
                     }
+                    Spacer(Modifier.width(12.dp))
                     Button(
-                        onClick = { onSave(text) },
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                        onClick = { onSave(url) },
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(stringResource(R.string.btn_save))
                     }
@@ -967,6 +970,7 @@ fun AutoOpenUrlDialog(
         }
     }
 }
+
 
 @Composable
 fun ObfuscationConfigSelectionDialog(
@@ -981,65 +985,81 @@ fun ObfuscationConfigSelectionDialog(
     val colors = ProtonNextTheme.colors
     var editingProfile by remember { mutableStateOf<ObfuscationProfile?>(null) }
 
-    if (editingProfile != null) {
-        ObfuscationProfileEditDialog(
-            profile = editingProfile!!,
-            onDismiss = { editingProfile = null },
-            onSave = {
-                onEdit(it)
-                editingProfile = null
-            }
-        )
-    } else {
-        Dialog(onDismissRequest = onDismiss) {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
-            ) {
-                Column(
-                    modifier = Modifier.padding(vertical = 16.dp).fillMaxWidth().fillMaxHeight(0.6f)
-                ) {
-                    Text(
-                        text = stringResource(R.string.title_select_obfuscation_config),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = colors.textNorm,
-                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-                    )
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
+        ) {
+            Column(modifier = Modifier.padding(vertical = 16.dp)) {
+                Text(
+                    text = stringResource(R.string.title_select_obfuscation_config),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = colors.textNorm,
+                    modifier = Modifier.padding(start = 24.dp, bottom = 16.dp)
+                )
 
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(configs) { config ->
-                            ListItem(
-                                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                                headlineContent = { Text(config.name, color = if (config.id == selectedId) colors.brandNorm else colors.textNorm) },
-                                trailingContent = {
-                                    if (!config.id.startsWith("standard")) {
-                                        Row {
-                                            IconButton(onClick = { editingProfile = config }) {
-                                                Icon(Icons.Rounded.Edit, contentDescription = "Edit", tint = colors.iconWeak)
-                                            }
-                                            IconButton(onClick = { onDelete(config.id) }) {
-                                                Icon(Icons.Rounded.Delete, contentDescription = "Delete", tint = Color.Red)
-                                            }
-                                        }
-                                    }
-                                },
-                                modifier = Modifier.clickable { onConfigSelected(config.id) }
-                            )
+                LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                    items(configs) { config ->
+                        val isSelected = config.id == selectedId
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onConfigSelected(config.id) }
+                                .padding(vertical = 12.dp, horizontal = 24.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = config.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = if (isSelected) colors.brandNorm else colors.textNorm,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                                if (!config.isReadOnly) {
+                                    Text(
+                                        text = stringResource(R.string.custom_config),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = colors.textWeak
+                                    )
+                                }
+                            }
+                            if (!config.isReadOnly) {
+                                IconButton(onClick = { editingProfile = config }) {
+                                    Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.btn_edit), tint = colors.iconNorm)
+                                }
+                                IconButton(onClick = { onDelete(config.id) }) {
+                                    Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.btn_delete), tint = colors.iconWeak)
+                                }
+                            }
                         }
                     }
+                }
 
-                    Button(
-                        onClick = onCreateNew,
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
-                    ) {
-                        Icon(Icons.Rounded.Add, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.btn_create_new_config))
-                    }
+                HorizontalDivider(color = colors.shade20.copy(alpha = 0.5f))
+
+                TextButton(
+                    onClick = onCreateNew,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                ) {
+                    Icon(Icons.Rounded.Add, contentDescription = null, tint = colors.brandNorm)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.btn_create_new_config), color = colors.brandNorm)
                 }
             }
         }
+    }
+
+    editingProfile?.let {
+        ObfuscationProfileEditDialog(
+            profile = it,
+            onDismiss = { editingProfile = null },
+            onSave = { updatedProfile ->
+                onEdit(updatedProfile)
+                editingProfile = null
+            }
+        )
     }
 }
 
@@ -1060,33 +1080,190 @@ fun ObfuscationProfileEditDialog(
     var h2 by remember { mutableStateOf(profile.h2) }
     var h3 by remember { mutableStateOf(profile.h3) }
     var h4 by remember { mutableStateOf(profile.h4) }
+    var i1 by remember { mutableStateOf(profile.i1) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary)
         ) {
-            LazyColumn(
-                modifier = Modifier.padding(24.dp).fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.9f)
             ) {
-                item {
-                    Text(
-                        text = stringResource(R.string.title_edit_obfuscation_config),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = colors.textNorm
-                    )
+                Text(
+                    text = stringResource(R.string.title_edit_obfuscation_config),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = colors.textNorm,
+                    modifier = Modifier.padding(24.dp)
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item {
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text(stringResource(R.string.obfuscation_config_name)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = colors.brandNorm,
+                                unfocusedBorderColor = colors.shade20
+                            )
+                        )
+                    }
+
+                    // Junk
+                    item {
+                        EditCategoryHeader(title = stringResource(R.string.obfuscation_category_junk))
+                        EditSettingsCard {
+                            EditParamField(label = "Jc", value = jc.toString(), onValueChange = { jc = it.toIntOrNull() ?: 0 })
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.shade20.copy(alpha = 0.5f))
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                EditParamField(modifier = Modifier.weight(1f), label = "Jmin", value = jmin.toString(), onValueChange = { jmin = it.toIntOrNull() ?: 0 })
+                                EditParamField(modifier = Modifier.weight(1f), label = "Jmax", value = jmax.toString(), onValueChange = { jmax = it.toIntOrNull() ?: 0 })
+                            }
+                        }
+                    }
+
+                    // Magic
+                    item {
+                        EditCategoryHeader(title = stringResource(R.string.obfuscation_category_magic))
+                        EditSettingsCard {
+                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                EditParamField(modifier = Modifier.weight(1f), label = "S1", value = s1.toString(), onValueChange = { s1 = it.toIntOrNull() ?: 0 })
+                                EditParamField(modifier = Modifier.weight(1f), label = "S2", value = s2.toString(), onValueChange = { s2 = it.toIntOrNull() ?: 0 })
+                            }
+                        }
+                    }
+
+                    // Headers
+                    item {
+                        EditCategoryHeader(title = stringResource(R.string.obfuscation_category_headers))
+                        EditSettingsCard {
+                            Column {
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    EditParamField(modifier = Modifier.weight(1f), label = "H1", value = h1, isNumeric = false, onValueChange = { h1 = it })
+                                    EditParamField(modifier = Modifier.weight(1f), label = "H2", value = h2, isNumeric = false, onValueChange = { h2 = it })
+                                }
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp), color = colors.shade20.copy(alpha = 0.5f))
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    EditParamField(modifier = Modifier.weight(1f), label = "H3", value = h3, isNumeric = false, onValueChange = { h3 = it })
+                                    EditParamField(modifier = Modifier.weight(1f), label = "H4", value = h4, isNumeric = false, onValueChange = { h4 = it })
+                                }
+                            }
+                        }
+                    }
+
+                    // Advanced (I1)
+                    item {
+                        EditCategoryHeader(title = stringResource(R.string.obfuscation_category_advanced))
+                        EditSettingsCard {
+                            EditParamField(label = "I1", value = i1, isNumeric = false, onValueChange = { i1 = it })
+                        }
+                    }
+                    
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
                 }
 
-                item {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text(stringResource(R.string.obfuscation_config_name)) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(android.R.string.cancel), color = colors.textWeak)
+                    }
+                    Spacer(Modifier.width(12.dp))
+                    Button(
+                        onClick = {
+                            onSave(profile.copy(
+                                name = name,
+                                jc = jc,
+                                jmin = jmin,
+                                jmax = jmax,
+                                s1 = s1,
+                                s2 = s2,
+                                h1 = h1,
+                                h2 = h2,
+                                h3 = h3,
+                                h4 = h4,
+                                i1 = i1
+                            ))
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(stringResource(R.string.btn_save))
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun EditCategoryHeader(title: String) {
+    val colors = ProtonNextTheme.colors
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+        color = colors.brandNorm,
+        modifier = Modifier.padding(start = 8.dp, bottom = 4.dp)
+    )
+}
+
+@Composable
+private fun EditSettingsCard(content: @Composable ColumnScope.() -> Unit) {
+    val colors = ProtonNextTheme.colors
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.backgroundSecondary.copy(alpha = 0.5f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            content = content
+        )
+    }
+}
+
+@Composable
+private fun EditParamField(
+    modifier: Modifier = Modifier,
+    label: String,
+    value: String,
+    isNumeric: Boolean = true,
+    onValueChange: (String) -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+        modifier = modifier.fillMaxWidth(),
+        keyboardOptions = KeyboardOptions(
+            keyboardType = if (isNumeric) KeyboardType.Number else KeyboardType.Text
+        ),
+        colors = TextFieldDefaults.colors(
+            focusedTextColor = colors.textNorm,
+            unfocusedTextColor = colors.textNorm,
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            focusedIndicatorColor = colors.brandNorm,
+            unfocusedIndicatorColor = colors.shade20,
+            cursorColor = colors.brandNorm,
+            focusedLabelColor = colors.brandNorm,
+            unfocusedLabelColor = colors.textWeak
+        ),
+        singleLine = true
+    )
 }

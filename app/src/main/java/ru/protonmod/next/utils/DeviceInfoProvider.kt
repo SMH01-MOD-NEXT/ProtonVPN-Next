@@ -9,6 +9,7 @@ import android.os.StatFs
 import android.provider.Settings
 import android.view.inputmethod.InputMethodManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
 import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -54,8 +55,16 @@ class DeviceInfoProvider @Inject constructor(
         return -(TimeZone.getDefault().rawOffset / (1000 * 60))
     }
 
-    // A proper root check is complex. This is a placeholder.
+    // Basic root check to avoid constant return value
     fun isJailbreak(): Boolean {
+        val paths = arrayOf(
+            "/system/app/Superuser.apk", "/sbin/su", "/system/bin/su", "/system/xbin/su",
+            "/data/local/xbin/su", "/data/local/bin/su", "/system/sd/xbin/su",
+            "/system/bin/failsafe/su", "/data/local/su", "/su/bin/su"
+        )
+        for (path in paths) {
+            if (File(path).exists()) return true
+        }
         return false
     }
 

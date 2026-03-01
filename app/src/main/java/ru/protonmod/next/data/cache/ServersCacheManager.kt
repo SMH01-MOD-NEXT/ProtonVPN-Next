@@ -17,10 +17,7 @@
 
 package ru.protonmod.next.data.cache
 
-import android.content.Context
 import android.util.Log
-import androidx.work.*
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -37,7 +34,6 @@ import javax.inject.Singleton
 
 @Singleton
 class ServersCacheManager @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val serversCacheDao: ServersCacheDao,
     private val serverDao: ServerDao,
     private val vpnRepository: VpnRepository,
@@ -46,9 +42,6 @@ class ServersCacheManager @Inject constructor(
     companion object {
         private const val TAG = "ServersCacheManager"
         private const val CACHE_DURATION_MILLIS = 60 * 60 * 1000L // 1 hour
-        private const val RETRY_DELAY_MINUTES = 2L
-        private const val BACKGROUND_UPDATE_WORK_TAG = "servers_bg_update"
-        private const val BACKGROUND_UPDATE_WORK_NAME = "servers_update_work"
         private const val AUTO_UPDATE_INTERVAL_MINUTES = 2L
     }
 
@@ -139,28 +132,5 @@ class ServersCacheManager @Inject constructor(
 
     suspend fun getCachedServers(): List<ru.protonmod.next.data.network.LogicalServer> {
         return serverDao.getAllServers().map { ru.protonmod.next.data.local.ServerMapper.toDomain(it) }
-    }
-
-    suspend fun isCacheExpired(): Boolean {
-        val cacheInfo = serversCacheDao.getCacheInfo() ?: return true
-        return System.currentTimeMillis() > cacheInfo.expiresAt
-    }
-
-    private fun scheduleBackgroundUpdate(accessToken: String, sessionId: String, userTier: Int, delayMinutes: Long = 0L) {
-        val updateRequest = PeriodicWorkRequestBuilder<ru.protonmod.next.data.cache.ServersCacheUpdateWorker>(
-            15, TimeUnit.MINUTES, 5, TimeUnit.MINUTES
-        ).apply {
-            if (delayMinutes > 0) setInitialDelay(delayMinutes, TimeUnit.MINUTES)
-            addTag(BACKGROUND_UPDATE_WORK_TAG)
-            setInputData(workDataOf("access_token" to accessToken, "session_id" to sessionId, "user_tier" to userTier))
-        }.build()
-
-        WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-            BACKGROUND_UPDATE_WORK_NAME, ExistingPeriodicWorkPolicy.REPLACE, updateRequest
-        )
-    }
-
-    fun cancelBackgroundUpdate() {
-        WorkManager.getInstance(context).cancelAllWorkByTag(BACKGROUND_UPDATE_WORK_TAG)
     }
 }

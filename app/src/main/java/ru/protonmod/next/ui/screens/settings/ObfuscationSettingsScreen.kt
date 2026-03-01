@@ -69,7 +69,6 @@ fun ObfuscationSettingsScreen(
     val selectedProfile = allProfiles.find { it.id == uiState.selectedProfileId } ?: standardProfile
 
     var showConfigDropdown by remember { mutableStateOf(false) }
-    var showSaveDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -236,6 +235,7 @@ fun ObfuscationSettingsScreen(
                         }
 
                         // Create New Profile Button
+                        var showSaveDialog by remember { mutableStateOf(false) }
                         TextButton(
                             onClick = { showSaveDialog = true },
                             modifier = Modifier.fillMaxWidth()
@@ -243,6 +243,54 @@ fun ObfuscationSettingsScreen(
                             Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(stringResource(R.string.obfuscation_save_config), color = colors.brandNorm)
+                        }
+                        
+                        if (showSaveDialog) {
+                            var newProfileName by remember { mutableStateOf("") }
+                            AlertDialog(
+                                onDismissRequest = { showSaveDialog = false },
+                                title = { Text(stringResource(R.string.obfuscation_save_config), color = colors.textNorm) },
+                                text = {
+                                    OutlinedTextField(
+                                        value = newProfileName,
+                                        onValueChange = { newProfileName = it },
+                                        label = { Text(stringResource(R.string.obfuscation_config_name)) },
+                                        singleLine = true,
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = colors.brandNorm,
+                                            focusedTextColor = colors.textNorm,
+                                            unfocusedTextColor = colors.textNorm
+                                        )
+                                    )
+                                },
+                                confirmButton = {
+                                    TextButton(
+                                        onClick = {
+                                            if (newProfileName.isNotBlank()) {
+                                                val newProfile = ObfuscationProfile(
+                                                    id = UUID.randomUUID().toString(),
+                                                    name = newProfileName,
+                                                    isReadOnly = false,
+                                                    jc = uiState.awgJc, jmin = uiState.awgJmin, jmax = uiState.awgJmax,
+                                                    s1 = uiState.awgS1, s2 = uiState.awgS2,
+                                                    h1 = uiState.awgH1, h2 = uiState.awgH2, h3 = uiState.awgH3, h4 = uiState.awgH4,
+                                                    i1 = uiState.awgI1
+                                                )
+                                                viewModel.saveObfuscationProfile(newProfile)
+                                            }
+                                            showSaveDialog = false
+                                        }
+                                    ) {
+                                        Text(stringResource(android.R.string.ok), color = colors.brandNorm)
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showSaveDialog = false }) {
+                                        Text(stringResource(android.R.string.cancel), color = colors.textWeak)
+                                    }
+                                },
+                                containerColor = colors.backgroundSecondary
+                            )
                         }
 
                         // Parameters (Junk)
@@ -347,55 +395,6 @@ fun ObfuscationSettingsScreen(
                 }
             }
         }
-    }
-
-    // Save Dialog Integration
-    if (showSaveDialog) {
-        var newProfileName by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { showSaveDialog = false },
-            title = { Text(stringResource(R.string.obfuscation_save_config), color = colors.textNorm) },
-            text = {
-                OutlinedTextField(
-                    value = newProfileName,
-                    onValueChange = { newProfileName = it },
-                    label = { Text(stringResource(R.string.obfuscation_config_name)) },
-                    singleLine = true,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = colors.brandNorm,
-                        focusedTextColor = colors.textNorm,
-                        unfocusedTextColor = colors.textNorm
-                    )
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (newProfileName.isNotBlank()) {
-                            val newProfile = ObfuscationProfile(
-                                id = UUID.randomUUID().toString(),
-                                name = newProfileName,
-                                isReadOnly = false,
-                                jc = uiState.awgJc, jmin = uiState.awgJmin, jmax = uiState.awgJmax,
-                                s1 = uiState.awgS1, s2 = uiState.awgS2,
-                                h1 = uiState.awgH1, h2 = uiState.awgH2, h3 = uiState.awgH3, h4 = uiState.awgH4,
-                                i1 = uiState.awgI1
-                            )
-                            viewModel.saveObfuscationProfile(newProfile)
-                        }
-                        showSaveDialog = false
-                    }
-                ) {
-                    Text(stringResource(android.R.string.ok), color = colors.brandNorm)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showSaveDialog = false }) {
-                    Text(stringResource(android.R.string.cancel), color = colors.textWeak)
-                }
-            },
-            containerColor = colors.backgroundSecondary
-        )
     }
 }
 

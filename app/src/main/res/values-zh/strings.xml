@@ -56,9 +56,18 @@
     <string name="map_placeholder">交互式地图占位符</string>
     <string name="label_fastest_server">最快服务器</string>
     <string name="label_select_location">选择位置</string>
+    <string name="label_server_unavailable">服务器不可用</string>
     <string name="desc_change_server">更改服务器</string>
     <string name="btn_disconnect">断开连接</string>
     <string name="btn_quick_connect">快速连接</string>
+
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">证书将在 %1$d 小时内过期。即将刷新…</string>
+    <string name="cert_msg_expired">您的 VPN 证书已过期，需要更新。</string>
+    <string name="cert_msg_refreshing">正在刷新 VPN 证书…</string>
+    <string name="cert_msg_refresh_failed">刷新证书失败：%1$s。15 分钟后重试。</string>
+    <string name="cert_msg_auto_refresh_failed">自动刷新失败。请手动更新以确保连接。</string>
+    <string name="cert_btn_refresh_now">立即刷新</string>
 
     <!-- Countries Screen -->
     <string name="countries_title">选择国家</string>
@@ -121,6 +130,7 @@
     <string name="obfuscation_category_magic">数据包大小 (Magic)</string>
     <string name="obfuscation_category_headers">标头 (Header)</string>
     <string name="obfuscation_category_advanced">高级</string>
+    <string name="custom_config">自定义配置</string>
 
     <!-- About App Screen -->
     <string name="about_community">社区</string>
@@ -179,12 +189,19 @@
     <string name="profiles_empty_desc">创建一个配置文件以使用特定设置快速连接。</string>
     <string name="profile_feature_obfuscation">混淆</string>
     <string name="profile_feature_connect_go">一键开启</string>
+    <string name="profile_server_info">服务器：%1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
 
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">创建配置文件</string>
     <string name="title_edit_profile">编辑配置文件</string>
     <string name="btn_save">保存</string>
     <string name="btn_cancel">取消</string>
+    <string name="btn_delete">删除</string>
+    <string name="btn_edit">编辑</string>
+    <string name="desc_delete_profile">删除配置文件</string>
     <string name="default_profile_name">我的配置文件</string>
     <string name="category_general">通用</string>
     <string name="label_profile_name">配置文件名称</string>
@@ -192,6 +209,7 @@
     <string name="location_server">服务器: %1$s</string>
     <string name="location_fastest">最快</string>
     <string name="label_target_location">目标位置</string>
+    <string name="label_location">位置</string>
     <string name="category_connection">连接</string>
     <string name="label_protocol">协议</string>
     <string name="label_port">端口</string>
@@ -201,19 +219,23 @@
     <string name="label_obfuscation_config">混淆配置</string>
     <string name="category_automation">自动化</string>
     <string name="label_connect_go_website">一键开启 (网站)</string>
+    <string name="label_enter_url">输入 URL</string>
     <string name="label_not_configured">未配置</string>
     <string name="automation_desc">VPN 连接建立后，在浏览器中自动打开此网站。</string>
     <string name="title_select_country">选择国家</string>
     <string name="title_select_city">选择城市</string>
     <string name="title_select_server">选择服务器</string>
-    <string name="location_best_in_country">%1$s 中最佳</string>
-    <string name="location_best_in_city">%1$s 中最佳</string>
+    <string name="location_fastest_in_country">%1$s 中最快</string>
+    <string name="location_fastest_in_city">%1$s 中最快</string>
     <string name="location_load">负载: %1$d%%</string>
     <string name="title_select_obfuscation_config">选择混淆配置</string>
+    <string name="title_auto_open_url">自动打开 URL</string>
     <string name="btn_create_new_config">创建新配置</string>
     <string name="connect_go_title">一键开启</string>
     <string name="connect_go_desc">输入连接后要打开的 URL (例如 https://example.com)</string>
     <string name="hint_url_placeholder">https://</string>
     <string name="title_select_protocol">选择协议</string>
     <string name="custom_config_name">自定义配置 %1$d</string>
+    <string name="title_edit_obfuscation_config">编辑混淆配置</string>
+    <string name="error_empty_profile_name">配置文件名称不能为空</string>
 </resources>

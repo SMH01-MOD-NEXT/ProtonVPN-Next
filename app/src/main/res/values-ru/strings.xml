@@ -56,14 +56,17 @@
     <string name="map_placeholder">Заглушка интерактивной карты</string>
     <string name="label_fastest_server">Самый быстрый сервер</string>
     <string name="label_select_location">Выберите локацию</string>
+    <string name="label_server_unavailable">Сервер недоступен</string>
     <string name="desc_change_server">Сменить сервер</string>
     <string name="btn_disconnect">Отключить</string>
     <string name="btn_quick_connect">Быстрое подключение</string>
 
     <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">Сертификат истекает через %1$d ч. Скоро обновим…</string>
     <string name="cert_msg_expired">Ваш VPN-сертификат истек и требует обновления.</string>
     <string name="cert_msg_refreshing">Обновление VPN-сертификата…</string>
     <string name="cert_msg_refresh_failed">Не удалось обновить сертификат: %1$s. Повтор через 15 минут.</string>
+    <string name="cert_msg_auto_refresh_failed">Автообновление не удалось. Пожалуйста, обновите вручную для работы VPN.</string>
     <string name="cert_btn_refresh_now">Обновить сейчас</string>
 
     <!-- Countries Screen -->

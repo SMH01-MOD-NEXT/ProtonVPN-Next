@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import ru.protonmod.next.data.local.SessionDao
+import ru.protonmod.next.ui.nav.Screen
 import ru.protonmod.next.ui.nav.appNavGraph
 import ru.protonmod.next.ui.screens.LoginScreen
 import ru.protonmod.next.ui.screens.WelcomeScreen
@@ -67,7 +68,7 @@ class MainViewModel @Inject constructor(
             // Check for active session in Room DB
             val session = sessionDao.getSession()
             if (session != null && session.accessToken.isNotEmpty()) {
-                _startDestination.value = "home"
+                _startDestination.value = Screen.Home.route
             } else {
                 _startDestination.value = "welcome"
             }
@@ -80,14 +81,7 @@ class MainActivity : ComponentActivity() {
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission is granted. Continue the action or workflow in your app.
-        } else {
-            // Explain to the user that the feature is unavailable because the
-            // features requires a permission that the user has denied.
-        }
-    }
+    ) { _ -> }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -144,7 +138,7 @@ fun ProtonNextAppNavHost(viewModel: MainViewModel = hiltViewModel()) {
                 onBackClick = { navController.popBackStack() },
                 onLoginSuccess = {
                     // Clear the entire backstack and navigate to home (dashboard)
-                    navController.navigate("home") {
+                    navController.navigate(Screen.Home.route) {
                         popUpTo(0)
                     }
                 }

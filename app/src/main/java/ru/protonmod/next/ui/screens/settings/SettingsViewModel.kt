@@ -196,32 +196,4 @@ class SettingsViewModel @Inject constructor(
         val standard = ObfuscationProfile.getStandardProfile()
         selectObfuscationProfile(standard)
     }
-
-    fun addExcludedApp(packageName: String) {
-        viewModelScope.launch {
-            val current = uiState.value.excludedApps
-            settingsManager.setExcludedApps(current + packageName)
-        }
-    }
-
-    fun removeExcludedApp(packageName: String) {
-        viewModelScope.launch {
-            val current = uiState.value.excludedApps
-            settingsManager.setExcludedApps(current - packageName)
-        }
-    }
-
-    fun addExcludedIp(ip: String) {
-        viewModelScope.launch {
-            val current = uiState.value.excludedIps
-            settingsManager.setExcludedIps(current + ip)
-        }
-    }
-
-    fun removeExcludedIp(ip: String) {
-        viewModelScope.launch {
-            val current = uiState.value.excludedIps
-            settingsManager.setExcludedIps(current - ip)
-        }
-    }
 }

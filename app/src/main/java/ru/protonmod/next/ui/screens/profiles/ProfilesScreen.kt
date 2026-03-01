@@ -26,7 +26,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
@@ -262,10 +261,10 @@ fun ProfileCardItem(
                 // Subtitle with protocol, port, and target info
                 val portStr = if (profile.port == 0) stringResource(R.string.settings_port_auto) else profile.port.toString()
                 val targetName = when {
-                    profile.targetServerId != null -> "Server: ${profile.targetServerId}"
-                    profile.targetCity != null -> "🏙️ ${profile.targetCity}, ${CountryUtils.getCountryName(context, profile.targetCountry!!)}"
-                    profile.targetCountry != null -> "${CountryUtils.getFlagForCountry(profile.targetCountry)} ${CountryUtils.getCountryName(context, profile.targetCountry)}"
-                    else -> "⚡ ${stringResource(R.string.location_fastest)}"
+                    profile.targetServerId != null -> stringResource(R.string.profile_server_info, profile.targetServerId)
+                    profile.targetCity != null -> stringResource(R.string.profile_city_info, profile.targetCity, CountryUtils.getCountryName(context, profile.targetCountry!!))
+                    profile.targetCountry != null -> stringResource(R.string.profile_country_info, CountryUtils.getFlagForCountry(profile.targetCountry), CountryUtils.getCountryName(context, profile.targetCountry))
+                    else -> stringResource(R.string.profile_fastest_info, stringResource(R.string.location_fastest))
                 }
 
                 Text(

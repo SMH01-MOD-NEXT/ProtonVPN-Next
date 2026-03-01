@@ -22,7 +22,7 @@ import android.net.VpnService
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -32,7 +32,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.rounded.Public
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,6 +53,7 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.vpn.AmneziaVpnManager
 
 @Composable
 fun DashboardScreen(
@@ -145,7 +149,8 @@ fun DashboardScreen(
                             onServerClick = { server ->
                                 checkVpnAndConnect(server)
                             },
-                            onDisconnect = { viewModel.disconnect() }
+                            onDisconnect = { viewModel.disconnect() },
+                            onRefreshCert = { viewModel.refreshCertificate() }
                         )
                     }
                 }
@@ -173,7 +178,8 @@ fun DashboardScreen(
 fun DashboardContent(
     state: DashboardUiState.Success,
     onServerClick: (LogicalServer) -> Unit,
-    onDisconnect: () -> Unit
+    onDisconnect: () -> Unit,
+    onRefreshCert: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     LazyColumn(
@@ -184,6 +190,14 @@ fun DashboardContent(
     ) {
         item {
             Spacer(modifier = Modifier.height(380.dp))
+        }
+
+        item {
+            CertificateBanner(
+                state = state.certificateState,
+                onRefresh = onRefreshCert,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
         }
 
         item {
@@ -240,6 +254,96 @@ fun DashboardContent(
         }
     }
 }
+
+@Composable
+fun CertificateBanner(
+    state: AmneziaVpnManager.CertificateState,
+    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    if (state == AmneziaVpnManager.CertificateState.Valid) return
+
+    val colors = ProtonNextTheme.colors
+    val (backgroundColor, contentColor, icon, message) = when (state) {
+        is AmneziaVpnManager.CertificateState.ExpiringSoon -> Quadruple(
+            colors.notificationWarning.copy(alpha = 0.1f),
+            colors.notificationWarning,
+            Icons.Rounded.Warning,
+            stringResource(R.string.cert_msg_expiring_soon, state.hoursRemaining)
+        )
+        is AmneziaVpnManager.CertificateState.Expired -> Quadruple(
+            colors.notificationError.copy(alpha = 0.1f),
+            colors.notificationError,
+            Icons.Default.ErrorOutline,
+            stringResource(R.string.cert_msg_expired)
+        )
+        is AmneziaVpnManager.CertificateState.Refreshing -> Quadruple(
+            colors.backgroundSecondary,
+            colors.textNorm,
+            Icons.Default.Refresh,
+            stringResource(R.string.cert_msg_refreshing)
+        )
+        is AmneziaVpnManager.CertificateState.RefreshFailed -> {
+            val msg = if (state.isFullyExpired) {
+                stringResource(R.string.cert_msg_refresh_failed, state.error)
+            } else {
+                stringResource(R.string.cert_msg_auto_refresh_failed)
+            }
+            Quadruple(
+                colors.notificationError.copy(alpha = 0.1f),
+                colors.notificationError,
+                Icons.Default.ErrorOutline,
+                msg
+            )
+        }
+        else -> return
+    }
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = backgroundColor
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = contentColor,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+            if (state is AmneziaVpnManager.CertificateState.Expired || state is AmneziaVpnManager.CertificateState.RefreshFailed) {
+                TextButton(onClick = onRefresh) {
+                    Text(stringResource(R.string.cert_btn_refresh_now), color = contentColor)
+                }
+            } else if (state is AmneziaVpnManager.CertificateState.Refreshing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = contentColor,
+                    strokeWidth = 2.dp
+                )
+            }
+        }
+    }
+}
+
+private data class Quadruple<out A, out B, out C, out D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)
 
 @Composable
 fun ConnectionStatusCard(

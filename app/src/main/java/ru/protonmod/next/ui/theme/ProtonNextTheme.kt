@@ -47,7 +47,6 @@ object ProtonPalette {
 
     val BalticSea = Color(0xFF1C1B24)
     val Bastille = Color(0xFF292733)
-    val SteelGray = Color(0xFF343140)
     val BlackCurrant = Color(0xFF3B3747)
     val GunPowder = Color(0xFF4A4658)
     val Smoky = Color(0xFF5B576B)
@@ -65,20 +64,6 @@ object ProtonPalette {
     val White = Color(0xFFFFFFFF)
 
     val Woodsmoke = Color(0xFF17181C)
-    val Charade = Color(0xFF25272C)
-    val Tuna = Color(0xFF303239)
-    val Abbey = Color(0xFF494D55)
-    val StormGray = Color(0xFF727680)
-    val SantasGray = Color(0xFF9CA0AA)
-
-    val PortGore = Color(0xFF1C223D)
-    val PickledBluewood = Color(0xFF29304D)
-    val Rhino = Color(0xFF353E60)
-
-    val FrenchGray = Color(0xFFBABDC6)
-    val Mischka = Color(0xFFDADCE3)
-    val AthensGray = Color(0xFFEAECF1)
-    val Whisper = Color(0xFFF5F6FA)
 
     val Pomegranate = Color(0xFFCC2D4F)
     val Mauvelous = Color(0xFFF08FA4)
@@ -86,28 +71,6 @@ object ProtonPalette {
     val TexasRose = Color(0xFFFFB84D)
     val Apple = Color(0xFF007B58)
     val PuertoRico = Color(0xFF4AB89A)
-
-    // New accent colors for rebranding
-    val PurpleBase = Color(0xFF8080FF)
-    val EnzianBase = Color(0xFF5252CC)
-    val PinkBase = Color(0xFFDB60D6)
-    val PlumBase = Color(0xFFA839A4)
-    val StrawberryBase = Color(0xFFEC3E7C)
-    val CeriseBase = Color(0xFFBA1E55)
-    val CarrotBase = Color(0xFFF78400)
-    val CopperBase = Color(0xFFC44800)
-    val SaharaBase = Color(0xFF936D58)
-    val SoilBase = Color(0xFF54473F)
-    val SlateBlueBase = Color(0xFF415DF0)
-    val CobaltBase = Color(0xFF273EB2)
-    val PacificBase = Color(0xFF179FD9)
-    val OceanBase = Color(0xFF0A77A6)
-    val ReefBase = Color(0xFF1DA583)
-    val PineBase = Color(0xFF0F735A)
-    val FernBase = Color(0xFF3CBB3A)
-    val ForestBase = Color(0xFF258723)
-    val OliveBase = Color(0xFFB4A40E)
-    val PickleBase = Color(0xFF807304)
 }
 
 @Stable
@@ -115,185 +78,72 @@ object ProtonPalette {
 class ProtonColors(
     isDark: Boolean,
 
-    shade100: Color,
-    shade80: Color,
-    shade60: Color,
-    shade50: Color,
-    shade40: Color,
-    shade20: Color,
-    shade15: Color,
-    shade10: Color,
-    shade0: Color,
+    val shade100: Color,
+    val shade80: Color,
+    val shade60: Color,
+    val shade50: Color,
+    val shade40: Color,
+    val shade20: Color,
+    val shade15: Color,
+    val shade10: Color,
+    val shade0: Color,
 
-    brandDarken40: Color = ProtonPalette.Chambray,
-    brandDarken20: Color = ProtonPalette.SanMarino,
-    brandNorm: Color = ProtonPalette.CornflowerBlue,
-    brandLighten20: Color = ProtonPalette.Portage,
-    brandLighten40: Color = ProtonPalette.Perano,
+    val brandDarken40: Color = ProtonPalette.Chambray,
+    val brandDarken20: Color = ProtonPalette.SanMarino,
+    val brandNorm: Color = ProtonPalette.CornflowerBlue,
+    val brandLighten20: Color = ProtonPalette.Portage,
+    val brandLighten40: Color = ProtonPalette.Perano,
 
-    textNorm: Color = shade100,
-    textAccent: Color = brandNorm,
-    textWeak: Color = shade80,
-    textHint: Color = shade60,
-    textDisabled: Color = shade50,
-    textInverted: Color = shade0,
+    val textNorm: Color = shade100,
+    val textAccent: Color = brandNorm,
+    val textWeak: Color = shade80,
+    val textHint: Color = shade60,
+    val textDisabled: Color = shade50,
+    val textInverted: Color = shade0,
 
-    iconNorm: Color = shade100,
-    iconAccent: Color = brandNorm,
-    iconWeak: Color = shade80,
-    iconHint: Color = shade60,
-    iconDisabled: Color = shade50,
-    iconInverted: Color = shade0,
+    val iconNorm: Color = shade100,
+    val iconAccent: Color = brandNorm,
+    val iconWeak: Color = shade80,
+    val iconHint: Color = shade60,
+    val iconDisabled: Color = shade50,
+    val iconInverted: Color = shade0,
 
-    interactionStrongNorm: Color = shade100,
-    interactionStrongPressed: Color = shade80,
+    val interactionStrongNorm: Color = shade100,
+    val interactionStrongPressed: Color = shade80,
 
-    interactionWeakNorm: Color = shade20,
-    interactionWeakPressed: Color = shade40,
-    interactionWeakDisabled: Color = shade10,
+    val interactionWeakNorm: Color = shade20,
+    val interactionWeakPressed: Color = shade40,
+    val interactionWeakDisabled: Color = shade10,
 
-    backgroundNorm: Color = shade0,
-    backgroundSecondary: Color = shade10,
-    backgroundDeep: Color = shade15,
+    val backgroundNorm: Color = shade0,
+    val backgroundSecondary: Color = shade10,
+    val backgroundDeep: Color = shade15,
 
-    separatorNorm: Color = shade20,
+    val separatorNorm: Color = shade20,
 
-    blenderNorm: Color,
+    val blenderNorm: Color,
 
-    notificationNorm: Color = shade100,
-    notificationError: Color = ProtonPalette.Pomegranate,
-    notificationWarning: Color = ProtonPalette.Sunglow,
-    notificationSuccess: Color = ProtonPalette.Apple,
+    val notificationNorm: Color = shade100,
+    val notificationError: Color = ProtonPalette.Pomegranate,
+    val notificationWarning: Color = ProtonPalette.Sunglow,
+    val notificationSuccess: Color = ProtonPalette.Apple,
 
-    interactionNorm: Color = brandNorm,
-    interactionPressed: Color = brandDarken20,
-    interactionDisabled: Color = brandLighten40,
+    val interactionNorm: Color = brandNorm,
+    val interactionPressed: Color = brandDarken20,
+    val interactionDisabled: Color = brandLighten40,
 
-    floatyBackground: Color = ProtonPalette.ShipGray,
-    floatyPressed: Color = ProtonPalette.Cinder,
-    floatyText: Color = Color.White,
+    val floatyBackground: Color = ProtonPalette.ShipGray,
+    val floatyPressed: Color = ProtonPalette.Cinder,
+    val floatyText: Color = Color.White,
 
-    shadowNorm: Color,
-    shadowRaised: Color,
-    shadowLifted: Color,
+    val shadowNorm: Color,
+    val shadowRaised: Color,
+    val shadowLifted: Color,
 
-    sidebarColors: ProtonColors? = null,
+    val sidebarColors: ProtonColors? = null,
 ) {
     var isDark: Boolean by mutableStateOf(isDark, structuralEqualityPolicy())
         internal set
-
-    var shade100: Color by mutableStateOf(shade100, structuralEqualityPolicy())
-        internal set
-    var shade80: Color by mutableStateOf(shade80, structuralEqualityPolicy())
-        internal set
-    var shade60: Color by mutableStateOf(shade60, structuralEqualityPolicy())
-        internal set
-    var shade50: Color by mutableStateOf(shade50, structuralEqualityPolicy())
-        internal set
-    var shade40: Color by mutableStateOf(shade40, structuralEqualityPolicy())
-        internal set
-    var shade20: Color by mutableStateOf(shade20, structuralEqualityPolicy())
-        internal set
-    var shade15: Color by mutableStateOf(shade15, structuralEqualityPolicy())
-        internal set
-    var shade10: Color by mutableStateOf(shade10, structuralEqualityPolicy())
-        internal set
-    var shade0: Color by mutableStateOf(shade0, structuralEqualityPolicy())
-        internal set
-
-    var textNorm: Color by mutableStateOf(textNorm, structuralEqualityPolicy())
-        internal set
-    var textAccent: Color by mutableStateOf(textAccent, structuralEqualityPolicy())
-        internal set
-    var textWeak: Color by mutableStateOf(textWeak, structuralEqualityPolicy())
-        internal set
-    var textHint: Color by mutableStateOf(textHint, structuralEqualityPolicy())
-        internal set
-    var textDisabled: Color by mutableStateOf(textDisabled, structuralEqualityPolicy())
-        internal set
-    var textInverted: Color by mutableStateOf(textInverted, structuralEqualityPolicy())
-        internal set
-
-    var iconNorm: Color by mutableStateOf(iconNorm, structuralEqualityPolicy())
-        internal set
-    var iconAccent: Color by mutableStateOf(iconAccent, structuralEqualityPolicy())
-        internal set
-    var iconWeak: Color by mutableStateOf(iconWeak, structuralEqualityPolicy())
-        internal set
-    var iconHint: Color by mutableStateOf(iconHint, structuralEqualityPolicy())
-        internal set
-    var iconDisabled: Color by mutableStateOf(iconDisabled, structuralEqualityPolicy())
-        internal set
-    var iconInverted: Color by mutableStateOf(iconInverted, structuralEqualityPolicy())
-        internal set
-
-    var interactionStrongNorm: Color by mutableStateOf(interactionStrongNorm, structuralEqualityPolicy())
-        internal set
-    var interactionStrongPressed: Color by mutableStateOf(interactionStrongPressed, structuralEqualityPolicy())
-        internal set
-
-    var interactionWeakNorm: Color by mutableStateOf(interactionWeakNorm, structuralEqualityPolicy())
-        internal set
-    var interactionWeakPressed: Color by mutableStateOf(interactionWeakPressed, structuralEqualityPolicy())
-        internal set
-    var interactionWeakDisabled: Color by mutableStateOf(interactionWeakDisabled, structuralEqualityPolicy())
-        internal set
-
-    var backgroundNorm: Color by mutableStateOf(backgroundNorm, structuralEqualityPolicy())
-        internal set
-    var backgroundSecondary: Color by mutableStateOf(backgroundSecondary, structuralEqualityPolicy())
-        internal set
-    var backgroundDeep: Color by mutableStateOf(backgroundDeep, structuralEqualityPolicy())
-        internal set
-
-    var separatorNorm: Color by mutableStateOf(separatorNorm, structuralEqualityPolicy())
-        internal set
-
-    var blenderNorm: Color by mutableStateOf(blenderNorm, structuralEqualityPolicy())
-        internal set
-
-    var brandDarken40: Color by mutableStateOf(brandDarken40, structuralEqualityPolicy())
-        internal set
-    var brandDarken20: Color by mutableStateOf(brandDarken20, structuralEqualityPolicy())
-        internal set
-    var brandNorm: Color by mutableStateOf(brandNorm, structuralEqualityPolicy())
-        internal set
-    var brandLighten20: Color by mutableStateOf(brandLighten20, structuralEqualityPolicy())
-        internal set
-    var brandLighten40: Color by mutableStateOf(brandLighten40, structuralEqualityPolicy())
-        internal set
-
-    var notificationNorm: Color by mutableStateOf(notificationNorm, structuralEqualityPolicy())
-        internal set
-    var notificationError: Color by mutableStateOf(notificationError, structuralEqualityPolicy())
-        internal set
-    var notificationWarning: Color by mutableStateOf(notificationWarning, structuralEqualityPolicy())
-        internal set
-    var notificationSuccess: Color by mutableStateOf(notificationSuccess, structuralEqualityPolicy())
-        internal set
-
-    var interactionNorm: Color by mutableStateOf(interactionNorm, structuralEqualityPolicy())
-        internal set
-    var interactionPressed: Color by mutableStateOf(interactionPressed, structuralEqualityPolicy())
-        internal set
-    var interactionDisabled: Color by mutableStateOf(interactionDisabled, structuralEqualityPolicy())
-        internal set
-
-    var floatyBackground: Color by mutableStateOf(floatyBackground, structuralEqualityPolicy())
-        internal set
-    var floatyPressed: Color by mutableStateOf(floatyPressed, structuralEqualityPolicy())
-        internal set
-    var floatyText: Color by mutableStateOf(floatyText, structuralEqualityPolicy())
-        internal set
-
-    var shadowNorm: Color by mutableStateOf(shadowNorm, structuralEqualityPolicy())
-        internal set
-    var shadowRaised: Color by mutableStateOf(shadowRaised, structuralEqualityPolicy())
-        internal set
-    var shadowLifted: Color by mutableStateOf(shadowLifted, structuralEqualityPolicy())
-        internal set
-
-    var sidebarColors: ProtonColors? by mutableStateOf(sidebarColors, structuralEqualityPolicy())
 
     fun copy(
         isDark: Boolean = this.isDark,
@@ -562,7 +412,6 @@ class ProtonColors(
 
 fun ProtonColors.textNorm(enabled: Boolean = true) = if (enabled) textNorm else textDisabled
 fun ProtonColors.textWeak(enabled: Boolean = true) = if (enabled) textWeak else textDisabled
-fun ProtonColors.textInverted(enabled: Boolean = true) = if (enabled) textInverted else textDisabled
 fun ProtonColors.interactionNorm(enabled: Boolean = true) = if (enabled) interactionNorm else interactionDisabled
 
 internal fun ProtonColors.toMaterial3ThemeColors() = androidx.compose.material3.ColorScheme(

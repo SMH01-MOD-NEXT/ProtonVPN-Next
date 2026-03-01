@@ -21,11 +21,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import retrofit2.http.Body
-import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
-import retrofit2.http.Query
 
 @Serializable
 data class AuthInfoRequest(
@@ -113,11 +111,6 @@ interface ProtonAuthApi {
         @Header("x-pm-uid") sessionId: String,
         @Body request: SecondFactorRequest
     ): LoginResponse
-
-    @DELETE("auth/v4")
-    suspend fun revokeSession(
-        @Query("AuthDevice") revokeAuthDevice: Int = 1
-    ): GenericResponse
 
     @GET("core/v4/users")
     suspend fun getUser(

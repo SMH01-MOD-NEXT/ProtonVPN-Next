@@ -58,16 +58,6 @@ object IpSubnetCalculator {
         return if (ip.contains("/")) ip else "$ip/32"
     }
 
-    /**
-     * Convert a list of IPs to CIDR notation for use in WireGuard
-     */
-    fun toWireGuardFormat(ips: Collection<String>): List<String> {
-        return ips
-            .filter { it.isNotBlank() }
-            .map { normalizeIp(it.trim()) }
-            .distinct()
-    }
-
     // --- New helpers for CIDR/range math ---
 
     private fun ipToLong(ip: String): Long {

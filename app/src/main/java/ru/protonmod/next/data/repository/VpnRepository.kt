@@ -23,14 +23,10 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
-import retrofit2.HttpException
 import ru.protonmod.next.data.network.*
 import ru.protonmod.next.data.local.ServerDao
 import ru.protonmod.next.data.local.ServerMapper
 import ru.protonmod.next.data.local.SessionDao
-import java.io.EOFException
-import java.net.ConnectException
-import java.net.SocketTimeoutException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -63,9 +59,7 @@ class VpnRepository @Inject constructor(
             val serversList = when (response.code()) {
                 304 -> {
                     Log.d(TAG, "Servers not modified (304), using in-memory or DB cache")
-                    if (cachedServers.isNotEmpty()) {
-                        cachedServers
-                    } else {
+                    cachedServers.ifEmpty {
                         // If memory is empty (e.g. app restart), load from DB
                         val dbServers = serverDao.getAllServers().map { ServerMapper.toDomain(it) }
                         cachedServers = dbServers

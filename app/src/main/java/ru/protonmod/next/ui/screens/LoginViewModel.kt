@@ -171,13 +171,6 @@ class LoginViewModel @Inject constructor(
     }
 
     /**
-     * Resets the UI state to Idle, allowing the user to try again.
-     */
-    fun resetState() {
-        _uiState.value = LoginUiState.Idle
-    }
-
-    /**
      * Specifically resets only the error state.
      */
     fun resetError() {

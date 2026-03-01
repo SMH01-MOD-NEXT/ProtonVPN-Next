@@ -19,7 +19,6 @@ package ru.protonmod.next.data.local
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.time.Instant
 
 @Entity(tableName = "recent_connections")
 data class RecentConnectionEntity(
@@ -30,4 +29,3 @@ data class RecentConnectionEntity(
     val country: String,
     val lastConnectedAt: Long = System.currentTimeMillis()
 )
-

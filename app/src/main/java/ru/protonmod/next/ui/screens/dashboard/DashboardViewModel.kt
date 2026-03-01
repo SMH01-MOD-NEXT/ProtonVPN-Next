@@ -17,9 +17,11 @@
 
 package ru.protonmod.next.ui.screens.dashboard
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.amnezia.awg.backend.Tunnel
+import ru.protonmod.next.R
 import ru.protonmod.next.data.cache.ServersCacheManager
 import ru.protonmod.next.data.local.RecentConnectionEntity
 import ru.protonmod.next.data.local.SessionDao
@@ -43,13 +46,15 @@ sealed class DashboardUiState {
         val recentConnections: List<LogicalServer> = emptyList(),
         val isConnected: Boolean = false,
         val connectedServer: LogicalServer? = null,
-        val isConnecting: Boolean = false
+        val isConnecting: Boolean = false,
+        val certificateState: AmneziaVpnManager.CertificateState = AmneziaVpnManager.CertificateState.Valid
     ) : DashboardUiState()
-    data class Error(val message: String) : DashboardUiState()
+    data class Error(val message: String, val isSessionError: Boolean = false) : DashboardUiState()
 }
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val serversCacheManager: ServersCacheManager,
     private val sessionDao: SessionDao,
     private val amneziaVpnManager: AmneziaVpnManager,
@@ -61,15 +66,25 @@ class DashboardViewModel @Inject constructor(
     private val _errorMessage = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<DashboardUiState> = combine(
-        combine(serversCacheManager.getServersFlow(), _isLoading, _errorMessage) { servers, isLoading, error ->
-            Triple(servers, isLoading, error)
-        },
+        serversCacheManager.getServersFlow(),
+        _isLoading,
+        _errorMessage,
         amneziaVpnManager.tunnelState,
         amneziaVpnManager.isConnecting,
+        amneziaVpnManager.certState,
         connectedServerState.connectedServer,
         recentConnectionDao.getRecentConnections()
-    ) { localState, tunnelState, isConnecting, connectedServer, recentEntities ->
-        val (servers, isLoading, error) = localState
+    ) { args: Array<Any?> ->
+        @Suppress("UNCHECKED_CAST")
+        val servers = args[0] as List<LogicalServer>
+        val isLoading = args[1] as Boolean
+        val error = args[2] as String?
+        val tunnelState = args[3] as Tunnel.State
+        val isConnecting = args[4] as Boolean
+        val certState = args[5] as AmneziaVpnManager.CertificateState
+        val connectedServer = args[6] as LogicalServer?
+        @Suppress("UNCHECKED_CAST")
+        val recentEntities = args[7] as List<RecentConnectionEntity>
 
         if (isLoading && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -87,7 +102,8 @@ class DashboardViewModel @Inject constructor(
                 recentConnections = recentServers,
                 isConnected = isConnected,
                 connectedServer = connectedServer,
-                isConnecting = isConnecting
+                isConnecting = isConnecting,
+                certificateState = certState
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
@@ -130,7 +146,7 @@ class DashboardViewModel @Inject constructor(
             _errorMessage.value = null
             val session = sessionDao.getSession()
             if (session == null) {
-                _errorMessage.value = "Active session not found. Please log in again."
+                _errorMessage.value = context.getString(R.string.error_session_not_found)
                 _isLoading.value = false
                 return@launch
             }
@@ -139,7 +155,7 @@ class DashboardViewModel @Inject constructor(
                 .onFailure { error ->
                     val cachedServers = serversCacheManager.getCachedServers()
                     if (cachedServers.isEmpty()) {
-                        _errorMessage.value = error.localizedMessage ?: "Unknown error occurred"
+                        _errorMessage.value = error.localizedMessage ?: context.getString(R.string.error_unknown)
                     }
                 }
             _isLoading.value = false
@@ -150,6 +166,10 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             amneziaVpnManager.disconnect()
         }
+    }
+
+    fun refreshCertificate() {
+        amneziaVpnManager.checkAndRefreshCertificateProactively()
     }
 
     fun toggleConnection(server: LogicalServer) {
@@ -175,7 +195,7 @@ class DashboardViewModel @Inject constructor(
     private suspend fun initiateConnection(server: LogicalServer) {
         val session = sessionDao.getSession()
         if (session == null) {
-            _errorMessage.value = "Active session not found. Please log in again."
+            _errorMessage.value = context.getString(R.string.error_session_not_found)
             return
         }
 
@@ -190,7 +210,7 @@ class DashboardViewModel @Inject constructor(
                 amneziaVpnManager.connect(server.id, physicalServer, session)
             }
         } else {
-            _errorMessage.value = "Selected server is currently unavailable."
+            _errorMessage.value = context.getString(R.string.label_server_unavailable)
         }
     }
 }

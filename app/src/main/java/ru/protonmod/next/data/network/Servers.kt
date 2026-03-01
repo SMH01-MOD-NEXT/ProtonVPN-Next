@@ -50,14 +50,3 @@ data class PhysicalServer(
     // Added field to store load fetched from vpn/v1/loads
     var load: Int = 0
 )
-
-// --- Server-Generated EC Key Models ---
-// We request the server to generate an EC key for us. The server will implicitly
-// authorize the X25519 (WireGuard) counterpart of this key on its backend.
-
-@Serializable
-data class ServerKeyResponse(
-    @SerialName("Code") val code: Int,
-    @SerialName("PrivateKey") val privateKey: String,
-    @SerialName("PublicKey") val publicKey: String
-)

@@ -56,9 +56,18 @@
     <string name="map_placeholder">محل نقشه تعاملی</string>
     <string name="label_fastest_server">سریع‌ترین سرور</string>
     <string name="label_select_location">انتخاب مکان</string>
+    <string name="label_server_unavailable">سرور در دسترس نیست</string>
     <string name="desc_change_server">تغییر سرور</string>
     <string name="btn_disconnect">قطع اتصال</string>
     <string name="btn_quick_connect">اتصال سریع</string>
+
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">گواهی در %1$d ساعت دیگر منقضی می‌شود. در حال تمدید…</string>
+    <string name="cert_msg_expired">گواهی VPN شما منقضی شده است و باید تمدید شود.</string>
+    <string name="cert_msg_refreshing">در حال تمدید گواهی VPN…</string>
+    <string name="cert_msg_refresh_failed">تمدید گواهی ناموفق بود: %1$s. تلاش مجدد تا ۱۵ دقیقه دیگر.</string>
+    <string name="cert_msg_auto_refresh_failed">تمدید خودکار ناموفق بود. لطفا برای اطمینان از اتصال، به صورت دستی بروزرسانی کنید.</string>
+    <string name="cert_btn_refresh_now">همین حالا تمدید کنید</string>
 
     <!-- Countries Screen -->
     <string name="countries_title">انتخاب کشور</string>
@@ -121,6 +130,7 @@
   <string name="obfuscation_category_magic">اندازه‌های بسته (Magic)</string>
   <string name="obfuscation_category_headers">هدرها (Header)</string>
   <string name="obfuscation_category_advanced">پیشرفته</string>
+  <string name="custom_config">پیکربندی سفارشی</string>
 
     <!-- About App Screen -->
     <string name="about_community">انجمن</string>
@@ -183,12 +193,19 @@
     <string name="profiles_empty_desc">یک پروفایل ایجاد کنید تا سریعاً با تنظیمات خاص متصل شوید.</string>
     <string name="profile_feature_obfuscation">مبهم‌سازی</string>
     <string name="profile_feature_connect_go">اتصال و رفتن</string>
+    <string name="profile_server_info">سرور: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
 
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">ایجاد پروفایل</string>
     <string name="title_edit_profile">ویرایش پروفایل</string>
     <string name="btn_save">ذخیره</string>
     <string name="btn_cancel">لغو</string>
+    <string name="btn_delete">حذف</string>
+    <string name="btn_edit">ویرایش</string>
+    <string name="desc_delete_profile">حذف پروفایل</string>
     <string name="default_profile_name">پروفایل من</string>
     <string name="category_general">عمومی</string>
     <string name="label_profile_name">نام پروفایل</string>
@@ -196,6 +213,7 @@
     <string name="location_server">سرور: %1$s</string>
     <string name="location_fastest">سریع‌ترین</string>
     <string name="label_target_location">مکان هدف</string>
+    <string name="label_location">مکان</string>
     <string name="category_connection">اتصال</string>
     <string name="label_protocol">پروتکل</string>
     <string name="label_port">پورت</string>
@@ -205,19 +223,23 @@
     <string name="label_obfuscation_config">پیکربندی مبهم‌سازی</string>
     <string name="category_automation">اتوماسیون</string>
     <string name="label_connect_go_website">اتصال و رفتن (وب‌سایت)</string>
+    <string name="label_enter_url">وارد کردن URL</string>
     <string name="label_not_configured">پیکربندی نشده</string>
     <string name="automation_desc">پس از برقراری اتصال VPN، این وب‌سایت را به‌طور خودکار در مرورگر خود باز کنید.</string>
     <string name="title_select_country">انتخاب کشور</string>
     <string name="title_select_city">انتخاب شهر</string>
     <string name="title_select_server">انتخاب سرور</string>
-    <string name="location_best_in_country">بهترین در %1$s</string>
-    <string name="location_best_in_city">بهترین در %1$s</string>
+    <string name="location_fastest_in_country">سریع‌ترین در %1$s</string>
+    <string name="location_fastest_in_city">سریع‌ترین در %1$s</string>
     <string name="location_load">بار: %1$d%%</string>
     <string name="title_select_obfuscation_config">انتخاب پیکربندی مبهم‌سازی</string>
+    <string name="title_auto_open_url">باز کردن خودکار URL</string>
     <string name="btn_create_new_config">ایجاد پیکربندی جدید</string>
     <string name="connect_go_title">اتصال و رفتن</string>
     <string name="connect_go_desc">URL را برای باز شدن پس از اتصال وارد کنید (مثلاً https://example.com)</string>
     <string name="hint_url_placeholder">https://</string>
     <string name="title_select_protocol">انتخاب پروتکل</string>
     <string name="custom_config_name">پیکربندی سفارشی %1$d</string>
+    <string name="title_edit_obfuscation_config">ویرایش پیکربندی مبهم‌سازی</string>
+    <string name="error_empty_profile_name">نام پروفایل نمی‌تواند خالی باشد</string>
 </resources>

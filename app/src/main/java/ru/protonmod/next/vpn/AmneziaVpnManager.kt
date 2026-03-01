@@ -49,7 +49,6 @@ import java.io.ByteArrayInputStream
 import java.net.InetAddress
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import java.util.Date
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -72,14 +71,15 @@ class AmneziaVpnManager @Inject constructor(
         
         private const val REFRESH_THRESHOLD_MS = 6 * 3600 * 1000L // 6 hours
         private const val RETRY_DELAY_MS = 15 * 60 * 1000L // 15 minutes
+        private const val PERIODIC_REFRESH_MS = 2 * 3600 * 1000L // 2 hours
     }
 
     sealed class CertificateState {
-        object Valid : CertificateState()
-        object ExpiringSoon : CertificateState() // < 6h, but still usable
-        object Expired : CertificateState()
+        data object Valid : CertificateState()
+        data class ExpiringSoon(val hoursRemaining: Int) : CertificateState()
+        data object Expired : CertificateState()
         data class RefreshFailed(val error: String, val isFullyExpired: Boolean) : CertificateState()
-        object Refreshing : CertificateState()
+        data object Refreshing : CertificateState()
     }
 
     private val _certState = MutableStateFlow<CertificateState>(CertificateState.Valid)
@@ -102,6 +102,7 @@ class AmneziaVpnManager @Inject constructor(
     private var isReconnecting = false
     private var connectionJob: Job? = null
     private var refreshJob: Job? = null
+    private var scheduledRefreshJob: Job? = null
 
     init {
         val filter = IntentFilter(ProtonVpnService.ACTION_STATE_CHANGED)
@@ -118,8 +119,9 @@ class AmneziaVpnManager @Inject constructor(
                         if (!(isReconnecting && newState == Tunnel.State.DOWN)) {
                             _tunnelState.value = newState
                             if (newState == Tunnel.State.UP) {
-                                // Proactive refresh if we are already connected and close to expiry
                                 checkAndRefreshCertificateProactively()
+                            } else if (newState == Tunnel.State.DOWN) {
+                                scheduledRefreshJob?.cancel()
                             }
                         }
                     }
@@ -130,12 +132,12 @@ class AmneziaVpnManager @Inject constructor(
         applicationScope.launch { settingsManager.notificationsEnabled.collect { updateServiceSettings() } }
         applicationScope.launch { settingsManager.killSwitchEnabled.collect { updateServiceSettings() } }
         
-        // Initial check on app start
         applicationScope.launch {
             val session = sessionDao.getSession()
             if (session != null) {
                 updateCertificateState(session.wgCertificate)
-                if (_certState.value is CertificateState.ExpiringSoon || _certState.value is CertificateState.Expired) {
+                // Always try to refresh on app start if not perfectly valid
+                if (_certState.value !is CertificateState.Valid) {
                     checkAndRefreshCertificateProactively()
                 }
             }
@@ -156,12 +158,40 @@ class AmneziaVpnManager @Inject constructor(
             if (now >= expiry) {
                 _certState.value = CertificateState.Expired
             } else if (expiry - now < REFRESH_THRESHOLD_MS) {
-                _certState.value = CertificateState.ExpiringSoon
+                val hours = ((expiry - now) / (3600 * 1000L)).toInt()
+                _certState.value = CertificateState.ExpiringSoon(hours)
             } else {
                 _certState.value = CertificateState.Valid
             }
         } catch (e: Exception) {
             _certState.value = CertificateState.Expired
+        }
+    }
+
+    private suspend fun performCertificateRefresh(session: SessionEntity): Result<String> {
+        val previousState = _certState.value
+        _certState.value = CertificateState.Refreshing
+        val result = vpnRepositoryProvider.get().registerWireGuardKey(
+            accessToken = session.accessToken,
+            sessionId = session.sessionId,
+            publicKeyPem = session.wgPublicKeyPem ?: ""
+        )
+        return if (result.isSuccess) {
+            val newCert = result.getOrNull()?.certificate
+            if (newCert != null) {
+                sessionDao.updateCertificate(newCert)
+                updateCertificateState(newCert)
+                Result.success(newCert)
+            } else {
+                _certState.value = previousState
+                Result.failure(Exception("Empty certificate in response"))
+            }
+        } else {
+            val error = result.exceptionOrNull()?.message ?: "Unknown error"
+            val isFullyExpired = previousState is CertificateState.Expired || 
+                                (previousState is CertificateState.RefreshFailed && previousState.isFullyExpired)
+            _certState.value = CertificateState.RefreshFailed(error, isFullyExpired)
+            Result.failure(result.exceptionOrNull() ?: Exception(error))
         }
     }
 
@@ -171,25 +201,10 @@ class AmneziaVpnManager @Inject constructor(
             while (true) {
                 val session = sessionDao.getSession() ?: break
                 updateCertificateState(session.wgCertificate)
-                
-                val state = _certState.value
-                if (state is CertificateState.Valid) break
-
-                _certState.value = CertificateState.Refreshing
-                val result = vpnRepositoryProvider.get().registerWireGuardKey(
-                    session.accessToken, session.sessionId, session.wgPublicKeyPem ?: ""
-                )
-
-                if (result.isSuccess) {
-                    val newCert = result.getOrNull()?.certificate
-                    updateCertificateState(newCert)
-                    break
-                } else {
-                    val error = result.exceptionOrNull()?.message ?: "Unknown error"
-                    val isFullyExpired = state is CertificateState.Expired
-                    _certState.value = CertificateState.RefreshFailed(error, isFullyExpired)
-                    delay(RETRY_DELAY_MS)
-                }
+                if (_certState.value is CertificateState.Valid) break
+                val result = performCertificateRefresh(session)
+                if (result.isSuccess) break
+                delay(RETRY_DELAY_MS)
             }
         }
     }
@@ -227,50 +242,24 @@ class AmneziaVpnManager @Inject constructor(
     ): Result<Unit> = withContext(Dispatchers.IO) {
         try {
             _isConnecting.value = true
-
-            // --- Certificate Refresh Check ---
             var currentSession = session
-            
-            while (true) {
-                updateCertificateState(currentSession.wgCertificate)
-                val state = _certState.value
-                
-                if (state is CertificateState.Valid) break
+            updateCertificateState(currentSession.wgCertificate)
 
-                // If expiring soon but not expired, we can connect while refreshing in background
-                if (state is CertificateState.ExpiringSoon) {
-                    checkAndRefreshCertificateProactively()
-                    break
-                }
-
-                // If expired or missing, we MUST refresh before connecting
-                _certState.value = CertificateState.Refreshing
-                val refreshResult = vpnRepositoryProvider.get().registerWireGuardKey(
-                    accessToken = currentSession.accessToken,
-                    sessionId = currentSession.sessionId,
-                    publicKeyPem = currentSession.wgPublicKeyPem ?: ""
-                )
-
-                if (refreshResult.isSuccess) {
-                    val newCert = refreshResult.getOrNull()?.certificate
-                    if (newCert != null) {
-                        currentSession = currentSession.copy(wgCertificate = newCert)
-                        updateCertificateState(newCert)
+            // 1. Strict blocking for Expired certificate
+            if (_certState.value is CertificateState.Expired) {
+                Log.d(TAG, "Blocking connection: Certificate is fully expired.")
+                while (true) {
+                    val refreshResult = performCertificateRefresh(currentSession)
+                    if (refreshResult.isSuccess) {
+                        currentSession = currentSession.copy(wgCertificate = refreshResult.getOrNull()!!)
                         break
                     }
-                } else {
-                    val error = refreshResult.exceptionOrNull()?.message ?: "Unknown error"
-                    _certState.value = CertificateState.RefreshFailed(error, true)
-                    Log.e(TAG, "Critical: Certificate expired and refresh failed. Waiting...")
-                    delay(RETRY_DELAY_MS)
-                    // Refresh session from DB in case it was updated elsewhere
+                    delay(5000) // Retry every 5s while blocking
                     currentSession = sessionDao.getSession() ?: throw Exception("Session lost during refresh")
                 }
             }
-            // ---------------------------------
 
             val wgPrivateKeyB64 = currentSession.wgPrivateKey ?: throw Exception("Offline VPN private key missing!")
-            
             var targetIp: String? = null
             for (i in 1..DNS_RETRY_COUNT) {
                 try {
@@ -291,48 +280,27 @@ class AmneziaVpnManager @Inject constructor(
             val splitTunnelingEnabled = settingsManager.splitTunnelingEnabled.first()
             val excludedApps = if (splitTunnelingEnabled) settingsManager.excludedApps.first() else emptySet()
             val excludedIps = if (splitTunnelingEnabled) settingsManager.excludedIps.first() else emptySet()
-
             val selectedPort = overridePort?.takeIf { it != 0 } ?: settingsManager.vpnPort.first().let { port ->
                 if (port == 0) listOf(443, 123, 1194, 51820).random() else port
             }
-
             val isObfuscationEnabled = overrideObfuscation ?: settingsManager.obfuscationEnabled.first()
 
             val params = if (isObfuscationEnabled) {
                 obfuscationParams ?: ObfuscationParams(
-                    jc = settingsManager.awgJc.first(),
-                    jmin = settingsManager.awgJmin.first(),
-                    jmax = settingsManager.awgJmax.first(),
-                    s1 = settingsManager.awgS1.first(),
-                    s2 = settingsManager.awgS2.first(),
-                    h1 = settingsManager.awgH1.first(),
-                    h2 = settingsManager.awgH2.first(),
-                    h3 = settingsManager.awgH3.first(),
-                    h4 = settingsManager.awgH4.first(),
+                    jc = settingsManager.awgJc.first(), jmin = settingsManager.awgJmin.first(), jmax = settingsManager.awgJmax.first(),
+                    s1 = settingsManager.awgS1.first(), s2 = settingsManager.awgS2.first(),
+                    h1 = settingsManager.awgH1.first(), h2 = settingsManager.awgH2.first(), h3 = settingsManager.awgH3.first(), h4 = settingsManager.awgH4.first(),
                     i1 = settingsManager.awgI1.first()
                 )
             } else {
-                ObfuscationParams(
-                    jc = 0, jmin = 0, jmax = 0,
-                    s1 = 0, s2 = 0,
-                    h1 = "", h2 = "", h3 = "", h4 = "",
-                    i1 = ""
-                )
+                ObfuscationParams(0, 0, 0, 0, 0, "", "", "", "", "")
             }
 
             val config = buildAwgConfig(
-                serverPublicKey = serverPubKey,
-                privateKey = wgPrivateKeyB64,
-                localIp = PROTON_CLIENT_IP,
-                dnsServer = PROTON_DNS_IP,
-                targetIp = targetIp,
-                excludedApps = excludedApps,
-                excludedIps = excludedIps,
-                port = selectedPort,
-                jc = params.jc, jmin = params.jmin, jmax = params.jmax,
-                s1 = params.s1, s2 = params.s2,
-                h1 = params.h1, h2 = params.h2, h3 = params.h3, h4 = params.h4,
-                i1 = params.i1
+                serverPublicKey = serverPubKey, privateKey = wgPrivateKeyB64, localIp = PROTON_CLIENT_IP, dnsServer = PROTON_DNS_IP,
+                targetIp = targetIp, excludedApps = excludedApps, excludedIps = excludedIps, port = selectedPort,
+                jc = params.jc, jmin = params.jmin, jmax = params.jmax, s1 = params.s1, s2 = params.s2,
+                h1 = params.h1, h2 = params.h2, h3 = params.h3, h4 = params.h4, i1 = params.i1
             )
 
             val intent = Intent(context, ProtonVpnService::class.java).apply {
@@ -344,11 +312,37 @@ class AmneziaVpnManager @Inject constructor(
                 putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_IPS, ArrayList(excludedIps))
             }
             context.startService(intent)
+
+            // Start periodic refresh job (3s initially, then every 2h)
+            startScheduledRefresh()
+
             Result.success(Unit)
         } catch (e: Exception) {
             _isConnecting.value = false
             _tunnelState.value = Tunnel.State.DOWN
             Result.failure(e)
+        }
+    }
+
+    private fun startScheduledRefresh() {
+        scheduledRefreshJob?.cancel()
+        scheduledRefreshJob = applicationScope.launch {
+            // Wait for connection to be active
+            _tunnelState.first { it == Tunnel.State.UP }
+            
+            // First refresh after 3 seconds
+            delay(3000)
+            Log.d(TAG, "Initial 3s post-connect refresh.")
+            val sessionAfterConnect = sessionDao.getSession() ?: return@launch
+            performCertificateRefresh(sessionAfterConnect)
+
+            // Then every 2 hours without reconnecting
+            while (_tunnelState.value == Tunnel.State.UP) {
+                delay(PERIODIC_REFRESH_MS)
+                Log.d(TAG, "Periodic 2h background refresh.")
+                val sessionPeriodic = sessionDao.getSession() ?: break
+                performCertificateRefresh(sessionPeriodic)
+            }
         }
     }
 
@@ -374,6 +368,7 @@ class AmneziaVpnManager @Inject constructor(
 
     fun disconnect() {
         connectionJob?.cancel()
+        scheduledRefreshJob?.cancel()
         applicationScope.launch {
             isReconnecting = false
             disconnectInternal()

@@ -23,7 +23,6 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
-import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ProtonVpnApi {
@@ -63,31 +62,6 @@ interface ProtonVpnApi {
     suspend fun getUserLocation(
         @Header("Authorization") authorization: String,
         @Header("x-pm-uid") sessionId: String
-    ): Response<ResponseBody>
-
-    /**
-     * Get streaming services availability per server.
-     */
-    @GET("vpn/v1/streamingservices")
-    suspend fun getStreamingServices(
-        @Header("Authorization") authorization: String,
-        @Header("x-pm-uid") sessionId: String
-    ): Response<ResponseBody>
-
-    /**
-     * Quick binary status check for a server.
-     */
-    @GET("vpn/v2/status/{id}/binary")
-    suspend fun getServerBinaryStatus(
-        @Path("id") serverId: String
-    ): Response<ByteArray>
-
-    /**
-     * Localized city names.
-     */
-    @GET("vpn/v1/cities/names")
-    suspend fun getServerCities(
-        @Header("x-pm-locale") locale: String
     ): Response<ResponseBody>
 
     /**

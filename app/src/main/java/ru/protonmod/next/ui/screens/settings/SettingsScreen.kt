@@ -134,7 +134,6 @@ fun SettingsContent(
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
-    var showPortDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier,
@@ -174,12 +173,24 @@ fun SettingsContent(
                     checked = state.autoConnectEnabled,
                     onCheckedChange = onAutoConnectChange
                 )
+                
+                var showPortDialog by remember { mutableStateOf(false) }
                 SettingRowWithIcon(
                     icon = Icons.Rounded.Numbers,
                     title = stringResource(R.string.settings_port),
                     subtitle = if (state.vpnPort == 0) stringResource(R.string.settings_port_auto) else state.vpnPort.toString(),
                     onClick = { showPortDialog = true }
                 )
+                if (showPortDialog) {
+                    PortSelectionDialog(
+                        currentPort = state.vpnPort,
+                        onDismiss = { showPortDialog = false },
+                        onPortSelected = {
+                            onPortChange(it)
+                            showPortDialog = false
+                        }
+                    )
+                }
             }
         }
 
@@ -214,18 +225,6 @@ fun SettingsContent(
                 )
             }
         }
-    }
-
-    // Dialog for selecting VPN port
-    if (showPortDialog) {
-        PortSelectionDialog(
-            currentPort = state.vpnPort,
-            onDismiss = { showPortDialog = false },
-            onPortSelected = {
-                onPortChange(it)
-                showPortDialog = false
-            }
-        )
     }
 }
 

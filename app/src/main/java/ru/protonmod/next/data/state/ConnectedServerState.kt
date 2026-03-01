@@ -38,7 +38,4 @@ class ConnectedServerState @Inject constructor() {
     fun setConnectedServer(server: LogicalServer?) {
         _connectedServer.value = server
     }
-
-    fun getConnectedServer(): LogicalServer? = _connectedServer.value
 }
-

@@ -78,12 +78,6 @@ class SplitTunnelingIpsViewModel @Inject constructor(
         }
     }
 
-    fun removeAll() {
-        viewModelScope.launch {
-            settingsManager.setExcludedIps(emptySet())
-        }
-    }
-
     private fun isValidIp(ip: String): Boolean {
         if (ip.isEmpty()) return false
 
@@ -117,6 +111,3 @@ class SplitTunnelingIpsViewModel @Inject constructor(
         return true
     }
 }
-
-
-
