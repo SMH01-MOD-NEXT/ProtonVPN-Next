@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+    <string name="app_name">Proton VPN-Next</string>
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Proton VPN-Next へようこそ</string>
+    <string name="welcome_subtitle">安全でプライベートで高速なVPNでデジタルライフを管理しましょう。ログなし、トラッキングなし。</string>
+    <string name="btn_create_account">アカウントを作成</string>
+    <string name="btn_login">ログイン</string>
+    <!-- Login Screen -->
+    <string name="login_title">おかえりなさい</string>
+    <string name="login_subtitle">Protonアカウントにログインする</string>
+    <string name="hint_username">メールアドレスまたはユーザー名</string>
+    <string name="hint_password">パスワード</string>
+    <string name="forgot_password">パスワードを忘れましたか？</string>
+    <string name="desc_back_button">戻って移動</string>
+    <string name="desc_toggle_password">パスワードの表示を切り替える</string>
+    <string name="login_success">ログインしました！</string>
+    <string name="login_error">エラー: %1$s</string>
+    <string name="title_security_check">セキュリティチェック</string>
+    <string name="title_2fa">2要素認証</string>
+    <string name="msg_2fa_instruction">認証アプリから6桁のTOTPコードを入力してください。</string>
+    <string name="hint_2fa_code">6-digit Code</string>
+    <string name="btn_verify">確認する</string>
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-Next</string>
+    <string name="desc_settings">設定</string>
+    <string name="error_loading_servers">サーバーの読み込みエラー</string>
+    <string name="btn_retry">再試行する</string>
+    <string name="error_system_appops">システムエラー：アプリを再インストールしてください。</string>
+    <string name="title_recent_connections">最近のコネクション</string>
+    <string name="status_connected">接続しました</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_disconnected">切断されました</string>
+    <string name="status_not_connected">接続していません</string>
+    <string name="msg_traffic_not_protected">トラフィックは保護されていません</string>
+    <string name="desc_toggle_connection">接続の切り替え</string>
+    <string name="desc_country">国</string>
+    <string name="map_placeholder">インタラクティブマッププレースホルダー</string>
+    <string name="label_fastest_server">最速サーバー</string>
+    <string name="label_select_location">場所を選択</string>
+    <string name="label_server_unavailable">サーバーが利用できません</string>
+    <string name="desc_change_server">サーバーの変更</string>
+    <string name="btn_disconnect">接続を解除</string>
+    <string name="btn_quick_connect">クイック接続</string>
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">Certificate expires in %1$dh. Refreshing soon…</string>
+    <string name="cert_msg_expired">VPN 証明書の有効期限が切れているため更新する必要があります。</string>
+    <string name="cert_msg_refreshing">Refreshing VPN certificate…</string>
+    <string name="cert_msg_refresh_failed">証明書の更新に失敗しました： %1$s。15分後に再試行します。</string>
+    <string name="cert_msg_auto_refresh_failed">自動更新に失敗しました。接続を確認するために手動で更新してください。</string>
+    <string name="cert_btn_refresh_now">今すぐ更新</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">国を選択</string>
+    <string name="desc_more_options">その他のオプション</string>
+    <!-- Settings Screen -->
+    <string name="settings_title">設定</string>
+    <string name="settings_connection">接続設定</string>
+    <string name="settings_kill_switch">キルスイッチ</string>
+    <string name="settings_kill_switch_desc">VPN接続が切断された場合は切断します</string>
+    <string name="settings_auto_connect">自動接続</string>
+    <string name="settings_auto_connect_desc">起動時にVPNに接続する</string>
+    <string name="settings_split_tunneling">トンネリングを分割</string>
+    <string name="settings_split_tunneling_desc">VPNからアプリやIPを除外</string>
+    <string name="settings_excluded_apps">除外アプリ</string>
+    <string name="settings_excluded_ips">除外されたIPアドレス</string>
+    <string name="settings_privacy">プライバシー &amp; 通知</string>
+    <string name="settings_notifications">通知</string>
+    <string name="settings_notifications_desc">VPN ステータス通知を受け取る</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">バージョン %1$s</string>
+    <string name="settings_licenses">オープンソースライセンス</string>
+    <string name="settings_licenses_desc">アプリで使用されているサードパーティ製ソフトウェア</string>
+    <string name="settings_on">オン</string>
+    <string name="settings_off">オフ</string>
+    <string name="settings_connection_protocol">Protocol</string>
+    <string name="settings_port">ポート</string>
+    <string name="settings_port_desc">接続ポートの選択</string>
+    <string name="settings_port_auto">自動</string>
+    <string name="settings_obfuscation">難読化(AmneziaWG)</string>
+    <string name="settings_obfuscation_desc">パケットヘッダーをDPIをバイパスするように変更する</string>
+    <string name="settings_reset_obfuscation">Standard ProtonVPN-Next にリセット</string>
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_jc">ジャンクパケット数 (Jc)</string>
+    <string name="obfuscation_jmin">ジャンクパケット最小サイズ (Jmin)</string>
+    <string name="obfuscation_jmax">ジャンクパケット最大サイズ (Jmax)</string>
+    <string name="obfuscation_s1">初期パケットジャンクサイズ (S1)</string>
+    <string name="obfuscation_s2">応答パケットジャンクサイズ (S2)</string>
+    <string name="obfuscation_h1">Init Packet Magic (H1)</string>
+    <string name="obfuscation_h2">応答パケットマジック (H2)</string>
+    <string name="obfuscation_h3">パケットマジックをアンロードする (H3)</string>
+    <string name="obfuscation_h4">伝送パケットマジック (H4)</string>
+    <string name="obfuscation_i1">特殊ジャンク（I1）</string>
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">Protocol</string>
+    <string name="protocol_title">Protocol</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">難読化を伴う高度なWireGuardプロトコル</string>
+    <string name="obfuscation_title">難読化</string>
+    <string name="obfuscation_enable">難読化を有効化</string>
+    <string name="obfuscation_enable_desc">DPIとVPNブロックをバイパスする</string>
+    <string name="obfuscation_info_desc">AmneziaWGパラメータを調整して、制限されたネットワークのVPNトラフィックとバイパス接続ブロックを非表示にします。</string>
+    <string name="obfuscation_config">設定</string>
+    <string name="obfuscation_config_standard">標準プロトンVPN-次の設定</string>
+    <string name="obfuscation_save_config">新しい設定として保存</string>
+    <string name="obfuscation_config_name">設定名</string>
+    <string name="obfuscation_category_junk">ジャンクパラメーター</string>
+    <string name="obfuscation_category_magic">パケットサイズ (魔法)</string>
+    <string name="obfuscation_category_headers">ヘッダー</string>
+    <string name="obfuscation_category_advanced">高度な設定</string>
+    <string name="custom_config">カスタム設定</string>
+    <!-- About App Screen -->
+    <string name="about_community">コミュニティ</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+    <!-- Licenses Screen -->
+    <string name="licenses_title">ライセンス</string>
+    <string name="license_app_title">Proton VPN-Next</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">AndroidX ライブラリ</string>
+    <string name="license_apache_2">Apache License 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">Kotlin Standard Library</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">VPN接続は選択したアプリとIPをバイパスします</string>
+    <string name="st_disabled_subtitle">すべてのトラフィックはVPN経由です</string>
+    <plurals name="st_apps_selected">
+        <item quantity="other">%1$d アプリが選択されています</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="other">%1$d IPを選択しました</item>
+    </plurals>
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="other">%1$d アプリを除外しました</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="other">%1$d IPを除外</item>
+    </plurals>
+    <!-- Notification -->
+    <string name="notification_channel_name">VPN ステータス</string>
+    <string name="notification_channel_desc">VPNの現在の接続状態を表示します</string>
+    <string name="notification_title_connected">%1$s に接続しました</string>
+    <string name="notification_title_disconnected">切断されました</string>
+    <string name="notification_title_connecting">Connecting…</string>
+    <string name="notification_action_disconnect">接続を解除</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">アクティブなセッションが見つかりません。もう一度ログインしてください。</string>
+    <string name="error_unknown">不明なエラー</string>
+    <string name="error_auth_failed">予期しない認証エラーが発生しました</string>
+    <string name="error_2fa_failed">2段階認証に失敗しました</string>
+    <!-- Profiles Screen -->
+    <string name="profiles_title">Profiles</string>
+    <string name="desc_create_profile">プロファイルを作成</string>
+    <string name="desc_edit_profile">プロファイルを編集</string>
+    <string name="profiles_empty_title">プロファイルはまだありません</string>
+    <string name="profiles_empty_desc">特定の設定にすばやく接続するためのプロファイルを作成します。</string>
+    <string name="profile_feature_obfuscation">難読化</string>
+    <string name="profile_feature_connect_go">Connect &amp; Go</string>
+    <string name="profile_server_info">サーバー: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">プロファイルを作成</string>
+    <string name="title_edit_profile">プロファイルを編集</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_cancel">キャンセル</string>
+    <string name="btn_delete">削除</string>
+    <string name="btn_edit">編集</string>
+    <string name="desc_delete_profile">プロファイルを削除</string>
+    <string name="default_profile_name">マイプロフィール</string>
+    <string name="category_general">全般</string>
+    <string name="label_profile_name">プロファイル名</string>
+    <string name="category_location">場所</string>
+    <string name="location_server">サーバー: %1$s</string>
+    <string name="location_fastest">最速です</string>
+    <string name="label_target_location">ターゲット場所</string>
+    <string name="label_location">場所</string>
+    <string name="category_connection">接続</string>
+    <string name="label_protocol">Protocol</string>
+    <string name="label_port">ポート</string>
+    <string name="category_advanced">高度な設定</string>
+    <string name="label_obfuscation">難読化</string>
+    <string name="obfuscation_desc">バイパスディープパケット検査</string>
+    <string name="label_obfuscation_config">難読化設定</string>
+    <string name="category_automation">自動化</string>
+    <string name="label_connect_go_website">Connect &amp; Go (Website)</string>
+    <string name="label_enter_url">URL を入力</string>
+    <string name="label_not_configured">設定されていません</string>
+    <string name="automation_desc">VPN接続が確立されると、このウェブサイトをブラウザで自動的に開きます。</string>
+    <string name="title_select_country">国を選択</string>
+    <string name="title_select_city">都市を選択</string>
+    <string name="title_select_server">サーバーを選択</string>
+    <string name="location_fastest_in_country">%1$sで最速です</string>
+    <string name="location_fastest_in_city">%1$sで最速です</string>
+    <string name="location_load">負荷: %1$d%%</string>
+    <string name="title_select_obfuscation_config">難読化設定を選択</string>
+    <string name="title_auto_open_url">URLを自動的に開く</string>
+    <string name="btn_create_new_config">新しい設定を作成</string>
+    <string name="connect_go_title">Connect &amp; Go</string>
+    <string name="connect_go_desc">接続時に開くURLを入力してください（例：https://example.com）</string>
+    <string name="hint_url_placeholder">https://</string>
+    <string name="title_select_protocol">Select Protocol</string>
+    <string name="custom_config_name">カスタム設定 %1$d</string>
+    <string name="title_edit_obfuscation_config">難読化設定を編集</string>
+    <string name="error_empty_profile_name">プロファイル名は空にできません</string>
+</resources>
