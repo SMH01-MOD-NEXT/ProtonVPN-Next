@@ -23,7 +23,6 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -41,15 +40,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -258,7 +257,6 @@ fun CountryCard(
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
-    val flagEmoji = CountryUtils.getFlagForCountry(country.code)
     val flagResId = CountryUtils.getFlagResource(context, country.code)
     val localizedName = CountryUtils.getCountryName(context, country.code)
     val interactionSource = remember { MutableInteractionSource() }
@@ -286,25 +284,30 @@ fun CountryCard(
             ) {
                 Box(contentAlignment = Alignment.BottomEnd) {
                     if (flagResId != 0) {
-                        Image(
-                            painter = painterResource(id = flagResId),
-                            contentDescription = localizedName,
-                            modifier = Modifier
-                                .width(40.dp)
-                                .height(28.dp)
-                                .clip(RoundedCornerShape(4.dp)),
-                            contentScale = ContentScale.FillBounds
+                        FlagIcon(
+                            countryFlag = flagResId,
+                            size = DpSize(36.dp, 24.dp)
                         )
                     } else {
-                        Text(
-                            text = flagEmoji,
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.width(40.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp, 24.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(colors.backgroundNorm),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Public,
+                                contentDescription = stringResource(R.string.desc_country),
+                                tint = colors.iconNorm,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                     if (isConnected) {
                         Box(
                             modifier = Modifier
+                                .offset(x = 4.dp, y = 4.dp)
                                 .size(10.dp)
                                 .background(colors.notificationSuccess, CircleShape)
                                 .padding(2.dp)
@@ -441,14 +444,22 @@ fun CityCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Box(contentAlignment = Alignment.BottomEnd) {
-                    Text(
-                        text = "🏙️",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.width(40.dp)
-                    )
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp, 24.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(colors.backgroundNorm),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "🏙️",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
                     if (isConnected) {
                         Box(
                             modifier = Modifier
+                                .offset(x = 4.dp, y = 4.dp)
                                 .size(10.dp)
                                 .background(colors.notificationSuccess, CircleShape)
                                 .padding(2.dp)
@@ -591,20 +602,22 @@ fun ServerSelectionCard(
                 Box(contentAlignment = Alignment.BottomEnd) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
+                            .size(36.dp, 24.dp)
+                            .clip(RoundedCornerShape(6.dp))
                             .background(colors.backgroundNorm),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.Public,
                             contentDescription = server.name,
-                            tint = colors.iconNorm
+                            tint = colors.iconNorm,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                     if (isConnected) {
                         Box(
                             modifier = Modifier
+                                .offset(x = 4.dp, y = 4.dp)
                                 .size(10.dp)
                                 .background(colors.notificationSuccess, CircleShape)
                                 .padding(2.dp)

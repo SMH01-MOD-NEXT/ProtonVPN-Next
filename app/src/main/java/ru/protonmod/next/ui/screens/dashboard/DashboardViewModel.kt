@@ -214,6 +214,20 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun quickConnect() {
+        viewModelScope.launch {
+            val currentState = uiState.value
+            if (currentState !is DashboardUiState.Success) return@launch
+
+            // Find the least loaded server among all available servers
+            val bestServer = currentState.servers
+                .filter { it.servers.any { s -> s.status == 1 } }
+                .minByOrNull { it.averageLoad }
+
+            bestServer?.let { initiateConnection(it) }
+        }
+    }
+
     fun connectToCountry(countryCode: String) {
         viewModelScope.launch {
             val currentState = uiState.value
@@ -221,9 +235,13 @@ class DashboardViewModel @Inject constructor(
 
             val serversInCountry = currentState.servers.filter { it.exitCountry == countryCode }
             if (serversInCountry.isNotEmpty()) {
-                // Ищем наименее загруженный сервер в выбранной стране
-                val bestServer = serversInCountry.minByOrNull { it.averageLoad } ?: serversInCountry.random()
-                initiateConnection(bestServer)
+                // Find the least loaded server in the selected country
+                val bestServer = serversInCountry
+                    .filter { it.servers.any { s -> s.status == 1 } }
+                    .minByOrNull { it.averageLoad } 
+                    ?: serversInCountry.firstOrNull()
+                
+                bestServer?.let { initiateConnection(it) }
             }
         }
     }

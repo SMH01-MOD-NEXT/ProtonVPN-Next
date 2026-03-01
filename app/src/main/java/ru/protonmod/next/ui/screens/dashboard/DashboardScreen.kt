@@ -23,13 +23,11 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -44,15 +42,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -71,18 +70,25 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     var pendingServer by remember { mutableStateOf<LogicalServer?>(null) }
+    var isQuickConnectPending by remember { mutableStateOf(false) }
 
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             Log.d("DashboardScreen", "VPN permission granted")
-            pendingServer?.let {
-                viewModel.toggleConnection(it)
-                pendingServer = null
+            if (isQuickConnectPending) {
+                viewModel.quickConnect()
+                isQuickConnectPending = false
+            } else {
+                pendingServer?.let {
+                    viewModel.toggleConnection(it)
+                    pendingServer = null
+                }
             }
         } else {
             pendingServer = null
+            isQuickConnectPending = false
         }
     }
 
@@ -98,6 +104,21 @@ fun DashboardScreen(
         } catch (_: SecurityException) {
             android.widget.Toast.makeText(context, context.getString(R.string.error_system_appops), android.widget.Toast.LENGTH_LONG).show()
             viewModel.toggleConnection(server)
+        }
+    }
+
+    val checkVpnAndQuickConnect: () -> Unit = {
+        try {
+            val intent = VpnService.prepare(context)
+            if (intent != null) {
+                isQuickConnectPending = true
+                vpnPermissionLauncher.launch(intent)
+            } else {
+                viewModel.quickConnect()
+            }
+        } catch (_: SecurityException) {
+            android.widget.Toast.makeText(context, context.getString(R.string.error_system_appops), android.widget.Toast.LENGTH_LONG).show()
+            viewModel.quickConnect()
         }
     }
 
@@ -156,6 +177,9 @@ fun DashboardScreen(
                             onServerClick = { server ->
                                 checkVpnAndConnect(server)
                             },
+                            onQuickConnect = {
+                                checkVpnAndQuickConnect()
+                            },
                             onDisconnect = { viewModel.disconnect() },
                             onRefreshCert = { viewModel.refreshCertificate() }
                         )
@@ -185,6 +209,7 @@ fun DashboardScreen(
 fun DashboardContent(
     state: DashboardUiState.Success,
     onServerClick: (LogicalServer) -> Unit,
+    onQuickConnect: () -> Unit,
     onDisconnect: () -> Unit,
     onRefreshCert: () -> Unit
 ) {
@@ -216,7 +241,7 @@ fun DashboardContent(
                     if (state.isConnected) {
                         onDisconnect()
                     } else {
-                        state.servers.firstOrNull()?.let { onServerClick(it) }
+                        onQuickConnect()
                     }
                 }
             )
@@ -402,42 +427,56 @@ fun ConnectionStatusCard(
                     .padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(colors.backgroundNorm),
-                    contentAlignment = Alignment.Center
-                ) {
+                if (isConnected || isConnecting) {
                     val countryCode = connectedServer?.exitCountry
                     val flagResId = CountryUtils.getFlagResource(context, countryCode)
                     if (flagResId != 0) {
-                        Image(
-                            painter = painterResource(id = flagResId),
-                            contentDescription = countryCode,
-                            modifier = Modifier.fillMaxSize().padding(10.dp).clip(RoundedCornerShape(4.dp)),
-                            contentScale = ContentScale.FillBounds
+                        FlagIcon(
+                            countryFlag = flagResId,
+                            size = DpSize(48.dp, 32.dp)
                         )
                     } else {
-                        Icon(
-                            imageVector = Icons.Rounded.Public,
-                            contentDescription = stringResource(R.string.desc_country),
-                            tint = colors.iconNorm
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp, 32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(colors.backgroundNorm),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Public,
+                                contentDescription = stringResource(R.string.desc_country),
+                                tint = colors.iconNorm,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
+                } else {
+                    FlagIcon(
+                        countryFlag = R.drawable.flag_fastest,
+                        size = DpSize(48.dp, 32.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
+                    val countryName = connectedServer?.let { CountryUtils.getCountryName(context, it.exitCountry) }
+                    
                     Text(
-                        text = if (isConnected || isConnecting) "${connectedServer?.name}" else stringResource(R.string.label_fastest_server),
-                        style = MaterialTheme.typography.titleMedium,
+                        text = if (isConnected || isConnecting) {
+                            "$countryName, ${connectedServer?.city}"
+                        } else stringResource(R.string.label_fastest_server),
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = contentColor
+                        color = contentColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = if (isConnected || isConnecting) "${connectedServer?.city}, ${connectedServer?.exitCountry}" else stringResource(R.string.label_select_location),
+                        text = if (isConnected || isConnecting) {
+                            connectedServer?.name ?: ""
+                        } else stringResource(R.string.label_select_location),
                         style = MaterialTheme.typography.bodyMedium,
                         color = colors.textWeak
                     )
@@ -507,26 +546,25 @@ fun ServerCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(colors.backgroundNorm),
-                contentAlignment = Alignment.Center
-            ) {
-                val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
-                if (flagResId != 0) {
-                    Image(
-                        painter = painterResource(id = flagResId),
-                        contentDescription = server.exitCountry,
-                        modifier = Modifier.fillMaxSize().padding(8.dp).clip(RoundedCornerShape(4.dp)),
-                        contentScale = ContentScale.FillBounds
-                    )
-                } else {
+            val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
+            if (flagResId != 0) {
+                FlagIcon(
+                    countryFlag = flagResId,
+                    size = DpSize(36.dp, 24.dp)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp, 24.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(colors.backgroundNorm),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         imageVector = Icons.Rounded.Public,
                         contentDescription = stringResource(R.string.desc_country),
-                        tint = colors.iconNorm
+                        tint = colors.iconNorm,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -534,14 +572,15 @@ fun ServerCard(
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
+                val countryName = CountryUtils.getCountryName(context, server.exitCountry)
                 Text(
-                    text = server.name,
+                    text = "$countryName, ${server.city}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = colors.textNorm
                 )
                 Text(
-                    text = "${server.city}, ${server.exitCountry}",
+                    text = server.name,
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.textWeak
                 )

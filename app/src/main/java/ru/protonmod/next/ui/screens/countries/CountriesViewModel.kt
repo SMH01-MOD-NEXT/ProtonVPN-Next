@@ -153,8 +153,13 @@ class CountriesViewModel @Inject constructor(
         viewModelScope.launch {
             val serversInCountry = serversGroupedByCountry[country] ?: emptyList()
             if (serversInCountry.isNotEmpty()) {
-                val randomServer = serversInCountry.random()
-                connectToServer(randomServer)
+                // Find the least loaded server in the country
+                val bestServer = serversInCountry
+                    .filter { it.servers.any { s -> s.status == 1 } }
+                    .minByOrNull { it.averageLoad } 
+                    ?: serversInCountry.firstOrNull()
+                
+                bestServer?.let { connectToServer(it) }
             }
         }
     }
@@ -188,8 +193,13 @@ class CountriesViewModel @Inject constructor(
             val country = currentState.country
             val serversInCity = serversGroupedByCityInCountry[country]?.get(city) ?: emptyList()
             if (serversInCity.isNotEmpty()) {
-                val randomServer = serversInCity.random()
-                connectToServer(randomServer)
+                // Find the least loaded server in the city
+                val bestServer = serversInCity
+                    .filter { it.servers.any { s -> s.status == 1 } }
+                    .minByOrNull { it.averageLoad }
+                    ?: serversInCity.firstOrNull()
+                    
+                bestServer?.let { connectToServer(it) }
             }
         }
     }

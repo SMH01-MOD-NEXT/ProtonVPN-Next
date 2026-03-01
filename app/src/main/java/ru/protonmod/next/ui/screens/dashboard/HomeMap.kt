@@ -230,9 +230,9 @@ object MapCoordinates {
         if (bounds != null) {
             val cx = bounds.centerX()
             val cy = bounds.centerY()
-            // Make the viewport size generous enough so we don't zoom in extremely close on small nations
-            val w = max(bounds.width() * 2.5f, 600f)
-            val h = max(bounds.height() * 2.5f, 600f)
+            // Make the viewport size tighter so we zoom in significantly closer
+            val w = max(bounds.width() * 2.5f, 50f)
+            val h = max(bounds.height() * 2.5f, 50f)
             return RectF(cx - w/2, cy - h/2, cx + w/2, cy + h/2)
         }
         // Fallback
@@ -252,7 +252,8 @@ class MapView(context: Context) : View(context) {
     private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var renderJob: Job? = null
 
-    private var mapBitmap: Bitmap? = null
+    // Using Picture instead of Bitmap for infinite vector quality upon zooming
+    private var mapPicture: Picture? = null
 
     // Matrix interpolation for smooth zooms
     private val currentMatrix = Matrix()
@@ -277,23 +278,17 @@ class MapView(context: Context) : View(context) {
     var bgColor: Int = android.graphics.Color.BLACK
     var baseMapColor: Int = android.graphics.Color.DKGRAY
     var borderMapColor: Int = android.graphics.Color.GRAY
-    var highlightMapColor: Int = android.graphics.Color.GREEN
     var pinColor: Int = android.graphics.Color.GREEN
-    var inactivePinColor: Int = android.graphics.Color.GRAY
 
     // Continuous Animations
-    private var pulseScale = 1f
-    private var pulseAlpha = 0f
-    private var dataFlowPhase = 0f
+    private var waveFraction = 0f
     private var pulseAnimator: ValueAnimator? = null
 
     // Paints
     private val pinPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    // Increased stroke width to make the wave more prominent
     private val pulsePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 6f }
     private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.WHITE; style = Paint.Style.FILL }
-    private val inactivePaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val tunnelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 5f }
-    private val tunnelPath = android.graphics.Path()
 
     private var pendingCountryFocus: String? = null
 
@@ -335,16 +330,13 @@ class MapView(context: Context) : View(context) {
     })
 
     init {
+        // Slow down the wave for a more premium effect
         pulseAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 1500
+            duration = 2500
             repeatCount = ValueAnimator.INFINITE
             interpolator = LinearInterpolator()
             addUpdateListener { anim ->
-                val fraction = anim.animatedFraction
-                pulseScale = 1f + fraction * 2f
-                pulseAlpha = 1f - fraction
-                // Speed up flow
-                dataFlowPhase = fraction * 200f
+                waveFraction = anim.animatedFraction
                 invalidate()
             }
             start()
@@ -356,14 +348,12 @@ class MapView(context: Context) : View(context) {
         scope.cancel()
         pulseAnimator?.cancel()
         matrixAnimator?.cancel()
-        mapBitmap?.recycle()
-        mapBitmap = null
+        mapPicture = null
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (!isInteractive) return super.onTouchEvent(event)
         gestureDetector.onTouchEvent(event)
-        // We always return true to consume the touch event, preventing underlying UI from scrolling
         return true
     }
 
@@ -378,9 +368,12 @@ class MapView(context: Context) : View(context) {
         val oldCountry = connectedServer?.exitCountry
         connectedServer = newServer
 
-        // Always render if not rendered yet, or if country changed
-        if (!isSvgRendered || oldCountry != newServer?.exitCountry) {
-            renderSvgInBackground(newServer?.exitCountry)
+        // Render once upon initialization
+        if (!isSvgRendered) {
+            renderSvgInBackground()
+        }
+
+        if (oldCountry != newServer?.exitCountry) {
             if (width > 0 && height > 0) {
                 animateToCountry(newServer?.exitCountry)
             } else {
@@ -418,7 +411,7 @@ class MapView(context: Context) : View(context) {
 
         matrixAnimator?.cancel()
         matrixAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
-            duration = 800
+            duration = 1200 // Smoother cinematic zoom
             interpolator = FastOutSlowInInterpolator()
             addUpdateListener { anim ->
                 val f = anim.animatedFraction
@@ -434,7 +427,7 @@ class MapView(context: Context) : View(context) {
         }
     }
 
-    private fun renderSvgInBackground(targetCountry: String?) {
+    private fun renderSvgInBackground() {
         isSvgRendered = true
         renderJob?.cancel()
         renderJob = scope.launch(Dispatchers.IO) {
@@ -443,39 +436,22 @@ class MapView(context: Context) : View(context) {
 
                 val baseHex = String.format("#%06X", (0xFFFFFF and baseMapColor))
                 val borderHex = String.format("#%06X", (0xFFFFFF and borderMapColor))
-                val highlightHex = String.format("#%06X", (0xFFFFFF and highlightMapColor))
 
+                // Using vector-effect: non-scaling-stroke so borders stay thin upon infinite zoom!
+                // Removed the country highlight so the animated dot stands out prominently
                 val cssBuilder = StringBuilder()
-                cssBuilder.append("path { fill: $baseHex; stroke: $borderHex; stroke-width: 1.5px; } ")
-
-                if (targetCountry != null) {
-                    val countryName = MapCoordinates.codeToMapCountryName[targetCountry.uppercase()]
-                    if (countryName != null) {
-                        cssBuilder.append("#$countryName { fill: $highlightHex; } ")
-                    }
-                }
+                cssBuilder.append("path { fill: $baseHex; stroke: $borderHex; stroke-width: 1.5px; vector-effect: non-scaling-stroke; } ")
 
                 val renderOptions = RenderOptions().css(cssBuilder.toString())
 
-                val docW = if (svg.documentWidth > 0) svg.documentWidth else MAP_ORIGINAL_WIDTH
-                val docH = if (svg.documentHeight > 0) svg.documentHeight else MAP_ORIGINAL_HEIGHT
-
-                // High-res rendering to ensure it stays crisp when zoomed
-                val bmWidth = 2500
-                val bmHeight = (bmWidth * (docH / docW)).toInt()
-
-                val bm = Bitmap.createBitmap(bmWidth, bmHeight, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bm)
-
-                val scaleX = bmWidth.toFloat() / docW
-                val scaleY = bmHeight.toFloat() / docH
-                canvas.scale(scaleX, scaleY)
-
+                // Draw SVG into a Picture object. This keeps vector quality infinite!
+                val picture = Picture()
+                val canvas = picture.beginRecording(MAP_ORIGINAL_WIDTH.toInt(), MAP_ORIGINAL_HEIGHT.toInt())
                 svg.renderToCanvas(canvas, renderOptions)
+                picture.endRecording()
 
                 withContext(Dispatchers.Main) {
-                    mapBitmap?.recycle()
-                    mapBitmap = bm
+                    mapPicture = picture
                     invalidate()
                 }
             } catch (e: Exception) {
@@ -488,74 +464,50 @@ class MapView(context: Context) : View(context) {
         super.onDraw(canvas)
         canvas.drawColor(bgColor)
 
-        if (mapBitmap == null) return
+        if (mapPicture == null) return
 
-        // 1. Draw the pre-rendered Map
-        val drawMatrix = Matrix()
-        drawMatrix.postScale(MAP_ORIGINAL_WIDTH / mapBitmap!!.width, MAP_ORIGINAL_HEIGHT / mapBitmap!!.height)
-        drawMatrix.postConcat(currentMatrix)
-        canvas.drawBitmap(mapBitmap!!, drawMatrix, null)
+        // 1. Draw Vector Map with infinite zoom capabilities
+        canvas.save()
+        canvas.concat(currentMatrix)
+        canvas.drawPicture(mapPicture!!)
+        canvas.restore()
 
-        // 2. Draw connections and pins
-        inactivePaint.color = inactivePinColor
+        // 2. Draw animated active server pin (drawn over map to prevent zoom distortion)
         pinPaint.color = pinColor
-
-        // Find screen scale factor from matrix
-        val matrixValues = FloatArray(9)
-        currentMatrix.getValues(matrixValues)
-        val currentScale = matrixValues[Matrix.MSCALE_X]
-
-        // Keep pin size consistent regardless of zoom
-        val baseRadius = 12f / currentScale
-
-        val pts = FloatArray(2)
-        val uniqueCodes = allServers.map { it.exitCountry }.distinct()
         val connectedCode = connectedServer?.exitCountry
 
-        var targetScreenX = 0f
-        var targetScreenY = 0f
-
-        // Explicitly calculate connected server coords first
-        if (connectedCode != null) {
-            val pt = MapCoordinates.getPointForCountry(connectedCode)
-            pts[0] = pt.x; pts[1] = pt.y
-            currentMatrix.mapPoints(pts)
-            targetScreenX = pts[0]
-            targetScreenY = pts[1]
-        }
-
-        for (code in uniqueCodes) {
-            if (code == connectedCode) continue // drawn later
-            val pt = MapCoordinates.getPointForCountry(code)
-            pts[0] = pt.x; pts[1] = pt.y
-            currentMatrix.mapPoints(pts)
-            val px = pts[0]; val py = pts[1]
-            canvas.drawCircle(px, py, baseRadius * 0.6f, inactivePaint)
-        }
-
-        // Draw Active Connection state
         if (connectedCode != null && (isConnected() || isConnecting)) {
-            val startX = width / 2f
-            val startY = height.toFloat() * 0.95f // User location near bottom
+            val pts = FloatArray(2)
+            val pt = MapCoordinates.getPointForCountry(connectedCode)
+            pts[0] = pt.x
+            pts[1] = pt.y
 
-            tunnelPath.reset()
-            tunnelPath.moveTo(startX, startY)
-            tunnelPath.quadTo(startX, targetScreenY, targetScreenX, targetScreenY)
+            // Translate from Vector coordinates to absolute Screen coordinates
+            currentMatrix.mapPoints(pts)
+            val targetScreenX = pts[0]
+            val targetScreenY = pts[1]
 
-            tunnelPaint.color = pinColor
-            tunnelPaint.alpha = 150
-            tunnelPaint.pathEffect = DashPathEffect(floatArrayOf(30f, 30f), -dataFlowPhase)
+            // Radius of the point is strictly fixed in screen pixels (doubled from 14f to 28f)
+            val screenRadius = 28f
+            val maxPulseScale = 5f
 
-            canvas.drawPath(tunnelPath, tunnelPaint)
-
-            // Pulsing target
+            // First outer wave
+            val scale1 = 1f + waveFraction * (maxPulseScale - 1f)
+            val alpha1 = 1f - waveFraction
             pulsePaint.color = pinColor
-            pulsePaint.alpha = (pulseAlpha * 255).toInt()
-            canvas.drawCircle(targetScreenX, targetScreenY, baseRadius * currentScale * pulseScale, pulsePaint)
+            pulsePaint.alpha = (alpha1 * 200).toInt()
+            canvas.drawCircle(targetScreenX, targetScreenY, screenRadius * scale1, pulsePaint)
+
+            // Second inner wave (shifted by half a cycle)
+            val waveFraction2 = (waveFraction + 0.5f) % 1.0f
+            val scale2 = 1f + waveFraction2 * (maxPulseScale - 1f)
+            val alpha2 = 1f - waveFraction2
+            pulsePaint.alpha = (alpha2 * 200).toInt()
+            canvas.drawCircle(targetScreenX, targetScreenY, screenRadius * scale2, pulsePaint)
 
             // Solid target pin
-            canvas.drawCircle(targetScreenX, targetScreenY, baseRadius * currentScale, pinPaint)
-            canvas.drawCircle(targetScreenX, targetScreenY, baseRadius * currentScale * 0.4f, dotPaint)
+            canvas.drawCircle(targetScreenX, targetScreenY, screenRadius, pinPaint)
+            canvas.drawCircle(targetScreenX, targetScreenY, screenRadius * 0.4f, dotPaint)
         }
     }
 
@@ -589,8 +541,6 @@ fun HomeMap(
         animationSpec = tween(durationMillis = 500),
         label = "pinColor"
     )
-    val highlightColorValue = if (isConnected) colors.notificationSuccess.copy(alpha = 0.5f) else colors.brandNorm.copy(alpha = 0.5f)
-    val inactiveColor = colors.iconWeak.copy(alpha = 0.5f).toArgb()
 
     AndroidView(
         modifier = modifier.fillMaxSize(),
@@ -599,7 +549,6 @@ fun HomeMap(
                 this.bgColor = bgColor
                 this.baseMapColor = baseMapColor
                 this.borderMapColor = borderMapColor
-                this.inactivePinColor = inactiveColor
             }
         },
         update = { mapView ->
@@ -608,7 +557,6 @@ fun HomeMap(
             mapView.isInteractive = isInteractive
             mapView.onNodeClick = onNodeClick
             mapView.pinColor = pinColorValue.value.toArgb()
-            mapView.highlightMapColor = highlightColorValue.toArgb()
 
             // Passes state down safely, triggering background SVG renders and Matrix animations if needed
             mapView.onServerStateChanged(connectedServer)

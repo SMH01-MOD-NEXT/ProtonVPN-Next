@@ -22,7 +22,6 @@ import android.net.VpnService
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,7 +29,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Bolt
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.VpnKey
 import androidx.compose.material3.*
@@ -40,15 +38,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -225,34 +223,30 @@ fun ProfileCardItem(
             // Profile Icon / Target Indicator
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(colors.brandNorm.copy(alpha = 0.15f)),
+                    .size(48.dp, 32.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(colors.brandNorm.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 when {
                     profile.targetCountry != null -> {
                         val flagResId = CountryUtils.getFlagResource(context, profile.targetCountry)
                         if (flagResId != 0) {
-                            Image(
-                                painter = painterResource(id = flagResId),
-                                contentDescription = profile.targetCountry,
-                                modifier = Modifier.fillMaxSize().padding(8.dp).clip(RoundedCornerShape(4.dp)),
-                                contentScale = ContentScale.FillBounds
+                            FlagIcon(
+                                countryFlag = flagResId,
+                                size = DpSize(48.dp, 32.dp)
                             )
                         } else {
                             Text(
                                 text = CountryUtils.getFlagForCountry(profile.targetCountry),
-                                style = MaterialTheme.typography.headlineSmall
+                                style = MaterialTheme.typography.titleMedium
                             )
                         }
                     }
                     else -> {
-                        Icon(
-                            imageVector = Icons.Rounded.Bolt,
-                            contentDescription = null,
-                            tint = colors.brandNorm,
-                            modifier = Modifier.size(24.dp)
+                        FlagIcon(
+                            countryFlag = R.drawable.flag_fastest,
+                            size = DpSize(48.dp, 32.dp)
                         )
                     }
                 }

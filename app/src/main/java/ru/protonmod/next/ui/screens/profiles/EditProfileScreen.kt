@@ -20,13 +20,11 @@ package ru.protonmod.next.ui.screens.profiles
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -40,19 +38,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.launch
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.screens.countries.CityDisplayItem
 import ru.protonmod.next.ui.screens.countries.CountryDisplayItem
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -195,16 +192,14 @@ fun EditProfileScreen(
                             targetServerId != null -> context.getString(R.string.location_server, targetServerName ?: targetServerId)
                             targetCity != null -> "🏙️ ${getLocalizedCityName(context, targetCity!!)}, ${CountryUtils.getCountryName(context, targetCountry)}"
                             targetCountry != null -> {
-                                val flagEmoji = CountryUtils.getFlagForCountry(targetCountry)
                                 val localizedName = CountryUtils.getCountryName(context, targetCountry)
-                                "$flagEmoji $localizedName"
+                                localizedName
                             }
                             else -> context.getString(R.string.location_fastest)
                         }
                     }
 
                     SettingRowWithIcon(
-                        icon = if (targetCountry == null) Icons.Rounded.Bolt else null,
                         countryCode = targetCountry,
                         title = stringResource(R.string.label_location),
                         subtitle = locationSubtitle,
@@ -396,7 +391,7 @@ fun SelectionCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.size(32.dp),
+                    modifier = Modifier.size(36.dp, 24.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     icon()
@@ -507,20 +502,10 @@ fun LocationSelectionDialog(
                                     else -> stringResource(R.string.location_fastest_in_city, getLocalizedCityName(context, currentCity ?: ""))
                                 },
                                 icon = {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxSize()
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(colors.brandNorm),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.Bolt,
-                                            contentDescription = null,
-                                            tint = Color.White,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
+                                    FlagIcon(
+                                        countryFlag = R.drawable.flag_fastest,
+                                        size = DpSize(36.dp, 24.dp)
+                                    )
                                 },
                                 onClick = {
                                     if (!isTransitioning) {
@@ -543,17 +528,23 @@ fun LocationSelectionDialog(
                                         title = localizedName,
                                         icon = {
                                             if (flagResId != 0) {
-                                                Image(
-                                                    painter = painterResource(id = flagResId),
-                                                    contentDescription = localizedName,
-                                                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp)),
-                                                    contentScale = ContentScale.FillBounds
+                                                FlagIcon(
+                                                    countryFlag = flagResId,
+                                                    size = DpSize(36.dp, 24.dp)
                                                 )
                                             } else {
-                                                Text(
-                                                    text = CountryUtils.getFlagForCountry(countryItem.code),
-                                                    fontSize = 24.sp
-                                                )
+                                                Box(
+                                                    modifier = Modifier
+                                                        .fillMaxSize()
+                                                        .clip(RoundedCornerShape(6.dp))
+                                                        .background(colors.backgroundNorm),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Text(
+                                                        text = CountryUtils.getFlagForCountry(countryItem.code),
+                                                        style = MaterialTheme.typography.bodyLarge
+                                                    )
+                                                }
                                             }
                                         },
                                         load = countryItem.averageLoad,
@@ -577,7 +568,15 @@ fun LocationSelectionDialog(
                                     SelectionCard(
                                         title = localizedCityName,
                                         icon = {
-                                            Text(text = "🏙️", fontSize = 24.sp)
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(colors.backgroundNorm),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(text = "🏙️", style = MaterialTheme.typography.bodyLarge)
+                                            }
                                         },
                                         load = cityItem.averageLoad,
                                         onClick = {
@@ -602,7 +601,7 @@ fun LocationSelectionDialog(
                                             Box(
                                                 modifier = Modifier
                                                     .fillMaxSize()
-                                                    .clip(CircleShape)
+                                                    .clip(RoundedCornerShape(6.dp))
                                                     .background(colors.backgroundNorm), // Match CountriesScreen styling
                                                 contentAlignment = Alignment.Center
                                             ) {
@@ -701,32 +700,34 @@ fun SettingRowWithIcon(
         modifier = baseModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (icon != null || countryCode != null) {
-            val isBolt = icon == Icons.Rounded.Bolt
+        if (icon != null || countryCode != null || (countryCode == null && title == stringResource(R.string.label_location))) {
             val flagResId = CountryUtils.getFlagResource(context, countryCode)
 
             Box(
                 modifier = Modifier
                     .padding(end = 16.dp)
-                    .size(40.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(if (isBolt) colors.brandNorm else colors.brandNorm.copy(alpha = 0.1f)),
+                    .size(48.dp, 32.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(colors.brandNorm.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 if (flagResId != 0) {
-                    Image(
-                        painter = painterResource(id = flagResId),
-                        contentDescription = countryCode,
-                        modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(2.dp)),
-                        contentScale = ContentScale.FillBounds
+                    FlagIcon(
+                        countryFlag = flagResId,
+                        size = DpSize(36.dp, 24.dp)
                     )
                 } else if (countryCode != null) {
                     Text(text = CountryUtils.getFlagForCountry(countryCode), style = MaterialTheme.typography.titleMedium)
+                } else if (title == stringResource(R.string.label_location)) {
+                    FlagIcon(
+                        countryFlag = R.drawable.flag_fastest,
+                        size = DpSize(36.dp, 24.dp)
+                    )
                 } else if (icon != null) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = if (isBolt) Color.White else colors.brandNorm,
+                        tint = colors.brandNorm,
                         modifier = Modifier.size(20.dp)
                     )
                 }

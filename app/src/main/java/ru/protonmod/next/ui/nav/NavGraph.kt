@@ -26,7 +26,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.ui.screens.countries.CountriesScreen
 import ru.protonmod.next.ui.screens.dashboard.DashboardScreen
-import ru.protonmod.next.ui.screens.map.MapScreen
 import ru.protonmod.next.ui.screens.profiles.*
 import ru.protonmod.next.ui.screens.settings.*
 
@@ -67,12 +66,6 @@ fun NavGraphBuilder.appNavGraph(
             onNavigateToCountries = { navController.navigate(Screen.Countries.route) },
             onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
             onNavigateToProfiles = { navController.navigate(Screen.Profiles.route) }
-        )
-    }
-
-    composable(Screen.Map.route) {
-        MapScreen(
-            onBack = { navController.popBackStack() }
         )
     }
 
