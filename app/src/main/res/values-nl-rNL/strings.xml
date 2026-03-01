@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+    <string name="app_name">Proton VPN Volgende</string>
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Welkom bij Proton VPN-Next</string>
+    <string name="welcome_subtitle">Neem controle over je digitale leven met veilige, privé en snelle VPN. Geen logs, geen tracking.</string>
+    <string name="btn_create_account">Account Aanmaken</string>
+    <string name="btn_login">Log in</string>
+    <!-- Login Screen -->
+    <string name="login_title">Welkom terug</string>
+    <string name="login_subtitle">Log in op uw Proton account</string>
+    <string name="hint_username">E-mailadres of gebruikersnaam</string>
+    <string name="hint_password">Wachtwoord</string>
+    <string name="forgot_password">Wachtwoord vergeten?</string>
+    <string name="desc_back_button">Navigeer terug</string>
+    <string name="desc_toggle_password">Toggle wachtwoordzichtbaarheid</string>
+    <string name="login_success">Login succesvol!</string>
+    <string name="login_error">Fout: %1$s</string>
+    <string name="title_security_check">Beveiliging Controle</string>
+    <string name="title_2fa">Tweestapsverificatie verificatie</string>
+    <string name="msg_2fa_instruction">Voer de 6-cijferige TOTP-code van uw authenticatie-app in.</string>
+    <string name="hint_2fa_code">6-digit Code</string>
+    <string name="btn_verify">Verifiëren</string>
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN Volgende</string>
+    <string name="desc_settings">Instellingen</string>
+    <string name="error_loading_servers">Fout bij laden servers</string>
+    <string name="btn_retry">Opnieuw</string>
+    <string name="error_system_appops">Systeemfout: Herinstalleer de app.</string>
+    <string name="title_recent_connections">Recente verbindingen</string>
+    <string name="status_connected">Verbonden</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_disconnected">Losgekoppeld</string>
+    <string name="status_not_connected">Niet verbonden</string>
+    <string name="msg_traffic_not_protected">Uw verkeer is niet beveiligd</string>
+    <string name="desc_toggle_connection">Verbinding in-/uitschakelen</string>
+    <string name="desc_country">Land:</string>
+    <string name="map_placeholder">Interactieve kaart plaatsaanduiding</string>
+    <string name="label_fastest_server">Snelste server</string>
+    <string name="label_select_location">selecteer locatie</string>
+    <string name="label_server_unavailable">Server niet beschikbaar</string>
+    <string name="desc_change_server">Server wijzigen</string>
+    <string name="btn_disconnect">Verbreek</string>
+    <string name="btn_quick_connect">Snel verbinden</string>
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">Certificaat verloopt in %1$duur. Binnenkort vernieuwen…</string>
+    <string name="cert_msg_expired">Uw VPN-certificaat is verlopen en moet worden vernieuwd.</string>
+    <string name="cert_msg_refreshing">Refreshing VPN certificate…</string>
+    <string name="cert_msg_refresh_failed">Certificaat vernieuwen mislukt: %1$s. Opnieuw proberen over 15 minuten.</string>
+    <string name="cert_msg_auto_refresh_failed">Automatisch vernieuwen mislukt. Werk het handmatig bij om de verbinding te waarborgen.</string>
+    <string name="cert_btn_refresh_now">Nu vernieuwen</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">Selecteer land</string>
+    <string name="desc_more_options">Meer opties</string>
+    <!-- Settings Screen -->
+    <string name="settings_title">Instellingen</string>
+    <string name="settings_connection">Verbindingsinstellingen</string>
+    <string name="settings_kill_switch">Kill Switch</string>
+    <string name="settings_kill_switch_desc">Verbreek de verbinding als de VPN-verbinding wegvalt</string>
+    <string name="settings_auto_connect">Automatisch verbinden</string>
+    <string name="settings_auto_connect_desc">Verbinding maken met VPN bij opstarten</string>
+    <string name="settings_split_tunneling">Split Tunneling</string>
+    <string name="settings_split_tunneling_desc">Apps of IP\'s uitsluiten van VPN</string>
+    <string name="settings_excluded_apps">Uitgesloten Apps</string>
+    <string name="settings_excluded_ips">Uitgesloten IP-adressen</string>
+    <string name="settings_privacy">Privacy &amp; Meldingen</string>
+    <string name="settings_notifications">Notificaties</string>
+    <string name="settings_notifications_desc">Ontvang VPN-statusmeldingen</string>
+    <string name="settings_about">Informatie</string>
+    <string name="settings_version">Versie %1$s</string>
+    <string name="settings_licenses">Open Source Licenties</string>
+    <string name="settings_licenses_desc">Derde-partij software gebruikt in de app</string>
+    <string name="settings_on">op</string>
+    <string name="settings_off">UIT</string>
+    <string name="settings_connection_protocol">Protocol</string>
+    <string name="settings_port">Poort</string>
+    <string name="settings_port_desc">Selectie van verbindingspoort</string>
+    <string name="settings_port_auto">Automatisch</string>
+    <string name="settings_obfuscation">Obfuscatie (AmneziaWG)</string>
+    <string name="settings_obfuscation_desc">Wijzig pakketheaders om DPI te omzeilen</string>
+    <string name="settings_reset_obfuscation">Terugzetten op Standaard ProtonVPN-Next</string>
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_jc">Aantal ongewenste pakketten (Jc)</string>
+    <string name="obfuscation_jmin">Junk Packet Min Grootte (Jmin)</string>
+    <string name="obfuscation_jmax">Maximale bestandsgrootte in prullenbak (Jmax)</string>
+    <string name="obfuscation_s1">Init Pakketromp grootte (S1)</string>
+    <string name="obfuscation_s2">Reactiepakketten Ongewenste Grootte (S2)</string>
+    <string name="obfuscation_h1">Init Pakket Magic (H1)</string>
+    <string name="obfuscation_h2">Response Packet Magic (H2)</string>
+    <string name="obfuscation_h3">Onderbelasting pakket Magic (H3)</string>
+    <string name="obfuscation_h4">Transport Pakket Magic (H4)</string>
+    <string name="obfuscation_i1">Speciale rommel (I1)</string>
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">Protocol</string>
+    <string name="protocol_title">Protocol</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">Geavanceerd WireGuard protocol met obfuscatie</string>
+    <string name="obfuscation_title">Verduistering</string>
+    <string name="obfuscation_enable">Obfuscatie inschakelen</string>
+    <string name="obfuscation_enable_desc">Bypass DPI en VPN blokkering</string>
+    <string name="obfuscation_info_desc">Pas AmneziaWG parameters aan om VPN-verkeer te verbergen en verbindingsblokken in beperkte netwerken te omzeilen.</string>
+    <string name="obfuscation_config">Configuratie</string>
+    <string name="obfuscation_config_standard">Standaard Proton VPN-configuratie</string>
+    <string name="obfuscation_save_config">Opslaan als nieuwe configuratie</string>
+    <string name="obfuscation_config_name">Configuratie naam</string>
+    <string name="obfuscation_category_junk">Overbodige parameters</string>
+    <string name="obfuscation_category_magic">Pakketafmetingen (Magie)</string>
+    <string name="obfuscation_category_headers">Kopteksten</string>
+    <string name="obfuscation_category_advanced">Geavanceerd</string>
+    <string name="custom_config">Aangepaste configuratie</string>
+    <!-- About App Screen -->
+    <string name="about_community">Gemeenschap</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+    <!-- Licenses Screen -->
+    <string name="licenses_title">Licenties</string>
+    <string name="license_app_title">Proton VPN Volgende</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">AndroidX bibliotheken</string>
+    <string name="license_apache_2">Apache licentie 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">Kotlin Standaard Bibliotheek</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">VPN-verbinding omzeilt geselecteerde apps en IP-adressen</string>
+    <string name="st_disabled_subtitle">Al het verkeer loopt via VPN</string>
+    <plurals name="st_apps_selected">
+        <item quantity="one">%1$d app geselecteerd</item>
+        <item quantity="other">%1$d apps geselecteerd</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">%1$d IP geselecteerd</item>
+        <item quantity="other">%1$d IPs geselecteerd</item>
+    </plurals>
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="one">%1$d app uitgesloten</item>
+        <item quantity="other">%1$d apps uitgesloten</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="one">%1$d IP uitgesloten</item>
+        <item quantity="other">%1$d IP\'s uitgesloten</item>
+    </plurals>
+    <!-- Notification -->
+    <string name="notification_channel_name">VPN status</string>
+    <string name="notification_channel_desc">Toont de huidige verbindingsstatus van de VPN</string>
+    <string name="notification_title_connected">Verbonden met %1$s</string>
+    <string name="notification_title_disconnected">Losgekoppeld</string>
+    <string name="notification_title_connecting">Connecting…</string>
+    <string name="notification_action_disconnect">Verbreek</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">Actieve sessie niet gevonden. Log opnieuw in.</string>
+    <string name="error_unknown">Onbekende fout.</string>
+    <string name="error_auth_failed">Er is een onverwachte authenticatiefout opgetreden</string>
+    <string name="error_2fa_failed">Twee-factor verificatie mislukt</string>
+    <!-- Profiles Screen -->
+    <string name="profiles_title">Profiles</string>
+    <string name="desc_create_profile">Profiel aanmaken</string>
+    <string name="desc_edit_profile">Profiel bewerken</string>
+    <string name="profiles_empty_title">Nog geen profielen</string>
+    <string name="profiles_empty_desc">Maak een profiel aan om snel verbinding te maken met specifieke instellingen.</string>
+    <string name="profile_feature_obfuscation">Verduistering</string>
+    <string name="profile_feature_connect_go">Connect &amp; Go</string>
+    <string name="profile_server_info">Server: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">Profiel aanmaken</string>
+    <string name="title_edit_profile">Profiel bewerken</string>
+    <string name="btn_save">Opslaan</string>
+    <string name="btn_cancel">annuleren</string>
+    <string name="btn_delete">Verwijderen</string>
+    <string name="btn_edit">Bewerken</string>
+    <string name="desc_delete_profile">Profiel verwijderen</string>
+    <string name="default_profile_name">Mijn profiel</string>
+    <string name="category_general">Algemeen</string>
+    <string name="label_profile_name">Profiel Naam</string>
+    <string name="category_location">Locatie</string>
+    <string name="location_server">Server: %1$s</string>
+    <string name="location_fastest">Snelste</string>
+    <string name="label_target_location">Doel Locatie</string>
+    <string name="label_location">Locatie</string>
+    <string name="category_connection">Verbindingsinstellingen</string>
+    <string name="label_protocol">Protocol</string>
+    <string name="label_port">Poort</string>
+    <string name="category_advanced">Geavanceerd</string>
+    <string name="label_obfuscation">Verduistering</string>
+    <string name="obfuscation_desc">Bypass dieppaket-inspectie</string>
+    <string name="label_obfuscation_config">Verduistering configuratie</string>
+    <string name="category_automation">Automatisering</string>
+    <string name="label_connect_go_website">Verbinden &amp; Go (Website)</string>
+    <string name="label_enter_url">URL invoeren</string>
+    <string name="label_not_configured">Niet geconfigureerd</string>
+    <string name="automation_desc">Open deze website automatisch in uw browser zodra de VPN-verbinding is gemaakt.</string>
+    <string name="title_select_country">Selecteer land</string>
+    <string name="title_select_city">Selecteer stad</string>
+    <string name="title_select_server">Selecteer Server</string>
+    <string name="location_fastest_in_country">Snelste in %1$s</string>
+    <string name="location_fastest_in_city">Snelste in %1$s</string>
+    <string name="location_load">Lading: %1$d%%</string>
+    <string name="title_select_obfuscation_config">Selecteer Obfuscation configuratie</string>
+    <string name="title_auto_open_url">URL automatisch openen</string>
+    <string name="btn_create_new_config">Nieuwe configuratie maken</string>
+    <string name="connect_go_title">Connect &amp; Go</string>
+    <string name="connect_go_desc">Voer de URL in om te openen op de verbinding (bijv. https://example.com)</string>
+    <string name="hint_url_placeholder">https://</string>
+    <string name="title_select_protocol">Select Protocol</string>
+    <string name="custom_config_name">Aangepaste configuratie %1$d</string>
+    <string name="title_edit_obfuscation_config">Bewerk Obfuscation configuratie</string>
+    <string name="error_empty_profile_name">Profielnaam kan niet leeg zijn</string>
+</resources>
