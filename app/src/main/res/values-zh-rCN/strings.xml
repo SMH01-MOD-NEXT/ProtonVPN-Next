@@ -54,13 +54,16 @@
     <string name="map_placeholder">Interactive Map Placeholder</string>
     <string name="label_fastest_server">Fastest Server</string>
     <string name="label_select_location">Select location</string>
+    <string name="label_server_unavailable">Server unavailable</string>
     <string name="desc_change_server">Change server</string>
     <string name="btn_disconnect">Disconnect</string>
     <string name="btn_quick_connect">Quick Connect</string>
     <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">Certificate expires in %1$dh. Refreshing soon…</string>
     <string name="cert_msg_expired">Your VPN certificate has expired and needs to be renewed.</string>
     <string name="cert_msg_refreshing">Refreshing VPN certificate…</string>
     <string name="cert_msg_refresh_failed">Failed to refresh certificate: %1$s. Retrying in 15 minutes.</string>
+    <string name="cert_msg_auto_refresh_failed">Auto-refresh failed. Please update manually to ensure connection.</string>
     <string name="cert_btn_refresh_now">Refresh Now</string>
     <!-- Countries Screen -->
     <string name="countries_title">Select Country</string>
@@ -120,6 +123,7 @@
     <string name="obfuscation_category_magic">Packet Sizes (Magic)</string>
     <string name="obfuscation_category_headers">Headers</string>
     <string name="obfuscation_category_advanced">Advanced</string>
+    <string name="custom_config">Custom Config</string>
     <!-- About App Screen -->
     <string name="about_community">Community</string>
     <string name="about_github">GitHub</string>
@@ -171,12 +175,17 @@
     <string name="profiles_empty_desc">Create a profile to quickly connect with specific settings.</string>
     <string name="profile_feature_obfuscation">Obfuscation</string>
     <string name="profile_feature_connect_go">Connect &amp; Go</string>
+    <string name="profile_server_info">Server: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Create Profile</string>
     <string name="title_edit_profile">Edit Profile</string>
     <string name="btn_save">Save</string>
     <string name="btn_cancel">Cancel</string>
     <string name="btn_delete">Delete</string>
+    <string name="btn_edit">Edit</string>
     <string name="desc_delete_profile">Delete Profile</string>
     <string name="default_profile_name">My Profile</string>
     <string name="category_general">General</string>
@@ -195,6 +204,7 @@
     <string name="label_obfuscation_config">Obfuscation Config</string>
     <string name="category_automation">Automation</string>
     <string name="label_connect_go_website">Connect &amp; Go (Website)</string>
+    <string name="label_enter_url">Enter URL</string>
     <string name="label_not_configured">Not configured</string>
     <string name="automation_desc">Automatically open this website in your browser once the VPN connection is established.</string>
     <string name="title_select_country">Select Country</string>
@@ -204,6 +214,7 @@
     <string name="location_fastest_in_city">Fastest in %1$s</string>
     <string name="location_load">Load: %1$d%%</string>
     <string name="title_select_obfuscation_config">Select Obfuscation Config</string>
+    <string name="title_auto_open_url">Auto-open URL</string>
     <string name="btn_create_new_config">Create New Config</string>
     <string name="connect_go_title">Connect &amp; Go</string>
     <string name="connect_go_desc">Enter the URL to open upon connection (e.g., https://example.com)</string>
