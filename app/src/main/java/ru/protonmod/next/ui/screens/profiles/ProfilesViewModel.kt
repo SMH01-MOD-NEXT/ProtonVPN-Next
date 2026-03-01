@@ -45,6 +45,8 @@ import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.state.ConnectedServerState
+import ru.protonmod.next.ui.screens.countries.CityDisplayItem
+import ru.protonmod.next.ui.screens.countries.CountryDisplayItem
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import javax.inject.Inject
 
@@ -86,8 +88,9 @@ class ProfilesViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    private val _countries = MutableStateFlow<List<String>>(emptyList())
-    val countries: StateFlow<List<String>> = _countries.asStateFlow()
+    // Changed from List<String> to List<CountryDisplayItem> to support load indicators
+    private val _countries = MutableStateFlow<List<CountryDisplayItem>>(emptyList())
+    val countries: StateFlow<List<CountryDisplayItem>> = _countries.asStateFlow()
 
     init {
         loadCountries()
@@ -172,7 +175,7 @@ class ProfilesViewModel @Inject constructor(
                 val standardProfileName = context.getString(R.string.obfuscation_config_standard)
                 val selectedConfig = customProfiles.find { it.id == profile.obfuscationProfileId }
                     ?: if (profile.obfuscationProfileId == "standard_1") ObfuscationProfile.getStandardProfile(standardProfileName) else null
-                
+
                 selectedConfig?.let {
                     obfuscationParams = AmneziaVpnManager.ObfuscationParams(
                         jc = it.jc, jmin = it.jmin, jmax = it.jmax,
@@ -189,8 +192,8 @@ class ProfilesViewModel @Inject constructor(
 
             if (tunnelState == Tunnel.State.UP || isConnecting) {
                 amneziaVpnManager.reconnect(
-                    targetServer.id, 
-                    physicalServer, 
+                    targetServer.id,
+                    physicalServer,
                     session,
                     overridePort = profile.port,
                     overrideObfuscation = profile.isObfuscationEnabled,
@@ -198,8 +201,8 @@ class ProfilesViewModel @Inject constructor(
                 )
             } else {
                 amneziaVpnManager.connect(
-                    targetServer.id, 
-                    physicalServer, 
+                    targetServer.id,
+                    physicalServer,
                     session,
                     overridePort = profile.port,
                     overrideObfuscation = profile.isObfuscationEnabled,
@@ -240,7 +243,7 @@ class ProfilesViewModel @Inject constructor(
 
     private fun handleAutoOpenUrl(url: String?) {
         if (url.isNullOrEmpty()) return
-        
+
         viewModelScope.launch {
             Log.d(TAG, "Waiting for VPN to be UP before opening URL: $url")
             try {
@@ -248,10 +251,10 @@ class ProfilesViewModel @Inject constructor(
                 withTimeout(20000) {
                     amneziaVpnManager.tunnelState.first { it == Tunnel.State.UP }
                 }
-                
+
                 // Extra small delay to ensure routing is established
                 delay(800)
-                
+
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
@@ -261,30 +264,38 @@ class ProfilesViewModel @Inject constructor(
                 Log.e(TAG, "Failed to handle Connect & Go", e)
                 // Fallback: try opening anyway if it took too long but we are still attempting
                 if (amneziaVpnManager.tunnelState.value == Tunnel.State.UP) {
-                   try {
-                       val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
-                           addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                       }
-                       context.startActivity(intent)
-                   } catch (_: Exception) {}
+                    try {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                    } catch (_: Exception) {}
                 }
             }
         }
     }
 
-    suspend fun getAvailableCountries(): List<String> {
+    // Now computes average load for countries to be displayed in the UI
+    suspend fun getAvailableCountries(): List<CountryDisplayItem> {
         return serversCacheManager.getCachedServers()
-            .map { it.exitCountry }
-            .distinct()
-            .sorted()
+            .groupBy { it.exitCountry }
+            .map { (countryCode, servers) ->
+                val avgLoad = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
+                CountryDisplayItem(code = countryCode, averageLoad = avgLoad)
+            }
+            .sortedBy { it.code }
     }
 
-    suspend fun getCitiesForCountry(countryCode: String): List<String> {
+    // Now computes average load for cities to be displayed in the UI
+    suspend fun getCitiesForCountry(countryCode: String): List<CityDisplayItem> {
         return serversCacheManager.getCachedServers()
             .filter { it.exitCountry == countryCode }
-            .map { it.city }
-            .distinct()
-            .sorted()
+            .groupBy { it.city }
+            .map { (cityName, servers) ->
+                val avgLoad = if (servers.isEmpty()) 0 else servers.map { it.averageLoad }.average().toInt()
+                CityDisplayItem(name = cityName, averageLoad = avgLoad)
+            }
+            .sortedBy { it.name }
     }
 
     suspend fun getServersForCity(countryCode: String, city: String): List<LogicalServer> {

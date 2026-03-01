@@ -50,6 +50,8 @@ import kotlinx.coroutines.launch
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.ui.screens.countries.CityDisplayItem
+import ru.protonmod.next.ui.screens.countries.CountryDisplayItem
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
 import java.util.Locale
@@ -438,7 +440,7 @@ fun SelectionCard(
 
 @Composable
 fun LocationSelectionDialog(
-    countries: List<String>,
+    countries: List<CountryDisplayItem>,
     selectedCountry: String?,
     selectedCity: String?,
     viewModel: ProfilesViewModel,
@@ -454,7 +456,7 @@ fun LocationSelectionDialog(
     var currentCity by remember { mutableStateOf(selectedCity) }
     var isTransitioning by remember { mutableStateOf(false) }
 
-    var cities by remember { mutableStateOf<List<String>>(emptyList()) }
+    var cities by remember { mutableStateOf<List<CityDisplayItem>>(emptyList()) }
     var servers by remember { mutableStateOf<List<LogicalServer>>(emptyList()) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -523,22 +525,23 @@ fun LocationSelectionDialog(
 
                         when (currentStep) {
                             0 -> {
-                                items(countries) { country ->
-                                    val localizedName = CountryUtils.getCountryName(context, country)
+                                items(countries) { countryItem ->
+                                    val localizedName = CountryUtils.getCountryName(context, countryItem.code)
                                     SelectionCard(
                                         title = localizedName,
                                         icon = {
                                             Text(
-                                                text = CountryUtils.getFlagForCountry(country),
+                                                text = CountryUtils.getFlagForCountry(countryItem.code),
                                                 fontSize = 24.sp
                                             )
                                         },
+                                        load = countryItem.averageLoad,
                                         onClick = {
                                             if (!isTransitioning) {
                                                 scope.launch {
                                                     isTransitioning = true
-                                                    cities = viewModel.getCitiesForCountry(country)
-                                                    currentCountry = country
+                                                    cities = viewModel.getCitiesForCountry(countryItem.code)
+                                                    currentCountry = countryItem.code
                                                     step = 1
                                                     isTransitioning = false
                                                 }
@@ -548,19 +551,20 @@ fun LocationSelectionDialog(
                                 }
                             }
                             1 -> {
-                                items(cities) { city ->
-                                    val localizedCityName = getLocalizedCityName(context, city)
+                                items(cities) { cityItem ->
+                                    val localizedCityName = getLocalizedCityName(context, cityItem.name)
                                     SelectionCard(
                                         title = localizedCityName,
                                         icon = {
                                             Text(text = "🏙️", fontSize = 24.sp)
                                         },
+                                        load = cityItem.averageLoad,
                                         onClick = {
                                             if (!isTransitioning) {
                                                 scope.launch {
                                                     isTransitioning = true
-                                                    servers = viewModel.getServersForCity(currentCountry!!, city)
-                                                    currentCity = city
+                                                    servers = viewModel.getServersForCity(currentCountry!!, cityItem.name)
+                                                    currentCity = cityItem.name
                                                     step = 2
                                                     isTransitioning = false
                                                 }
@@ -1168,7 +1172,7 @@ fun ObfuscationProfileEditDialog(
                             EditParamField(label = "I1", value = i1, isNumeric = false, onValueChange = { i1 = it })
                         }
                     }
-                    
+
                     item { Spacer(modifier = Modifier.height(8.dp)) }
                 }
 
