@@ -87,6 +87,7 @@ fun EditProfileScreen(
     var targetCountry by remember { mutableStateOf<String?>(null) }
     var targetCity by remember { mutableStateOf<String?>(null) }
     var targetServerId by remember { mutableStateOf<String?>(null) }
+    var targetServerName by remember { mutableStateOf<String?>(null) }
     var selectedProtocol by remember { mutableStateOf("AmneziaWG") }
     var selectedPort by remember { mutableIntStateOf(0) }
     var autoOpenUrl by remember { mutableStateOf("") }
@@ -100,6 +101,7 @@ fun EditProfileScreen(
             targetCountry = it.targetCountry
             targetCity = it.targetCity
             targetServerId = it.targetServerId
+            targetServerName = it.targetServerName
             selectedProtocol = it.protocol
             selectedPort = it.port
             autoOpenUrl = it.autoOpenUrl ?: ""
@@ -148,6 +150,7 @@ fun EditProfileScreen(
                                 targetCountry = targetCountry,
                                 targetCity = targetCity,
                                 targetServerId = targetServerId,
+                                targetServerName = targetServerName,
                                 protocol = selectedProtocol,
                                 port = selectedPort,
                                 autoOpenUrl = validatedUrl,
@@ -184,9 +187,9 @@ fun EditProfileScreen(
 
             item {
                 Category(title = stringResource(R.string.category_connection)) {
-                    val locationSubtitle = remember(targetCountry, targetCity, targetServerId) {
+                    val locationSubtitle = remember(targetCountry, targetCity, targetServerId, targetServerName) {
                         when {
-                            targetServerId != null -> "Server: $targetServerId"
+                            targetServerId != null -> context.getString(R.string.location_server, targetServerName ?: targetServerId)
                             targetCity != null -> "🏙️ ${getLocalizedCityName(context, targetCity!!)}, ${CountryUtils.getCountryName(context, targetCountry)}"
                             targetCountry != null -> "${CountryUtils.getFlagForCountry(targetCountry)} ${CountryUtils.getCountryName(context, targetCountry)}"
                             else -> context.getString(R.string.location_fastest)
@@ -321,10 +324,11 @@ fun EditProfileScreen(
             selectedCity = targetCity,
             viewModel = viewModel,
             onDismiss = { showLocationDialog = false },
-            onLocationSelected = { country, city, serverId ->
+            onLocationSelected = { country, city, serverId, serverName ->
                 targetCountry = country
                 targetCity = city
                 targetServerId = serverId
+                targetServerName = serverName
                 showLocationDialog = false
             }
         )
@@ -445,7 +449,7 @@ fun LocationSelectionDialog(
     selectedCity: String?,
     viewModel: ProfilesViewModel,
     onDismiss: () -> Unit,
-    onLocationSelected: (String?, String?, String?) -> Unit
+    onLocationSelected: (String?, String?, String?, String?) -> Unit
 ) {
     val context = LocalContext.current
     val colors = ProtonNextTheme.colors
@@ -514,9 +518,9 @@ fun LocationSelectionDialog(
                                 onClick = {
                                     if (!isTransitioning) {
                                         when(currentStep) {
-                                            0 -> onLocationSelected(null, null, null)
-                                            1 -> onLocationSelected(currentCountry, null, null)
-                                            2 -> onLocationSelected(currentCountry, currentCity, null)
+                                            0 -> onLocationSelected(null, null, null, null)
+                                            1 -> onLocationSelected(currentCountry, null, null, null)
+                                            2 -> onLocationSelected(currentCountry, currentCity, null, null)
                                         }
                                     }
                                 }
@@ -596,7 +600,7 @@ fun LocationSelectionDialog(
                                         load = server.averageLoad,
                                         onClick = {
                                             if (!isTransitioning) {
-                                                onLocationSelected(currentCountry, currentCity, server.id)
+                                                onLocationSelected(currentCountry, currentCity, server.id, server.name)
                                             }
                                         }
                                     )

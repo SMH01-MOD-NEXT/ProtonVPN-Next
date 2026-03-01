@@ -261,7 +261,7 @@ fun ProfileCardItem(
                 // Subtitle with protocol, port, and target info
                 val portStr = if (profile.port == 0) stringResource(R.string.settings_port_auto) else profile.port.toString()
                 val targetName = when {
-                    profile.targetServerId != null -> stringResource(R.string.profile_server_info, profile.targetServerId)
+                    profile.targetServerId != null -> stringResource(R.string.profile_server_info, profile.targetServerName ?: profile.targetServerId)
                     profile.targetCity != null -> stringResource(R.string.profile_city_info, profile.targetCity, CountryUtils.getCountryName(context, profile.targetCountry!!))
                     profile.targetCountry != null -> stringResource(R.string.profile_country_info, CountryUtils.getFlagForCountry(profile.targetCountry), CountryUtils.getCountryName(context, profile.targetCountry))
                     else -> stringResource(R.string.profile_fastest_info, stringResource(R.string.location_fastest))

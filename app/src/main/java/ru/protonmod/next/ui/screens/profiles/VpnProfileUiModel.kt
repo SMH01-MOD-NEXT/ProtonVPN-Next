@@ -28,6 +28,7 @@ data class VpnProfileUiModel(
     val obfuscationProfileId: String? = null,
     val autoOpenUrl: String? = null,
     val targetServerId: String? = null,
+    val targetServerName: String? = null,
     val targetCountry: String? = null,
     val targetCity: String? = null
 )

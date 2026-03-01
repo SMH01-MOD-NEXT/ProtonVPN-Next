@@ -30,6 +30,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -65,28 +66,32 @@ class ProfilesViewModel @Inject constructor(
         private const val TAG = "ProfilesViewModel"
     }
 
-    val profiles: StateFlow<List<VpnProfileUiModel>> = profileDao.getAllProfilesFlow()
-        .map { entities ->
-            entities.map { entity ->
-                VpnProfileUiModel(
-                    id = entity.id,
-                    name = entity.name,
-                    protocol = entity.protocol,
-                    port = entity.port,
-                    isObfuscationEnabled = entity.isObfuscationEnabled,
-                    obfuscationProfileId = entity.obfuscationProfileId,
-                    autoOpenUrl = entity.autoOpenUrl,
-                    targetServerId = entity.targetServerId,
-                    targetCountry = entity.targetCountry,
-                    targetCity = entity.targetCity
-                )
-            }
+    val profiles: StateFlow<List<VpnProfileUiModel>> = combine(
+        profileDao.getAllProfilesFlow(),
+        serversCacheManager.getServersFlow()
+    ) { entities, servers ->
+        entities.map { entity ->
+            // Resolve the human-readable name from the cached servers list
+            val serverName = servers.find { it.id == entity.targetServerId }?.name
+            VpnProfileUiModel(
+                id = entity.id,
+                name = entity.name,
+                protocol = entity.protocol,
+                port = entity.port,
+                isObfuscationEnabled = entity.isObfuscationEnabled,
+                obfuscationProfileId = entity.obfuscationProfileId,
+                autoOpenUrl = entity.autoOpenUrl,
+                targetServerId = entity.targetServerId,
+                targetServerName = serverName,
+                targetCountry = entity.targetCountry,
+                targetCity = entity.targetCity
+            )
         }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     // Changed from List<String> to List<CountryDisplayItem> to support load indicators
     private val _countries = MutableStateFlow<List<CountryDisplayItem>>(emptyList())
@@ -128,6 +133,8 @@ class ProfilesViewModel @Inject constructor(
 
     suspend fun getProfileById(id: String): VpnProfileUiModel? {
         return profileDao.getProfileById(id)?.let { entity ->
+            val servers = serversCacheManager.getCachedServers()
+            val serverName = servers.find { it.id == entity.targetServerId }?.name
             VpnProfileUiModel(
                 id = entity.id,
                 name = entity.name,
@@ -137,6 +144,7 @@ class ProfilesViewModel @Inject constructor(
                 obfuscationProfileId = entity.obfuscationProfileId,
                 autoOpenUrl = entity.autoOpenUrl,
                 targetServerId = entity.targetServerId,
+                targetServerName = serverName,
                 targetCountry = entity.targetCountry,
                 targetCity = entity.targetCity
             )
