@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+    <string name="app_name">Proton VPN-Nästa</string>
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Välkommen till Proton VPN-Next</string>
+    <string name="welcome_subtitle">Ta kontroll över ditt digitala liv med säkra, privata och snabba VPN. Inga loggar, ingen spårning.</string>
+    <string name="btn_create_account">Skapa konto</string>
+    <string name="btn_login">Logga in</string>
+    <!-- Login Screen -->
+    <string name="login_title">Välkommen tillbaka</string>
+    <string name="login_subtitle">Logga in på ditt Protonkonto</string>
+    <string name="hint_username">E-post eller användarnamn</string>
+    <string name="hint_password">Lösenord</string>
+    <string name="forgot_password">Glömt lösenordet?</string>
+    <string name="desc_back_button">Navigera tillbaka</string>
+    <string name="desc_toggle_password">Växla lösenord synlighet</string>
+    <string name="login_success">Inloggning lyckades!</string>
+    <string name="login_error">Fel: %1$s</string>
+    <string name="title_security_check">Säkerhetskontroll</string>
+    <string name="title_2fa">Tvåfaktorsautentisering</string>
+    <string name="msg_2fa_instruction">Ange den 6-siffriga TOTP-koden från din autentiseringsapp.</string>
+    <string name="hint_2fa_code">6-digit Code</string>
+    <string name="btn_verify">Verifiera</string>
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-Nästa</string>
+    <string name="desc_settings">Inställningar</string>
+    <string name="error_loading_servers">Fel vid inläsning av servrar</string>
+    <string name="btn_retry">Försök igen</string>
+    <string name="error_system_appops">Systemfel: vänligen installera om appen.</string>
+    <string name="title_recent_connections">Senaste kontakter</string>
+    <string name="status_connected">Ansluten</string>
+    <string name="status_connecting">Ansluter…</string>
+    <string name="status_disconnected">Frånkopplad</string>
+    <string name="status_not_connected">Inte ansluten</string>
+    <string name="msg_traffic_not_protected">Din trafik är inte skyddad</string>
+    <string name="desc_toggle_connection">Växla anslutning</string>
+    <string name="desc_country">Land</string>
+    <string name="map_placeholder">Interaktiv karta Platshållare</string>
+    <string name="label_fastest_server">Snabbaste servern</string>
+    <string name="label_select_location">Välj plats</string>
+    <string name="label_server_unavailable">Servern ej tillgänglig</string>
+    <string name="desc_change_server">Ändra server</string>
+    <string name="btn_disconnect">Koppla från</string>
+    <string name="btn_quick_connect">Snabb anslutning</string>
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">Certifikat löper ut i %1$dh. Uppdaterar snart…</string>
+    <string name="cert_msg_expired">Ditt VPN-certifikat har löpt ut och måste förnyas.</string>
+    <string name="cert_msg_refreshing">Uppdaterar VPN-certifikat…</string>
+    <string name="cert_msg_refresh_failed">Det gick inte att uppdatera 65. %1$s. Försöker om 15 minuter.</string>
+    <string name="cert_msg_auto_refresh_failed">Automatisk uppdatering misslyckades. Uppdatera manuellt för att säkerställa anslutningen.</string>
+    <string name="cert_btn_refresh_now">Uppdatera nu</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">Välj land</string>
+    <string name="desc_more_options">Fler alternativ</string>
+    <!-- Settings Screen -->
+    <string name="settings_title">Inställningar</string>
+    <string name="settings_connection">Inställningar för anslutning</string>
+    <string name="settings_kill_switch">Döda strömbrytare</string>
+    <string name="settings_kill_switch_desc">Koppla från om VPN-anslutningen tappar</string>
+    <string name="settings_auto_connect">Anslut automatiskt</string>
+    <string name="settings_auto_connect_desc">Anslut till VPN vid uppstart</string>
+    <string name="settings_split_tunneling">Delad tunnel</string>
+    <string name="settings_split_tunneling_desc">Exkludera appar eller IP-adresser från VPN</string>
+    <string name="settings_excluded_apps">Uteslutna appar</string>
+    <string name="settings_excluded_ips">Exkluderade IP-adresser</string>
+    <string name="settings_privacy">Sekretess &amp; aviseringar</string>
+    <string name="settings_notifications">Aviseringar</string>
+    <string name="settings_notifications_desc">Få aviseringar om VPN-status</string>
+    <string name="settings_about">Om</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_licenses">Licenser för öppen källkod</string>
+    <string name="settings_licenses_desc">Tredjeparts programvara som används i appen</string>
+    <string name="settings_on">På</string>
+    <string name="settings_off">Av</string>
+    <string name="settings_connection_protocol">Protocol</string>
+    <string name="settings_port">Port</string>
+    <string name="settings_port_desc">Val av anslutningsport</string>
+    <string name="settings_port_auto">Automatiskt</string>
+    <string name="settings_obfuscation">Obfusk (AmneziaWG)</string>
+    <string name="settings_obfuscation_desc">Ändra paketrubriker för att kringgå DPI</string>
+    <string name="settings_reset_obfuscation">Återställ till Standard ProtonVPN-Next</string>
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_jc">Antal skräppaket (Jc)</string>
+    <string name="obfuscation_jmin">Skräp paketets minsta storlek (Jmin)</string>
+    <string name="obfuscation_jmax">Max storlek för skräppaket (Jmax)</string>
+    <string name="obfuscation_s1">Init Packet Skräpstorlek (S1)</string>
+    <string name="obfuscation_s2">Svarspaket Skräpstorlek (S2)</string>
+    <string name="obfuscation_h1">Init Packet Magic (H1)</string>
+    <string name="obfuscation_h2">Response Packet Magic (H2)</string>
+    <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
+    <string name="obfuscation_h4">Transport Packet Magic (H4)</string>
+    <string name="obfuscation_i1">Speciellt Skräp (I1)</string>
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">Protocol</string>
+    <string name="protocol_title">Protocol</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">Avancerat WireGuard protokoll med fördunkling</string>
+    <string name="obfuscation_title">Obfusk</string>
+    <string name="obfuscation_enable">Aktivera förvrängning</string>
+    <string name="obfuscation_enable_desc">Förbipassera DPI och VPN blockering</string>
+    <string name="obfuscation_info_desc">Justera AmneziaWG-parametrar för att dölja VPN-trafik och kringgå anslutningsblock i begränsade nätverk.</string>
+    <string name="obfuscation_config">Konfiguration</string>
+    <string name="obfuscation_config_standard">Standard Proton VPN-Next Konfiguration</string>
+    <string name="obfuscation_save_config">Spara som ny konfiguration</string>
+    <string name="obfuscation_config_name">Konfigurationsnamn</string>
+    <string name="obfuscation_category_junk">Parametrar för skräp</string>
+    <string name="obfuscation_category_magic">Förpackningsstorlekar (magiska)</string>
+    <string name="obfuscation_category_headers">Sidhuvuden</string>
+    <string name="obfuscation_category_advanced">Avancerat</string>
+    <string name="custom_config">Anpassad konfiguration</string>
+    <!-- About App Screen -->
+    <string name="about_community">Gemenskap</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+    <!-- Licenses Screen -->
+    <string name="licenses_title">Licenser</string>
+    <string name="license_app_title">Proton VPN-Nästa</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">AndroidX bibliotek</string>
+    <string name="license_apache_2">Apache-licens 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">Kotlin standardbibliotek</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">VPN-anslutningen förbigår utvalda appar och IP-adresser</string>
+    <string name="st_disabled_subtitle">All trafik går via VPN</string>
+    <plurals name="st_apps_selected">
+        <item quantity="one">%1$d app vald</item>
+        <item quantity="other">%1$d appar valda</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">%1$d IP vald</item>
+        <item quantity="other">%1$d IP-adresser valda</item>
+    </plurals>
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="one">%1$d app exkluderad</item>
+        <item quantity="other">%1$d appar exkluderade</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="one">%1$d IP exkluderad</item>
+        <item quantity="other">%1$d IP-adresser exkluderade</item>
+    </plurals>
+    <!-- Notification -->
+    <string name="notification_channel_name">VPN-status</string>
+    <string name="notification_channel_desc">Visar aktuell anslutningsstatus för VPN</string>
+    <string name="notification_title_connected">Ansluten till %1$s</string>
+    <string name="notification_title_disconnected">Frånkopplad</string>
+    <string name="notification_title_connecting">Ansluter…</string>
+    <string name="notification_action_disconnect">Koppla från</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">Det gick inte att hitta aktiv session. Logga in igen.</string>
+    <string name="error_unknown">Okänt fel</string>
+    <string name="error_auth_failed">Ett oväntat autentiseringsfel uppstod</string>
+    <string name="error_2fa_failed">Tvåfaktorsverifiering misslyckades</string>
+    <!-- Profiles Screen -->
+    <string name="profiles_title">Profiles</string>
+    <string name="desc_create_profile">Skapa profil</string>
+    <string name="desc_edit_profile">Redigera profil</string>
+    <string name="profiles_empty_title">Ännu inga profiler</string>
+    <string name="profiles_empty_desc">Skapa en profil för att snabbt ansluta till specifika inställningar.</string>
+    <string name="profile_feature_obfuscation">Obfusk</string>
+    <string name="profile_feature_connect_go">Anslut &amp; Go</string>
+    <string name="profile_server_info">Server: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">Skapa profil</string>
+    <string name="title_edit_profile">Redigera profil</string>
+    <string name="btn_save">Spara</string>
+    <string name="btn_cancel">Avbryt</string>
+    <string name="btn_delete">Radera</string>
+    <string name="btn_edit">Redigera</string>
+    <string name="desc_delete_profile">Ta bort profil</string>
+    <string name="default_profile_name">Min profil</string>
+    <string name="category_general">Allmänt</string>
+    <string name="label_profile_name">Profilens namn</string>
+    <string name="category_location">Plats</string>
+    <string name="location_server">Server: %1$s</string>
+    <string name="location_fastest">Snabbaste</string>
+    <string name="label_target_location">Mål plats</string>
+    <string name="label_location">Plats</string>
+    <string name="category_connection">Anslutning</string>
+    <string name="label_protocol">Protocol</string>
+    <string name="label_port">Port</string>
+    <string name="category_advanced">Avancerat</string>
+    <string name="label_obfuscation">Obfusk</string>
+    <string name="obfuscation_desc">Förbipassera djupinspektion av paket</string>
+    <string name="label_obfuscation_config">Obfuscation Konfiguration</string>
+    <string name="category_automation">Automatisering</string>
+    <string name="label_connect_go_website">Anslut &amp; Go (webbplats)</string>
+    <string name="label_enter_url">Ange URL</string>
+    <string name="label_not_configured">Inte konfigurerad</string>
+    <string name="automation_desc">Öppna automatiskt denna webbplats i din webbläsare när VPN-anslutningen är etablerad.</string>
+    <string name="title_select_country">Välj land</string>
+    <string name="title_select_city">Välj stad</string>
+    <string name="title_select_server">Välj server</string>
+    <string name="location_fastest_in_country">Snabbast i %1$s</string>
+    <string name="location_fastest_in_city">Snabbast i %1$s</string>
+    <string name="location_load">Laddning: %1$d%%</string>
+    <string name="title_select_obfuscation_config">Välj Obfuscationskonfiguration</string>
+    <string name="title_auto_open_url">Auto-öppna URL</string>
+    <string name="btn_create_new_config">Skapa ny konfiguration</string>
+    <string name="connect_go_title">Anslut &amp; Go</string>
+    <string name="connect_go_desc">Ange URL att öppna vid anslutning (t.ex., https://example.com)</string>
+    <string name="hint_url_placeholder">https://</string>
+    <string name="title_select_protocol">Select Protocol</string>
+    <string name="custom_config_name">Anpassad konfiguration %1$d</string>
+    <string name="title_edit_obfuscation_config">Redigera Obduktionskonfiguration</string>
+    <string name="error_empty_profile_name">Profilnamnet får inte vara tomt</string>
+</resources>
