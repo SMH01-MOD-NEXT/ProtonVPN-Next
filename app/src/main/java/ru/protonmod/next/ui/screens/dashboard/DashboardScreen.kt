@@ -109,13 +109,16 @@ fun DashboardScreen(
                 .padding(paddingValues)
                 .background(colors.backgroundNorm)
         ) {
+            val successState = uiState as? DashboardUiState.Success
             HomeMap(
                 modifier = Modifier
                     .fillMaxWidth()
                     .fillMaxHeight(0.6f)
                     .clickable { onNavigateToMap?.invoke() },
-                connectedServer = (uiState as? DashboardUiState.Success)?.connectedServer,
-                isConnecting = (uiState as? DashboardUiState.Success)?.isConnecting ?: false
+                allServers = successState?.servers ?: emptyList(),
+                connectedServer = successState?.connectedServer,
+                isConnecting = successState?.isConnecting ?: false,
+                isInteractive = false
             )
 
             AnimatedContent(

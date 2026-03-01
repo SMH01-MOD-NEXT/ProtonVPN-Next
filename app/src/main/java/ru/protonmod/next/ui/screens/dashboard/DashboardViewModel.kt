@@ -116,7 +116,7 @@ class DashboardViewModel @Inject constructor(
                 if (state == Tunnel.State.UP) {
                     // Give the tunnel 3 seconds to stabilize routing before updating servers/load
                     delay(3000)
-                    
+
                     connectedServerState.connectedServer.value?.let { server ->
                         recentConnectionDao.addRecentConnection(
                             RecentConnectionEntity(
@@ -211,6 +211,20 @@ class DashboardViewModel @Inject constructor(
             }
         } else {
             _errorMessage.value = context.getString(R.string.label_server_unavailable)
+        }
+    }
+
+    fun connectToCountry(countryCode: String) {
+        viewModelScope.launch {
+            val currentState = uiState.value
+            if (currentState !is DashboardUiState.Success) return@launch
+
+            val serversInCountry = currentState.servers.filter { it.exitCountry == countryCode }
+            if (serversInCountry.isNotEmpty()) {
+                // Ищем наименее загруженный сервер в выбранной стране
+                val bestServer = serversInCountry.minByOrNull { it.averageLoad } ?: serversInCountry.random()
+                initiateConnection(bestServer)
+            }
         }
     }
 }
