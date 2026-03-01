@@ -23,6 +23,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -43,7 +44,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,6 +56,7 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
 
 @Composable
@@ -356,6 +360,7 @@ fun ConnectionStatusCard(
     onToggleConnection: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
     val cardContainerColor = when {
         isConnected -> colors.notificationSuccess.copy(alpha = 0.15f)
         isConnecting -> colors.backgroundSecondary
@@ -404,11 +409,22 @@ fun ConnectionStatusCard(
                         .background(colors.backgroundNorm),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Rounded.Public,
-                        contentDescription = stringResource(R.string.desc_country),
-                        tint = colors.iconNorm
-                    )
+                    val countryCode = connectedServer?.exitCountry
+                    val flagResId = CountryUtils.getFlagResource(context, countryCode)
+                    if (flagResId != 0) {
+                        Image(
+                            painter = painterResource(id = flagResId),
+                            contentDescription = countryCode,
+                            modifier = Modifier.fillMaxSize().padding(10.dp).clip(RoundedCornerShape(4.dp)),
+                            contentScale = ContentScale.FillBounds
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Rounded.Public,
+                            contentDescription = stringResource(R.string.desc_country),
+                            tint = colors.iconNorm
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -475,6 +491,7 @@ fun ServerCard(
     modifier: Modifier = Modifier
 ) {
     val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -497,11 +514,21 @@ fun ServerCard(
                     .background(colors.backgroundNorm),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Public,
-                    contentDescription = stringResource(R.string.desc_country),
-                    tint = colors.iconNorm
-                )
+                val flagResId = CountryUtils.getFlagResource(context, server.exitCountry)
+                if (flagResId != 0) {
+                    Image(
+                        painter = painterResource(id = flagResId),
+                        contentDescription = server.exitCountry,
+                        modifier = Modifier.fillMaxSize().padding(8.dp).clip(RoundedCornerShape(4.dp)),
+                        contentScale = ContentScale.FillBounds
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Rounded.Public,
+                        contentDescription = stringResource(R.string.desc_country),
+                        tint = colors.iconNorm
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))

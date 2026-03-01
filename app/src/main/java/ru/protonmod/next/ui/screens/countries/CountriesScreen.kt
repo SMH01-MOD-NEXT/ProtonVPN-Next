@@ -23,6 +23,7 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -40,7 +41,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -255,7 +258,8 @@ fun CountryCard(
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
-    val flag = CountryUtils.getFlagForCountry(country.code)
+    val flagEmoji = CountryUtils.getFlagForCountry(country.code)
+    val flagResId = CountryUtils.getFlagResource(context, country.code)
     val localizedName = CountryUtils.getCountryName(context, country.code)
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -281,11 +285,23 @@ fun CountryCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Box(contentAlignment = Alignment.BottomEnd) {
-                    Text(
-                        text = flag,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.width(40.dp)
-                    )
+                    if (flagResId != 0) {
+                        Image(
+                            painter = painterResource(id = flagResId),
+                            contentDescription = localizedName,
+                            modifier = Modifier
+                                .width(40.dp)
+                                .height(28.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            contentScale = ContentScale.FillBounds
+                        )
+                    } else {
+                        Text(
+                            text = flagEmoji,
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.width(40.dp)
+                        )
+                    }
                     if (isConnected) {
                         Box(
                             modifier = Modifier

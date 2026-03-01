@@ -20,6 +20,7 @@ package ru.protonmod.next.ui.screens.profiles
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -39,7 +40,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -191,14 +194,18 @@ fun EditProfileScreen(
                         when {
                             targetServerId != null -> context.getString(R.string.location_server, targetServerName ?: targetServerId)
                             targetCity != null -> "🏙️ ${getLocalizedCityName(context, targetCity!!)}, ${CountryUtils.getCountryName(context, targetCountry)}"
-                            targetCountry != null -> "${CountryUtils.getFlagForCountry(targetCountry)} ${CountryUtils.getCountryName(context, targetCountry)}"
+                            targetCountry != null -> {
+                                val flagEmoji = CountryUtils.getFlagForCountry(targetCountry)
+                                val localizedName = CountryUtils.getCountryName(context, targetCountry)
+                                "$flagEmoji $localizedName"
+                            }
                             else -> context.getString(R.string.location_fastest)
                         }
                     }
 
                     SettingRowWithIcon(
                         icon = if (targetCountry == null) Icons.Rounded.Bolt else null,
-                        flag = if (targetCountry != null) CountryUtils.getFlagForCountry(targetCountry) else null,
+                        countryCode = targetCountry,
                         title = stringResource(R.string.label_location),
                         subtitle = locationSubtitle,
                         onClick = { showLocationDialog = true }
@@ -531,13 +538,23 @@ fun LocationSelectionDialog(
                             0 -> {
                                 items(countries) { countryItem ->
                                     val localizedName = CountryUtils.getCountryName(context, countryItem.code)
+                                    val flagResId = CountryUtils.getFlagResource(context, countryItem.code)
                                     SelectionCard(
                                         title = localizedName,
                                         icon = {
-                                            Text(
-                                                text = CountryUtils.getFlagForCountry(countryItem.code),
-                                                fontSize = 24.sp
-                                            )
+                                            if (flagResId != 0) {
+                                                Image(
+                                                    painter = painterResource(id = flagResId),
+                                                    contentDescription = localizedName,
+                                                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp)),
+                                                    contentScale = ContentScale.FillBounds
+                                                )
+                                            } else {
+                                                Text(
+                                                    text = CountryUtils.getFlagForCountry(countryItem.code),
+                                                    fontSize = 24.sp
+                                                )
+                                            }
                                         },
                                         load = countryItem.averageLoad,
                                         onClick = {
@@ -666,13 +683,14 @@ fun Category(
 fun SettingRowWithIcon(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
-    flag: String? = null,
+    countryCode: String? = null,
     title: String,
     subtitle: String? = null,
     trailingContent: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null
 ) {
     val colors = ProtonNextTheme.colors
+    val context = LocalContext.current
     var baseModifier = modifier.fillMaxWidth()
     if (onClick != null) {
         baseModifier = baseModifier.clickable(onClick = onClick)
@@ -683,8 +701,9 @@ fun SettingRowWithIcon(
         modifier = baseModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (icon != null || flag != null) {
+        if (icon != null || countryCode != null) {
             val isBolt = icon == Icons.Rounded.Bolt
+            val flagResId = CountryUtils.getFlagResource(context, countryCode)
 
             Box(
                 modifier = Modifier
@@ -694,8 +713,15 @@ fun SettingRowWithIcon(
                     .background(if (isBolt) colors.brandNorm else colors.brandNorm.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                if (flag != null) {
-                    Text(text = flag, style = MaterialTheme.typography.titleMedium)
+                if (flagResId != 0) {
+                    Image(
+                        painter = painterResource(id = flagResId),
+                        contentDescription = countryCode,
+                        modifier = Modifier.fillMaxSize().padding(4.dp).clip(RoundedCornerShape(2.dp)),
+                        contentScale = ContentScale.FillBounds
+                    )
+                } else if (countryCode != null) {
+                    Text(text = CountryUtils.getFlagForCountry(countryCode), style = MaterialTheme.typography.titleMedium)
                 } else if (icon != null) {
                     Icon(
                         imageVector = icon,

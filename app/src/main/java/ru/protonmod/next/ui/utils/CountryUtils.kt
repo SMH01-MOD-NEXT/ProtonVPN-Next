@@ -25,6 +25,21 @@ import java.util.Locale
 object CountryUtils {
 
     /**
+     * Returns a drawable resource ID for a country flag, or 0 if not found.
+     */
+    fun getFlagResource(context: Context, countryCode: String?): Int {
+        if (countryCode == null) return 0
+        // Standard mapping: UK -> GB for resource matching if necessary, 
+        // but typically resources follow ISO 3166-1 alpha-2.
+        val normalizedCode = when (val code = countryCode.lowercase()) {
+            "uk" -> "gb"
+            else -> code
+        }
+        val resName = "flag_$normalizedCode"
+        return context.resources.getIdentifier(resName, "drawable", context.packageName)
+    }
+
+    /**
      * Generates an Emoji flag from an ISO country code (e.g., "US" -> 🇺🇸)
      */
     fun getFlagForCountry(countryCode: String?): String {

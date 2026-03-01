@@ -22,6 +22,7 @@ import android.net.VpnService
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,7 +40,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -229,10 +232,20 @@ fun ProfileCardItem(
             ) {
                 when {
                     profile.targetCountry != null -> {
-                        Text(
-                            text = CountryUtils.getFlagForCountry(profile.targetCountry),
-                            style = MaterialTheme.typography.headlineSmall
-                        )
+                        val flagResId = CountryUtils.getFlagResource(context, profile.targetCountry)
+                        if (flagResId != 0) {
+                            Image(
+                                painter = painterResource(id = flagResId),
+                                contentDescription = profile.targetCountry,
+                                modifier = Modifier.fillMaxSize().padding(8.dp).clip(RoundedCornerShape(4.dp)),
+                                contentScale = ContentScale.FillBounds
+                            )
+                        } else {
+                            Text(
+                                text = CountryUtils.getFlagForCountry(profile.targetCountry),
+                                style = MaterialTheme.typography.headlineSmall
+                            )
+                        }
                     }
                     else -> {
                         Icon(
@@ -263,7 +276,11 @@ fun ProfileCardItem(
                 val targetName = when {
                     profile.targetServerId != null -> stringResource(R.string.profile_server_info, profile.targetServerName ?: profile.targetServerId)
                     profile.targetCity != null -> stringResource(R.string.profile_city_info, profile.targetCity, CountryUtils.getCountryName(context, profile.targetCountry!!))
-                    profile.targetCountry != null -> stringResource(R.string.profile_country_info, CountryUtils.getFlagForCountry(profile.targetCountry), CountryUtils.getCountryName(context, profile.targetCountry))
+                    profile.targetCountry != null -> {
+                        val flagEmoji = CountryUtils.getFlagForCountry(profile.targetCountry)
+                        val localizedCountryName = CountryUtils.getCountryName(context, profile.targetCountry)
+                        stringResource(R.string.profile_country_info, flagEmoji, localizedCountryName)
+                    }
                     else -> stringResource(R.string.profile_fastest_info, stringResource(R.string.location_fastest))
                 }
 
