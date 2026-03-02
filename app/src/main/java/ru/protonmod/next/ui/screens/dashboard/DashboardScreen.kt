@@ -23,11 +23,13 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -39,10 +41,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,9 +58,89 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.nav.MainTarget
+import ru.protonmod.next.ui.theme.ProtonColors
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
+
+// --- Extensions for UI Effects matching Original Proton ---
+
+fun Modifier.vpnStatusOverlayBackground(
+    isConnected: Boolean,
+    isConnecting: Boolean,
+    colors: ProtonColors
+): Modifier = composed {
+    val targetColor = when {
+        isConnected -> colors.notificationSuccess.copy(alpha = 0.4f)
+        isConnecting -> Color.White.copy(alpha = 0.4f)
+        else -> colors.notificationError.copy(alpha = 0.4f)
+    }
+
+    val gradientColor by animateColorAsState(
+        targetValue = targetColor,
+        animationSpec = tween(durationMillis = 500),
+        label = "Gradient Animation"
+    )
+
+    background(
+        Brush.verticalGradient(
+            colors = listOf(gradientColor, gradientColor.copy(alpha = 0.0F))
+        )
+    )
+}
+
+@Composable
+fun VpnStatusTop(
+    isConnected: Boolean,
+    isConnecting: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val colors = ProtonNextTheme.colors
+
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        AnimatedContent(
+            targetState = Pair(isConnected, isConnecting),
+            label = "VpnStatusTopTransition"
+        ) { (connected, connecting) ->
+            when {
+                connected -> {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_proton_lock_filled),
+                            tint = colors.notificationSuccess,
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.status_connected),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = colors.notificationSuccess,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+                connecting -> {
+                    CircularProgressIndicator(
+                        color = colors.iconNorm,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+                else -> {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_proton_lock_open_filled_2),
+                        contentDescription = null,
+                        tint = colors.notificationError,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// --- Main Screen ---
 
 @Composable
 fun DashboardScreen(
@@ -135,6 +219,10 @@ fun DashboardScreen(
                 .background(colors.backgroundNorm)
         ) {
             val successState = uiState as? DashboardUiState.Success
+            val isConnected = successState?.isConnected == true
+            val isConnecting = successState?.isConnecting == true
+
+            // 1. Z-Index Bottom: Map Layer
             HomeMap(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -142,10 +230,29 @@ fun DashboardScreen(
                     .clickable { onNavigateToMap?.invoke() },
                 allServers = successState?.servers ?: emptyList(),
                 connectedServer = successState?.connectedServer,
-                isConnecting = successState?.isConnecting ?: false,
+                isConnecting = isConnecting,
                 isInteractive = false
             )
 
+            // 2. Z-Index Middle: Gradient Overlay (over the map, under the cards)
+            Spacer(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp) // Proton uses ~200-250dp for the top gradient
+                    .align(Alignment.TopCenter)
+                    .vpnStatusOverlayBackground(isConnected, isConnecting, colors)
+            )
+
+            // 3. Z-Index Top: Lock Icon & Status
+            VpnStatusTop(
+                isConnected = isConnected,
+                isConnecting = isConnecting,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 48.dp) // Padding from the top of the screen
+            )
+
+            // 4. Z-Index Top-most: Scrollable Content (Cards will scroll over everything above)
             AnimatedContent(
                 targetState = uiState,
                 label = "dashboard_state",
@@ -187,6 +294,7 @@ fun DashboardScreen(
                 }
             }
 
+            // Bottom Navigation
             LiquidGlassBottomBar(
                 selectedTarget = currentTarget,
                 showCountries = true,
@@ -221,6 +329,7 @@ fun DashboardContent(
         )
     ) {
         item {
+            // This spacer pushes the cards down so the Map and Lock icon are visible
             Spacer(modifier = Modifier.height(380.dp))
         }
 
@@ -462,7 +571,7 @@ fun ConnectionStatusCard(
 
                 Column(modifier = Modifier.weight(1f)) {
                     val countryName = connectedServer?.let { CountryUtils.getCountryName(context, it.exitCountry) }
-                    
+
                     Text(
                         text = if (isConnected || isConnecting) {
                             "$countryName, ${connectedServer?.city}"
