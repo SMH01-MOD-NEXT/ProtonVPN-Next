@@ -34,8 +34,10 @@ import okhttp3.OkHttp
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
 import retrofit2.Retrofit
+import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
+import ru.protonmod.next.data.network.TokenAuthenticator
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import org.amnezia.awg.backend.Tunnel
 import java.net.InetAddress
@@ -89,9 +91,19 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    fun provideTokenAuthenticator(
+        sessionDao: SessionDao,
+        authApiProvider: javax.inject.Provider<ProtonAuthApi>
+    ): TokenAuthenticator {
+        return TokenAuthenticator(sessionDao, authApiProvider)
+    }
+
+    @Provides
+    @Singleton
     fun provideOkHttpClient(
         @ApplicationContext context: Context,
-        vpnManager: AmneziaVpnManager
+        vpnManager: AmneziaVpnManager,
+        tokenAuthenticator: TokenAuthenticator
     ): OkHttpClient {
         try {
             OkHttp.initialize(context)
@@ -100,11 +112,11 @@ object NetworkModule {
         val dynamicBaseUrlInterceptor = Interceptor { chain ->
             var request = chain.request()
             val userAgent = generateUserAgent()
-            
+
             // Determine which base URL to use
             val isVpnUp = vpnManager.tunnelState.value == Tunnel.State.UP
             val newBaseUrl = if (isVpnUp) PROTON_DIRECT_URL.toHttpUrl() else PROTON_PROXY_URL.toHttpUrl()
-            
+
             val newUrl = request.url.newBuilder()
                 .scheme(newBaseUrl.scheme)
                 .host(newBaseUrl.host)
@@ -118,7 +130,7 @@ object NetworkModule {
                 .addHeader("x-pm-apiversion", "4")
                 .addHeader("Accept", "application/vnd.protonmail.v1+json")
                 .build()
-            
+
             chain.proceed(request)
         }
 
@@ -143,6 +155,7 @@ object NetworkModule {
 
         return OkHttpClient.Builder()
             .addInterceptor(dynamicBaseUrlInterceptor)
+            .authenticator(tokenAuthenticator)
             .dns(dynamicDns)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)

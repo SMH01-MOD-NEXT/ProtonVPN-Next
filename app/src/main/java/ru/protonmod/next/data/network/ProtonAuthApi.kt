@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.data.network
 
+import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -43,6 +44,15 @@ data class LoginRequest(
 @Serializable
 data class SecondFactorRequest(
     @SerialName("TwoFactorCode") val twoFactorCode: String
+)
+
+@Serializable
+data class RefreshSessionRequest(
+    @SerialName("UID") val uid: String,
+    @SerialName("RefreshToken") val refreshToken: String,
+    @SerialName("ResponseType") @Required val responseType: String = "token",
+    @SerialName("GrantType") @Required val grantType: String = "refresh_token",
+    @SerialName("RedirectURI") @Required val redirectUri: String = "http://protonmail.ch"
 )
 
 @Serializable
@@ -110,6 +120,11 @@ interface ProtonAuthApi {
         @Header("Authorization") authorization: String,
         @Header("x-pm-uid") sessionId: String,
         @Body request: SecondFactorRequest
+    ): LoginResponse
+
+    @POST("auth/v4/refresh")
+    suspend fun refreshSession(
+        @Body request: RefreshSessionRequest
     ): LoginResponse
 
     @GET("core/v4/users")
