@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+    <string name="app_name">Proton VPN-التالي-</string>
+    <!-- Welcome Screen -->
+    <string name="welcome_title">مرحبا بكم في Proton VPN-Next</string>
+    <string name="welcome_subtitle">سيطر على حياتك الرقمية بأمان وخاص وسريع. لا توجد سجلات، ولا تتبع.</string>
+    <string name="btn_create_account">إنشاء حساب</string>
+    <string name="btn_login">تسجيل الدخول</string>
+    <!-- Login Screen -->
+    <string name="login_title">مرحبا بعودة</string>
+    <string name="login_subtitle">تسجيل الدخول إلى حساب Proton الخاص بك</string>
+    <string name="hint_username">البريد الإلكتروني أو اسم المستخدم</string>
+    <string name="hint_password">كلمة المرور</string>
+    <string name="forgot_password">نسيت كلمة المرور؟</string>
+    <string name="desc_back_button">التنقل إلى الوراء</string>
+    <string name="desc_toggle_password">تبديل رؤية كلمة المرور</string>
+    <string name="login_success">تم تسجيل الدخول بنجاح!</string>
+    <string name="login_error">خطأ: %1$s</string>
+    <string name="title_security_check">فحص الأمان</string>
+    <string name="title_2fa">المصادقة الثنائية</string>
+    <string name="msg_2fa_instruction">أدخل رمز TOTP المكون من 6 أرقام من تطبيق المصادقة الخاص بك.</string>
+    <string name="hint_2fa_code">6-digit Code</string>
+    <string name="btn_verify">تحقق</string>
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-التالي-</string>
+    <string name="desc_settings">الإعدادات</string>
+    <string name="error_loading_servers">خطأ في تحميل الخوادم</string>
+    <string name="btn_retry">إعادة المحاولة</string>
+    <string name="error_system_appops">خطأ في النظام: الرجاء إعادة تثبيت التطبيق.</string>
+    <string name="title_recent_connections">الاتصالات الأخيرة</string>
+    <string name="status_connected">متصل</string>
+    <string name="status_connecting">جارٍ توصيل…</string>
+    <string name="status_disconnected">قطع</string>
+    <string name="status_not_connected">غير متصل</string>
+    <string name="msg_traffic_not_protected">حركة المرور الخاصة بك غير محمية</string>
+    <string name="desc_toggle_connection">تبديل الاتصال</string>
+    <string name="desc_country">البلد</string>
+    <string name="map_placeholder">مكان الخريطة التفاعلية</string>
+    <string name="label_fastest_server">أسرع خادم</string>
+    <string name="label_select_location">حدد الموقع</string>
+    <string name="label_server_unavailable">الخادم غير متوفر</string>
+    <string name="desc_change_server">تغيير الخادم</string>
+    <string name="btn_disconnect">قطع الاتصال</string>
+    <string name="btn_quick_connect">الاتصال السريع</string>
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">تنتهي صلاحية الشهادة في %1$dساعة. التحديث قريبا…</string>
+    <string name="cert_msg_expired">انتهت صلاحية شهادة VPN الخاصة بك وتحتاج إلى تجديدها.</string>
+    <string name="cert_msg_refreshing">تحديث شهادة VPN…</string>
+    <string name="cert_msg_refresh_failed">فشل تحديث الشهادة: %1$s. أعد المحاولة في 15 دقيقة.</string>
+    <string name="cert_msg_auto_refresh_failed">فشل التحديث التلقائي. الرجاء التحديث يدوياً لضمان الاتصال.</string>
+    <string name="cert_btn_refresh_now">تحديث الآن</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">حدد البلد</string>
+    <string name="desc_more_options">المزيد من الخيارات</string>
+    <!-- Settings Screen -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_connection">إعدادات الاتصال</string>
+    <string name="settings_kill_switch">إيقاف التبديل</string>
+    <string name="settings_kill_switch_desc">قطع الاتصال إذا انخفض اتصال VPN</string>
+    <string name="settings_auto_connect">الاتصال التلقائي</string>
+    <string name="settings_auto_connect_desc">الاتصال بـ VPN عند بدء التشغيل</string>
+    <string name="settings_split_tunneling">تقسيم الاتصال النفقي</string>
+    <string name="settings_split_tunneling_desc">استبعاد التطبيقات أو عناوين IP من VPN</string>
+    <string name="settings_excluded_apps">التطبيقات المستبعدة</string>
+    <string name="settings_excluded_ips">عنوان IP المستبعد</string>
+    <string name="settings_privacy">الخصوصية &amp; الإشعارات</string>
+    <string name="settings_notifications">الإشعارات</string>
+    <string name="settings_notifications_desc">تلقي إشعارات حالة VPN</string>
+    <string name="settings_about">حول</string>
+    <string name="settings_version">الإصدار %1$s</string>
+    <string name="settings_licenses">تراخيص مفتوحة المصدر</string>
+    <string name="settings_licenses_desc">برنامج الطرف الثالث المستخدم في التطبيق</string>
+    <string name="settings_on">تشغيل</string>
+    <string name="settings_off">متوقف</string>
+    <string name="settings_connection_protocol">Protocol</string>
+    <string name="settings_port">المنفذ</string>
+    <string name="settings_port_desc">اختيار منفذ الاتصال</string>
+    <string name="settings_port_auto">تلقائي</string>
+    <string name="settings_obfuscation">تشويش (AmneziaWG)</string>
+    <string name="settings_obfuscation_desc">تعديل رؤوس الحزم لتجاوز DPI</string>
+    <string name="settings_reset_obfuscation">إعادة تعيين إلى ProtonVPN-التالي-القياسي</string>
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_jc">عدد حزم السكة (Jc)</string>
+    <string name="obfuscation_jmin">الحد الأدنى لحجم حزمة البسكت (جنين)</string>
+    <string name="obfuscation_jmax">الحد الاقصى لحجم حزمة السدود (حد اقصى)</string>
+    <string name="obfuscation_s1">حجم حزمة السكة المنبوذة (S1)</string>
+    <string name="obfuscation_s2">حجم حزمة الاستجابة (S2)</string>
+    <string name="obfuscation_h1">سحر حزمة الأنيت (H1)</string>
+    <string name="obfuscation_h2">استجابة سحر الحزمة (H2)</string>
+    <string name="obfuscation_h3">تحميل حزمة السحر (H3)</string>
+    <string name="obfuscation_h4">سحر حزمة النقل (H4)</string>
+    <string name="obfuscation_i1">حوض خاص (I1)</string>
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">Protocol</string>
+    <string name="protocol_title">Protocol</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">بروتوكول WireGuard المتقدم مع التشويش</string>
+    <string name="obfuscation_title">تشويش</string>
+    <string name="obfuscation_enable">تمكين التشويش</string>
+    <string name="obfuscation_enable_desc">تجاوز حجب DPI و VPN</string>
+    <string name="obfuscation_info_desc">ضبط معلمات AmneziaWG لإخفاء حركة مرور VPN وتجنب كتل الاتصال في الشبكات المقيدة.</string>
+    <string name="obfuscation_config">الإعدادات</string>
+    <string name="obfuscation_config_standard">تكوين Proton VPN-القادم القياسي</string>
+    <string name="obfuscation_save_config">حفظ كتكوين جديد</string>
+    <string name="obfuscation_config_name">اسم التكوين</string>
+    <string name="obfuscation_category_junk">البارامترات المتهالكة</string>
+    <string name="obfuscation_category_magic">أحجام الحقائب (ماجيكي)</string>
+    <string name="obfuscation_category_headers">الترويسات</string>
+    <string name="obfuscation_category_advanced">متقدم</string>
+    <string name="custom_config">تكوين مخصص</string>
+    <!-- About App Screen -->
+    <string name="about_community">المجتمع</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">تيليجرام</string>
+    <!-- Licenses Screen -->
+    <string name="licenses_title">التراخيص</string>
+    <string name="license_app_title">Proton VPN-التالي-</string>
+    <string name="license_app_desc">رخصة جنو العامة v3.0</string>
+    <string name="license_androidx_title">مكتبات AndroidX</string>
+    <string name="license_apache_2">رخصة أباتشي 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">مكتبة كوتلين القياسية</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">إعادة تجهيز &amp; OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">سيتم تجاوز اتصال VPN التطبيقات المحددة و عناوين IP</string>
+    <string name="st_disabled_subtitle">جميع حركة المرور تمر عبر VPN</string>
+    <plurals name="st_apps_selected">
+        <item quantity="zero">تم تحديد %1$d تطبيق</item>
+        <item quantity="one">تم تحديد تطبيق %1$d</item>
+        <item quantity="two">تم تحديد %1$d تطبيق</item>
+        <item quantity="few">تم تحديد %1$d تطبيق</item>
+        <item quantity="many">تم تحديد %1$d تطبيق</item>
+        <item quantity="other">تم تحديد %1$d تطبيق</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="zero">تم تحديد %1$d IP</item>
+        <item quantity="one">تم تحديد %1$d IP</item>
+        <item quantity="two">تم تحديد %1$d IP</item>
+        <item quantity="few">تم تحديد %1$d IP</item>
+        <item quantity="many">تم تحديد %1$d IP</item>
+        <item quantity="other">تم تحديد %1$d IP</item>
+    </plurals>
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="zero">%1$d تطبيقات مستبعدة</item>
+        <item quantity="one">تم استبعاد تطبيق %1$d</item>
+        <item quantity="two">%1$d تطبيقات مستبعدة</item>
+        <item quantity="few">%1$d تطبيقات مستبعدة</item>
+        <item quantity="many">%1$d تطبيقات مستبعدة</item>
+        <item quantity="other">%1$d تطبيقات مستبعدة</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="zero">تم استبعاد %1$d IP</item>
+        <item quantity="one">تم استبعاد %1$d IP</item>
+        <item quantity="two">تم استبعاد %1$d IP</item>
+        <item quantity="few">تم استبعاد %1$d IP</item>
+        <item quantity="many">تم استبعاد %1$d IP</item>
+        <item quantity="other">تم استبعاد %1$d IP</item>
+    </plurals>
+    <!-- Notification -->
+    <string name="notification_channel_name">حالة VPN</string>
+    <string name="notification_channel_desc">يعرض حالة الاتصال الحالية لـ VPN</string>
+    <string name="notification_title_connected">متصل بـ %1$s</string>
+    <string name="notification_title_disconnected">قطع</string>
+    <string name="notification_title_connecting">جارٍ توصيل…</string>
+    <string name="notification_action_disconnect">قطع الاتصال</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">لم يتم العثور على جلسة نشطة. الرجاء تسجيل الدخول مرة أخرى.</string>
+    <string name="error_unknown">خطأ غير معروف</string>
+    <string name="error_auth_failed">حدث خطأ غير متوقع في المصادقة</string>
+    <string name="error_2fa_failed">فشل التحقق الثنائي</string>
+    <!-- Profiles Screen -->
+    <string name="profiles_title">Profiles</string>
+    <string name="desc_create_profile">إنشاء ملف شخصي</string>
+    <string name="desc_edit_profile">تعديل الملف الشخصي</string>
+    <string name="profiles_empty_title">لا توجد ملفات شخصية بعد</string>
+    <string name="profiles_empty_desc">إنشاء ملف شخصي للاتصال بسرعة بإعدادات محددة.</string>
+    <string name="profile_feature_obfuscation">تشويش</string>
+    <string name="profile_feature_connect_go">الاتصال &amp; اذهب</string>
+    <string name="profile_server_info">الخادم: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s، %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">إنشاء ملف شخصي</string>
+    <string name="title_edit_profile">تعديل الملف الشخصي</string>
+    <string name="btn_save">حفظ</string>
+    <string name="btn_cancel">إلغاء</string>
+    <string name="btn_delete">حذف</string>
+    <string name="btn_edit">تحرير</string>
+    <string name="desc_delete_profile">حذف الملف الشخصي</string>
+    <string name="default_profile_name">ملفي الشخصي</string>
+    <string name="category_general">عام</string>
+    <string name="label_profile_name">اسم الملف الشخصي</string>
+    <string name="category_location">الموقع</string>
+    <string name="location_server">الخادم: %1$s</string>
+    <string name="location_fastest">الأسرع</string>
+    <string name="label_target_location">الموقع المستهدف</string>
+    <string name="label_location">الموقع</string>
+    <string name="category_connection">اتصال</string>
+    <string name="label_protocol">Protocol</string>
+    <string name="label_port">المنفذ</string>
+    <string name="category_advanced">متقدم</string>
+    <string name="label_obfuscation">تشويش</string>
+    <string name="obfuscation_desc">تجاوز فحص الحزم العميقة</string>
+    <string name="label_obfuscation_config">تهيئة التشويش</string>
+    <string name="category_automation">أتمتة</string>
+    <string name="label_connect_go_website">الاتصال &amp; اذهب (الموقع)</string>
+    <string name="label_enter_url">أدخل عنوان URL</string>
+    <string name="label_not_configured">لم يتم تكوينه</string>
+    <string name="automation_desc">فتح هذا الموقع تلقائياً في المتصفح الخاص بك بمجرد إنشاء اتصال VPN.</string>
+    <string name="title_select_country">حدد البلد</string>
+    <string name="title_select_city">حدد المدينة</string>
+    <string name="title_select_server">حدد الخادم</string>
+    <string name="location_fastest_in_country">أسرع في %1$s</string>
+    <string name="location_fastest_in_city">أسرع في %1$s</string>
+    <string name="location_load">التحميل: %1$d%%</string>
+    <string name="title_select_obfuscation_config">حدد تهيئة Obfuscation</string>
+    <string name="title_auto_open_url">فتح رابط تلقائي</string>
+    <string name="btn_create_new_config">إنشاء تكوين جديد</string>
+    <string name="connect_go_title">الاتصال &amp; اذهب</string>
+    <string name="connect_go_desc">أدخل عنوان URL لفتحه عند الاتصال (على سبيل المثال، https://example.com)</string>
+    <string name="hint_url_placeholder">https://</string>
+    <string name="title_select_protocol">Select Protocol</string>
+    <string name="custom_config_name">تكوين مخصص %1$d</string>
+    <string name="title_edit_obfuscation_config">تعديل إعدادات Obfuscation</string>
+    <string name="error_empty_profile_name">لا يمكن أن يكون اسم الملف الشخصي فارغاً</string>
+</resources>

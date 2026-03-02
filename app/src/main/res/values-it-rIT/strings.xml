@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+    <string name="app_name">Proton VPN-Next</string>
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Benvenuto in Proton VPN-Next</string>
+    <string name="welcome_subtitle">Prendi il controllo della tua vita digitale con VPN sicura, privata e veloce. Nessun registro, nessun tracciamento.</string>
+    <string name="btn_create_account">Crea Account</string>
+    <string name="btn_login">Log In</string>
+    <!-- Login Screen -->
+    <string name="login_title">Bentornato</string>
+    <string name="login_subtitle">Accedi al tuo account Proton</string>
+    <string name="hint_username">Email o nome utente</string>
+    <string name="hint_password">Password</string>
+    <string name="forgot_password">Password dimenticata?</string>
+    <string name="desc_back_button">Torna indietro</string>
+    <string name="desc_toggle_password">Attiva/Disattiva visibilità password</string>
+    <string name="login_success">Accesso Riuscito!</string>
+    <string name="login_error">Errore: %1$s</string>
+    <string name="title_security_check">Controllo Di Sicurezza</string>
+    <string name="title_2fa">Autenticazione A Due Fattori</string>
+    <string name="msg_2fa_instruction">Inserisci il codice TOTP a 6 cifre dalla tua app di autenticazione.</string>
+    <string name="hint_2fa_code">6-digit Code</string>
+    <string name="btn_verify">Verifica</string>
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-Next</string>
+    <string name="desc_settings">Impostazioni</string>
+    <string name="error_loading_servers">Errore nel caricamento dei server</string>
+    <string name="btn_retry">Riprova</string>
+    <string name="error_system_appops">Errore di sistema: reinstalla l\'app.</string>
+    <string name="title_recent_connections">Connessioni recenti</string>
+    <string name="status_connected">Connesso</string>
+    <string name="status_connecting">Connessione…</string>
+    <string name="status_disconnected">Disconnesso</string>
+    <string name="status_not_connected">Non connesso</string>
+    <string name="msg_traffic_not_protected">Il tuo traffico non è protetto</string>
+    <string name="desc_toggle_connection">Attiva/Disattiva Connessione</string>
+    <string name="desc_country">Paese</string>
+    <string name="map_placeholder">Segnaposto Mappa Interattiva</string>
+    <string name="label_fastest_server">Server Più Veloce</string>
+    <string name="label_select_location">Seleziona posizione</string>
+    <string name="label_server_unavailable">Server non disponibile</string>
+    <string name="desc_change_server">Cambia server</string>
+    <string name="btn_disconnect">Disconnetti</string>
+    <string name="btn_quick_connect">Connessione Rapida</string>
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">Il certificato scade in %1$dh. Aggiornando presto…</string>
+    <string name="cert_msg_expired">Il tuo certificato VPN è scaduto e deve essere rinnovato.</string>
+    <string name="cert_msg_refreshing">Aggiornamento del certificato VPN…</string>
+    <string name="cert_msg_refresh_failed">Impossibile aggiornare il certificato: %1$s. Riprovare tra 15 minuti.</string>
+    <string name="cert_msg_auto_refresh_failed">Aggiornamento automatico non riuscito. Si prega di aggiornare manualmente per garantire la connessione.</string>
+    <string name="cert_btn_refresh_now">Aggiorna Ora</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">Seleziona Paese</string>
+    <string name="desc_more_options">Altre opzioni</string>
+    <!-- Settings Screen -->
+    <string name="settings_title">Impostazioni</string>
+    <string name="settings_connection">Impostazioni Di Connessione</string>
+    <string name="settings_kill_switch">Interruttore Uccisione</string>
+    <string name="settings_kill_switch_desc">Disconnetti se la connessione VPN scende</string>
+    <string name="settings_auto_connect">Connessione Automatica</string>
+    <string name="settings_auto_connect_desc">Connettiti a VPN all\'avvio</string>
+    <string name="settings_split_tunneling">Split Tunneling</string>
+    <string name="settings_split_tunneling_desc">Escludi app o IP dalla VPN</string>
+    <string name="settings_excluded_apps">Applicazioni Escluse</string>
+    <string name="settings_excluded_ips">Indirizzi IP Esclusi</string>
+    <string name="settings_privacy">Privacy &amp; Notifiche</string>
+    <string name="settings_notifications">Notifiche</string>
+    <string name="settings_notifications_desc">Ricevi notifiche di stato VPN</string>
+    <string name="settings_about">Informazioni</string>
+    <string name="settings_version">Versione %1$s</string>
+    <string name="settings_licenses">Licenze Open Source</string>
+    <string name="settings_licenses_desc">Software di terze parti utilizzato nell\'app</string>
+    <string name="settings_on">Acceso</string>
+    <string name="settings_off">Off</string>
+    <string name="settings_connection_protocol">Protocol</string>
+    <string name="settings_port">Porta</string>
+    <string name="settings_port_desc">Selezione del porto di connessione</string>
+    <string name="settings_port_auto">Automatico</string>
+    <string name="settings_obfuscation">Odontoiatria (AmneziaWG)</string>
+    <string name="settings_obfuscation_desc">Modifica intestazioni pacchetto per bypassare DPI</string>
+    <string name="settings_reset_obfuscation">Ripristina ProtonVPN-Next Standard</string>
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_jc">Conta Pacchetti Spazzatura (Jc)</string>
+    <string name="obfuscation_jmin">Dimensione Minima Pacchetto Spazzatura (Jmin)</string>
+    <string name="obfuscation_jmax">Dimensione Massima Pacchetto Spazzatura (Jmax)</string>
+    <string name="obfuscation_s1">Init Packet Junk Size (S1)</string>
+    <string name="obfuscation_s2">Dimensione Indesiderata Pacchetto Di Risposta (S2)</string>
+    <string name="obfuscation_h1">Magia Del Pacchetto Init (H1)</string>
+    <string name="obfuscation_h2">Pacchetto Di Risposta Magia (H2)</string>
+    <string name="obfuscation_h3">Magia Del Pacchetto Sottocarico (H3)</string>
+    <string name="obfuscation_h4">Magia Del Pacchetto Di Trasporto (H4)</string>
+    <string name="obfuscation_i1">Spazzatura Speciale (I1)</string>
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">Protocol</string>
+    <string name="protocol_title">Protocol</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">Protocollo WireGuard avanzato con offuscamento</string>
+    <string name="obfuscation_title">Opacità</string>
+    <string name="obfuscation_enable">Abilita Obfuscation</string>
+    <string name="obfuscation_enable_desc">Ignora il blocco DPI e VPN</string>
+    <string name="obfuscation_info_desc">Regolare i parametri AmneziaWG per nascondere il traffico VPN e bypassare i blocchi di connessione in reti limitate.</string>
+    <string name="obfuscation_config">Configurazione</string>
+    <string name="obfuscation_config_standard">Configurazione Standard Proton VPN-Next</string>
+    <string name="obfuscation_save_config">Salva come nuova configurazione</string>
+    <string name="obfuscation_config_name">Nome configurazione</string>
+    <string name="obfuscation_category_junk">Parametri Indesiderata</string>
+    <string name="obfuscation_category_magic">Dimensioni Del Pacchetto (Magico)</string>
+    <string name="obfuscation_category_headers">Intestazioni</string>
+    <string name="obfuscation_category_advanced">Avanzate</string>
+    <string name="custom_config">Configurazione Personalizzata</string>
+    <!-- About App Screen -->
+    <string name="about_community">Community</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+    <!-- Licenses Screen -->
+    <string name="licenses_title">Licenze</string>
+    <string name="license_app_title">Proton VPN-Next</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">Librerie AndroidX</string>
+    <string name="license_apache_2">Licenza Apache 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">Libreria Standard Di Kotlin</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <!-- Split Tunneling -->
+    <string name="st_enabled_subtitle">La connessione VPN aggirerà le app e gli IP selezionati</string>
+    <string name="st_disabled_subtitle">Tutto il traffico passa attraverso la VPN</string>
+    <plurals name="st_apps_selected">
+        <item quantity="one">Applicazione %1$d selezionata</item>
+        <item quantity="other">Applicazioni selezionate per %1$d</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">%1$d IP selezionato</item>
+        <item quantity="other">Ip %1$d selezionati</item>
+    </plurals>
+    <plurals name="settings_apps_excluded_count">
+        <item quantity="one">App %1$d esclusa</item>
+        <item quantity="other">App %1$d escluse</item>
+    </plurals>
+    <plurals name="settings_ips_excluded_count">
+        <item quantity="one">IP %1$d escluso</item>
+        <item quantity="other">Ip %1$d esclusi</item>
+    </plurals>
+    <!-- Notification -->
+    <string name="notification_channel_name">Stato VPN</string>
+    <string name="notification_channel_desc">Mostra lo stato attuale della connessione della VPN</string>
+    <string name="notification_title_connected">Connesso a %1$s</string>
+    <string name="notification_title_disconnected">Disconnesso</string>
+    <string name="notification_title_connecting">Connessione…</string>
+    <string name="notification_action_disconnect">Disconnetti</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">Sessione attiva non trovata. Effettua nuovamente il login.</string>
+    <string name="error_unknown">Errore sconosciuto</string>
+    <string name="error_auth_failed">Si è verificato un errore di autenticazione inatteso</string>
+    <string name="error_2fa_failed">Verifica a due fattori fallita</string>
+    <!-- Profiles Screen -->
+    <string name="profiles_title">Profiles</string>
+    <string name="desc_create_profile">Crea Profilo</string>
+    <string name="desc_edit_profile">Modifica Profilo</string>
+    <string name="profiles_empty_title">Ancora nessun profilo</string>
+    <string name="profiles_empty_desc">Crea un profilo per connetterti rapidamente con impostazioni specifiche.</string>
+    <string name="profile_feature_obfuscation">Opacità</string>
+    <string name="profile_feature_connect_go">Connetti &amp; Vai</string>
+    <string name="profile_server_info">Server: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">Crea Profilo</string>
+    <string name="title_edit_profile">Modifica Profilo</string>
+    <string name="btn_save">Salva</string>
+    <string name="btn_cancel">Annulla</string>
+    <string name="btn_delete">Elimina</string>
+    <string name="btn_edit">Modifica</string>
+    <string name="desc_delete_profile">Elimina Profilo</string>
+    <string name="default_profile_name">Il Mio Profilo</string>
+    <string name="category_general">Generale</string>
+    <string name="label_profile_name">Nome Del Profilo</string>
+    <string name="category_location">Posizione</string>
+    <string name="location_server">Server: %1$s</string>
+    <string name="location_fastest">Più Veloce</string>
+    <string name="label_target_location">Posizione Destinazione</string>
+    <string name="label_location">Posizione</string>
+    <string name="category_connection">Connessione</string>
+    <string name="label_protocol">Protocol</string>
+    <string name="label_port">Porta</string>
+    <string name="category_advanced">Avanzate</string>
+    <string name="label_obfuscation">Opacità</string>
+    <string name="obfuscation_desc">Bypass deep packet inspection</string>
+    <string name="label_obfuscation_config">Configurazione Di Ofuscazione</string>
+    <string name="category_automation">Automazione</string>
+    <string name="label_connect_go_website">Collega &amp; Vai (Sito Web)</string>
+    <string name="label_enter_url">Inserisci URL</string>
+    <string name="label_not_configured">Non configurato</string>
+    <string name="automation_desc">Apri automaticamente questo sito web nel tuo browser una volta stabilita la connessione VPN.</string>
+    <string name="title_select_country">Seleziona Paese</string>
+    <string name="title_select_city">Seleziona Città</string>
+    <string name="title_select_server">Seleziona Server</string>
+    <string name="location_fastest_in_country">Più veloce in %1$s</string>
+    <string name="location_fastest_in_city">Più veloce in %1$s</string>
+    <string name="location_load">Load: %1$d%%</string>
+    <string name="title_select_obfuscation_config">Seleziona Configurazione Di Obfuscazione</string>
+    <string name="title_auto_open_url">Auto-apri URL</string>
+    <string name="btn_create_new_config">Crea Nuova Configurazione</string>
+    <string name="connect_go_title">Connetti &amp; Vai</string>
+    <string name="connect_go_desc">Inserisci l\'URL da aprire alla connessione (ad esempio, https://example.com)</string>
+    <string name="hint_url_placeholder">·//</string>
+    <string name="title_select_protocol">Select Protocol</string>
+    <string name="custom_config_name">%1$d Configurazione Personalizzata</string>
+    <string name="title_edit_obfuscation_config">Modifica Configurazione Di Obfuscazione</string>
+    <string name="error_empty_profile_name">Il nome del profilo non può essere vuoto</string>
+</resources>
