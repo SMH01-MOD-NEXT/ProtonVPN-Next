@@ -133,7 +133,9 @@ class CountriesViewModel @Inject constructor(
             return
         }
 
-        val physicalServer = server.servers.firstOrNull { it.status == 1 }
+        val physicalServer = server.servers
+            .filter { it.status == 1 }
+            .minByOrNull { it.load }
 
         if (physicalServer != null) {
             connectedServerState.setConnectedServer(server)

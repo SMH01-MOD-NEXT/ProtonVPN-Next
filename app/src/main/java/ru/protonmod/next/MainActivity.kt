@@ -25,6 +25,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -91,9 +92,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ProtonNextTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                // Remove surface color here to allow Edge-to-Edge to shine through
+                Box(
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     LaunchedEffect(Unit) {
                         checkAndRequestNotificationPermission()

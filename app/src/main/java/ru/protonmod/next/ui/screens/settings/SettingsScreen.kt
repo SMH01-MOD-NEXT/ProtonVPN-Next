@@ -56,7 +56,7 @@ fun SettingsScreen(
     onNavigateToCountries: (() -> Unit)? = null,
     onNavigateToProfiles: (() -> Unit)? = null,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
-    onNavigateToProtocol: (() -> Unit)? = null, // Added navigation for Protocol Screen
+    onNavigateToProtocol: (() -> Unit)? = null,
     onNavigateToAbout: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -67,6 +67,7 @@ fun SettingsScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {}
     ) { paddingValues ->
         Box(
@@ -74,7 +75,7 @@ fun SettingsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Background gradient decoration
+            // Background gradient decoration (immersive)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -98,7 +99,9 @@ fun SettingsScreen(
                 onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
                 onNavigateToProtocol = onNavigateToProtocol,
                 onNavigateToAbout = onNavigateToAbout,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.statusBars)
             )
 
             LiquidGlassBottomBar(
@@ -116,6 +119,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
             )
         }
     }
@@ -165,7 +169,6 @@ fun SettingsContent(
         // Connection Settings
         item {
             Category(title = stringResource(R.string.settings_connection)) {
-                // Protocol item removed from here as it is now a FeatureTile
                 SettingToggleRow(
                     icon = Icons.Rounded.Autorenew,
                     title = stringResource(R.string.settings_auto_connect),
@@ -302,7 +305,7 @@ private fun FeatureCategory(
     modifier: Modifier = Modifier,
     state: SettingsUiState,
     onNavigateToSplitTunnelingMain: (() -> Unit)?,
-    onNavigateToProtocol: (() -> Unit)? // Added parameter
+    onNavigateToProtocol: (() -> Unit)?
 ) {
     Row(
         modifier = modifier
@@ -324,9 +327,9 @@ private fun FeatureCategory(
         FeatureTile(
             modifier = Modifier.weight(1f),
             title = stringResource(id = R.string.settings_protocol),
-            subtitle = "AmneziaWG", // You can get this from SettingsUiState later if multiple protocols exist
+            subtitle = "AmneziaWG",
             icon = Icons.Rounded.Security,
-            isActive = true, // Always active or based on state
+            isActive = true,
             onClick = { onNavigateToProtocol?.invoke() }
         )
     }
@@ -348,7 +351,7 @@ fun FeatureTile(
         colors = CardDefaults.cardColors(
             containerColor = colors.backgroundSecondary.copy(alpha = 0.8f)
         ),
-        modifier = modifier.aspectRatio(1f) // Makes it a perfect square
+        modifier = modifier.aspectRatio(1f)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -358,7 +361,6 @@ fun FeatureTile(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Circular icon background
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -457,7 +459,6 @@ fun SettingRowWithIcon(
         modifier = baseModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Leading Icon with circular background
         if (icon != null) {
             Box(
                 modifier = Modifier
@@ -478,7 +479,6 @@ fun SettingRowWithIcon(
             Spacer(modifier = Modifier.width(8.dp))
         }
 
-        // Title and Subtitle
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center
@@ -498,7 +498,6 @@ fun SettingRowWithIcon(
             }
         }
 
-        // Trailing Content
         if (trailingContent != null) {
             trailingContent()
         } else if (onClick != null) {

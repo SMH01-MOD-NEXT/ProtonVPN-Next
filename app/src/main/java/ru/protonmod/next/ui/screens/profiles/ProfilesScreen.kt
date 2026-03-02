@@ -101,13 +101,16 @@ fun ProfilesScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = colors.backgroundNorm,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onCreateNewProfile,
                 containerColor = colors.brandNorm,
                 contentColor = Color.White,
                 shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(bottom = 80.dp) // Avoid overlapping with BottomBar
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(bottom = 80.dp) // Offset above BottomBar
             ) {
                 Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desc_create_profile))
             }
@@ -119,7 +122,7 @@ fun ProfilesScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Background gradient decoration
+            // Background gradient decoration (immersive)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -135,7 +138,9 @@ fun ProfilesScreen(
             )
 
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.statusBars),
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
@@ -189,6 +194,7 @@ fun ProfilesScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
             )
         }
     }

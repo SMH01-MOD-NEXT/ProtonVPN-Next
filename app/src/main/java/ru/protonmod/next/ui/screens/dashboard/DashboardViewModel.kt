@@ -22,6 +22,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,15 +30,26 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.amnezia.awg.backend.Tunnel
+import org.json.JSONObject
 import ru.protonmod.next.R
 import ru.protonmod.next.data.cache.ServersCacheManager
 import ru.protonmod.next.data.local.RecentConnectionEntity
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.state.ConnectedServerState
+import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import java.net.Proxy
 import javax.inject.Inject
+
+data class LocationText(
+    val country: String,
+    val ip: String,
+)
 
 sealed class DashboardUiState {
     data object Loading : DashboardUiState()
@@ -47,7 +59,10 @@ sealed class DashboardUiState {
         val isConnected: Boolean = false,
         val connectedServer: LogicalServer? = null,
         val isConnecting: Boolean = false,
-        val certificateState: AmneziaVpnManager.CertificateState = AmneziaVpnManager.CertificateState.Valid
+        val certificateState: AmneziaVpnManager.CertificateState = AmneziaVpnManager.CertificateState.Valid,
+        val originalLocationText: LocationText? = null,
+        val vpnLocationText: LocationText? = null,
+        val isIpHidden: Boolean = false
     ) : DashboardUiState()
     data class Error(val message: String, val isSessionError: Boolean = false) : DashboardUiState()
 }
@@ -62,8 +77,18 @@ class DashboardViewModel @Inject constructor(
     private val recentConnectionDao: ru.protonmod.next.data.local.RecentConnectionDao
 ) : ViewModel() {
 
+    private val prefs = context.getSharedPreferences("dashboard_ui_prefs", Context.MODE_PRIVATE)
+
     private val _isLoading = MutableStateFlow(true)
     private val _errorMessage = MutableStateFlow<String?>(null)
+
+    // Store original unprotected location
+    private val _originalLocationText = MutableStateFlow<LocationText?>(null)
+    // Store the secure VPN location (fetched after connection)
+    private val _vpnLocationText = MutableStateFlow<LocationText?>(null)
+
+    // Persistent privacy state for hiding IP
+    private val _isIpHidden = MutableStateFlow(prefs.getBoolean("is_ip_hidden", false))
 
     val uiState: StateFlow<DashboardUiState> = combine(
         serversCacheManager.getServersFlow(),
@@ -73,7 +98,10 @@ class DashboardViewModel @Inject constructor(
         amneziaVpnManager.isConnecting,
         amneziaVpnManager.certState,
         connectedServerState.connectedServer,
-        recentConnectionDao.getRecentConnections()
+        recentConnectionDao.getRecentConnections(),
+        _originalLocationText,
+        _vpnLocationText,
+        _isIpHidden
     ) { args: Array<Any?> ->
         @Suppress("UNCHECKED_CAST")
         val servers = args[0] as List<LogicalServer>
@@ -85,6 +113,9 @@ class DashboardViewModel @Inject constructor(
         val connectedServer = args[6] as LogicalServer?
         @Suppress("UNCHECKED_CAST")
         val recentEntities = args[7] as List<RecentConnectionEntity>
+        val originalLocationText = args[8] as LocationText?
+        val vpnLocationText = args[9] as LocationText?
+        val isIpHidden = args[10] as Boolean
 
         if (isLoading && servers.isEmpty()) {
             DashboardUiState.Loading
@@ -103,13 +134,17 @@ class DashboardViewModel @Inject constructor(
                 isConnected = isConnected,
                 connectedServer = connectedServer,
                 isConnecting = isConnecting,
-                certificateState = certState
+                certificateState = certState,
+                originalLocationText = originalLocationText,
+                vpnLocationText = vpnLocationText,
+                isIpHidden = isIpHidden
             )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.Loading)
 
     init {
         loadServers()
+        fetchOriginalLocation()
 
         viewModelScope.launch {
             amneziaVpnManager.tunnelState.collect { state ->
@@ -127,15 +162,90 @@ class DashboardViewModel @Inject constructor(
                                 lastConnectedAt = System.currentTimeMillis()
                             )
                         )
+                        // Fetch the new secure IP of the VPN server
+                        fetchVpnLocation(server.exitCountry)
                     }
                     // Refresh server loads after connection is established
                     loadServers()
                 } else if (state == Tunnel.State.DOWN) {
                     connectedServerState.setConnectedServer(null)
+                    _vpnLocationText.value = null
                 }
             }
         }
     }
+
+    /**
+     * Toggles the visibility of the IP address and persists the setting.
+     */
+    fun toggleIpVisibility() {
+        val newValue = !_isIpHidden.value
+        _isIpHidden.value = newValue
+        prefs.edit().putBoolean("is_ip_hidden", newValue).apply()
+    }
+
+    private fun fetchOriginalLocation() {
+        viewModelScope.launch {
+            val location = fetchRealLocation()
+            if (location != null) {
+                // Translate the country code to the user's current locale language
+                val localizedCountry = CountryUtils.getCountryName(context, location.countryCode)
+                _originalLocationText.value = LocationText(localizedCountry, location.ip)
+            }
+        }
+    }
+
+    private fun fetchVpnLocation(countryCode: String) {
+        viewModelScope.launch {
+            // TODO: In a real implementation, call an API like https://api.ipify.org through the VPN tunnel
+            // to get the actual public IP of the VPN server.
+            // For now, we simulate a network delay and generate a fake IP to demonstrate the UI.
+            delay(1500)
+            val fakeIp = "185.201.${(10..250).random()}.${(10..250).random()}"
+            val localizedCountry = CountryUtils.getCountryName(context, countryCode)
+            _vpnLocationText.value = LocationText(localizedCountry, fakeIp)
+        }
+    }
+
+    /**
+     * Fetches the user's real location based on IP, bypassing any proxy or VPN.
+     *
+     * @return [LocationData] object containing location info, or null in case of an error.
+     */
+    private suspend fun fetchRealLocation(): LocationData? = withContext(Dispatchers.IO) {
+        try {
+            // Create an OkHttp client that ignores system proxies/VPNs
+            val client = OkHttpClient.Builder()
+                .proxy(Proxy.NO_PROXY)
+                .build()
+
+            // Request to geolocation service
+            val request = Request.Builder()
+                .url("https://ipwho.is/")
+                .build()
+
+            client.newCall(request).execute().use { response ->
+                if (response.isSuccessful) {
+                    val body = response.body?.string()
+                    if (!body.isNullOrBlank()) {
+                        val json = JSONObject(body)
+                        val ip = json.optString("ip", "")
+                        val countryCode = json.optString("country_code", "")
+
+                        if (ip.isNotEmpty() && countryCode.isNotEmpty()) {
+                            return@withContext LocationData(ip, countryCode)
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            // Log the error for debugging purposes
+            e.printStackTrace()
+        }
+        null
+    }
+
+    private data class LocationData(val ip: String, val countryCode: String)
 
     fun loadServers() {
         if (uiState.value is DashboardUiState.Error) {
@@ -192,6 +302,19 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun quickConnect() {
+        viewModelScope.launch {
+            val currentState = uiState.value
+            if (currentState !is DashboardUiState.Success) return@launch
+
+            // Connect to the fastest server globally
+            val bestServer = currentState.servers.minByOrNull { it.averageLoad }
+            if (bestServer != null) {
+                initiateConnection(bestServer)
+            }
+        }
+    }
+
     private suspend fun initiateConnection(server: LogicalServer) {
         val session = sessionDao.getSession()
         if (session == null) {
@@ -214,20 +337,6 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    fun quickConnect() {
-        viewModelScope.launch {
-            val currentState = uiState.value
-            if (currentState !is DashboardUiState.Success) return@launch
-
-            // Find the least loaded server among all available servers
-            val bestServer = currentState.servers
-                .filter { it.servers.any { s -> s.status == 1 } }
-                .minByOrNull { it.averageLoad }
-
-            bestServer?.let { initiateConnection(it) }
-        }
-    }
-
     fun connectToCountry(countryCode: String) {
         viewModelScope.launch {
             val currentState = uiState.value
@@ -235,13 +344,9 @@ class DashboardViewModel @Inject constructor(
 
             val serversInCountry = currentState.servers.filter { it.exitCountry == countryCode }
             if (serversInCountry.isNotEmpty()) {
-                // Find the least loaded server in the selected country
-                val bestServer = serversInCountry
-                    .filter { it.servers.any { s -> s.status == 1 } }
-                    .minByOrNull { it.averageLoad } 
-                    ?: serversInCountry.firstOrNull()
-                
-                bestServer?.let { initiateConnection(it) }
+                // Find fastest server in this country
+                val bestServer = serversInCountry.minByOrNull { it.averageLoad } ?: serversInCountry.random()
+                initiateConnection(bestServer)
             }
         }
     }

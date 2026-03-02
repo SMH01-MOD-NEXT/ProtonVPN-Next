@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.*
@@ -100,6 +101,7 @@ fun CountriesScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.countries_title), fontWeight = FontWeight.Bold, color = colors.textNorm) },
@@ -167,7 +169,7 @@ fun CountriesScreen(
                     }
                     is CountriesUiState.CitiesList -> {
                         CitiesListContent(
-                            country = state.country,
+                            countryName = state.country,
                             cities = state.cities,
                             connectedServer = connectedServer,
                             onBack = { viewModel.backToCountries() },
@@ -184,8 +186,8 @@ fun CountriesScreen(
                     }
                     is CountriesUiState.ServersList -> {
                         ServersListContent(
-                            country = state.country,
-                            city = state.city,
+                            countryName = state.country,
+                            cityName = state.city,
                             servers = state.servers,
                             connectedServer = connectedServer,
                             onBack = { viewModel.backToCities() },
@@ -213,6 +215,7 @@ fun CountriesScreen(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
             )
         }
     }
@@ -228,8 +231,10 @@ fun CountriesListContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            horizontal = 16.dp,
-            vertical = 16.dp
+            start = 16.dp,
+            top = 16.dp,
+            end = 16.dp,
+            bottom = 120.dp
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -240,10 +245,6 @@ fun CountriesListContent(
                 onClick = { onCountryClick(country) },
                 onMoreClick = { onCountryMore(country) }
             )
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
@@ -349,7 +350,7 @@ fun CountryCard(
 
 @Composable
 fun CitiesListContent(
-    country: String,
+    countryName: String,
     cities: List<CityDisplayItem>,
     connectedServer: LogicalServer?,
     onBack: () -> Unit,
@@ -359,8 +360,10 @@ fun CitiesListContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            horizontal = 16.dp,
-            vertical = 16.dp
+            start = 16.dp,
+            top = 16.dp,
+            end = 16.dp,
+            bottom = 120.dp
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -388,7 +391,7 @@ fun CitiesListContent(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = country,
+                        text = countryName,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = colors.textNorm
@@ -400,14 +403,10 @@ fun CitiesListContent(
         items(cities) { city ->
             CityCard(
                 city = city,
-                isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == country),
+                isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == countryName),
                 onClick = { onCityClick(city) },
                 onMoreClick = { onCityMore(city) }
             )
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
@@ -451,9 +450,11 @@ fun CityCard(
                             .background(colors.backgroundNorm),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "🏙️",
-                            style = MaterialTheme.typography.bodyLarge
+                        Icon(
+                            imageVector = Icons.Default.LocationCity,
+                            contentDescription = null,
+                            tint = colors.iconNorm,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                     if (isConnected) {
@@ -501,24 +502,26 @@ fun CityCard(
 
 @Composable
 fun ServersListContent(
-    country: String,
-    city: String,
+    countryName: String,
+    cityName: String,
     servers: List<LogicalServer>,
     connectedServer: LogicalServer?,
     onBack: () -> Unit,
     onServerClick: (LogicalServer) -> Unit
 ) {
-    val colors = ProtonNextTheme.colors
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            horizontal = 16.dp,
-            vertical = 16.dp,
+            start = 16.dp,
+            top = 16.dp,
+            end = 16.dp,
+            bottom = 120.dp
         ),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
             val backInteractionSource = remember { MutableInteractionSource() }
+            val colors = ProtonNextTheme.colors
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -539,41 +542,30 @@ fun ServersListContent(
                         tint = colors.textNorm
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            text = country,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.textNorm
-                        )
-                        Text(
-                            text = city,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.textWeak
-                        )
-                    }
+                    Text(
+                        text = "$countryName, $cityName",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textNorm
+                    )
                 }
             }
         }
 
         items(servers) { server ->
-            ServerSelectionCard(
+            ServerItemCard(
                 server = server,
                 isConnected = connectedServer?.id == server.id,
                 onClick = { onServerClick(server) }
             )
         }
-
-        item {
-            Spacer(modifier = Modifier.height(100.dp))
-        }
     }
 }
 
 @Composable
-fun ServerSelectionCard(
+fun ServerItemCard(
     server: LogicalServer,
-    isConnected: Boolean = false,
+    isConnected: Boolean,
     onClick: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
@@ -592,79 +584,64 @@ fun ServerSelectionCard(
             containerColor = if (isConnected) colors.brandNorm.copy(alpha = 0.1f) else colors.backgroundSecondary.copy(alpha = 0.5f)
         )
     ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(contentAlignment = Alignment.BottomEnd) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp, 24.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(colors.backgroundNorm),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Public,
-                            contentDescription = server.name,
-                            tint = colors.iconNorm,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    if (isConnected) {
-                        Box(
-                            modifier = Modifier
-                                .offset(x = 4.dp, y = 4.dp)
-                                .size(10.dp)
-                                .background(colors.notificationSuccess, CircleShape)
-                                .padding(2.dp)
-                                .background(colors.backgroundNorm, CircleShape)
-                                .padding(1.dp)
-                                .background(colors.notificationSuccess, CircleShape)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = server.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = colors.textNorm
-                    )
-                    Text(
-                        text = server.city,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.textWeak
-                    )
-                }
-
-                LoadIndicator(load = server.averageLoad)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = server.name,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = colors.textNorm
+                )
+                Text(
+                    text = server.servers.firstOrNull()?.exitIp ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textWeak
+                )
             }
 
-            LoadProgressBar(load = server.averageLoad)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                LoadIndicator(load = server.averageLoad)
+                if (isConnected) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .background(colors.notificationSuccess, CircleShape)
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 fun LoadIndicator(load: Int) {
-    val loadColor = CountryUtils.getColorForLoad(load)
-    Surface(
-        color = loadColor.copy(alpha = 0.2f),
-        shape = RoundedCornerShape(8.dp)
-    ) {
+    val colors = ProtonNextTheme.colors
+    val color = when {
+        load < 40 -> colors.notificationSuccess
+        load < 70 -> colors.notificationWarning
+        else -> colors.notificationError
+    }
+
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            imageVector = Icons.Rounded.Public,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = "$load%",
             style = MaterialTheme.typography.labelMedium,
-            color = loadColor,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            color = color,
+            fontWeight = FontWeight.Bold
         )
     }
 }
@@ -672,17 +649,18 @@ fun LoadIndicator(load: Int) {
 @Composable
 fun LoadProgressBar(load: Int) {
     val colors = ProtonNextTheme.colors
-    Box(
+    val color = when {
+        load < 40 -> colors.notificationSuccess
+        load < 70 -> colors.notificationWarning
+        else -> colors.notificationError
+    }
+
+    LinearProgressIndicator(
+        progress = { load / 100f },
         modifier = Modifier
             .fillMaxWidth()
-            .height(4.dp)
-            .background(colors.textNorm.copy(alpha = 0.05f))
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(load / 100f)
-                .fillMaxHeight()
-                .background(CountryUtils.getColorForLoad(load))
-        )
-    }
+            .height(4.dp),
+        color = color,
+        trackColor = color.copy(alpha = 0.1f)
+    )
 }

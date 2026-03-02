@@ -19,11 +19,13 @@ package ru.protonmod.next.ui.screens.dashboard
 
 import android.app.Activity
 import android.net.VpnService
+import android.text.BidiFormatter
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -45,14 +47,21 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import kotlinx.coroutines.delay
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
@@ -140,6 +149,143 @@ fun VpnStatusTop(
     }
 }
 
+// --- Masked Location Text Components ---
+
+@Composable
+private fun annotatedCountryHighlight(
+    text: String,
+    highlight: String,
+    displayText: String = text,
+) = buildAnnotatedString {
+    append(displayText)
+    val startIndex = text.indexOf(highlight)
+    if (startIndex >= 0) {
+        addStyle(
+            style = SpanStyle(color = ProtonNextTheme.colors.textNorm, fontWeight = FontWeight.SemiBold),
+            start = startIndex,
+            end = startIndex + highlight.length
+        )
+    }
+}
+
+/**
+ * Text that can beautifully obscure its contents with a character-by-character animation.
+ * Replaces chars with '*' while keeping spaces and dots intact.
+ */
+@Composable
+private fun ObscurableText(
+    modifier: Modifier = Modifier,
+    targetText: String,
+    highlightText: String,
+    isObscured: Boolean,
+    duration: Int = 30, // animation speed per character
+    targetCharacter: Char = '*',
+    preserveCharacters: CharArray = charArrayOf('.', ' ', '-', ':')
+) {
+    var displayText by remember(targetText) {
+        mutableStateOf(
+            // Pre-obscure immediately to avoid IP flashes on launch if the user set it to hidden
+            if (isObscured) {
+                val chars = targetText.toCharArray()
+                for (i in chars.indices) {
+                    if (!preserveCharacters.contains(chars[i])) chars[i] = targetCharacter
+                }
+                String(chars)
+            } else {
+                targetText
+            }
+        )
+    }
+    val fixedWidth = remember(targetText) { mutableStateOf<Int?>(null) }
+
+    LaunchedEffect(isObscured, targetText) {
+        val targetChars = targetText.toCharArray()
+        var currentChars = displayText.toCharArray()
+
+        // Failsafe in case lengths mismatch due to edge cases
+        if (currentChars.size != targetChars.size) {
+            currentChars = targetChars.clone()
+        }
+
+        val indicesToAnimate = targetText.indices
+            .filter { !preserveCharacters.contains(targetText[it]) }
+            .filter {
+                if (isObscured) currentChars[it] != targetCharacter
+                else currentChars[it] != targetChars[it]
+            }
+            .shuffled()
+
+        for (i in indicesToAnimate) {
+            delay(duration.toLong())
+            val newChar = if (isObscured) targetCharacter else targetChars[i]
+            currentChars[i] = newChar
+            displayText = String(currentChars)
+        }
+    }
+
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+        Layout(
+            content = {
+                Text(
+                    text = annotatedCountryHighlight(
+                        text = targetText,
+                        highlight = highlightText,
+                        displayText = displayText
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ProtonNextTheme.colors.textWeak,
+                    modifier = Modifier.onGloballyPositioned {
+                        // Prevent layout jumping while animating
+                        if (fixedWidth.value == null) {
+                            fixedWidth.value = it.size.width
+                        }
+                    },
+                )
+            },
+            modifier = modifier,
+            measurePolicy = { measurables, constraints ->
+                val placeable = measurables.first().measure(constraints)
+                val width = fixedWidth.value ?: placeable.width
+                val offsetX = (width - placeable.width) / 2
+                layout(width, placeable.height) {
+                    placeable.placeRelative(offsetX, 0)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun LocationTextElement(
+    locationText: LocationText,
+    isObscured: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = ProtonNextTheme.colors
+    Surface(
+        color = colors.backgroundSecondary.copy(alpha = 0.86F),
+        border = BorderStroke(
+            1.dp,
+            Brush.verticalGradient(listOf(colors.shade100.copy(alpha = 0.08f), colors.shade100.copy(alpha = 0.02f)))
+        ),
+        shape = RoundedCornerShape(8.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick) // Makes the entire IP block clickable to toggle privacy mode
+    ) {
+        val country = BidiFormatter.getInstance().unicodeWrap(locationText.country)
+        val fullText = "$country • ${locationText.ip}"
+
+        ObscurableText(
+            targetText = fullText,
+            highlightText = country,
+            isObscured = isObscured,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+        )
+    }
+}
+
 // --- Main Screen ---
 
 @Composable
@@ -210,6 +356,7 @@ fun DashboardScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {}
     ) { paddingValues ->
         Box(
@@ -222,7 +369,7 @@ fun DashboardScreen(
             val isConnected = successState?.isConnected == true
             val isConnecting = successState?.isConnecting == true
 
-            // 1. Z-Index Bottom: Map Layer
+            // 1. Z-Index Bottom: Map Layer (fills status bar)
             HomeMap(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -234,7 +381,7 @@ fun DashboardScreen(
                 isInteractive = false
             )
 
-            // 2. Z-Index Middle: Gradient Overlay (over the map, under the cards)
+            // 2. Z-Index Middle: Gradient Overlay (over the map, under the cards, fills status bar)
             Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -249,25 +396,34 @@ fun DashboardScreen(
                 isConnecting = isConnecting,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(top = 48.dp) // Padding from the top of the screen
+                    // ADD windowInsetsPadding here to move the icon BELOW the status bar
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(top = 16.dp) 
             )
 
             // 4. Z-Index Top-most: Scrollable Content (Cards will scroll over everything above)
+            val baseState = when (uiState) {
+                is DashboardUiState.Loading -> 0
+                is DashboardUiState.Error -> 1
+                is DashboardUiState.Success -> 2
+            }
+
             AnimatedContent(
-                targetState = uiState,
+                targetState = baseState,
                 label = "dashboard_state",
                 modifier = Modifier.fillMaxSize()
-            ) { state ->
-                when (state) {
-                    is DashboardUiState.Loading -> {
+            ) { target ->
+                when (target) {
+                    0 -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(color = colors.brandNorm)
                         }
                     }
-                    is DashboardUiState.Error -> {
+                    1 -> {
+                        val errorState = uiState as? DashboardUiState.Error
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(state.message, color = colors.notificationError)
+                                Text(errorState?.message.orEmpty(), color = colors.notificationError)
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Button(
                                     onClick = { viewModel.loadServers() },
@@ -278,18 +434,22 @@ fun DashboardScreen(
                             }
                         }
                     }
-                    is DashboardUiState.Success -> {
-                        DashboardContent(
-                            state = state,
-                            onServerClick = { server ->
-                                checkVpnAndConnect(server)
-                            },
-                            onQuickConnect = {
-                                checkVpnAndQuickConnect()
-                            },
-                            onDisconnect = { viewModel.disconnect() },
-                            onRefreshCert = { viewModel.refreshCertificate() }
-                        )
+                    2 -> {
+                        val successState = uiState as? DashboardUiState.Success
+                        if (successState != null) {
+                            DashboardContent(
+                                state = successState,
+                                onServerClick = { server ->
+                                    checkVpnAndConnect(server)
+                                },
+                                onQuickConnect = {
+                                    checkVpnAndQuickConnect()
+                                },
+                                onDisconnect = { viewModel.disconnect() },
+                                onRefreshCert = { viewModel.refreshCertificate() },
+                                onToggleIpVisibility = { viewModel.toggleIpVisibility() }
+                            )
+                        }
                     }
                 }
             }
@@ -307,7 +467,10 @@ fun DashboardScreen(
                         else -> {}
                     }
                 },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    // Add bottom insets padding here if necessary
+                    .windowInsetsPadding(WindowInsets.navigationBars)
             )
         }
     }
@@ -319,7 +482,8 @@ fun DashboardContent(
     onServerClick: (LogicalServer) -> Unit,
     onQuickConnect: () -> Unit,
     onDisconnect: () -> Unit,
-    onRefreshCert: () -> Unit
+    onRefreshCert: () -> Unit,
+    onToggleIpVisibility: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
     LazyColumn(
@@ -330,6 +494,7 @@ fun DashboardContent(
     ) {
         item {
             // This spacer pushes the cards down so the Map and Lock icon are visible
+            // We increase this height slightly because we removed the top padding from Scaffold
             Spacer(modifier = Modifier.height(380.dp))
         }
 
@@ -346,6 +511,10 @@ fun DashboardContent(
                 isConnected = state.isConnected,
                 isConnecting = state.isConnecting,
                 connectedServer = state.connectedServer,
+                originalLocationText = state.originalLocationText,
+                vpnLocationText = state.vpnLocationText,
+                isIpHidden = state.isIpHidden,
+                onToggleIpVisibility = onToggleIpVisibility,
                 onToggleConnection = {
                     if (state.isConnected) {
                         onDisconnect()
@@ -491,6 +660,10 @@ fun ConnectionStatusCard(
     isConnected: Boolean,
     isConnecting: Boolean,
     connectedServer: LogicalServer?,
+    originalLocationText: LocationText?,
+    vpnLocationText: LocationText?,
+    isIpHidden: Boolean,
+    onToggleIpVisibility: () -> Unit,
     onToggleConnection: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
@@ -515,16 +688,31 @@ fun ConnectionStatusCard(
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
-            Text(
-                text = when {
-                    isConnected -> stringResource(R.string.status_connected)
-                    isConnecting -> stringResource(R.string.status_connecting)
-                    else -> stringResource(R.string.status_not_connected)
-                },
-                style = MaterialTheme.typography.labelLarge,
-                color = if (isConnected) colors.notificationSuccess else contentColor.copy(alpha = 0.7f),
-                fontWeight = FontWeight.Bold
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = when {
+                        isConnected -> stringResource(R.string.status_connected)
+                        isConnecting -> stringResource(R.string.status_connecting)
+                        else -> stringResource(R.string.status_not_connected)
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (isConnected) colors.notificationSuccess else contentColor.copy(alpha = 0.7f),
+                    fontWeight = FontWeight.Bold
+                )
+
+                // Select current location source
+                val currentLocation = if (isConnected) vpnLocationText else originalLocationText
+
+                if (currentLocation != null) {
+                    Spacer(modifier = Modifier.width(12.dp))
+                    LocationTextElement(
+                        locationText = currentLocation,
+                        // Always force hide when connecting to emulate the "encrypting" animation
+                        isObscured = isIpHidden || isConnecting,
+                        onClick = onToggleIpVisibility
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
