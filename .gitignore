@@ -17,3 +17,10 @@ local.properties
 
 # Sentry Config File
 sentry.properties
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
