@@ -21,6 +21,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 
 @Dao
 interface CityTranslationDao {
@@ -47,5 +48,16 @@ interface CityTranslationDao {
 
     @Query("DELETE FROM city_cache")
     suspend fun clearCacheInfo()
+
+    /**
+     * Atomically clears old city translations for a language and inserts new ones.
+     * Uses @Transaction to batch the operations into a single database transaction,
+     * avoiding N+1 query patterns when inserting multiple city translations.
+     */
+    @Transaction
+    suspend fun upsertTranslations(languageCode: String, translations: List<CityTranslationEntity>) {
+        clearTranslations(languageCode)
+        insertTranslations(translations)
+    }
 }
 

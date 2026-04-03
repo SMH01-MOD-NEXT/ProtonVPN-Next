@@ -470,9 +470,9 @@ class VpnRepository @Inject constructor(
             }
             
             if (entities.isNotEmpty()) {
-                // To keep DB clean, we could clear old translations for this language, 
-                // but REPLACE strategy in DAO is enough for now.
-                cityTranslationDao.insertTranslations(entities)
+                // Use upsertTranslations to atomically clear old translations and insert new ones
+                // in a single transaction, avoiding N+1 query patterns.
+                cityTranslationDao.upsertTranslations(languageTag, entities)
                 cityTranslationDao.saveCacheInfo(CityCacheEntity(languageTag, now))
                 cityRepository.clearCache()
                 ProtonLogger.i(TAG, "Saved ${entities.size} city translations for $languageTag")
