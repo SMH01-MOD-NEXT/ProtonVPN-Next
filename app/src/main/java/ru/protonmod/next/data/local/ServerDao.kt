@@ -18,6 +18,8 @@
 package ru.protonmod.next.data.local
 
 import androidx.room.*
+import androidx.sqlite.db.SupportSQLiteQuery
+import androidx.sqlite.db.SimpleSQLiteQuery
 import kotlinx.coroutines.flow.Flow
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.PhysicalServer
@@ -48,8 +50,30 @@ interface ServerDao {
     @Query("SELECT * FROM servers")
     fun getServersFlow(): Flow<List<ServerEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertServers(servers: List<ServerEntity>)
+    /**
+     * Batch insert servers using a single optimized SQL statement.
+     * This replaces the individual INSERT OR REPLACE calls with a single
+     * multi-row INSERT statement to avoid N+1 query performance issues.
+     */
+    suspend fun insertServers(servers: List<ServerEntity>) {
+        if (servers.isEmpty()) return
+        
+        // Build a single INSERT OR REPLACE statement with multiple rows
+        val valuesClause = servers.joinToString(", ") { entity ->
+            val id = entity.id.replace("'", "''")
+            val name = entity.name.replace("'", "''")
+            val city = entity.city.replace("'", "''")
+            val exitCountry = entity.exitCountry.replace("'", "''")
+            val physicalServersJson = entity.physicalServersJson.replace("'", "''")
+            "('$id', '$name', '$city', '$exitCountry', ${entity.tier}, ${entity.features}, ${entity.averageLoad}, '$physicalServersJson')"
+        }
+        
+        val sql = "INSERT OR REPLACE INTO servers (id, name, city, exitCountry, tier, features, averageLoad, physicalServersJson) VALUES $valuesClause"
+        insertServersRaw(SimpleSQLiteQuery(sql))
+    }
+
+    @RawQuery
+    suspend fun insertServersRaw(query: SupportSQLiteQuery)
 
     @Query("DELETE FROM servers")
     suspend fun clearAllServers()

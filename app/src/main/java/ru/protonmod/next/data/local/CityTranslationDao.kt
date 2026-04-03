@@ -21,14 +21,38 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
+import androidx.sqlite.db.SupportSQLiteQuery
+import androidx.sqlite.db.SimpleSQLiteQuery
 
 @Dao
 interface CityTranslationDao {
     @Query("SELECT localizedName FROM city_translations WHERE countryCode = :countryCode AND englishName = :englishName AND languageCode = :languageCode LIMIT 1")
     suspend fun getLocalizedName(countryCode: String, englishName: String, languageCode: String): String?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertTranslations(translations: List<CityTranslationEntity>)
+    /**
+     * Batch insert city translations using a single optimized SQL statement.
+     * This replaces the individual INSERT OR REPLACE calls with a single
+     * multi-row INSERT statement to avoid N+1 query performance issues.
+     */
+    suspend fun insertTranslations(translations: List<CityTranslationEntity>) {
+        if (translations.isEmpty()) return
+        
+        // Build a single INSERT OR REPLACE statement with multiple rows
+        val valuesClause = translations.joinToString(", ") { entity ->
+            val countryCode = entity.countryCode.replace("'", "''")
+            val englishName = entity.englishName.replace("'", "''")
+            val localizedName = entity.localizedName.replace("'", "''")
+            val languageCode = entity.languageCode.replace("'", "''")
+            "('$countryCode', '$englishName', '$localizedName', '$languageCode')"
+        }
+        
+        val sql = "INSERT OR REPLACE INTO city_translations (countryCode, englishName, localizedName, languageCode) VALUES $valuesClause"
+        insertTranslationsRaw(SimpleSQLiteQuery(sql))
+    }
+
+    @RawQuery
+    suspend fun insertTranslationsRaw(query: SupportSQLiteQuery)
 
     @Query("DELETE FROM city_translations WHERE languageCode = :languageCode")
     suspend fun clearTranslations(languageCode: String)
