@@ -153,7 +153,15 @@ object NetworkModule {
                 .addHeader("Accept", "application/vnd.protonmail.v1+json")
                 .build()
 
-            chain.proceed(request)
+            try {
+                chain.proceed(request)
+            } catch (e: Exception) {
+                // Log network errors for debugging lifecycle issues
+                if (e is java.net.SocketTimeoutException || e is java.net.ConnectException) {
+                    android.util.Log.w("NetworkModule", "Network timeout during ${request.url}: ${e.message}")
+                }
+                throw e
+            }
         }
 
         // Bootstrap client for DNS over HTTPS requires longer timeouts
@@ -182,9 +190,11 @@ object NetworkModule {
             .addInterceptor(dynamicBaseUrlInterceptor)
             .authenticator(tokenAuthenticator)
             .dns(dynamicDns)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
+            // Reduced timeouts to detect network failures faster and prevent JNI reference leaks
+            // Original: 30s connect timeout. On mobile, 15s is more responsive and safer.
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(45, TimeUnit.SECONDS)
+            .writeTimeout(45, TimeUnit.SECONDS)
             .build()
     }
 

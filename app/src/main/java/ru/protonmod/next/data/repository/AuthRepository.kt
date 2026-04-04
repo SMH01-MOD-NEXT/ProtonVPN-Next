@@ -34,9 +34,13 @@ import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.utils.crypto.CryptoWrapper
 import ru.protonmod.next.vpn.AmneziaVpnManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
+import java.net.SocketTimeoutException
+import java.net.ConnectException
 
 @Singleton
 class AuthRepository @Inject constructor(
@@ -64,6 +68,22 @@ class AuthRepository @Inject constructor(
 
     // Cache the challenge payload to ensure cryptographic hash matches during CAPTCHA retry
     private var pendingChallengePayload: JsonObject? = null
+
+    /**
+     * SupervisorJob for auth operations that allows cancellation of pending login/anonymous operations.
+     * Prevents JNI reference leaks when activity is destroyed mid-login.
+     */
+    private val authJob = SupervisorJob()
+
+    /**
+     * Cancel all pending authentication operations.
+     * Called when ViewModel is cleared to prevent JNI reference leaks.
+     */
+    fun cancelPendingOperations() {
+        ProtonLogger.d(TAG, "Cancelling pending auth operations")
+        authJob.cancel()
+        clearPendingAuth()
+    }
 
     /**
      * Resets temporary authentication state and cached payloads.
@@ -228,6 +248,15 @@ class AuthRepository @Inject constructor(
             ))
         } catch (e: Exception) {
             if (e is CancellationException) throw e
+            
+            // Handle network timeouts explicitly to prevent JNI reference leaks
+            if (e is SocketTimeoutException || e is ConnectException) {
+                ProtonLogger.w(TAG, "[Login] Network timeout error: ${e.message}")
+                clearPendingAuth()
+                ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Network Timeout (${e.message})", SentryLevel.WARNING, "auth.flow")
+                return@withContext Result.failure(e)
+            }
+            
             if (e !is HttpException) ProtonLogger.e(TAG, "[Login] Exception thrown", e)
             ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Failed (${e.message})", SentryLevel.ERROR, "auth.flow")
             handleHttpError(e)
@@ -288,6 +317,14 @@ class AuthRepository @Inject constructor(
             }
         } catch (e: Exception) {
             if (e is CancellationException) throw e
+            
+            // Handle network timeouts explicitly to prevent JNI reference leaks
+            if (e is SocketTimeoutException || e is ConnectException) {
+                ProtonLogger.w(TAG, "[AnonymousLogin] Network timeout error: ${e.message}")
+                clearPendingAuth()
+                return@withContext Result.failure(e)
+            }
+            
             if (e !is HttpException) ProtonLogger.e(TAG, "[AnonymousLogin] Exception thrown", e)
             handleHttpError(e)
         }

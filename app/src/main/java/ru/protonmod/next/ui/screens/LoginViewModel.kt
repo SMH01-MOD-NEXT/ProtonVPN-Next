@@ -32,6 +32,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import java.net.SocketTimeoutException
+import java.net.ConnectException
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.repository.AuthRepository
@@ -101,6 +103,16 @@ class LoginViewModel @Inject constructor(
     val isApiBypassEnabled = settingsManager.apiBypassEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    /**
+     * Cancel any pending login operations to prevent JNI reference leaks.
+     * Called when the ViewModel is cleared or navigating away.
+     */
+    override fun onCleared() {
+        super.onCleared()
+        ProtonLogger.d("LoginViewModel", "ViewModel cleared, cancelling pending auth operations")
+        authRepository.cancelPendingOperations()
+    }
+
     fun login(username: String, passwordRaw: String, captchaToken: String? = null) {
         if (username.isBlank() || passwordRaw.isBlank()) return
 
@@ -147,6 +159,12 @@ class LoginViewModel @Inject constructor(
                             captchaToken = exception.token,
                             isAnonymous = false,
                             sessionId = exception.sessionId
+                        )
+                    } else if (exception is SocketTimeoutException || exception is ConnectException) {
+                        // Network timeout errors - log with context but don't crash
+                        ProtonLogger.w("Login", "Network error during login for $username: ${exception.message}")
+                        _uiState.value = LoginUiState.Error(
+                            "Connection timeout. Please check your internet and try again."
                         )
                     } else {
                         ProtonLogger.e("Login", "Login failed for $username: ${exception.message}", exception)
@@ -224,6 +242,12 @@ class LoginViewModel @Inject constructor(
                             captchaToken = exception.token,
                             isAnonymous = true,
                             sessionId = exception.sessionId
+                        )
+                    } else if (exception is SocketTimeoutException || exception is ConnectException) {
+                        // Network timeout errors - log with context but don't crash
+                        ProtonLogger.w("Login", "Network error during anonymous login: ${exception.message}")
+                        _uiState.value = LoginUiState.Error(
+                            "Connection timeout. Please check your internet and try again."
                         )
                     } else {
                         ProtonLogger.e("Login", "Anonymous login failed: ${exception.message}", exception)
