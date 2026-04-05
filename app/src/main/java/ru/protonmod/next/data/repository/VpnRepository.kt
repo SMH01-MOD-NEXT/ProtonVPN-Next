@@ -444,6 +444,10 @@ class VpnRepository @Inject constructor(
             } else {
                 Result.failure(Exception("Proton Cert Error: ${response.code}"))
             }
+        } catch (e: CancellationException) {
+            // Re-throw cancellation exceptions to allow proper coroutine cancellation propagation
+            // when user navigates away during certificate registration.
+            throw e
         } catch (e: Exception) {
             ProtonLogger.e(TAG, "Error in registerWireGuardKey", e)
             Result.failure(e)

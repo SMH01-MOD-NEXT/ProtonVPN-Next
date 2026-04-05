@@ -456,7 +456,13 @@ class AuthRepository @Inject constructor(
                 val cert = regResult.getOrNull()?.certificate
                 Triple(wgPrivateKeyB64, publicKeyPem, cert ?: "")
             } else null
+        } catch (e: CancellationException) {
+            // When user navigates away during certificate registration, log at debug level
+            // and return null to allow login to proceed without certificate.
+            ProtonLogger.d(TAG, "registerAndGetVpnKeys cancelled during navigation")
+            null
         } catch (e: Exception) {
+            ProtonLogger.e(TAG, "Error in registerAndGetVpnKeys", e)
             null
         }
     }
