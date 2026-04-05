@@ -264,6 +264,7 @@ class MapView(context: Context) : View(context) {
 
     // SVG rendering via Picture/Canvas
     private var mapPicture: Picture? = null
+    private var mapRasterBitmap: Bitmap? = null
     private var mapCacheBitmap: Bitmap? = null
     private val cacheCanvas = Canvas()
 
@@ -373,6 +374,8 @@ class MapView(context: Context) : View(context) {
         pulseAnimator?.cancel()
         matrixAnimator?.cancel()
         mapPicture = null
+        mapRasterBitmap?.recycle()
+        mapRasterBitmap = null
         mapCacheBitmap?.recycle()
         mapCacheBitmap = null
     }
@@ -478,8 +481,16 @@ class MapView(context: Context) : View(context) {
                 svg.renderToCanvas(canvas, renderOptions)
                 picture.endRecording()
 
+                // Pre-rasterize the Picture to a Bitmap to avoid libhwui GPU driver bugs
+                // when applying matrix transformations. This approach is more stable across
+                // different Android versions and GPU drivers.
+                val rasterBitmap = Bitmap.createBitmap(MAP_ORIGINAL_WIDTH.toInt(), MAP_ORIGINAL_HEIGHT.toInt(), Bitmap.Config.ARGB_8888)
+                val rasterCanvas = Canvas(rasterBitmap)
+                rasterCanvas.drawPicture(picture)
+
                 withContext(Dispatchers.Main) {
                     mapPicture = picture
+                    mapRasterBitmap = rasterBitmap
                     invalidate()
                 }
             } catch (e: Exception) {
@@ -492,16 +503,21 @@ class MapView(context: Context) : View(context) {
         super.onDraw(canvas)
         // No drawColor here, letting the background gradient show through
 
-        if (mapPicture == null) return
+        if (mapRasterBitmap == null) return
 
         val isAnimating = matrixAnimator?.isRunning == true
 
         if (isAnimating) {
-            // During zoom, rasterize the Picture into a screen-sized Bitmap with the
-            // current matrix applied. Using drawPicture() after canvas.concat() triggers
-            // libhwui assertion failures on some devices/drivers, so we avoid it entirely.
-            mapPicture?.let { picture ->
-                drawPictureWithMatrix(canvas, picture, currentMatrix, width, height)
+            // During zoom, apply the transformation matrix directly to the rasterized bitmap.
+            // This avoids the problematic canvas.concat() + drawPicture() pattern that
+            // triggers GPU assertion failures on certain Android devices and drivers.
+            mapRasterBitmap?.let { bitmap ->
+                try {
+                    val paint = Paint().apply { isFilterBitmap = true }
+                    canvas.drawBitmap(bitmap, currentMatrix, paint)
+                } catch (e: Exception) {
+                    ProtonLogger.e("HomeMap", "Failed to draw transformed bitmap", e)
+                }
             }
             // Invalidate cache since zoom changed
             mapCacheBitmap = null
@@ -510,18 +526,24 @@ class MapView(context: Context) : View(context) {
             if (width > 0 && height > 0 && (mapCacheBitmap == null || mapCacheBitmap?.width != width || mapCacheBitmap?.height != height)) {
                 mapCacheBitmap?.recycle()
                 mapCacheBitmap = null
-                mapPicture?.let { picture ->
+                mapRasterBitmap?.let { bitmap ->
                     try {
-                        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                        mapCacheBitmap = bitmap
-                        cacheCanvas.setBitmap(bitmap)
+                        val cachebitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                        mapCacheBitmap = cachebitmap
+                        cacheCanvas.setBitmap(cachebitmap)
                         cacheCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-                        drawPictureWithMatrix(cacheCanvas, picture, currentMatrix, width, height)
+                        val paint = Paint().apply { isFilterBitmap = true }
+                        cacheCanvas.drawBitmap(bitmap, currentMatrix, paint)
                     } catch (e: Exception) {
                         ProtonLogger.e("HomeMap", "Failed to create/prepare cache bitmap", e)
                         mapCacheBitmap = null
                         // Fallback: render directly onto the view canvas
-                        drawPictureWithMatrix(canvas, picture, currentMatrix, width, height)
+                        try {
+                            val paint = Paint().apply { isFilterBitmap = true }
+                            canvas.drawBitmap(bitmap, currentMatrix, paint)
+                        } catch (e2: Exception) {
+                            ProtonLogger.e("HomeMap", "Failed to draw bitmap", e2)
+                        }
                         return
                     }
                 }
@@ -573,25 +595,6 @@ class MapView(context: Context) : View(context) {
     }
 
     private fun isConnected() = connectedServer != null && !isConnecting
-
-    /**
-     * Rasterizes a [Picture] into a [Bitmap] with [matrix] applied, then draws the result
-     * onto [canvas]. This avoids calling [Canvas.drawPicture] after [Canvas.concat], which
-     * triggers assertion failures in libhwui on certain Android versions and GPU drivers.
-     */
-    private fun drawPictureWithMatrix(canvas: Canvas, picture: Picture, matrix: Matrix, w: Int, h: Int) {
-        if (w <= 0 || h <= 0) return
-        try {
-            val tmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-            val tmpCanvas = Canvas(tmp)
-            tmpCanvas.concat(matrix)
-            tmpCanvas.drawPicture(picture)
-            canvas.drawBitmap(tmp, 0f, 0f, null)
-            tmp.recycle()
-        } catch (e: Exception) {
-            ProtonLogger.e("HomeMap", "drawPictureWithMatrix failed", e)
-        }
-    }
 }
 
 // --- Compose Wrapper ---
