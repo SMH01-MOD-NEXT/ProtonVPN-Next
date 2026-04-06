@@ -86,6 +86,12 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     private var killSwitchEnabled: Boolean = false
     private var isManualDisconnect: Boolean = false
 
+    // Cached PendingIntent objects to reduce IPC calls to system service
+    // These are reused across notification updates to avoid DeadSystemException
+    // when the system PendingIntent service becomes temporarily unavailable
+    private var cachedDisconnectPendingIntent: PendingIntent? = null
+    private var cachedContentPendingIntent: PendingIntent? = null
+
     companion object {
         private const val TAG = "ProtonVpnService"
 
@@ -382,6 +388,10 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         statsJob?.cancel()
         statsJob = null
 
+        // Clear cached PendingIntent objects to allow fresh creation on next connection
+        cachedDisconnectPendingIntent = null
+        cachedContentPendingIntent = null
+
         // Log final session stats
         val totalRx = lastRx
         val totalTx = lastTx
@@ -491,19 +501,38 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             else -> getString(R.string.notification_title_disconnected)
         }
 
-        // Intent for manual disconnection via notification action
-        val disconnectIntent = Intent(this, ProtonVpnService::class.java).apply {
-            action = ACTION_DISCONNECT
+        // Get or create cached PendingIntent for disconnect action
+        // Caching reduces IPC calls to system service and prevents DeadSystemException
+        val disconnectPendingIntent = try {
+            if (cachedDisconnectPendingIntent == null) {
+                val disconnectIntent = Intent(this, ProtonVpnService::class.java).apply {
+                    action = ACTION_DISCONNECT
+                }
+                cachedDisconnectPendingIntent = PendingIntent.getService(
+                    this, 0, disconnectIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+            }
+            cachedDisconnectPendingIntent
+        } catch (e: Exception) {
+            ProtonLogger.e(TAG, "Failed to create disconnect PendingIntent, system service may be unavailable", e)
+            null
         }
-        val disconnectPendingIntent = PendingIntent.getService(
-            this, 0, disconnectIntent, PendingIntent.FLAG_IMMUTABLE
-        )
 
-        // Intent to launch the application when the notification is tapped
-        val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
-        val contentPendingIntent = PendingIntent.getActivity(
-            this, 0, launchIntent, PendingIntent.FLAG_IMMUTABLE
-        )
+        // Get or create cached PendingIntent for app launch
+        val contentPendingIntent = try {
+            if (cachedContentPendingIntent == null) {
+                val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+                if (launchIntent != null) {
+                    cachedContentPendingIntent = PendingIntent.getActivity(
+                        this, 0, launchIntent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+                }
+            }
+            cachedContentPendingIntent
+        } catch (e: Exception) {
+            ProtonLogger.e(TAG, "Failed to create content PendingIntent, system service may be unavailable", e)
+            null
+        }
 
         val activeChannelId = if (notificationsEnabled) CHANNEL_ID else CHANNEL_SILENT_ID
 
@@ -512,15 +541,22 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             .setContentTitle(title)
             .setPriority(if (notificationsEnabled) NotificationCompat.PRIORITY_LOW else NotificationCompat.PRIORITY_MIN)
             .setOngoing(stateName != Tunnel.State.DOWN.name)
-            .setContentIntent(contentPendingIntent)
             .setShowWhen(false)
 
+        // Set content intent if available
+        if (contentPendingIntent != null) {
+            builder.setContentIntent(contentPendingIntent)
+        }
+
         if (stateName == Tunnel.State.UP.name) {
-            builder.addAction(
-                0,
-                getString(R.string.notification_action_disconnect),
-                disconnectPendingIntent
-            )
+            // Add disconnect action only if PendingIntent was successfully created
+            if (disconnectPendingIntent != null) {
+                builder.addAction(
+                    0,
+                    getString(R.string.notification_action_disconnect),
+                    disconnectPendingIntent
+                )
+            }
             if (!speedText.isNullOrEmpty() && notificationsEnabled) {
                 builder.setContentText(speedText)
             }
