@@ -266,8 +266,10 @@ class MapView(context: Context) : View(context) {
     // SVG rendering via Picture/Canvas
     private var mapPicture: Picture? = null
     private var mapRasterBitmap: Bitmap? = null
+    private var mapAnimationBitmap: Bitmap? = null
     private var mapCacheBitmap: Bitmap? = null
     private val cacheCanvas = Canvas()
+    private val animationCanvas = Canvas()
 
     // Matrix interpolation for smooth zooms
     private val currentMatrix = Matrix()
@@ -377,6 +379,8 @@ class MapView(context: Context) : View(context) {
         mapPicture = null
         mapRasterBitmap?.recycle()
         mapRasterBitmap = null
+        mapAnimationBitmap?.recycle()
+        mapAnimationBitmap = null
         mapCacheBitmap?.recycle()
         mapCacheBitmap = null
     }
@@ -509,15 +513,17 @@ class MapView(context: Context) : View(context) {
         val isAnimating = matrixAnimator?.isRunning == true
 
         if (isAnimating) {
-            // During zoom, apply the transformation matrix directly to the rasterized bitmap.
-            // This avoids the problematic canvas.concat() + drawPicture() pattern that
-            // triggers GPU assertion failures on certain Android devices and drivers.
+            // During zoom animation, render to intermediate bitmap first to avoid GPU assertion failures.
+            // This isolates matrix transformation from the final rendering pipeline.
             mapRasterBitmap?.let { bitmap ->
-                try {
-                    val paint = Paint().apply { isFilterBitmap = true }
-                    canvas.drawBitmap(bitmap, currentMatrix, paint)
-                } catch (e: Exception) {
-                    ProtonLogger.e("HomeMap", "Failed to draw transformed bitmap", e)
+                mapAnimationBitmap?.recycle()
+                mapAnimationBitmap = renderToIntermediateBitmap(bitmap, currentMatrix)
+                mapAnimationBitmap?.let { intermediateBitmap ->
+                    try {
+                        canvas.drawBitmap(intermediateBitmap, 0f, 0f, null)
+                    } catch (e: Exception) {
+                        ProtonLogger.e("HomeMap", "Failed to draw animation bitmap", e)
+                    }
                 }
             }
             // Invalidate cache since zoom changed
@@ -528,22 +534,18 @@ class MapView(context: Context) : View(context) {
                 mapCacheBitmap?.recycle()
                 mapCacheBitmap = null
                 mapRasterBitmap?.let { bitmap ->
-                    try {
-                        val cachebitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                        mapCacheBitmap = cachebitmap
-                        cacheCanvas.setBitmap(cachebitmap)
-                        cacheCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
-                        val paint = Paint().apply { isFilterBitmap = true }
-                        cacheCanvas.drawBitmap(bitmap, currentMatrix, paint)
-                    } catch (e: Exception) {
-                        ProtonLogger.e("HomeMap", "Failed to create/prepare cache bitmap", e)
-                        mapCacheBitmap = null
-                        // Fallback: render directly onto the view canvas
-                        try {
-                            val paint = Paint().apply { isFilterBitmap = true }
-                            canvas.drawBitmap(bitmap, currentMatrix, paint)
-                        } catch (e2: Exception) {
-                            ProtonLogger.e("HomeMap", "Failed to draw bitmap", e2)
+                    // Use intermediate rendering approach for consistency and stability
+                    mapCacheBitmap = renderToIntermediateBitmap(bitmap, currentMatrix)
+                    if (mapCacheBitmap == null) {
+                        ProtonLogger.e("HomeMap", "Failed to create cached bitmap")
+                        // Fallback: try intermediate rendering directly for this frame
+                        renderToIntermediateBitmap(bitmap, currentMatrix)?.let { intermediateBitmap ->
+                            try {
+                                canvas.drawBitmap(intermediateBitmap, 0f, 0f, null)
+                            } catch (e: Exception) {
+                                ProtonLogger.e("HomeMap", "Failed to draw fallback bitmap", e)
+                            }
+                            intermediateBitmap.recycle()
                         }
                         return
                     }
@@ -596,6 +598,29 @@ class MapView(context: Context) : View(context) {
     }
 
     private fun isConnected() = connectedServer != null && !isConnecting
+
+    /**
+     * Renders the rasterized bitmap with transformation applied to an intermediate bitmap.
+     * This avoids GPU assertion failures that occur when applying transformation matrices
+     * directly to large bitmaps during final rendering.
+     */
+    private fun renderToIntermediateBitmap(bitmap: Bitmap, matrix: Matrix): Bitmap? {
+        if (width <= 0 || height <= 0) return null
+
+        return try {
+            val intermediateBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            animationCanvas.setBitmap(intermediateBitmap)
+            animationCanvas.drawColor(android.graphics.Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+            
+            val paint = Paint().apply { isFilterBitmap = true }
+            animationCanvas.drawBitmap(bitmap, matrix, paint)
+            
+            intermediateBitmap
+        } catch (e: Exception) {
+            ProtonLogger.e("HomeMap", "Failed to render intermediate bitmap", e)
+            null
+        }
+    }
 }
 
 // --- Compose Wrapper ---
