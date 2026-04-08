@@ -13,6 +13,12 @@
 - **USE AT YOUR OWN RISK:** This software is provided "as is" without any warranties. The developer assumes **no responsibility** for your accounts, data, or any potential consequences (such as account restrictions) resulting from the use of this unofficial client.
 - **SUPPORT PROTON:** If you value privacy and enjoy Proton's services, we highly recommend subscribing to an official **Proton VPN paid plan**. Supporting the original creators ensures the continued development of the secure infrastructure we all rely on.
 
+### 📱 System Requirements
+- **Operating System:** Android 10+ (API level 29 or higher)
+- **Device Architecture:** **64-bit only** (arm64-v8a or x86_64)
+  - ⚠️ **32-bit devices are NOT supported.** The VPN engine (AmneziaWG) is compiled exclusively for 64-bit architectures. Attempting to install on 32-bit devices will result in a native library error.
+  - Most modern Android devices are 64-bit. Check your device's CPU architecture to verify compatibility.
+
 ### 🛠 Build Instructions
 
 #### Using Android Studio (Recommended)
@@ -73,6 +79,12 @@ Ensure you have the Android SDK and JDK 17 installed.
 - **НЕОФИЦИАЛЬНЫЙ КЛИЕНТ:** Данное приложение **НЕ ЯВЛЯЕТСЯ** официальным продуктом Proton AG и никак не связано с официальной командой разработчиков Proton.
 - **ИСПОЛЬЗУЙТЕ НА СВОЙ СТРАХ И РИСК:** Программное обеспечение предоставляется по принципу «как есть». Разработчик **не несет ответственности** за ваши аккаунты, сохранность данных или любые возможные последствия (включая блокировки аккаунтов), возникшие в результате использования этого клиента.
 - **ПОДДЕРЖИТЕ PROTON:** Если вы цените приватность и вам нравятся продукты Proton, мы настоятельно рекомендуем **оформить платную подписку** на официальном сайте. Поддержка оригинальных создателей гарантирует развитие защищенной инфраструктуры, которой мы все пользуемся.
+
+### 📱 Системные требования
+- **Операционная система:** Android 10+ (API 29 и выше)
+- **Архитектура устройства:** **Только 64-бит** (arm64-v8a или x86_64)
+  - ⚠️ **32-бит устройства НЕ поддерживаются.** VPN-движок (AmneziaWG) скомпилирован исключительно под 64-битные архитектуры. Попытка установки на 32-бит устройства приведет к ошибке загрузки нативной библиотеки.
+  - Большинство современных Android-устройств - это 64-бит. Проверьте архитектуру процессора вашего устройства для подтверждения совместимости.
 
 ### 🛠 Инструкции по сборке
 

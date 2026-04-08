@@ -209,6 +209,13 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     override fun onCreate() {
         ProtonLogger.i(TAG, "VPN Service creating in isolated :vpn process (PID: ${android.os.Process.myPid()})")
 
+        // Verify 64-bit runtime (failsafe for 32-bit device detection)
+        if (System.getProperty("ro.product.cpu.abi")?.contains("armeabi") == true ||
+            System.getProperty("ro.product.cpu.abi")?.contains("x86") == true && 
+            System.getProperty("ro.product.cpu.abi")?.contains("x86_64") == false) {
+            ProtonLogger.e(TAG, "FATAL: App requires 64-bit CPU (arm64-v8a or x86_64). This device is 32-bit and not supported.")
+        }
+
         // Set environment variables required for the Go backend (WireGuard/AmneziaWG)
         try {
             Os.setenv("TMPDIR", cacheDir.absolutePath, true)

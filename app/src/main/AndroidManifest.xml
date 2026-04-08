@@ -18,6 +18,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- This app requires 64-bit native libraries (arm64-v8a or x86_64).
+         32-bit devices are not supported. -->
+    <uses-native-library
+        android:name="libam-go.so"
+        android:required="true" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
