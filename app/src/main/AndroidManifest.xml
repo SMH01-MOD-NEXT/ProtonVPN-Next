@@ -55,6 +55,12 @@
                 android:name="androidx.work.WorkManagerInitializer"
                 android:value="androidx.startup"
                 tools:node="remove" />
+            <!-- Disable EmojiCompatInitializer to prevent synchronous main-thread font loading
+                 at app startup, which caused Background ANR on cold start (ANDROID-V). -->
+            <meta-data
+                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+                android:value="androidx.startup"
+                tools:node="remove" />
         </provider>
 
         <activity
