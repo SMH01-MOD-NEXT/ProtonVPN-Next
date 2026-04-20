@@ -422,6 +422,13 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
     /**
      * Starts background collection of tunnel-specific logs from Logcat
      * and explicitly forwards critical AmneziaWG logs to Sentry as Breadcrumbs.
+     *
+     * To prevent CPU saturation (which can cause background ANRs on the main thread):
+     *  - Repetitive log lines are deduplicated within a rolling time window.
+     *  - A small coroutine yield is inserted between each line so the IO thread
+     *    is not monopolised, allowing other work to be scheduled.
+     *  - The expensive Sentry Logs API (addSentryLog) is intentionally NOT called
+     *    here; breadcrumbs alone are sufficient for tunnel diagnostics.
      */
     private fun startLogcatCollection() {
         if (logcatJob?.isActive == true) {
@@ -448,6 +455,14 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 return@launch
             }
 
+            // Deduplication: track last seen message and when it was last forwarded.
+            // High-frequency identical messages (e.g. repeated handshake/keepalive lines
+            // during a degraded tunnel) are suppressed to avoid flooding Sentry and
+            // saturating DefaultDispatcher-worker threads.
+            var lastLine = ""
+            var lastLineEmittedAt = 0L
+            val deduplicationWindowMs = 5_000L // suppress exact duplicates within 5 s
+
             try {
                 process.inputStream.bufferedReader().useLines { lines ->
                     lines.forEach { line ->
@@ -463,7 +478,19 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                         // Drop completely empty logs (which cause the "staircase" effect in Sentry)
                         if (cleanLine.isBlank()) return@forEach
 
-                        // Add as breadcrumb (will be sent IF a crash/error happens later)
+                        val now = System.currentTimeMillis()
+
+                        // Suppress exact duplicate lines within the deduplication window.
+                        if (cleanLine == lastLine && now - lastLineEmittedAt < deduplicationWindowMs) {
+                            return@forEach
+                        }
+                        lastLine = cleanLine
+                        lastLineEmittedAt = now
+
+                        // Add as breadcrumb (will be sent IF a crash/error happens later).
+                        // Note: we deliberately do NOT call ProtonLogger.d() here because that
+                        // would trigger addSentryLog() — an extra Sentry SDK IPC call per line
+                        // that is unnecessary for routine tunnel noise and adds significant cost.
                         ProtonLogger.addSentryBreadcrumb(
                             "AmneziaWG",
                             cleanLine,
@@ -471,8 +498,14 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                             "vpn.awg"
                         )
 
-                        // Local debug as well
-                        ProtonLogger.d("Tun/proton_awg", cleanLine)
+                        // Local logcat output (debug builds only, no Sentry overhead)
+                        if (android.util.Log.isLoggable("Tun/proton_awg", android.util.Log.DEBUG)) {
+                            android.util.Log.d("Tun/proton_awg", cleanLine)
+                        }
+
+                        // Yield to the coroutine dispatcher so this hot loop does not
+                        // monopolise a DefaultDispatcher worker thread and starve the UI.
+                        kotlinx.coroutines.yield()
                     }
                 }
             } catch (e: Exception) {

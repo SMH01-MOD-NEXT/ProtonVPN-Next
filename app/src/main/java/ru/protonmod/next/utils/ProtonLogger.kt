@@ -23,6 +23,7 @@ import io.sentry.Breadcrumb
 import io.sentry.SentryLevel
 import io.sentry.SentryLogLevel
 import ru.protonmod.next.BuildConfig
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * A professional logging wrapper for Proton VPN-Next.
@@ -34,6 +35,20 @@ object ProtonLogger {
 
     private const val DEFAULT_TAG = "ProtonVPN"
     private const val CALL_STACK_INDEX = 4
+
+    /**
+     * Minimum interval (ms) between breadcrumbs with the same category+message prefix.
+     * Prevents high-frequency tunnel log loops from flooding the Sentry breadcrumb buffer
+     * and saturating DefaultDispatcher worker threads (which causes background ANRs).
+     */
+    private const val BREADCRUMB_RATE_LIMIT_MS = 1_000L
+
+    /**
+     * Tracks the last time a breadcrumb with a given dedup key was emitted.
+     * Key = "$category:${message.take(60)}" to group near-duplicate messages.
+     * ConcurrentHashMap so it is safe to access from multiple IO threads.
+     */
+    private val breadcrumbLastEmitted = ConcurrentHashMap<String, Long>()
 
     /** Controlled by SettingsManager at runtime/startup */
     var isNonFatalEnabled: Boolean = true
@@ -213,6 +228,17 @@ object ProtonLogger {
         category: String = "log.message"
     ) {
         if (!isAnalyticsEnabled) return
+
+        // Rate-limit repetitive breadcrumbs (e.g. high-frequency tunnel handshake/keepalive
+        // log lines) to prevent saturating Dispatcher.IO threads and causing background ANRs.
+        val dedupKey = "$category:${message.take(60)}"
+        val now = System.currentTimeMillis()
+        val last = breadcrumbLastEmitted[dedupKey]
+        if (last != null && now - last < BREADCRUMB_RATE_LIMIT_MS) {
+            return // Drop this breadcrumb; an identical one was emitted very recently
+        }
+        breadcrumbLastEmitted[dedupKey] = now
+
         val breadcrumb = Breadcrumb().apply {
             this.category = if (category == "log.message") tag else category
             this.message = message
