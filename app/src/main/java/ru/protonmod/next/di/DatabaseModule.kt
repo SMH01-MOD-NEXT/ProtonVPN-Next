@@ -148,6 +148,14 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_14_15 = object : Migration(14, 15) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE session ADD COLUMN certExpiresAt INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE session ADD COLUMN certRefreshAt INTEGER NOT NULL DEFAULT 0")
+            db.execSQL("ALTER TABLE servers_cache ADD COLUMN statusId TEXT")
+        }
+    }
+
     @Provides
     @Singleton
     fun provideAppDatabase(@ApplicationContext context: Context): AppDatabase {
@@ -166,6 +174,7 @@ object DatabaseModule {
         .addMigrations(MIGRATION_11_12)
         .addMigrations(MIGRATION_12_13)
         .addMigrations(MIGRATION_13_14)
+        .addMigrations(MIGRATION_14_15)
         .build()
     }
 
