@@ -22,6 +22,10 @@ import io.sentry.Sentry
 import io.sentry.Breadcrumb
 import io.sentry.SentryLevel
 import io.sentry.SentryLogLevel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import ru.protonmod.next.BuildConfig
 import java.util.concurrent.ConcurrentHashMap
 
@@ -49,6 +53,21 @@ object ProtonLogger {
      * ConcurrentHashMap so it is safe to access from multiple IO threads.
      */
     private val breadcrumbLastEmitted = ConcurrentHashMap<String, Long>()
+
+    /**
+     * Tracks the last time a Sentry log entry with a given dedup key was emitted.
+     * Key = "$tag:${message.take(60)}" to group near-duplicate messages.
+     * Mirrors breadcrumbLastEmitted to prevent the same high-frequency log flood
+     * from saturating Sentry SDK internals and causing background ANRs.
+     */
+    private val sentryLogLastEmitted = ConcurrentHashMap<String, Long>()
+
+    /**
+     * Dedicated background scope for dispatching Sentry log calls off the calling thread.
+     * Ensures Sentry.logger().log() (which acquires a scope lock) never blocks the
+     * main/broadcast thread and cannot cause a background ANR.
+     */
+    private val logScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** Controlled by SettingsManager at runtime/startup */
     var isNonFatalEnabled: Boolean = true
@@ -253,12 +272,25 @@ object ProtonLogger {
     /**
      * Forwards a log entry to the Sentry Logs API (requires options.logs.isEnabled = true).
      * This feeds the real-time "Logs" explorer in Sentry, separate from breadcrumbs.
+     *
+     * Rate-limited (same interval as breadcrumbs) to drop high-frequency duplicate log lines
+     * and dispatched asynchronously on [logScope] so the Sentry SDK's internal scope-lock
+     * acquisition (Scope.getSpan) never blocks the calling thread — preventing background ANRs.
      */
     @PublishedApi
     internal fun addSentryLog(tag: String, message: String, level: SentryLevel, throwable: Throwable? = null) {
         if (!isAnalyticsEnabled || !isSentryLogsEnabled) return
+
+        // Rate-limit: drop near-duplicate log lines emitted faster than BREADCRUMB_RATE_LIMIT_MS.
+        val dedupKey = "$tag:${message.take(60)}"
+        val now = System.currentTimeMillis()
+        val last = sentryLogLastEmitted[dedupKey]
+        if (last != null && now - last < BREADCRUMB_RATE_LIMIT_MS) {
+            return // Drop; an identical entry was emitted very recently.
+        }
+        sentryLogLastEmitted[dedupKey] = now
+
         val fullMessage = "[$tag] $message"
-        
         val logLevel = when (level) {
             SentryLevel.DEBUG -> SentryLogLevel.DEBUG
             SentryLevel.INFO -> SentryLogLevel.INFO
@@ -267,12 +299,16 @@ object ProtonLogger {
             SentryLevel.FATAL -> SentryLogLevel.FATAL
         }
 
-        // Use the official Sentry Logs API (v8.12.0+)
-        // This ensures logs are sent to the "Logs" explorer in both debug and release.
-        if (throwable != null) {
-            Sentry.logger().log(logLevel, "$fullMessage: ${throwable.message}", throwable)
-        } else {
-            Sentry.logger().log(logLevel, fullMessage)
+        // Dispatch off the calling thread so Sentry.logger().log() (which acquires a
+        // scope lock) cannot stall the main/broadcast thread and trigger a background ANR.
+        logScope.launch {
+            // Use the official Sentry Logs API (v8.12.0+)
+            // This ensures logs are sent to the "Logs" explorer in both debug and release.
+            if (throwable != null) {
+                Sentry.logger().log(logLevel, "$fullMessage: ${throwable.message}", throwable)
+            } else {
+                Sentry.logger().log(logLevel, fullMessage)
+            }
         }
     }
 
