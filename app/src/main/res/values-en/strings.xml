@@ -32,17 +32,12 @@
     <string name="desc_back_button">Navigate back</string>
     <string name="desc_back">Back</string>
     <string name="desc_toggle_password">Toggle password visibility</string>
-    <string name="login_success">Login Successful!</string>
-    <string name="login_error">Error: %1$s</string>
-    <string name="title_security_check">Security Check</string>
     <string name="title_2fa">Two-Factor Authentication</string>
     <string name="msg_2fa_instruction">Enter the 6-digit TOTP code from your authenticator app.</string>
     <string name="hint_2fa_code">6-digit Code</string>
     <string name="btn_verify">Verify</string>
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
-    <string name="desc_settings">Settings</string>
-    <string name="error_loading_servers">Error loading servers</string>
     <string name="btn_retry">Retry</string>
     <string name="error_system_appops">System error: please reinstall the app.</string>
     <string name="title_recent_connections">Recent connections</string>
@@ -52,11 +47,8 @@
     <string name="status_disconnecting">Disconnecting…</string>
     <string name="status_disconnected">Disconnected</string>
     <string name="status_not_connected">Not connected</string>
-    <string name="msg_traffic_not_protected">Your traffic is not protected</string>
     <string name="desc_toggle_connection">Toggle Connection</string>
     <string name="desc_country">Country</string>
-    <string name="map_placeholder">Interactive Map Placeholder</string>
-    <string name="ip_placeholder">0.0.0.0</string>
     <string name="status_vpn">VPN</string>
     <string name="location_format">%1$s • %2$s</string>
     <string name="location_city_format">%1$s, %2$s</string>
@@ -105,12 +97,9 @@
     <string name="settings_licenses_desc">Third-party software used in the app</string>
     <string name="settings_on">On</string>
     <string name="settings_off">Off</string>
-    <string name="settings_connection_protocol">Protocol</string>
     <string name="settings_port">Port</string>
     <string name="settings_port_desc">Selection of connection port</string>
     <string name="settings_port_auto">Auto</string>
-    <string name="settings_obfuscation">Obfuscation (AmneziaWG)</string>
-    <string name="settings_obfuscation_desc">Modify packet headers to bypass DPI</string>
     <string name="settings_reset_obfuscation">Reset to Standard ProtonVPN-Next</string>
     <string name="settings_api_bypass">API Block Bypass</string>
     <string name="settings_api_bypass_desc">Ensures successful login and server retrieval by routing API requests through alternative channels when blocked.</string>
@@ -126,7 +115,6 @@
     <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
     <string name="api_bypass_strategy_warp_desc">Uses a temporary WARP tunnel for API requests. High reliability.</string>
     <string name="warp_fetching_config">Fetching WARP configuration…</string>
-    <string name="warp_error_fetching">Failed to fetch configuration. Check your connection.</string>
     <string name="warp_permission_title">VPN Permission Required</string>
     <string name="warp_permission_desc">WARP needs permission to create a local tunnel for API bypass. No data is sent outside Cloudflare.</string>
     <string name="btn_allow">Allow</string>
@@ -145,7 +133,7 @@
     <string name="settings_country_spoofing_description">Override the country code sent to the API to simulate a different physical location.</string>
     <string name="settings_country_spoofing_null_label">Null Spoof</string>
     <string name="settings_country_spoofing_null_desc">Do not send any country code header to the API.</string>
-    <string name="settings_country_spoofing_code_label">Country Code (ISO 3166-1 alpha-2)</string>
+    <string name="settings_country_spoofing_code_label">Country Code (ISO 3166&#8211;1 alpha&#8211;2)</string>
     <string name="settings_country_spoofing_code_hint">e.g. US, DE, RU</string>
     <string name="settings_country_spoofing_update_toast">Updating server list…</string>
     <!-- Custom DNS -->
@@ -250,10 +238,8 @@
     <!-- About App Screen -->
     <string name="about_community">Community</string>
     <string name="about_github">GitHub</string>
-    <string name="about_github_unavailable">GitHub (%1$s)</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
-    <string name="about_unavailable">Temporarily unavailable</string>
     <string name="about_sentry">Powered by Sentry</string>
     <string name="url_sentry">https://sentry.io/</string>
     <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
@@ -275,7 +261,6 @@
     <string name="license_room_title">Room Database</string>
     <string name="license_leakcanary_title">LeakCanary</string>
     <string name="license_android_svg_title">Android SVG</string>
-    <string name="license_mit">MIT License</string>
     <string name="license_bsl">Business Source License 1.1</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Split Tunneling Mode</string>
@@ -296,14 +281,6 @@
     <plurals name="st_domains_selected">
         <item quantity="one">%1$d domain selected</item>
         <item quantity="other">%1$d domains selected</item>
-    </plurals>
-    <plurals name="settings_apps_excluded_count">
-        <item quantity="one">%1$d app excluded</item>
-        <item quantity="other">%1$d apps excluded</item>
-    </plurals>
-    <plurals name="settings_ips_excluded_count">
-        <item quantity="one">%1$d IP excluded</item>
-        <item quantity="other">%1$d IPs excluded</item>
     </plurals>
     <string name="st_search_apps_hint">Search apps</string>
     <string name="st_selected_apps_header">Selected Apps (%1$d)</string>
@@ -339,8 +316,6 @@
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Active session not found. Please log in again.</string>
     <string name="error_unknown">Unknown error</string>
-    <string name="error_auth_failed">An unexpected authentication error occurred</string>
-    <string name="error_2fa_failed">Two-factor verification failed</string>
     <string name="unknown">Unknown</string>
     <!-- Profiles Screen -->
     <string name="profiles_title">Profiles</string>
@@ -362,14 +337,10 @@
     <string name="btn_cancel">Cancel</string>
     <string name="btn_delete">Delete</string>
     <string name="btn_edit">Edit</string>
-    <string name="desc_delete_profile">Delete Profile</string>
-    <string name="default_profile_name">My Profile</string>
     <string name="category_general">General</string>
     <string name="label_profile_name">Profile Name</string>
-    <string name="category_location">Location</string>
     <string name="location_server">Server: %1$s</string>
     <string name="location_fastest">Fastest</string>
-    <string name="label_target_location">Target Location</string>
     <string name="label_location">Location</string>
     <string name="category_connection">Connection</string>
     <string name="label_protocol">Protocol</string>
@@ -390,11 +361,9 @@
     <string name="location_fastest_in_city">Fastest in %1$s</string>
     <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">Select Obfuscation Config</string>
-    <string name="title_auto_open_url">Auto-open URL</string>
     <string name="btn_create_new_config">Create New Config</string>
     <string name="connect_go_title">Connect &amp; Go</string>
     <string name="connect_go_desc">Enter the URL to open upon connection (e.g., https://example.com)</string>
-    <string name="hint_url_placeholder">https://</string>
     <string name="title_select_protocol">Select Protocol</string>
     <string name="custom_config_name">Custom Config %1$d</string>
     <string name="title_edit_obfuscation_config">Edit Obfuscation Config</string>
@@ -444,11 +413,8 @@
     <string name="obfuscation_dialog_domain_title">Enter Domain</string>
     <string name="obfuscation_dialog_domain_desc">Enter a domain (e.g., google.com) to generate a QUIC-based identification string.</string>
     <string name="settings_widget">Widget</string>
-    <string name="settings_widget_desc">Add a widget to your home screen for quick connection control</string>
     <string name="settings_widget_add_to_home">Add to Home Screen</string>
     <string name="settings_widget_add_to_home_desc">Place a VPN widget on your home screen</string>
-    <string name="widget_added_successfully">Widget pinned successfully!</string>
-    <string name="widget_error_not_supported">Your home screen does not support pinning widgets.</string>
     <string name="captcha_title">Security Check</string>
     <string name="captcha_message">To keep your account secure, please complete the verification below.</string>
     <string name="captcha_proxy_active">Anti-blocking proxy is active</string>
@@ -491,5 +457,4 @@
     <string name="ota_status_up_to_date">App is up to date</string>
     <string name="ota_btn_check">Check for Updates</string>
     <string name="ota_downloading">Downloading update… %1$d%%</string>
-    <string name="ota_download_failed">Download failed. Please try again later.</string>
 </resources>
