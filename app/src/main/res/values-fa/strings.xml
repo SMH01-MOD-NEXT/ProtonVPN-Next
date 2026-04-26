@@ -32,17 +32,12 @@
     <string name="desc_back_button">بازگشت</string>
     <string name="desc_back">بازگشت</string>
     <string name="desc_toggle_password">تغییر وضعیت نمایش رمز عبور</string>
-    <string name="login_success">ورود با موفقیت انجام شد!</string>
-    <string name="login_error">خطا: %1$s</string>
-    <string name="title_security_check">بررسی امنیتی</string>
     <string name="title_2fa">احراز هویت دو مرحله‌ای</string>
     <string name="msg_2fa_instruction">کد ۶ رقمی TOTP را از برنامه احراز هویت خود وارد کنید.</string>
     <string name="hint_2fa_code">کد ۶ رقمی</string>
     <string name="btn_verify">تایید</string>
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
-    <string name="desc_settings">تنظیمات</string>
-    <string name="error_loading_servers">خطا در بارگذاری سرورها</string>
     <string name="btn_retry">تلاش مجدد</string>
     <string name="error_system_appops">خطای سیستم: لطفاً برنامه را دوباره نصب کنید.</string>
     <string name="title_recent_connections">اتصال‌های اخیر</string>
@@ -52,11 +47,8 @@
     <string name="status_disconnecting">در حال قطع اتصال…</string>
     <string name="status_disconnected">قطع شد</string>
     <string name="status_not_connected">متصل نیست</string>
-    <string name="msg_traffic_not_protected">ترافیک شما محافظت نمی‌شود</string>
     <string name="desc_toggle_connection">تغییر وضعیت اتصال</string>
     <string name="desc_country">کشور</string>
-    <string name="map_placeholder">محل قرارگیری نقشه تعاملی</string>
-    <string name="ip_placeholder">0.0.0.0</string>
     <string name="status_vpn">VPN</string>
     <string name="location_format">%1$s • %2$s</string>
     <string name="location_city_format">%1$s, %2$s</string>
@@ -105,12 +97,9 @@
     <string name="settings_licenses_desc">نرم‌افزارهای شخص ثالث استفاده شده در برنامه</string>
     <string name="settings_on">روشن</string>
     <string name="settings_off">خاموش</string>
-    <string name="settings_connection_protocol">پروتکل</string>
     <string name="settings_port">پورت</string>
     <string name="settings_port_desc">انتخاب پورت اتصال</string>
     <string name="settings_port_auto">خودکار</string>
-    <string name="settings_obfuscation">مبهم‌سازی (AmneziaWG)</string>
-    <string name="settings_obfuscation_desc">تغییر هدرهای بسته برای دور زدن DPI</string>
     <string name="settings_reset_obfuscation">بازنشانی به استاندارد ProtonVPN-Next</string>
     <string name="settings_api_bypass">دور زدن مسدودسازی API</string>
     <string name="settings_api_bypass_desc">با مسیریابی درخواست‌های API از طریق کانال‌های جایگزین در صورت مسدود بودن، ورود موفقیت‌آمیز و بازیابی سرور را تضمین می‌کند.</string>
@@ -126,7 +115,6 @@
     <string name="api_bypass_strategy_warp">وارپ (کلادفلر)</string>
     <string name="api_bypass_strategy_warp_desc">استفاده از یک تونل موقت WARP برای درخواست‌های API. قابلیت اطمینان بالا.</string>
     <string name="warp_fetching_config">در حال دریافت پیکربندی WARP…</string>
-    <string name="warp_error_fetching">دریافت پیکربندی ناموفق بود. اتصال خود را بررسی کنید.</string>
     <string name="warp_permission_title">مجوز VPN لازم است</string>
     <string name="warp_permission_desc">وارپ برای ایجاد یک تونل محلی جهت دور زدن مسدودسازی API به مجوز نیاز دارد. هیچ داده‌ای به خارج از کلادفلر ارسال نمی‌شود.</string>
     <string name="btn_allow">اجازه دادن</string>
@@ -250,10 +238,8 @@
     <!-- About App Screen -->
     <string name="about_community">انجمن</string>
     <string name="about_github">GitHub</string>
-    <string name="about_github_unavailable">GitHub (%1$s)</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
-    <string name="about_unavailable">موقت در دسترس نیست</string>
     <string name="about_sentry">طراحی شده توسط Sentry</string>
     <string name="url_sentry">https://sentry.io/</string>
     <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
@@ -275,7 +261,6 @@
     <string name="license_room_title">Room Database</string>
     <string name="license_leakcanary_title">LeakCanary</string>
     <string name="license_android_svg_title">Android SVG</string>
-    <string name="license_mit">MIT License</string>
     <string name="license_bsl">Business Source License 1.1</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">حالت تونل‌زنی تقسیم‌شده</string>
@@ -296,14 +281,6 @@
     <plurals name="st_domains_selected">
         <item quantity="one">%1$d دامنه انتخاب شد</item>
         <item quantity="other">%1$d دامنه انتخاب شدند</item>
-    </plurals>
-    <plurals name="settings_apps_excluded_count">
-        <item quantity="one">%1$d برنامه حذف شد</item>
-        <item quantity="other">%1$d برنامه حذف شدند</item>
-    </plurals>
-    <plurals name="settings_ips_excluded_count">
-        <item quantity="one">%1$d IP حذف شد</item>
-        <item quantity="other">%1$d IP حذف شدند</item>
     </plurals>
     <string name="st_search_apps_hint">جستجوی برنامه‌ها</string>
     <string name="st_selected_apps_header">برنامه‌های انتخاب شده (%1$d)</string>
@@ -339,8 +316,6 @@
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">نشست فعال یافت نشد. لطفاً دوباره وارد شوید.</string>
     <string name="error_unknown">خطای ناشناخته</string>
-    <string name="error_auth_failed">یک خطای احراز هویت غیرمنتظره رخ داد</string>
-    <string name="error_2fa_failed">تایید دو مرحله‌ای ناموفق بود</string>
     <string name="unknown">نامشخص</string>
     <!-- Profiles Screen -->
     <string name="profiles_title">پروفایل‌ها</string>
@@ -362,14 +337,10 @@
     <string name="btn_cancel">لغو</string>
     <string name="btn_delete">حذف</string>
     <string name="btn_edit">ویرایش</string>
-    <string name="desc_delete_profile">حذف پروفایل</string>
-    <string name="default_profile_name">پروفایل من</string>
     <string name="category_general">عمومی</string>
     <string name="label_profile_name">نام پروفایل</string>
-    <string name="category_location">مکان</string>
     <string name="location_server">سرور: %1$s</string>
     <string name="location_fastest">سریع‌ترین</string>
-    <string name="label_target_location">مکان هدف</string>
     <string name="label_location">مکان</string>
     <string name="category_connection">اتصال</string>
     <string name="label_protocol">پروتکل</string>
@@ -390,11 +361,9 @@
     <string name="location_fastest_in_city">سریع‌ترین در %1$s</string>
     <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">انتخاب پیکربندی مبهم‌سازی</string>
-    <string name="title_auto_open_url">باز کردن خودکار URL</string>
     <string name="btn_create_new_config">ایجاد پیکربندی جدید</string>
     <string name="connect_go_title">اتصال و اجرا</string>
     <string name="connect_go_desc">URL را برای باز شدن پس از اتصال وارد کنید (مثلاً https://example.com)</string>
-    <string name="hint_url_placeholder">https://</string>
     <string name="title_select_protocol">انتخاب پروتکل</string>
     <string name="custom_config_name">پیکربندی سفارشی %1$d</string>
     <string name="title_edit_obfuscation_config">ویرایش پیکربندی مبهم‌سازی</string>
@@ -444,11 +413,8 @@
     <string name="obfuscation_dialog_domain_title">ورود دامنه</string>
     <string name="obfuscation_dialog_domain_desc">یک دامنه وارد کنید (مثلاً google.com) تا یک رشته شناسایی مبتنی بر QUIC تولید شود.</string>
     <string name="settings_widget">ویجت</string>
-    <string name="settings_widget_desc">افزودن ویجت به صفحه اصلی برای کنترل سریع اتصال</string>
     <string name="settings_widget_add_to_home">افزودن به صفحه اصلی</string>
     <string name="settings_widget_add_to_home_desc">قرار دادن ویجت VPN در صفحه اصلی</string>
-    <string name="widget_added_successfully">ویجت با موفقیت اضافه شد!</string>
-    <string name="widget_error_not_supported">صفحه اصلی شما از پین کردن ویجت پشتیبانی نمی‌کند.</string>
     <string name="captcha_title">تایید انسانی</string>
     <string name="captcha_message">برای ایمن نگه داشتن حساب خود، لطفاً تأیید زیر را کامل کنید.</string>
     <string name="captcha_proxy_active">پراکسی ضد مسدودسازی فعال است</string>
@@ -491,5 +457,4 @@
     <string name="ota_status_up_to_date">برنامه بروز است</string>
     <string name="ota_btn_check">بررسی برای بروزرسانی</string>
     <string name="ota_downloading">در حال دانلود بروزرسانی… %1$d%%</string>
-    <string name="ota_download_failed">دانلود ناموفق بود. لطفاً بعداً دوباره تلاش کنید.</string>
 </resources>
