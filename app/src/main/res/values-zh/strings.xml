@@ -17,14 +17,12 @@
   -->
 <resources>
     <string name="app_name">Proton VPN-Next</string>
-
     <!-- Welcome Screen -->
     <string name="welcome_title">欢迎使用 Proton VPN-Next</string>
     <string name="welcome_subtitle">通过安全、私密且快速的 VPN 掌控您的数字生活。无日志，无追踪。</string>
     <string name="btn_create_account">创建账户</string>
     <string name="btn_login">登录</string>
     <string name="btn_continue_guest">以访客身份继续</string>
-
     <!-- Login Screen -->
     <string name="login_title">欢迎回来</string>
     <string name="login_subtitle">登录您的 Proton 账户</string>
@@ -41,7 +39,6 @@
     <string name="msg_2fa_instruction">输入您身份验证器应用中的 6 位 TOTP 代码。</string>
     <string name="hint_2fa_code">6 位代码</string>
     <string name="btn_verify">验证</string>
-
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="desc_settings">设置</string>
@@ -69,7 +66,6 @@
     <string name="desc_change_server">更改服务器</string>
     <string name="btn_disconnect">断开连接</string>
     <string name="btn_quick_connect">快速连接</string>
-
     <!-- VPN Certificate Messages -->
     <string name="cert_msg_expiring_soon">证书将在 %1$d 小时内过期。即将刷新…</string>
     <string name="cert_msg_expired">您的 VPN 证书已过期，需要更新。</string>
@@ -77,11 +73,9 @@
     <string name="cert_msg_refresh_failed">刷新证书失败：%1$s。15 分钟后重试。</string>
     <string name="cert_msg_auto_refresh_failed">自动刷新失败。请手动更新以确保连接。</string>
     <string name="cert_btn_refresh_now">立即刷新</string>
-
     <!-- Countries Screen -->
     <string name="countries_title">选择国家</string>
     <string name="desc_more_options">更多选项</string>
-
     <!-- Settings Screen -->
     <string name="settings_title">设置</string>
     <string name="settings_connection">连接设置</string>
@@ -92,7 +86,9 @@
     <string name="settings_split_tunneling">拆分隧道</string>
     <string name="settings_split_tunneling_desc">从 VPN 中排除应用或 IP</string>
     <string name="settings_excluded_apps">排除的应用</string>
+    <string name="settings_included_apps">仅限 VPN 的应用</string>
     <string name="settings_excluded_ips">排除的 IP 地址</string>
+    <string name="settings_included_ips">仅限 VPN 的 IP 地址</string>
     <string name="settings_excluded_domains">排除的域名</string>
     <string name="settings_included_domains">仅限 VPN 的域名</string>
     <string name="settings_privacy">隐私与通知</string>
@@ -101,11 +97,11 @@
     <string name="settings_about">关于</string>
     <string name="settings_version">版本 %1$s</string>
     <string name="settings_version_short">v%1$s</string>
+    <string name="settings_licenses">开源许可</string>
     <string name="settings_privacy_policy">隐私政策</string>
     <string name="settings_disclaimer">免责声明</string>
     <string name="settings_legal">法律信息</string>
     <string name="welcome_agreement_text">继续即表示您同意我们的 %1$s 和 %2$s。</string>
-    <string name="settings_licenses">开源许可</string>
     <string name="settings_licenses_desc">应用中使用的第三方软件</string>
     <string name="settings_on">开启</string>
     <string name="settings_off">关闭</string>
@@ -116,7 +112,6 @@
     <string name="settings_obfuscation">混淆 (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">修改数据包头以绕过 DPI</string>
     <string name="settings_reset_obfuscation">重置为标准 ProtonVPN-Next</string>
-
     <string name="settings_api_bypass">API 屏蔽绕过</string>
     <string name="settings_api_bypass_desc">当 API 请求被屏蔽时，通过替代通道路由请求，确保成功登录并获取服务器列表。</string>
     <string name="api_bypass_vpn_detected">检测到活跃的 VPN 连接。API 绕过已自动禁用，因为当前不需要。</string>
@@ -145,7 +140,6 @@
     <string name="api_proxy_type_socks">SOCKS5</string>
     <string name="api_proxy_username">用户名 (可选)</string>
     <string name="api_proxy_password">密码 (可选)</string>
-
     <!-- Country Spoofing -->
     <string name="settings_country_spoofing_title">国家伪装</string>
     <string name="settings_country_spoofing_description">覆盖发送到 API 的国家代码，以模拟不同的物理位置。</string>
@@ -154,7 +148,6 @@
     <string name="settings_country_spoofing_code_label">国家代码 (ISO 3166-1 alpha-2)</string>
     <string name="settings_country_spoofing_code_hint">例如 US, DE, RU</string>
     <string name="settings_country_spoofing_update_toast">正在更新服务器列表…</string>
-
     <!-- Custom DNS -->
     <string name="settings_custom_dns">自定义 DNS</string>
     <string name="settings_custom_dns_default">默认 (Proton DNS)</string>
@@ -162,7 +155,6 @@
     <string name="settings_custom_dns_desc">输入 IPv4 或 IPv6 地址。留空则使用 Proton 默认的安全 DNS。</string>
     <string name="settings_custom_dns_reset">重置默认</string>
     <string name="settings_custom_dns_placeholder">例如 1.1.1.1 或 2606:4700:4700::1111</string>
-
     <!-- Customization -->
     <string name="settings_customization">个性化</string>
     <string name="settings_app_theme">应用主题</string>
@@ -183,7 +175,6 @@
     <string name="theme_purevpn">PureVPN</string>
     <string name="theme_mullvad">Mullvad</string>
     <string name="theme_windscribe">Windscribe</string>
-
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">错误报告</string>
     <string name="settings_error_reporting_desc">管理崩溃报告和分析</string>
@@ -203,7 +194,6 @@
     <string name="settings_sentry_logs_desc">包含匿名系统日志以帮助调试复杂问题</string>
     <string name="settings_sentry_session_replay">会话重放</string>
     <string name="settings_sentry_session_replay_desc">匿名交互回放以调试 UI 问题</string>
-
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
     <string name="kill_switch_subtitle">终止开关</string>
@@ -212,7 +202,6 @@
     <string name="kill_switch_step_2">2. 点击 Proton VPN-Next 旁的设置图标。</string>
     <string name="kill_switch_step_3">3. 启用“始终开启的 VPN”和“屏蔽未使用 VPN 的连接”。</string>
     <string name="kill_switch_button">打开 VPN 设置</string>
-
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">垃圾包数量 (Jc)</string>
     <string name="obfuscation_jmin">垃圾包最小尺寸 (Jmin)</string>
@@ -230,7 +219,6 @@
     <string name="obfuscation_i3">特殊垃圾 (I3)</string>
     <string name="obfuscation_i4">特殊垃圾 (I4)</string>
     <string name="obfuscation_i5">特殊垃圾 (I5)</string>
-
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">简单</string>
     <string name="obfuscation_mode_advanced">高级</string>
@@ -241,7 +229,6 @@
     <string name="obfuscation_junk_custom">自定义</string>
     <string name="obfuscation_regenerate_i1">重新生成身份识别</string>
     <string name="obfuscation_i1_desc">用于绕过 DPI 的唯一身份识别字符串。如果连接不稳定，请重新生成。</string>
-
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">协议</string>
     <string name="protocol_title">协议</string>
@@ -260,7 +247,6 @@
     <string name="obfuscation_category_headers">头部</string>
     <string name="obfuscation_category_advanced">高级</string>
     <string name="custom_config">自定义配置</string>
-
     <!-- About App Screen -->
     <string name="about_community">社区</string>
     <string name="about_github">GitHub</string>
@@ -268,17 +254,11 @@
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_unavailable">暂时不可用</string>
-
     <string name="about_sentry">由 Sentry 提供支持</string>
     <string name="url_sentry">https://sentry.io/</string>
-
     <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
     <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
     <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
-
-    <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
-    <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
-
     <!-- Licenses Screen -->
     <string name="licenses_title">许可</string>
     <string name="license_app_title">Proton VPN-Next</string>
@@ -297,7 +277,6 @@
     <string name="license_android_svg_title">Android SVG</string>
     <string name="license_mit">MIT 许可</string>
     <string name="license_bsl">Business Source License 1.1</string>
-
     <!-- Split Tunneling -->
     <string name="settings_st_mode">拆分隧道模式</string>
     <string name="st_mode_exclude">排除模式</string>
@@ -305,8 +284,6 @@
     <string name="st_mode_include">包含模式</string>
     <string name="st_mode_include_desc">仅选定的应用和 IP 将使用 VPN</string>
     <string name="st_enabled_subtitle">VPN 连接将遵循拆分隧道规则</string>
-    <string name="settings_included_apps">仅限 VPN 的应用</string>
-    <string name="settings_included_ips">仅限 VPN 的 IP 地址</string>
     <string name="st_disabled_subtitle">所有流量都通过 VPN</string>
     <plurals name="st_apps_selected">
         <item quantity="other">已选择 %1$d 个应用</item>
@@ -317,14 +294,12 @@
     <plurals name="st_domains_selected">
         <item quantity="other">已选择 %1$d 个域名</item>
     </plurals>
-
     <plurals name="settings_apps_excluded_count">
         <item quantity="other">已排除 %1$d 个应用</item>
     </plurals>
     <plurals name="settings_ips_excluded_count">
         <item quantity="other">已排除 %1$d 个 IP</item>
     </plurals>
-
     <string name="st_search_apps_hint">搜索应用</string>
     <string name="st_selected_apps_header">已选择应用 (%1$d)</string>
     <string name="st_available_apps_header">可用应用 (%1$d)</string>
@@ -335,7 +310,6 @@
     <string name="st_included_ips_header">包含的 IP (%1$d)</string>
     <string name="st_no_ips_added">尚未添加 IP 地址</string>
     <string name="st_remove_ip_desc">移除 IP</string>
-
     <string name="st_domain_hint">例如 example.com</string>
     <string name="st_add_domain_desc">添加域名</string>
     <string name="st_invalid_domain_error">无效的域名格式</string>
@@ -343,7 +317,6 @@
     <string name="st_included_domains_header">包含的域名 (%1$d)</string>
     <string name="st_no_domains_added">尚未添加域名</string>
     <string name="st_remove_domain_desc">移除域名</string>
-
     <!-- Notification -->
     <string name="notification_channel_name">VPN 状态</string>
     <string name="notification_channel_desc">显示 VPN 的当前连接状态</string>
@@ -352,14 +325,18 @@
     <string name="notification_title_disconnected">已断开连接</string>
     <string name="notification_title_connecting">正在连接…</string>
     <string name="notification_action_disconnect">断开连接</string>
-
+    <!-- Speed Units -->
+    <string name="unit_kb_s">KiB/s</string>
+    <string name="unit_mb_s">MiB/s</string>
+    <string name="unit_gb_s">GiB/s</string>
+    <string name="unit_b_s">B/s</string>
+    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">未找到活动会话。请重新登录。</string>
     <string name="error_unknown">未知错误</string>
     <string name="error_auth_failed">发生意外的身份验证错误</string>
     <string name="error_2fa_failed">双重验证失败</string>
     <string name="unknown">未知</string>
-
     <!-- Profiles Screen -->
     <string name="profiles_title">配置方案</string>
     <string name="desc_create_profile">创建方案</string>
@@ -373,7 +350,6 @@
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
     <string name="profile_info_format">%1$s • %2$s • %3$s</string>
-
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">创建配置方案</string>
     <string name="title_edit_profile">编辑配置方案</string>
@@ -418,7 +394,6 @@
     <string name="custom_config_name">自定义配置 %1$d</string>
     <string name="title_edit_obfuscation_config">编辑混淆配置</string>
     <string name="error_empty_profile_name">配置方案名称不能为空</string>
-
     <!-- Debug Tools -->
     <string name="settings_debug">调试工具</string>
     <string name="debug_title">调试面板</string>
@@ -437,7 +412,6 @@
     <string name="debug_nuke_confirm">您确定吗？所有设置、账户和服务器缓存将被永久删除。</string>
     <string name="debug_device_header">设备信息</string>
     <string name="debug_select_server">选择要导出配置的服务器</string>
-
     <!-- Sentry Debug -->
     <string name="debug_sentry_header">Sentry SDK 测试</string>
     <string name="debug_btn_crash_java">触发 Java 崩溃</string>
@@ -448,9 +422,7 @@
     <string name="debug_btn_capture_exception">捕获非致命异常</string>
     <string name="debug_btn_arithmetic_error">算术错误 (1/0)</string>
     <string name="debug_btn_null_pointer">空指针异常</string>
-
     <string name="debug_btn_fake_crash">模拟应用崩溃</string>
-
     <string name="title_quick_connect_config">快速连接配置</string>
     <string name="qc_strategy_fastest">最快服务器</string>
     <string name="qc_strategy_fastest_desc">始终连接到最快的可用服务器。</string>
@@ -459,36 +431,23 @@
     <string name="qc_header_profiles">使用配置方案</string>
     <string name="qc_header_recent">最近服务器</string>
     <string name="qc_strategy_profile_desc">使用特定的方案设置连接。</string>
-
     <string name="tile_subtitle_connected">已连接：%s</string>
     <string name="tile_subtitle_fastest">快速连接：最快</string>
     <string name="tile_subtitle_last">快速连接：上次使用</string>
     <string name="tile_subtitle_specific">快速连接：%s</string>
-
     <string name="obfuscation_btn_generate_from_domain">从域名生成</string>
     <string name="obfuscation_dialog_domain_title">输入域名</string>
     <string name="obfuscation_dialog_domain_desc">输入域名（例如 google.com）以生成基于 QUIC 的识别字符串。</string>
-
     <string name="settings_widget">小组件</string>
     <string name="settings_widget_desc">在主屏幕添加小组件以快速管理连接</string>
     <string name="settings_widget_add_to_home">添加到主屏幕</string>
     <string name="settings_widget_add_to_home_desc">在桌面放置 VPN 小组件</string>
     <string name="widget_added_successfully">小组件添加成功！</string>
     <string name="widget_error_not_supported">您的主屏幕不支持固定小组件。</string>
-
-    <!-- Speed Units -->
-    <string name="unit_kb_s">KiB/s</string>
-    <string name="unit_mb_s">MiB/s</string>
-    <string name="unit_gb_s">GiB/s</string>
-    <string name="unit_b_s">B/s</string>
-    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
-
-    <!-- Captcha Screen -->
     <string name="captcha_title">人机身份验证</string>
     <string name="captcha_message">为了您的账户安全，请完成下方验证。</string>
     <string name="captcha_proxy_active">防封锁代理已激活</string>
     <string name="desc_close">关闭</string>
-
     <!-- Token Login & Session Management -->
     <string name="btn_login_tokens">通过令牌登录</string>
     <string name="title_login_tokens">基于令牌的登录</string>
@@ -504,7 +463,6 @@
     <string name="btn_import">导入</string>
     <string name="btn_logout">退出</string>
     <string name="logout_confirmation">您确定要退出吗？</string>
-
     <!-- OTA Updates -->
     <string name="ota_title">软件更新</string>
     <string name="ota_new_version">发现新版本：%1$s</string>
