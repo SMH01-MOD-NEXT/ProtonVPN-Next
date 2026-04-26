@@ -32,17 +32,12 @@
     <string name="desc_back_button">Вернуться назад</string>
     <string name="desc_back">Назад</string>
     <string name="desc_toggle_password">Показать/скрыть пароль</string>
-    <string name="login_success">Вход выполнен!</string>
-    <string name="login_error">Ошибка: %1$s</string>
-    <string name="title_security_check">Проверка безопасности</string>
     <string name="title_2fa">Двухфакторная аутентификация</string>
     <string name="msg_2fa_instruction">Введите 6-значный код TOTP из вашего приложения-аутентификатора.</string>
     <string name="hint_2fa_code">6-значный код</string>
     <string name="btn_verify">Проверить</string>
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
-    <string name="desc_settings">Настройки</string>
-    <string name="error_loading_servers">Ошибка загрузки серверов</string>
     <string name="btn_retry">Повторить</string>
     <string name="error_system_appops">Системная ошибка: пожалуйста, переустановите приложение.</string>
     <string name="title_recent_connections">Недавние подключения</string>
@@ -52,11 +47,8 @@
     <string name="status_disconnecting">Отключение…</string>
     <string name="status_disconnected">Отключено</string>
     <string name="status_not_connected">Не подключено</string>
-    <string name="msg_traffic_not_protected">Ваш трафик не защищен</string>
     <string name="desc_toggle_connection">Переключить соединение</string>
     <string name="desc_country">Страна</string>
-    <string name="map_placeholder">Заглушка интерактивной карты</string>
-    <string name="ip_placeholder">0.0.0.0</string>
     <string name="status_vpn">VPN</string>
     <string name="location_format">%1$s • %2$s</string>
     <string name="location_city_format">%1$s, %2$s</string>
@@ -105,12 +97,9 @@
     <string name="settings_licenses_desc">Стороннее ПО, используемое в приложении</string>
     <string name="settings_on">Вкл</string>
     <string name="settings_off">Выкл</string>
-    <string name="settings_connection_protocol">Протокол</string>
     <string name="settings_port">Порт</string>
     <string name="settings_port_desc">Выбор порта подключения</string>
     <string name="settings_port_auto">Авто</string>
-    <string name="settings_obfuscation">Обфускация (AmneziaWG)</string>
-    <string name="settings_obfuscation_desc">Изменение заголовков пакетов для обхода DPI</string>
     <string name="settings_reset_obfuscation">Сбросить до стандартного ProtonVPN-Next</string>
     <string name="settings_api_bypass">Обход блокировки API</string>
     <string name="settings_api_bypass_desc">Обеспечивает успешный вход и получение данных сервера путем маршрутизации запросов API через альтернативные каналы при блокировке.</string>
@@ -126,7 +115,6 @@
     <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
     <string name="api_bypass_strategy_warp_desc">Использование временного туннеля WARP для запросов к API. Высокая надежность.</string>
     <string name="warp_fetching_config">Получение конфигурации WARP…</string>
-    <string name="warp_error_fetching">Не удалось получить конфигурацию. Проверьте подключение.</string>
     <string name="warp_permission_title">Требуется разрешение на VPN</string>
     <string name="warp_permission_desc">Для WARP требуется разрешение на создание локального туннеля для обхода блокировок API. Никакие данные не передаются за пределы Cloudflare.</string>
     <string name="btn_allow">Разрешить</string>
@@ -250,10 +238,8 @@
     <!-- About App Screen -->
     <string name="about_community">Сообщество</string>
     <string name="about_github">GitHub</string>
-    <string name="about_github_unavailable">GitHub (%1$s)</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
-    <string name="about_unavailable">Временно недоступно</string>
     <string name="about_sentry">На базе Sentry</string>
     <string name="url_sentry">https://sentry.io/</string>
     <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
@@ -275,7 +261,6 @@
     <string name="license_room_title">База данных Room</string>
     <string name="license_leakcanary_title">LeakCanary</string>
     <string name="license_android_svg_title">Android SVG</string>
-    <string name="license_mit">MIT License</string>
     <string name="license_bsl">Business Source License 1.1</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Режим раздельного туннелирования</string>
@@ -302,18 +287,6 @@
         <item quantity="few">%1$d домена выбрано</item>
         <item quantity="many">%1$d доменов выбрано</item>
         <item quantity="other">%1$d домена выбрано</item>
-    </plurals>
-    <plurals name="settings_apps_excluded_count">
-        <item quantity="one">%1$d приложение исключено</item>
-        <item quantity="few">%1$d приложения исключено</item>
-        <item quantity="many">%1$d приложений исключено</item>
-        <item quantity="other">%1$d приложения исключено</item>
-    </plurals>
-    <plurals name="settings_ips_excluded_count">
-        <item quantity="one">%1$d IP исключен</item>
-        <item quantity="few">%1$d IP исключено</item>
-        <item quantity="many">%1$d IP выбрано</item>
-        <item quantity="other">%1$d IP выбрано</item>
     </plurals>
     <string name="st_search_apps_hint">Поиск приложений</string>
     <string name="st_selected_apps_header">Выбранные приложения (%1$d)</string>
@@ -349,8 +322,6 @@
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Активная сессия не найдена. Пожалуйста, войдите снова.</string>
     <string name="error_unknown">Неизвестная ошибка</string>
-    <string name="error_auth_failed">Произошла непредвиденная ошибка аутентификации</string>
-    <string name="error_2fa_failed">Ошибка двухфакторной проверки</string>
     <string name="unknown">Неизвестно</string>
     <!-- Profiles Screen -->
     <string name="profiles_title">Профили</string>
@@ -372,14 +343,10 @@
     <string name="btn_cancel">Отмена</string>
     <string name="btn_delete">Удалить</string>
     <string name="btn_edit">Редактировать</string>
-    <string name="desc_delete_profile">Удалить профиль</string>
-    <string name="default_profile_name">Мой профиль</string>
     <string name="category_general">Общее</string>
     <string name="label_profile_name">Название профиля</string>
-    <string name="category_location">Локация</string>
     <string name="location_server">Сервер: %1$s</string>
     <string name="location_fastest">Самый быстрый</string>
-    <string name="label_target_location">Целевая локация</string>
     <string name="label_location">Локация</string>
     <string name="category_connection">Подключение</string>
     <string name="label_protocol">Протокол</string>
@@ -400,11 +367,9 @@
     <string name="location_fastest_in_city">Самый быстрый в %1$s</string>
     <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">Выберите конфиг обфускации</string>
-    <string name="title_auto_open_url">Автоматически открывать URL</string>
     <string name="btn_create_new_config">Создать новый конфиг</string>
     <string name="connect_go_title">Connect &amp; Go</string>
     <string name="connect_go_desc">Введите URL для открытия при подключении (напр., https://example.com)</string>
-    <string name="hint_url_placeholder">https://</string>
     <string name="title_select_protocol">Выберите протокол</string>
     <string name="custom_config_name">Свой конфиг %1$d</string>
     <string name="title_edit_obfuscation_config">Редактировать конфиг обфускации</string>
@@ -454,11 +419,8 @@
     <string name="obfuscation_dialog_domain_title">Введите домен</string>
     <string name="obfuscation_dialog_domain_desc">Введите домен (например, google.com) для генерации идентификатора на основе QUIC.</string>
     <string name="settings_widget">Виджет</string>
-    <string name="settings_widget_desc">Добавьте виджет на главный экран для быстрого управления подключением</string>
     <string name="settings_widget_add_to_home">Добавить на главный экран</string>
     <string name="settings_widget_add_to_home_desc">Разместить виджет VPN на рабочем столе</string>
-    <string name="widget_added_successfully">Виджет успешно добавлен!</string>
-    <string name="widget_error_not_supported">Ваш рабочий стол не поддерживает добавление виджетов.</string>
     <string name="captcha_title">Проверка безопасности</string>
     <string name="captcha_message">Для обеспечения безопасности аккаунта, пожалуйста, пройдите проверку ниже.</string>
     <string name="captcha_proxy_active">Антиблокировочный прокси активен</string>
@@ -501,5 +463,4 @@
     <string name="ota_status_up_to_date">Установлена актуальная версия</string>
     <string name="ota_btn_check">Проверить обновления</string>
     <string name="ota_downloading">Загрузка обновления… %1$d%%</string>
-    <string name="ota_download_failed">Ошибка загрузки. Попробуйте позже.</string>
 </resources>
