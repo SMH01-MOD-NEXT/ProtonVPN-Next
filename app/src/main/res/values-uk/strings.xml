@@ -17,14 +17,12 @@
   -->
 <resources>
     <string name="app_name">Proton VPN-Next</string>
-
     <!-- Welcome Screen -->
     <string name="welcome_title">Ласкаво просимо до Proton VPN-Next</string>
     <string name="welcome_subtitle">Керуйте своїм цифровим життям за допомогою безпечного, приватного та швидкого VPN. Без логів та стеження.</string>
     <string name="btn_create_account">Створити акаунт</string>
     <string name="btn_login">Увійти</string>
     <string name="btn_continue_guest">Продовжити як гість</string>
-
     <!-- Login Screen -->
     <string name="login_title">З поверненням</string>
     <string name="login_subtitle">Увійдіть у свій акаунт Proton</string>
@@ -41,7 +39,6 @@
     <string name="msg_2fa_instruction">Введіть 6-значний код TOTP з вашого додатка-автентифікатора.</string>
     <string name="hint_2fa_code">6-значний код</string>
     <string name="btn_verify">Перевірити</string>
-
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
     <string name="desc_settings">Налаштування</string>
@@ -69,7 +66,6 @@
     <string name="desc_change_server">Змінити сервер</string>
     <string name="btn_disconnect">Відключити</string>
     <string name="btn_quick_connect">Швидке підключення</string>
-
     <!-- VPN Certificate Messages -->
     <string name="cert_msg_expiring_soon">Термін дії сертифіката закінчується через %1$d год. Скоро оновимо…</string>
     <string name="cert_msg_expired">Термін дії вашого VPN-сертифіката закінчився і його необхідно оновити.</string>
@@ -77,11 +73,9 @@
     <string name="cert_msg_refresh_failed">Не вдалося оновити сертифікат: %1$s. Повторна спроба через 15 хвилин.</string>
     <string name="cert_msg_auto_refresh_failed">Автоматичне оновлення не вдалося. Будь ласка, оновіть вручну.</string>
     <string name="cert_btn_refresh_now">Оновити зараз</string>
-
     <!-- Countries Screen -->
     <string name="countries_title">Виберіть країну</string>
     <string name="desc_more_options">Додаткові опції</string>
-
     <!-- Settings Screen -->
     <string name="settings_title">Налаштування</string>
     <string name="settings_connection">Налаштування підключення</string>
@@ -92,7 +86,9 @@
     <string name="settings_split_tunneling">Роздільне тунелювання</string>
     <string name="settings_split_tunneling_desc">Виключити додатки або IP з VPN</string>
     <string name="settings_excluded_apps">Виключені додатки</string>
+    <string name="settings_included_apps">Додатки через VPN</string>
     <string name="settings_excluded_ips">Виключені IP-адреси</string>
+    <string name="settings_included_ips">IP-адреси через VPN</string>
     <string name="settings_excluded_domains">Виключені домени</string>
     <string name="settings_included_domains">Домени через VPN</string>
     <string name="settings_privacy">Приватність та сповіщення</string>
@@ -101,11 +97,11 @@
     <string name="settings_about">Про додаток</string>
     <string name="settings_version">Версія %1$s</string>
     <string name="settings_version_short">v%1$s</string>
+    <string name="settings_licenses">Ліцензії відкритого ПЗ</string>
     <string name="settings_privacy_policy">Політика конфіденційності</string>
     <string name="settings_disclaimer">Відмова від відповідальності</string>
     <string name="settings_legal">Юридична інформація</string>
     <string name="welcome_agreement_text">Продовжуючи, ви погоджуєтеся з нашою %1$s та %2$s.</string>
-    <string name="settings_licenses">Ліцензії відкритого ПЗ</string>
     <string name="settings_licenses_desc">Стороннє ПЗ, що використовується в додатку</string>
     <string name="settings_on">Увімк</string>
     <string name="settings_off">Вимк</string>
@@ -116,7 +112,6 @@
     <string name="settings_obfuscation">Обфускація (AmneziaWG)</string>
     <string name="settings_obfuscation_desc">Зміна заголовків пакетів для обходу DPI</string>
     <string name="settings_reset_obfuscation">Скинути до стандартного ProtonVPN-Next</string>
-
     <string name="settings_api_bypass">Обіхід блокування API</string>
     <string name="settings_api_bypass_desc">Забезпечує успішний вхід та отримання даних сервера шляхом маршрутизації запитів API через альтернативні канали при блокуванні.</string>
     <string name="api_bypass_vpn_detected">Виявлено активне VPN-з\'єднання. Обіхід API автоматично вимкнено, оскільки він не потрібен.</string>
@@ -145,7 +140,6 @@
     <string name="api_proxy_type_socks">SOCKS5</string>
     <string name="api_proxy_username">Ім\'я користувача (необов\'язково)</string>
     <string name="api_proxy_password">Пароль (необов\'язково)</string>
-
     <!-- Country Spoofing -->
     <string name="settings_country_spoofing_title">Підміна країни</string>
     <string name="settings_country_spoofing_description">Підміна коду країни, що відправляється в API, для імітації іншого фізичного розташування.</string>
@@ -154,7 +148,6 @@
     <string name="settings_country_spoofing_code_label">Код країни (ISO 3166-1 alpha-2)</string>
     <string name="settings_country_spoofing_code_hint">напр. US, DE, RU</string>
     <string name="settings_country_spoofing_update_toast">Оновлення списку серверів…</string>
-
     <!-- Custom DNS -->
     <string name="settings_custom_dns">Користувацький DNS</string>
     <string name="settings_custom_dns_default">За замовчуванням (Proton DNS)</string>
@@ -162,7 +155,6 @@
     <string name="settings_custom_dns_desc">Введіть IPv4 або IPv6 адресу. Залиште порожнім, щоб використовувати стандартний безпечний DNS від Proton.</string>
     <string name="settings_custom_dns_reset">Скинути</string>
     <string name="settings_custom_dns_placeholder">напр. 1.1.1.1 або 94.140.14.14</string>
-
     <!-- Customization -->
     <string name="settings_customization">Кастомізація</string>
     <string name="settings_app_theme">Тема додатка</string>
@@ -183,7 +175,6 @@
     <string name="theme_purevpn">PureVPN</string>
     <string name="theme_mullvad">Mullvad</string>
     <string name="theme_windscribe">Windscribe</string>
-
     <!-- Error Reporting Settings -->
     <string name="settings_error_reporting">Звіти про помилки</string>
     <string name="settings_error_reporting_desc">Керування звітами про збої та аналітикою</string>
@@ -203,7 +194,6 @@
     <string name="settings_sentry_logs_desc">Включати анонімні системні логи, щоб допомогти у налагодженні складних проблем</string>
     <string name="settings_sentry_session_replay">Повтори сесій</string>
     <string name="settings_sentry_session_replay_desc">Анонімне відтворення взаємодій для налагодження проблем інтерфейсу</string>
-
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
     <string name="kill_switch_subtitle">Аварійний вимикач</string>
@@ -212,7 +202,6 @@
     <string name="kill_switch_step_2">2. Натисніть іконку налаштувань поруч із Proton VPN-Next.</string>
     <string name="kill_switch_step_3">3. Увімкніть «Постійний VPN» та «Блокувати з\'єднання без VPN».</string>
     <string name="kill_switch_button">Відкрити налаштування VPN</string>
-
     <!-- Obfuscation Params -->
     <string name="obfuscation_jc">Кількість сміттєвих пакетів (Jc)</string>
     <string name="obfuscation_jmin">Мін. розмір сміттєвого пакета (Jmin)</string>
@@ -230,7 +219,6 @@
     <string name="obfuscation_i3">Спеціальне сміття (I3)</string>
     <string name="obfuscation_i4">Спеціальне сміття (I4)</string>
     <string name="obfuscation_i5">Спеціальне сміття (I5)</string>
-
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Простий</string>
     <string name="obfuscation_mode_advanced">Розширений</string>
@@ -241,7 +229,6 @@
     <string name="obfuscation_junk_custom">Своя</string>
     <string name="obfuscation_regenerate_i1">Оновити ідентифікацію</string>
     <string name="obfuscation_i1_desc">Унікальний рядок ідентифікації для обходу DPI. Оновіть, якщо з\'єднання нестабільне.</string>
-
     <!-- Settings: Protocol & Obfuscation -->
     <string name="settings_protocol">Протокол</string>
     <string name="protocol_title">Протокол</string>
@@ -260,7 +247,6 @@
     <string name="obfuscation_category_headers">Заголовки</string>
     <string name="obfuscation_category_advanced">Розширені</string>
     <string name="custom_config">Своя конфігурація</string>
-
     <!-- About App Screen -->
     <string name="about_community">Спільнота</string>
     <string name="about_github">GitHub</string>
@@ -268,17 +254,11 @@
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
     <string name="about_unavailable">Тимчасово недоступно</string>
-
     <string name="about_sentry">Працює на базі Sentry</string>
     <string name="url_sentry">https://sentry.io/</string>
-
     <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
     <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
     <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
-
-    <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
-    <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
-
     <!-- Licenses Screen -->
     <string name="licenses_title">Ліцензії</string>
     <string name="license_app_title">Proton VPN-Next</string>
@@ -297,7 +277,6 @@
     <string name="license_android_svg_title">Android SVG</string>
     <string name="license_mit">MIT License</string>
     <string name="license_bsl">Business Source License 1.1</string>
-
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Режим роздільного тунелювання</string>
     <string name="st_mode_exclude">Режим виключення</string>
@@ -306,8 +285,6 @@
     <string name="st_mode_include_desc">Тільки вибрані додатки та IP будуть використовувати VPN</string>
     <string name="st_enabled_subtitle">VPN з\'єднання буде слідувати правилам роздільного тунелювання</string>
     <string name="st_disabled_subtitle">Ввесь трафік іде через VPN</string>
-    <string name="settings_included_apps">Додатки через VPN</string>
-    <string name="settings_included_ips">IP-адреси через VPN</string>
     <plurals name="st_apps_selected">
         <item quantity="one">Вибрано %1$d додаток</item>
         <item quantity="few">Вибрано %1$d додатки</item>
@@ -326,7 +303,6 @@
         <item quantity="many">Вибрано %1$d доменів</item>
         <item quantity="other">Вибрано %1$d доменів</item>
     </plurals>
-
     <plurals name="settings_apps_excluded_count">
         <item quantity="one">Виключено %1$d додаток</item>
         <item quantity="few">Виключено %1$d додатки</item>
@@ -339,7 +315,6 @@
         <item quantity="many">Виключено %1$d IP-адрес</item>
         <item quantity="other">Виключено %1$d IP-адрес</item>
     </plurals>
-
     <string name="st_search_apps_hint">Пошук додатків</string>
     <string name="st_selected_apps_header">Вибрані додатки (%1$d)</string>
     <string name="st_available_apps_header">Доступні додатки (%1$d)</string>
@@ -350,7 +325,6 @@
     <string name="st_included_ips_header">Включені IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адреси ще не додано</string>
     <string name="st_remove_ip_desc">Видалити IP</string>
-
     <string name="st_domain_hint">напр. example.com</string>
     <string name="st_add_domain_desc">Додати домен</string>
     <string name="st_invalid_domain_error">Неправильний формат домену</string>
@@ -358,7 +332,6 @@
     <string name="st_included_domains_header">Включені домени (%1$d)</string>
     <string name="st_no_domains_added">Домени ще не додано</string>
     <string name="st_remove_domain_desc">Видалити домен</string>
-
     <!-- Notification -->
     <string name="notification_channel_name">Статус VPN</string>
     <string name="notification_channel_desc">Показує поточний статус підключення VPN</string>
@@ -367,14 +340,18 @@
     <string name="notification_title_disconnected">Відключено</string>
     <string name="notification_title_connecting">Підключення…</string>
     <string name="notification_action_disconnect">Відключити</string>
-
+    <!-- Speed Units -->
+    <string name="unit_kb_s">КБ/с</string>
+    <string name="unit_mb_s">МБ/с</string>
+    <string name="unit_gb_s">ГБ/с</string>
+    <string name="unit_b_s">Б/с</string>
+    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Активна сесія не знайдена. Будь ласка, увійдіть знову.</string>
     <string name="error_unknown">Невідома помилка</string>
     <string name="error_auth_failed">Сталася непередбачена помилка автентифікації</string>
     <string name="error_2fa_failed">Помилка двофакторної перевірки</string>
     <string name="unknown">Невідомо</string>
-
     <!-- Profiles Screen -->
     <string name="profiles_title">Профілі</string>
     <string name="desc_create_profile">Створити профіль</string>
@@ -388,7 +365,6 @@
     <string name="profile_country_info">%1$s %2$s</string>
     <string name="profile_fastest_info">⚡ %1$s</string>
     <string name="profile_info_format">%1$s • %2$s • %3$s</string>
-
     <!-- Edit Profile Screen -->
     <string name="title_create_profile">Створити профіль</string>
     <string name="title_edit_profile">Редагувати профіль</string>
@@ -433,7 +409,6 @@
     <string name="custom_config_name">Своя конфігурація %1$d</string>
     <string name="title_edit_obfuscation_config">Редагувати конфігурацію обфускації</string>
     <string name="error_empty_profile_name">Назва профілю не може бути порожньою</string>
-
     <!-- Debug Tools -->
     <string name="settings_debug">Інструменти налагодження</string>
     <string name="debug_title">Панель налагодження</string>
@@ -452,7 +427,6 @@
     <string name="debug_nuke_confirm">Ви впевнені? Усі налаштування, акаунти та кеш серверів будуть безповоротно видалені.</string>
     <string name="debug_device_header">Інформація про пристрій</string>
     <string name="debug_select_server">Виберіть сервер для експорту конфігурації</string>
-
     <!-- Sentry Debug -->
     <string name="debug_sentry_header">Тестування Sentry SDK</string>
     <string name="debug_btn_crash_java">Викликати Java Crash</string>
@@ -463,9 +437,7 @@
     <string name="debug_btn_capture_exception">Надіслати помилку (Non-fatal)</string>
     <string name="debug_btn_arithmetic_error">Арифметична помилка (1/0)</string>
     <string name="debug_btn_null_pointer">NullPointer Exception</string>
-
     <string name="debug_btn_fake_crash">Фейковий краш додатка</string>
-
     <string name="title_quick_connect_config">Налаштування швидкого підключення</string>
     <string name="qc_strategy_fastest">Найшвидший сервер</string>
     <string name="qc_strategy_fastest_desc">Завжди підключатися до найшвидшого сервера.</string>
@@ -474,36 +446,23 @@
     <string name="qc_header_profiles">ВИКОРИСТОВУВАТИ ПРОФІЛЬ</string>
     <string name="qc_header_recent">ОСТАННІ СЕРВЕРИ</string>
     <string name="qc_strategy_profile_desc">Підключитися з налаштуваннями профілю.</string>
-
     <string name="tile_subtitle_connected">Підключено: %s</string>
     <string name="tile_subtitle_fastest">Швидке: Найшвидший</string>
     <string name="tile_subtitle_last">Швидке: Останній раз</string>
     <string name="tile_subtitle_specific">Швидке: %s</string>
-
     <string name="obfuscation_btn_generate_from_domain">Генерація за доменом</string>
     <string name="obfuscation_dialog_domain_title">Введіть домен</string>
     <string name="obfuscation_dialog_domain_desc">Введіть домен (напр., google.com) для генерації ідентифікатора на основі QUIC.</string>
-
     <string name="settings_widget">Віджет</string>
     <string name="settings_widget_desc">Додайте віджет на головний екран для швидкого керування підключенням</string>
     <string name="settings_widget_add_to_home">Додати на головний екран</string>
     <string name="settings_widget_add_to_home_desc">Розмістити віджет VPN на робочому столі</string>
     <string name="widget_added_successfully">Віджет успішно додано!</string>
     <string name="widget_error_not_supported">Ваш робочий стіл не підтримує додавання віджетів.</string>
-
-    <!-- Speed Units -->
-    <string name="unit_kb_s">КБ/с</string>
-    <string name="unit_mb_s">МБ/с</string>
-    <string name="unit_gb_s">ГБ/с</string>
-    <string name="unit_b_s">Б/с</string>
-    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
-
-    <!-- Captcha Screen -->
     <string name="captcha_title">Перевірка на людяність</string>
     <string name="captcha_message">Для забезпечення безпеки акаунта, будь ласка, пройдіть перевірку нижче.</string>
     <string name="captcha_proxy_active">Антиблокувальний проксі активний</string>
     <string name="desc_close">Закрити</string>
-
     <!-- Token Login & Session Management -->
     <string name="btn_login_tokens">Вхід за токенами</string>
     <string name="title_login_tokens">Вхід за токенами</string>
@@ -519,7 +478,6 @@
     <string name="btn_import">Імпортувати</string>
     <string name="btn_logout">Вийти</string>
     <string name="logout_confirmation">Ви впевнені, що хочете вийти?</string>
-
     <!-- OTA Updates -->
     <string name="ota_title">Оновлення ПЗ</string>
     <string name="ota_new_version">Доступна нова версія: %1$s</string>
