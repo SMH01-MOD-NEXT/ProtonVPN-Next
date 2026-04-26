@@ -16,7 +16,6 @@
   ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   -->
 <resources>
-    <string name="app_name">Proton VPN-Next</string>
     <!-- Welcome Screen -->
     <string name="welcome_title">به Proton VPN-Next خوش آمدید</string>
     <string name="welcome_subtitle">زندگی دیجیتال خود را با VPN امن، خصوصی و سریع کنترل کنید. بدون لاگ، بدون ردیابی.</string>
@@ -50,8 +49,6 @@
     <string name="desc_toggle_connection">تغییر وضعیت اتصال</string>
     <string name="desc_country">کشور</string>
     <string name="status_vpn">VPN</string>
-    <string name="location_format">%1$s • %2$s</string>
-    <string name="location_city_format">%1$s, %2$s</string>
     <string name="label_fastest_server">سریع‌ترین سرور</string>
     <string name="label_select_location">انتخاب مکان</string>
     <string name="label_server_unavailable">سرور در دسترس نیست</string>
@@ -240,11 +237,8 @@
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
+    <string name="about_crowdin">Help with Translation</string>
     <string name="about_sentry">طراحی شده توسط Sentry</string>
-    <string name="url_sentry">https://sentry.io/</string>
-    <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">مجوزها</string>
     <string name="license_app_title">Proton VPN-Next</string>
@@ -312,7 +306,6 @@
     <string name="unit_mb_s">مگابایت بر ثانیه</string>
     <string name="unit_gb_s">گیگابایت بر ثانیه</string>
     <string name="unit_b_s">بایت بر ثانیه</string>
-    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">نشست فعال یافت نشد. لطفاً دوباره وارد شوید.</string>
     <string name="error_unknown">خطای ناشناخته</string>
@@ -359,7 +352,6 @@
     <string name="title_select_server">انتخاب سرور</string>
     <string name="location_fastest_in_country">سریع‌ترین در %1$s</string>
     <string name="location_fastest_in_city">سریع‌ترین در %1$s</string>
-    <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">انتخاب پیکربندی مبهم‌سازی</string>
     <string name="btn_create_new_config">ایجاد پیکربندی جدید</string>
     <string name="connect_go_title">اتصال و اجرا</string>
