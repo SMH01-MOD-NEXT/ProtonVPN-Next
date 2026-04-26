@@ -48,10 +48,13 @@ class SystemContextWrapper @Inject constructor(
     }
 
     fun stopVpnService() {
-        val intent = Intent(context, ProtonVpnService::class.java).apply {
-            action = ProtonVpnService.ACTION_DISCONNECT
+        // Use a broadcast instead of startService() to avoid BackgroundServiceStartNotAllowedException
+        // on Android 8+ when the app is in the background. The service's broadcast receiver handles
+        // ACTION_DISCONNECT to set isManualDisconnect and tear down the tunnel gracefully.
+        val intent = Intent(ProtonVpnService.ACTION_DISCONNECT).apply {
+            setPackage(context.packageName)
         }
-        context.startService(intent)
+        context.sendBroadcast(intent)
     }
 
     fun updateVpnSettings(notificationsEnabled: Boolean, killSwitchEnabled: Boolean, nonFatalEnabled: Boolean, analyticsEnabled: Boolean) {

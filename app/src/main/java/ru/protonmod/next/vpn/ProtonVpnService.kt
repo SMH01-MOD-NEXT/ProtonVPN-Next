@@ -183,28 +183,46 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
      */
     private val settingsReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            if (intent?.action == ACTION_UPDATE_SETTINGS) {
-                notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
-                killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
+            when (intent?.action) {
+                ACTION_UPDATE_SETTINGS -> {
+                    notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, notificationsEnabled)
+                    killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
 
-                if (intent.hasExtra(EXTRA_NON_FATAL_ENABLED)) {
-                    val nonFatal = intent.getBooleanExtra(EXTRA_NON_FATAL_ENABLED, true)
-                    ProtonLogger.isNonFatalEnabled = nonFatal
+                    if (intent.hasExtra(EXTRA_NON_FATAL_ENABLED)) {
+                        val nonFatal = intent.getBooleanExtra(EXTRA_NON_FATAL_ENABLED, true)
+                        ProtonLogger.isNonFatalEnabled = nonFatal
+                    }
+
+                    if (intent.hasExtra(EXTRA_ANALYTICS_ENABLED)) {
+                        val analytics = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
+                        ProtonLogger.isAnalyticsEnabled = analytics
+                    }
+
+                    ProtonLogger.d(TAG, "Settings updated via broadcast: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled, nonFatal=${ProtonLogger.isNonFatalEnabled}, analytics=${ProtonLogger.isAnalyticsEnabled}")
+
+                    val label = when {
+                        isCurrentlyConnecting -> STATE_CONNECTING
+                        else -> currentTunnelState.name
+                    }
+
+                    updateNotification(label)
                 }
-
-                if (intent.hasExtra(EXTRA_ANALYTICS_ENABLED)) {
-                    val analytics = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
-                    ProtonLogger.isAnalyticsEnabled = analytics
+                ACTION_DISCONNECT -> {
+                    // Handles disconnect requests sent as a broadcast (e.g. from a backgrounded app).
+                    // This mirrors the ACTION_DISCONNECT branch in onStartCommand but is reachable
+                    // without startService(), avoiding BackgroundServiceStartNotAllowedException.
+                    ProtonLogger.i(TAG, "Action DISCONNECT via broadcast: Stopping tunnel gracefully")
+                    isManualDisconnect = true
+                    isCurrentlyConnecting = false
+                    serviceScope.launch(Dispatchers.IO) {
+                        try {
+                            backend.setState(tunnel, Tunnel.State.DOWN, null)
+                        } catch (e: Exception) {
+                            ProtonLogger.e(TAG, "Failed to stop VPN tunnel cleanly via broadcast", e)
+                            stopForegroundOrService()
+                        }
+                    }
                 }
-
-                ProtonLogger.d(TAG, "Settings updated via broadcast: notifications=$notificationsEnabled, killSwitch=$killSwitchEnabled, nonFatal=${ProtonLogger.isNonFatalEnabled}, analytics=${ProtonLogger.isAnalyticsEnabled}")
-
-                val label = when {
-                    isCurrentlyConnecting -> STATE_CONNECTING
-                    else -> currentTunnelState.name
-                }
-
-                updateNotification(label)
             }
         }
     }
@@ -231,8 +249,11 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
         super.onCreate()
         createNotificationChannels()
 
-        // Register the dynamic settings receiver
-        val filter = IntentFilter(ACTION_UPDATE_SETTINGS)
+        // Register the dynamic settings receiver — also handles ACTION_DISCONNECT broadcast
+        // so the tunnel can be stopped from a backgrounded app without startService().
+        val filter = IntentFilter(ACTION_UPDATE_SETTINGS).apply {
+            addAction(ACTION_DISCONNECT)
+        }
         ContextCompat.registerReceiver(this, settingsReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
 
         // Initialize the Go backend
