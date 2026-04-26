@@ -16,7 +16,6 @@
   ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   -->
 <resources>
-    <string name="app_name">Proton VPN-Next</string>
     <!-- Welcome Screen -->
     <string name="welcome_title">Добро пожаловать в Proton VPN-Next</string>
     <string name="welcome_subtitle">Возьмите управление своей цифровой жизнью с безопасным, приватным и быстрым VPN. Без журналов, без отслеживания.</string>
@@ -50,8 +49,6 @@
     <string name="desc_toggle_connection">Переключить соединение</string>
     <string name="desc_country">Страна</string>
     <string name="status_vpn">VPN</string>
-    <string name="location_format">%1$s • %2$s</string>
-    <string name="location_city_format">%1$s, %2$s</string>
     <string name="label_fastest_server">Самый быстрый сервер</string>
     <string name="label_select_location">Выберите локацию</string>
     <string name="label_server_unavailable">Сервер недоступен</string>
@@ -240,11 +237,8 @@
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
+    <string name="about_crowdin">Help with Translation</string>
     <string name="about_sentry">На базе Sentry</string>
-    <string name="url_sentry">https://sentry.io/</string>
-    <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">Лицензии</string>
     <string name="license_app_title">Proton VPN-Next</string>
@@ -318,7 +312,6 @@
     <string name="unit_mb_s">МБ/с</string>
     <string name="unit_gb_s">ГБ/с</string>
     <string name="unit_b_s">Б/с</string>
-    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Активная сессия не найдена. Пожалуйста, войдите снова.</string>
     <string name="error_unknown">Неизвестная ошибка</string>
@@ -365,7 +358,6 @@
     <string name="title_select_server">Выберите сервер</string>
     <string name="location_fastest_in_country">Самый быстрый в %1$s</string>
     <string name="location_fastest_in_city">Самый быстрый в %1$s</string>
-    <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">Выберите конфиг обфускации</string>
     <string name="btn_create_new_config">Создать новый конфиг</string>
     <string name="connect_go_title">Connect &amp; Go</string>
