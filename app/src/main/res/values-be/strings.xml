@@ -16,7 +16,6 @@
   ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
   -->
 <resources>
-    <string name="app_name">Proton VPN-Next</string>
     <!-- Welcome Screen -->
     <string name="welcome_title">Сардэчна запрашаем у Proton VPN-Next</string>
     <string name="welcome_subtitle">Кіруйце сваім лічбавым жыццём з дапамогай бяспечнага, прыватнага і хуткага VPN. Без логаў і сачэння.</string>
@@ -50,8 +49,6 @@
     <string name="desc_toggle_connection">Пераключыць падключэнне</string>
     <string name="desc_country">Краіна</string>
     <string name="status_vpn">VPN</string>
-    <string name="location_format">%1$s • %2$s</string>
-    <string name="location_city_format">%1$s, %2$s</string>
     <string name="label_fastest_server">Самы хуткі сервер</string>
     <string name="label_select_location">Выберыце лакацыю</string>
     <string name="label_server_unavailable">Сервер недаступны</string>
@@ -59,7 +56,7 @@
     <string name="btn_disconnect">Адключыць</string>
     <string name="btn_quick_connect">Хуткае падключэнне</string>
     <!-- VPN Certificate Messages -->
-    <string name="cert_msg_expiring_soon">Тэрмін дзеяння сертыфіката заканчваецца праз %1$d г. Хуткае абнаўленне…</string>
+    <string name="cert_msg_expiring_soon">Тэрмін дзеяння сертыфіката завяршаецца праз %1$d гадз. Хуткае абнаўленне…</string>
     <string name="cert_msg_expired">Тэрмін дзеяння вашага VPN-сертыфіката скончыўся і яго неабходна абнавіць.</string>
     <string name="cert_msg_refreshing">Абнаўленне VPN-сертыфіката…</string>
     <string name="cert_msg_refresh_failed">Не ўдалося абнавіць сертыфікат: %1$s. Паўторная спроба праз 15 хвілін.</string>
@@ -240,11 +237,8 @@
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
+    <string name="about_crowdin">Дапамагчы з перакладам</string>
     <string name="about_sentry">Працуе на базе Sentry</string>
-    <string name="url_sentry">https://sentry.io/</string>
-    <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram">https://t.me/ProtonVPN_MOD</string>
     <!-- Licenses Screen -->
     <string name="licenses_title">Ліцэнзіі</string>
     <string name="license_app_title">Proton VPN-Next</string>
@@ -318,7 +312,6 @@
     <string name="unit_mb_s">МБ/с</string>
     <string name="unit_gb_s">ГБ/с</string>
     <string name="unit_b_s">Б/с</string>
-    <string name="vpn_speed_format">↑ %1$s ↓ %2$s</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Актыўны сеанс не знойдзены. Увайдзіце яшчэ раз.</string>
     <string name="error_unknown">Невядомая памылка</string>
@@ -340,7 +333,7 @@
     <string name="title_create_profile">Стварыць профіль</string>
     <string name="title_edit_profile">Рэдагаваць профіль</string>
     <string name="btn_save">Захаваць</string>
-    <string name="btn_cancel">Адмена</string>
+    <string name="btn_cancel">Скасаваць</string>
     <string name="btn_delete">Выдаліць</string>
     <string name="btn_edit">Рэдагаваць</string>
     <string name="category_general">Агульныя</string>
@@ -365,7 +358,6 @@
     <string name="title_select_server">Выберыце сервер</string>
     <string name="location_fastest_in_country">Самы хуткі ў %1$s</string>
     <string name="location_fastest_in_city">Самы хуткі ў %1$s</string>
-    <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">Выберыце канфігурацыю абфускацыі</string>
     <string name="btn_create_new_config">Стварыць новую канфігурацыю</string>
     <string name="connect_go_title">Connect &amp; Go</string>
@@ -378,7 +370,7 @@
     <string name="settings_debug">Інструменты адладкі</string>
     <string name="debug_title">Панэль адладкі</string>
     <string name="debug_session_header">VPN Сесія і Сертыфікат</string>
-    <string name="debug_cert_id">ID серт.: %1$s</string>
+    <string name="debug_cert_id">Ідэнт. серт.: %1$s</string>
     <string name="debug_cert_issued">Выдадзены: %1$s</string>
     <string name="debug_cert_expires">Заканчваецца: %1$s</string>
     <string name="debug_btn_refresh_cert">Абнавіць сертыфікат прымусова</string>
@@ -388,7 +380,7 @@
     <string name="debug_btn_export_logs">Экспарт Logcat у Downloads</string>
     <string name="debug_btn_export_config">Экспарт WG канфігурацыі (.conf)</string>
     <string name="debug_danger_header">Небяспечная зона</string>
-    <string name="debug_btn_nuke">Скід усіх даных (Factory Reset)</string>
+    <string name="debug_btn_nuke">Скіданне ўсіх даных (Factory Reset)</string>
     <string name="debug_nuke_confirm">Вы сапраўды хочаце гэта зрабіць? Усе налады, уліковыя запісы і кэш сервераў будуць незваротна выдалены.</string>
     <string name="debug_device_header">Інфармацыя аб прыладзе</string>
     <string name="debug_select_server">Выберыце сервер для экспарту канфігурацыі</string>
