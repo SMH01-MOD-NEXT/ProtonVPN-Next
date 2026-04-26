@@ -19,7 +19,7 @@
     <string name="app_name">Proton VPN-Next</string>
     <!-- Welcome Screen -->
     <string name="welcome_title">Добро пожаловать в Proton VPN-Next</string>
-    <string name="welcome_subtitle">Управляйте своей цифровой жизнью с помощью безопасного, приватного и быстрого VPN. Без логов и слежки.</string>
+    <string name="welcome_subtitle">Возьмите управление своей цифровой жизнью с безопасным, приватным и быстрым VPN. Без журналов, без отслеживания.</string>
     <string name="btn_create_account">Создать аккаунт</string>
     <string name="btn_login">Войти</string>
     <string name="btn_continue_guest">Продолжить как гость</string>
