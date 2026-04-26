@@ -32,17 +32,12 @@
     <string name="desc_back_button">返回</string>
     <string name="desc_back">返回</string>
     <string name="desc_toggle_password">切换密码可见性</string>
-    <string name="login_success">登录成功！</string>
-    <string name="login_error">错误：%1$s</string>
-    <string name="title_security_check">安全检查</string>
     <string name="title_2fa">双重身份验证</string>
     <string name="msg_2fa_instruction">输入您身份验证器应用中的 6 位 TOTP 代码。</string>
     <string name="hint_2fa_code">6 位代码</string>
     <string name="btn_verify">验证</string>
     <!-- Dashboard Screen -->
     <string name="dashboard_title">Proton VPN-Next</string>
-    <string name="desc_settings">设置</string>
-    <string name="error_loading_servers">加载服务器出错</string>
     <string name="btn_retry">重试</string>
     <string name="error_system_appops">系统错误：请重新安装应用。</string>
     <string name="title_recent_connections">最近连接</string>
@@ -52,11 +47,8 @@
     <string name="status_disconnecting">正在断开连接…</string>
     <string name="status_disconnected">已断开</string>
     <string name="status_not_connected">未连接</string>
-    <string name="msg_traffic_not_protected">您的流量未受保护</string>
     <string name="desc_toggle_connection">切换连接</string>
     <string name="desc_country">国家</string>
-    <string name="map_placeholder">交互式地图占位符</string>
-    <string name="ip_placeholder">0.0.0.0</string>
     <string name="status_vpn">VPN</string>
     <string name="location_format">%1$s • %2$s</string>
     <string name="location_city_format">%1$s, %2$s</string>
@@ -105,12 +97,9 @@
     <string name="settings_licenses_desc">应用中使用的第三方软件</string>
     <string name="settings_on">开启</string>
     <string name="settings_off">关闭</string>
-    <string name="settings_connection_protocol">协议</string>
     <string name="settings_port">端口</string>
     <string name="settings_port_desc">选择连接端口</string>
     <string name="settings_port_auto">自动</string>
-    <string name="settings_obfuscation">混淆 (AmneziaWG)</string>
-    <string name="settings_obfuscation_desc">修改数据包头以绕过 DPI</string>
     <string name="settings_reset_obfuscation">重置为标准 ProtonVPN-Next</string>
     <string name="settings_api_bypass">API 屏蔽绕过</string>
     <string name="settings_api_bypass_desc">当 API 请求被屏蔽时，通过替代通道路由请求，确保成功登录并获取服务器列表。</string>
@@ -126,7 +115,6 @@
     <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
     <string name="api_bypass_strategy_warp_desc">使用临时 WARP 隧道进行 API 请求。可靠性高。</string>
     <string name="warp_fetching_config">正在获取 WARP 配置…</string>
-    <string name="warp_error_fetching">获取配置失败。请检查您的连接。</string>
     <string name="warp_permission_title">需要 VPN 权限</string>
     <string name="warp_permission_desc">WARP 需要权限才能创建用于绕过 API 阻止的本地隧道。没有任何数据会发送到 Cloudflare 之外。</string>
     <string name="btn_allow">允许</string>
@@ -250,10 +238,8 @@
     <!-- About App Screen -->
     <string name="about_community">社区</string>
     <string name="about_github">GitHub</string>
-    <string name="about_github_unavailable">GitHub (%1$s)</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
-    <string name="about_unavailable">暂时不可用</string>
     <string name="about_sentry">由 Sentry 提供支持</string>
     <string name="url_sentry">https://sentry.io/</string>
     <string name="url_github">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
@@ -275,7 +261,6 @@
     <string name="license_room_title">Room 数据库</string>
     <string name="license_leakcanary_title">LeakCanary</string>
     <string name="license_android_svg_title">Android SVG</string>
-    <string name="license_mit">MIT 许可</string>
     <string name="license_bsl">Business Source License 1.1</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">拆分隧道模式</string>
@@ -293,12 +278,6 @@
     </plurals>
     <plurals name="st_domains_selected">
         <item quantity="other">已选择 %1$d 个域名</item>
-    </plurals>
-    <plurals name="settings_apps_excluded_count">
-        <item quantity="other">已排除 %1$d 个应用</item>
-    </plurals>
-    <plurals name="settings_ips_excluded_count">
-        <item quantity="other">已排除 %1$d 个 IP</item>
     </plurals>
     <string name="st_search_apps_hint">搜索应用</string>
     <string name="st_selected_apps_header">已选择应用 (%1$d)</string>
@@ -334,8 +313,6 @@
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">未找到活动会话。请重新登录。</string>
     <string name="error_unknown">未知错误</string>
-    <string name="error_auth_failed">发生意外的身份验证错误</string>
-    <string name="error_2fa_failed">双重验证失败</string>
     <string name="unknown">未知</string>
     <!-- Profiles Screen -->
     <string name="profiles_title">配置方案</string>
@@ -357,14 +334,10 @@
     <string name="btn_cancel">取消</string>
     <string name="btn_delete">删除</string>
     <string name="btn_edit">编辑</string>
-    <string name="desc_delete_profile">删除配置方案</string>
-    <string name="default_profile_name">我的方案</string>
     <string name="category_general">常规</string>
     <string name="label_profile_name">方案名称</string>
-    <string name="category_location">位置</string>
     <string name="location_server">服务器：%1$s</string>
     <string name="location_fastest">最快</string>
-    <string name="label_target_location">目标位置</string>
     <string name="label_location">位置</string>
     <string name="category_connection">连接</string>
     <string name="label_protocol">协议</string>
@@ -385,11 +358,9 @@
     <string name="location_fastest_in_city">%1$s 中最快</string>
     <string name="location_load">%1$d%%</string>
     <string name="title_select_obfuscation_config">选择混淆配置</string>
-    <string name="title_auto_open_url">自动打开 URL</string>
     <string name="btn_create_new_config">创建新配置</string>
     <string name="connect_go_title">连接即启动</string>
     <string name="connect_go_desc">输入连接后打开的 URL (例如 https://example.com)</string>
-    <string name="hint_url_placeholder">https://</string>
     <string name="title_select_protocol">选择协议</string>
     <string name="custom_config_name">自定义配置 %1$d</string>
     <string name="title_edit_obfuscation_config">编辑混淆配置</string>
@@ -439,11 +410,8 @@
     <string name="obfuscation_dialog_domain_title">输入域名</string>
     <string name="obfuscation_dialog_domain_desc">输入域名（例如 google.com）以生成基于 QUIC 的识别字符串。</string>
     <string name="settings_widget">小组件</string>
-    <string name="settings_widget_desc">在主屏幕添加小组件以快速管理连接</string>
     <string name="settings_widget_add_to_home">添加到主屏幕</string>
     <string name="settings_widget_add_to_home_desc">在桌面放置 VPN 小组件</string>
-    <string name="widget_added_successfully">小组件添加成功！</string>
-    <string name="widget_error_not_supported">您的主屏幕不支持固定小组件。</string>
     <string name="captcha_title">人机身份验证</string>
     <string name="captcha_message">为了您的账户安全，请完成下方验证。</string>
     <string name="captcha_proxy_active">防封锁代理已激活</string>
@@ -486,5 +454,4 @@
     <string name="ota_status_up_to_date">应用已是最新版本</string>
     <string name="ota_btn_check">检查更新</string>
     <string name="ota_downloading">正在下载更新… %1$d%%</string>
-    <string name="ota_download_failed">下载失败。请稍后再试。</string>
 </resources>
