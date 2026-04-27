@@ -27,12 +27,12 @@
     <string name="login_subtitle">Увайдзіце ў свой акаўнт Proton</string>
     <string name="hint_username">Электронная пошта або імя карыстальніка</string>
     <string name="hint_password">Пароль</string>
-    <string name="forgot_password">Забыліся пароль?</string>
+    <string name="forgot_password">Забылі пароль?</string>
     <string name="desc_back_button">Назад</string>
     <string name="desc_back">Назад</string>
     <string name="desc_toggle_password">Паказаць/схаваць пароль</string>
     <string name="title_2fa">Двухфактарная аўтэнтыфікацыя</string>
-    <string name="msg_2fa_instruction">Увядзіце 6-значны код TOTP з вашага прыкладання-аўтэнтыфікатара.</string>
+    <string name="msg_2fa_instruction">Увядзіце 6-значны код TOTP з вашай праграмы аўтэнтыфікацыі.</string>
     <string name="hint_2fa_code">6-значны код</string>
     <string name="btn_verify">Праверыць</string>
     <!-- Dashboard Screen -->
@@ -49,7 +49,7 @@
     <string name="desc_toggle_connection">Пераключыць падключэнне</string>
     <string name="desc_country">Краіна</string>
     <string name="status_vpn">VPN</string>
-    <string name="label_fastest_server">Самы хуткі сервер</string>
+    <string name="label_fastest_server">Найхутчэйшы сервер</string>
     <string name="label_select_location">Выберыце лакацыю</string>
     <string name="label_server_unavailable">Сервер недаступны</string>
     <string name="desc_change_server">Змяніць сервер</string>
@@ -69,12 +69,12 @@
     <string name="settings_title">Налады</string>
     <string name="settings_connection">Налады падключэння</string>
     <string name="settings_kill_switch">Kill Switch</string>
-    <string name="settings_kill_switch_desc">Аварыйны выключальнік</string>
+    <string name="settings_kill_switch_desc">Kill Switch</string>
     <string name="settings_auto_connect">Аўтападключэнне</string>
     <string name="settings_auto_connect_desc">Падключацца да VPN пры запуску</string>
     <string name="settings_split_tunneling">Раздзельнае тунэляванне</string>
-    <string name="settings_split_tunneling_desc">Выключыць прыкладанні або IP з VPN</string>
-    <string name="settings_excluded_apps">Выключаныя прыкладанні</string>
+    <string name="settings_split_tunneling_desc">Выключыць праграмы або IP з VPN</string>
+    <string name="settings_excluded_apps">Выключаныя праграмы</string>
     <string name="settings_included_apps">Прыкладанні праз VPN</string>
     <string name="settings_excluded_ips">Выключаныя IP-адрасы</string>
     <string name="settings_included_ips">IP-адрасы праз VPN</string>
@@ -149,7 +149,7 @@
     <string name="settings_custom_dns">Карыстальніцкі DNS</string>
     <string name="settings_custom_dns_default">Прадвызначана (Proton DNS)</string>
     <string name="settings_custom_dns_title">Карыстальніцкі сервер DNS</string>
-    <string name="settings_custom_dns_desc">Увядзіце IPv4 або IPv6 адрас. Пакіньце пустым, каб выкарыстоўваць стандартны бяспечны DNS ад Proton.</string>
+    <string name="settings_custom_dns_desc">Увядзіце IPv4 або IPv6 адрас. Пакіньце пустым, каб прадвызначана выкарыстоўваць бяспечны сервер DNS ад Proton.</string>
     <string name="settings_custom_dns_reset">Скінуць</string>
     <string name="settings_custom_dns_placeholder">напрыклад, 1.1.1.1 або 94.140.14.14</string>
     <!-- Customization -->
@@ -163,8 +163,8 @@
     <string name="theme_light">Светлая</string>
     <string name="theme_dark">Цёмная</string>
     <string name="theme_amoled">AMOLED</string>
-    <string name="theme_gold_light">Золата светлая</string>
-    <string name="theme_gold_dark">Золата цёмная</string>
+    <string name="theme_gold_light">Светлае золата</string>
+    <string name="theme_gold_dark">Цёмнае золата</string>
     <string name="theme_gold_amoled">Золата AMOLED</string>
     <string name="theme_surfshark">Surfshark</string>
     <string name="theme_nord">NordVPN</string>
@@ -188,22 +188,22 @@
     <string name="settings_sentry_metrics">Метрыкі праграмы</string>
     <string name="settings_sentry_metrics_desc">Адсочванне стану прыкладання з дапамогай лікавых даных (лічыльнікі, шкалы)</string>
     <string name="settings_sentry_logs">Адпраўка логаў</string>
-    <string name="settings_sentry_logs_desc">Уключаць ананімныя сістэмныя логі, каб дапамагчы ў адладцы складаных праблем</string>
+    <string name="settings_sentry_logs_desc">Уключаць ананімныя сістэмныя журналы, каб дапамагчы ў адладцы складаных праблем</string>
     <string name="settings_sentry_session_replay">Паўторы сесій</string>
     <string name="settings_sentry_session_replay_desc">Ананімнае прайграванне ўзаемадзеянняў для адладкі праблем інтэрфейсу</string>
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
-    <string name="kill_switch_subtitle">Аварыйны выключальнік</string>
+    <string name="kill_switch_subtitle">Kill Switch</string>
     <string name="kill_switch_desc">Каб ваш трафік заўсёды быў абаронены, выкарыстоўвайце Kill Switch, які прадастаўляецца Android. Гэта прадухіляе ўцечку даных пры разрыве VPN-злучэння.</string>
     <string name="kill_switch_step_1">1. Націсніце кнопку ніжэй, каб адкрыць налады VPN.</string>
     <string name="kill_switch_step_2">2. Націсніце значок налад побач з Proton VPN-Next.</string>
     <string name="kill_switch_step_3">3. Уключыце «Пастаянны VPN» і «Блакіраваць падключэнні без VPN».</string>
     <string name="kill_switch_button">Адкрыць налады VPN</string>
     <!-- Obfuscation Params -->
-    <string name="obfuscation_jc">Колькасць смеццевых пакетаў (Jc)</string>
-    <string name="obfuscation_jmin">Мін. памер смеццевага пакета (Jmin)</string>
-    <string name="obfuscation_jmax">Макс. памер смеццевага пакета (Jmax)</string>
-    <string name="obfuscation_s1">Памер смецця ў Init пакеце (S1)</string>
+    <string name="obfuscation_jc">Junk Packet Count (Jc)</string>
+    <string name="obfuscation_jmin">Junk Packet Min Size (Jmin)</string>
+    <string name="obfuscation_jmax">Junk Packet Max Size (Jmax)</string>
+    <string name="obfuscation_s1">Init Packet Junk Size (S1)</string>
     <string name="obfuscation_s2">Памер смецця ў Response пакеце (S2)</string>
     <string name="obfuscation_s3">Памер смецця ў Cookie Reply (S3)</string>
     <string name="obfuscation_s4">Памер смецця ў Transport (S4)</string>
@@ -219,7 +219,7 @@
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Просты</string>
     <string name="obfuscation_mode_advanced">Дадаткова</string>
-    <string name="obfuscation_junk_level">Інтэнсіўнасць смецця</string>
+    <string name="obfuscation_junk_level">Junk Intensity</string>
     <string name="obfuscation_junk_low">Нізкая (Стандарт)</string>
     <string name="obfuscation_junk_medium">Сярэдняя</string>
     <string name="obfuscation_junk_high">Высокая</string>
@@ -239,7 +239,7 @@
     <string name="obfuscation_config_standard">Стандартная канфігурацыя Proton VPN-Next</string>
     <string name="obfuscation_save_config">Захаваць як новую канфігурацыю</string>
     <string name="obfuscation_config_name">Назва канфігурацыі</string>
-    <string name="obfuscation_category_junk">Параметры смецця</string>
+    <string name="obfuscation_category_junk">Junk Parameters</string>
     <string name="obfuscation_category_magic">Памеры пакетаў (Magic)</string>
     <string name="obfuscation_category_headers">Загалоўкі</string>
     <string name="obfuscation_category_advanced">Дадаткова</string>
@@ -299,14 +299,14 @@
     <string name="st_available_apps_header">Даступныя праграмы (%1$d)</string>
     <string name="st_ip_hint">напрыклад, 192.168.1.0/24</string>
     <string name="st_add_ip_desc">Дадаць IP</string>
-    <string name="st_invalid_ip_error">Няправільны фармат IP-адраса</string>
+    <string name="st_invalid_ip_error">Памылковы фармат IP-адраса</string>
     <string name="st_excluded_ips_header">Выключаныя IP (%1$d)</string>
     <string name="st_included_ips_header">Уключаныя IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адрасы яшчэ не дададзены</string>
     <string name="st_remove_ip_desc">Выдаліць IP</string>
     <string name="st_domain_hint">напрыклад, example.com</string>
     <string name="st_add_domain_desc">Дадаць дамен</string>
-    <string name="st_invalid_domain_error">Няправільны фармат дамена</string>
+    <string name="st_invalid_domain_error">Памылковы фармат дамена</string>
     <string name="st_excluded_domains_header">Выключаныя дамены (%1$d)</string>
     <string name="st_included_domains_header">Уключаныя дамены (%1$d)</string>
     <string name="st_no_domains_added">Дамены яшчэ не дададзены</string>
@@ -320,9 +320,9 @@
     <string name="notification_title_connecting">Падключэнне…</string>
     <string name="notification_action_disconnect">Адключыць</string>
     <!-- Speed Units -->
-    <string name="unit_kb_s">КБ/с</string>
+    <string name="unit_kb_s">КіБ/с</string>
     <string name="unit_mb_s">МБ/с</string>
-    <string name="unit_gb_s">ГБ/с</string>
+    <string name="unit_gb_s">ГіБ/с</string>
     <string name="unit_b_s">Б/с</string>
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Актыўны сеанс не знойдзены. Увайдзіце яшчэ раз.</string>
@@ -351,8 +351,8 @@
     <string name="category_general">Агульныя</string>
     <string name="label_profile_name">Назва профілю</string>
     <string name="location_server">Сервер: %1$s</string>
-    <string name="location_fastest">Самы хуткі</string>
-    <string name="label_location">Лакацыя</string>
+    <string name="location_fastest">Найхутчэйшы</string>
+    <string name="label_location">Месцазнаходжанне</string>
     <string name="category_connection">Подключэнне</string>
     <string name="label_protocol">Пратакол</string>
     <string name="label_port">Порт</string>
@@ -362,18 +362,18 @@
     <string name="label_obfuscation_config">Канфігурацыя абфускацыі</string>
     <string name="category_automation">Аўтаматызацыя</string>
     <string name="label_connect_go_website">Connect &amp; Go (Веб-сайт)</string>
-    <string name="label_enter_url">Увядзіце URL</string>
+    <string name="label_enter_url">Увядзіце URL-адрас</string>
     <string name="label_not_configured">Не настроена</string>
     <string name="automation_desc">Аўтаматычна адкрываць гэты вэб-сайт у браўзеры пасля таго, як праграма падключыцца да сервера VPN.</string>
     <string name="title_select_country">Выберыце краіну</string>
     <string name="title_select_city">Выберыце горад</string>
     <string name="title_select_server">Выберыце сервер</string>
-    <string name="location_fastest_in_country">Самы хуткі ў %1$s</string>
-    <string name="location_fastest_in_city">Самы хуткі ў %1$s</string>
+    <string name="location_fastest_in_country">Найхутчэйшы ў %1$s</string>
+    <string name="location_fastest_in_city">Найхутчэйшы ў %1$s</string>
     <string name="title_select_obfuscation_config">Выберыце канфігурацыю абфускацыі</string>
     <string name="btn_create_new_config">Стварыць новую канфігурацыю</string>
     <string name="connect_go_title">Connect &amp; Go</string>
-    <string name="connect_go_desc">Увядзіце URL для адкрыцця пры падключэнні (напр., https://example.com)</string>
+    <string name="connect_go_desc">Увядзіце URL-адрас для адкрыцця пры падключэнні (напрыклад, https://example.com)</string>
     <string name="title_select_protocol">Выберыце пратакол</string>
     <string name="custom_config_name">Карыстальніцкая канфігурацыя %1$d</string>
     <string name="title_edit_obfuscation_config">Рэдагаваць канфігурацыю абфускацыі</string>
@@ -384,13 +384,13 @@
     <string name="debug_session_header">VPN Сесія і Сертыфікат</string>
     <string name="debug_cert_id">Ідэнт. серт.: %1$s</string>
     <string name="debug_cert_issued">Выдадзены: %1$s</string>
-    <string name="debug_cert_expires">Заканчваецца: %1$s</string>
+    <string name="debug_cert_expires">Міне: %1$s</string>
     <string name="debug_btn_refresh_cert">Абнавіць сертыфікат прымусова</string>
-    <string name="debug_btn_refresh_session">Абнавіць сесію прымусова</string>
+    <string name="debug_btn_refresh_session">Абнавіць сеанс прымусова</string>
     <string name="debug_session_refreshed">Сесія паспяхова абноўлена!</string>
-    <string name="debug_exports_header">Экспарт і Дыягностыка</string>
+    <string name="debug_exports_header">Экспарт і дыягностыка</string>
     <string name="debug_btn_export_logs">Экспарт Logcat у Downloads</string>
-    <string name="debug_btn_export_config">Экспарт WG канфігурацыі (.conf)</string>
+    <string name="debug_btn_export_config">Экспарт канфігурацыі WG (.conf)</string>
     <string name="debug_danger_header">Небяспечная зона</string>
     <string name="debug_btn_nuke">Скіданне ўсіх даных (Factory Reset)</string>
     <string name="debug_nuke_confirm">Вы сапраўды хочаце гэта зрабіць? Усе налады, уліковыя запісы і кэш сервераў будуць незваротна выдалены.</string>
@@ -406,11 +406,11 @@
     <string name="debug_btn_capture_exception">Адправіць памылку (Non-fatal)</string>
     <string name="debug_btn_arithmetic_error">Арыфметычная памылка (1/0)</string>
     <string name="debug_btn_null_pointer">NullPointer Exception</string>
-    <string name="debug_btn_fake_crash">Фэйкавы краш прыкладання</string>
+    <string name="debug_btn_fake_crash">Падманная аварыя праграмы</string>
     <string name="title_quick_connect_config">Налада хуткага падключэння</string>
-    <string name="qc_strategy_fastest">Самы хуткі сервер</string>
+    <string name="qc_strategy_fastest">Найхутчэйшы сервер</string>
     <string name="qc_strategy_fastest_desc">Заўсёды падключацца да самага хуткага сервера.</string>
-    <string name="qc_strategy_recent">Апошні выкарыстаны</string>
+    <string name="qc_strategy_recent">Апошні падключаны</string>
     <string name="qc_strategy_recent_desc">Падключыцца да сервера з мінулай сесіі.</string>
     <string name="qc_header_profiles">ВЫКАРЫСТОЎВАЦЬ ПРОФІЛЬ</string>
     <string name="qc_header_recent">АПОШНІЯ СЕРВЕРЫ</string>
@@ -421,7 +421,7 @@
     <string name="tile_subtitle_specific">Хуткае: %s</string>
     <string name="obfuscation_btn_generate_from_domain">Генерацыя па дамене</string>
     <string name="obfuscation_dialog_domain_title">Увядзіце дамен</string>
-    <string name="obfuscation_dialog_domain_desc">Увядзіце дамен (напр., google.com) для генерацыі ідэнтыфікатара на аснове QUIC.</string>
+    <string name="obfuscation_dialog_domain_desc">Увядзіце дамен (напрыклад, google.com) для генерацыі ідэнтыфікатара радка на аснове QUIC.</string>
     <string name="settings_widget">Віджэт</string>
     <string name="settings_widget_add_to_home">Дадаць на галоўны экран</string>
     <string name="settings_widget_add_to_home_desc">Размясціць віджэт VPN на рабочым стале</string>
@@ -434,10 +434,10 @@
     <string name="title_login_tokens">Уваход па токенах</string>
     <string name="msg_login_tokens_desc">Устаўце JSON вашай сесіі ніжэй для прамога ўваходу. Трымайце гэтыя дадзеныя ў сакрэце!</string>
     <string name="hint_session_json">JSON сесіі</string>
-    <string name="debug_btn_export_session">Экспарт сесіі (Буфер)</string>
-    <string name="debug_btn_import_session">Імпарт сесіі</string>
-    <string name="debug_btn_fetch_domains">Атрымаць даступныя дамены (буфер)</string>
-    <string name="debug_export_session_title">Экспарт канфідэнцыйных дадзеных</string>
+    <string name="debug_btn_export_session">Экспарт сеанса (у буфер)</string>
+    <string name="debug_btn_import_session">Імпарт сеанса</string>
+    <string name="debug_btn_fetch_domains">Атрымаць даступныя дамены (з буфера)</string>
+    <string name="debug_export_session_title">Экспарт канфідэнцыяльных даных</string>
     <string name="debug_export_session_msg">Гэта скапіюе вашу поўную сесію (уключаючы токены і прыватныя ключы) у буфер абмену. НЕ дзяліцеся гэтым ні з кім!</string>
     <string name="debug_import_session_warning">УВАГА: Імпарт сесіі перазапіша бягучую. Выкарыстоўвайце з асцярожнасцю.</string>
     <string name="debug_btn_copy">Скапіяваць</string>
@@ -458,7 +458,7 @@
     <string name="ota_channel_stable">Стабільны</string>
     <string name="ota_channel_nightly">Nightly (начныя зборкі)</string>
     <string name="ota_channel_unavailable">Недаступна</string>
-    <string name="ota_freq_hourly">Кожную гадзіну</string>
+    <string name="ota_freq_hourly">Штогадзіну</string>
     <string name="ota_freq_daily">Штодзень</string>
     <string name="ota_freq_weekly">Штотыдзень</string>
     <string name="ota_freq_monthly">Штомесяц</string>
