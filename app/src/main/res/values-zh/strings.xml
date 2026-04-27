@@ -126,17 +126,17 @@
     <string name="api_proxy_username">用户名 (可选)</string>
     <string name="api_proxy_password">密码 (可选)</string>
     <string name="api_bypass_strategy_byedpi">ByeDPI</string>
-    <string name="api_bypass_strategy_byedpi_desc">利用高级数据包分段和欺骗技术绕过 DPI 屏蔽。</string>
-    <string name="byedpi_flags_title">最佳策略参数</string>
-    <string name="byedpi_flags_label">ByeDPI 标志</string>
-    <string name="byedpi_sni_title">SNI 主机</string>
+    <string name="api_bypass_strategy_byedpi_desc">Bypass DPI blocks using advanced packet fragmentation and deception.</string>
+    <string name="byedpi_flags_title">BEST STRATEGY FLAGS</string>
+    <string name="byedpi_flags_label">ByeDPI Flags</string>
+    <string name="byedpi_sni_title">SNI Host</string>
     <string name="byedpi_sni_hint">google.com</string>
-    <string name="byedpi_flags_none">尚未测试</string>
-    <string name="byedpi_test_results_title">测试结果</string>
-    <string name="btn_apply">应用</string>
-    <string name="btn_copy">复制</string>
-    <string name="btn_start_test">寻找可用策略</string>
-    <string name="btn_stop_test">停止测试</string>
+    <string name="byedpi_flags_none">Not tested yet</string>
+    <string name="byedpi_test_results_title">Test Results</string>
+    <string name="btn_apply">Apply</string>
+    <string name="btn_copy">Copy</string>
+    <string name="btn_start_test">Find Working Strategy</string>
+    <string name="btn_stop_test">Stop Testing</string>
     <!-- Country Spoofing -->
     <string name="settings_country_spoofing_title">国家伪装</string>
     <string name="settings_country_spoofing_description">覆盖发送到 API 的国家代码，以模拟不同的物理位置。</string>
