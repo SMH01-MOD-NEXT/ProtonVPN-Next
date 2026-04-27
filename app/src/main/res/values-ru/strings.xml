@@ -189,7 +189,7 @@
     <string name="settings_sentry_metrics_desc">Отслеживание состояния приложения с помощью числовых данных (счетчики, шкалы)</string>
     <string name="settings_sentry_logs">Отправка логов</string>
     <string name="settings_sentry_logs_desc">Включать анонимные системные логи, чтобы помочь в отладке сложных проблем</string>
-    <string name="settings_sentry_session_replay">Повторы сеансов</string>
+    <string name="settings_sentry_session_replay">Повторы сессий</string>
     <string name="settings_sentry_session_replay_desc">Анонимное воспроизведение взаимодействий для отладки проблем интерфейса</string>
     <!-- Kill Switch Screen -->
     <string name="kill_switch_title">Kill Switch</string>
@@ -325,7 +325,7 @@
     <string name="unit_gb_s">ГБ/с</string>
     <string name="unit_b_s">Б/с</string>
     <!-- Errors and ViewModels -->
-    <string name="error_session_not_found">Активный сеанс не найден. Пожалуйста, войдите снова.</string>
+    <string name="error_session_not_found">Активная сессия не найдена. Пожалуйста, войдите снова.</string>
     <string name="error_unknown">Неизвестная ошибка</string>
     <string name="unknown">Неизвестно</string>
     <!-- Profiles Screen -->
@@ -381,13 +381,13 @@
     <!-- Debug Tools -->
     <string name="settings_debug">Инструменты отладки</string>
     <string name="debug_title">Панель отладки</string>
-    <string name="debug_session_header">VPN Сеанс и Сертификат</string>
+    <string name="debug_session_header">VPN Сессия и Сертификат</string>
     <string name="debug_cert_id">ID серт.: %1$s</string>
     <string name="debug_cert_issued">Выдан: %1$s</string>
     <string name="debug_cert_expires">Истекает: %1$s</string>
     <string name="debug_btn_refresh_cert">Обновить сертификат принудительно</string>
-    <string name="debug_btn_refresh_session">Обновить сеанс принудительно</string>
-    <string name="debug_session_refreshed">Сеанс успешно обновлен!</string>
+    <string name="debug_btn_refresh_session">Обновить сессию принудительно</string>
+    <string name="debug_session_refreshed">Сессия успешно обновлена!</string>
     <string name="debug_exports_header">Экспорт и Диагностика</string>
     <string name="debug_btn_export_logs">Экспорт Logcat в Downloads</string>
     <string name="debug_btn_export_config">Экспорт WG конфига (.conf)</string>
@@ -411,7 +411,7 @@
     <string name="qc_strategy_fastest">Самый быстрый сервер</string>
     <string name="qc_strategy_fastest_desc">Всегда подключаться к самому быстрому серверу.</string>
     <string name="qc_strategy_recent">Последний использованный</string>
-    <string name="qc_strategy_recent_desc">Подключиться к серверу из прошлого сеанса.</string>
+    <string name="qc_strategy_recent_desc">Подключиться к серверу из прошлой сессии.</string>
     <string name="qc_header_profiles">ИСПОЛЬЗОВАТЬ ПРОФИЛЬ</string>
     <string name="qc_header_recent">НЕДАВНИЕ СЕРВЕРЫ</string>
     <string name="qc_strategy_profile_desc">Подключиться с настройками профиля.</string>
@@ -432,14 +432,14 @@
     <!-- Token Login & Session Management -->
     <string name="btn_login_tokens">Вход по токенам</string>
     <string name="title_login_tokens">Вход по токенам</string>
-    <string name="msg_login_tokens_desc">Вставьте JSON вашего сеанса ниже для прямого входа. Храните эти данные в секрете!</string>
-    <string name="hint_session_json">JSON сеанса</string>
-    <string name="debug_btn_export_session">Экспорт сеанса (буфер)</string>
-    <string name="debug_btn_import_session">Импорт сеанса</string>
+    <string name="msg_login_tokens_desc">Вставьте JSON вашей сессии ниже для прямого входа. Храните эти данные в секрете!</string>
+    <string name="hint_session_json">JSON сессии</string>
+    <string name="debug_btn_export_session">Экспорт сессии (буфер)</string>
+    <string name="debug_btn_import_session">Импорт сессии</string>
     <string name="debug_btn_fetch_domains">Получить доступные домены (буфер)</string>
     <string name="debug_export_session_title">Экспорт конфиденциальных данных</string>
-    <string name="debug_export_session_msg">Это скопирует ваш полный сеанс (включая токены и приватные ключи) в буфер обмена. НЕ делитесь этим ни с кем!</string>
-    <string name="debug_import_session_warning">ВНИМАНИЕ: Импорт сеанса перезапишет текущий. Используйте с осторожностью.</string>
+    <string name="debug_export_session_msg">Это скопирует вашу полную сессию (включая токены и приватные ключи) в буфер обмена. НЕ делитесь этим ни с кем!</string>
+    <string name="debug_import_session_warning">ВНИМАНИЕ: Импорт сессии перезапишет текущую. Используйте с осторожностью.</string>
     <string name="debug_btn_copy">Копировать</string>
     <string name="btn_import">Импортировать</string>
     <string name="btn_logout">Выйти</string>
