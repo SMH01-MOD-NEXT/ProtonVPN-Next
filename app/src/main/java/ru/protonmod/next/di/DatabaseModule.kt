@@ -150,9 +150,30 @@ object DatabaseModule {
 
     val MIGRATION_14_15 = object : Migration(14, 15) {
         override fun migrate(db: SupportSQLiteDatabase) {
-            db.execSQL("ALTER TABLE session ADD COLUMN certExpiresAt INTEGER NOT NULL DEFAULT 0")
-            db.execSQL("ALTER TABLE session ADD COLUMN certRefreshAt INTEGER NOT NULL DEFAULT 0")
-            db.execSQL("ALTER TABLE servers_cache ADD COLUMN statusId TEXT")
+            val sessionCursor = db.query("PRAGMA table_info(session)")
+            val sessionColumns = mutableListOf<String>()
+            while (sessionCursor.moveToNext()) {
+                sessionColumns.add(sessionCursor.getString(sessionCursor.getColumnIndexOrThrow("name")))
+            }
+            sessionCursor.close()
+
+            if (!sessionColumns.contains("certExpiresAt")) {
+                db.execSQL("ALTER TABLE session ADD COLUMN certExpiresAt INTEGER NOT NULL DEFAULT 0")
+            }
+            if (!sessionColumns.contains("certRefreshAt")) {
+                db.execSQL("ALTER TABLE session ADD COLUMN certRefreshAt INTEGER NOT NULL DEFAULT 0")
+            }
+
+            val cacheCursor = db.query("PRAGMA table_info(servers_cache)")
+            val cacheColumns = mutableListOf<String>()
+            while (cacheCursor.moveToNext()) {
+                cacheColumns.add(cacheCursor.getString(cacheCursor.getColumnIndexOrThrow("name")))
+            }
+            cacheCursor.close()
+
+            if (!cacheColumns.contains("statusId")) {
+                db.execSQL("ALTER TABLE servers_cache ADD COLUMN statusId TEXT")
+            }
         }
     }
 
