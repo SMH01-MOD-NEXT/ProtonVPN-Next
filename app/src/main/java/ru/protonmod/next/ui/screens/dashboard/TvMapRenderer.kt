@@ -140,14 +140,14 @@ class TvMapRenderer(
                     documentHeight * viewBoxScale * regionScale
                 )
 
-            canvas.drawColor(android.graphics.Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR)
+            canvas.drawColor(android.graphics.Color.TRANSPARENT)
             svg.renderToCanvas(canvas, renderOptions)
 
             // If current render job was canceled don't produce and pass output bitmap to client,
             // but if it's still active don't suspend and finish blocking current (background)
             // thread to avoid starting new render before map is fully copied to output bitmap.
             if (isActive) withContext(NonCancellable + Dispatchers.Main) {
-                outCanvas.drawColor(android.graphics.Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR)
+                outCanvas.drawColor(android.graphics.Color.TRANSPARENT)
                 outCanvas.drawBitmap(map, 0f, 0f, null)
                 val regionHeight = height / width * region.w
                 val regionRect = RectF(region.x, region.y, region.x + region.w, region.y + regionHeight)

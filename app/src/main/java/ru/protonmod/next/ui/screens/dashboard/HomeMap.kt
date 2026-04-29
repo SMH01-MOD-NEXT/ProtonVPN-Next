@@ -331,7 +331,7 @@ class MapView constructor(
             context.contentResolver,
             Settings.Global.ANIMATOR_DURATION_SCALE, 1f
         ) != 0f
-        setLayerType(LAYER_TYPE_HARDWARE, null)
+        setLayerType(LAYER_TYPE_SOFTWARE, null)
         mapRenderer = TvMapRenderer(
             context,
             scope,
@@ -357,7 +357,7 @@ class MapView constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        canvas.drawColor(Color.TRANSPARENT)
         if (width == 0 || height == 0)
             return
 
