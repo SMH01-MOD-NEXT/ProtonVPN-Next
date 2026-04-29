@@ -31,6 +31,13 @@
 -keep class me.proton.vpn.** { *; }
 -keep class ru.protonmod.next.data.network.** { *; }
 
+# --- AmneziaWG Library ---
+# DnsSettings and other classes in this library are Java records / used via JNI from the
+# native Go backend. Without this rule R8 strips them, causing NoClassDefFoundError at runtime.
+-keep class org.amnezia.awg.** { *; }
+# Suppress the secondary warning about R8's own record-desugaring shim (RecordTag).
+-dontwarn com.android.tools.r8.**
+
 # Preserve line numbers for non-obfuscated stack traces (optional, increases size slightly)
 #-keepattributes SourceFile,LineNumberTable
 
