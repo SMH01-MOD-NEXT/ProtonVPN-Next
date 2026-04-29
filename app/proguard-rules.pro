@@ -35,8 +35,9 @@
 # DnsSettings and other classes in this library are Java records / used via JNI from the
 # native Go backend. Without this rule R8 strips them, causing NoClassDefFoundError at runtime.
 -keep class org.amnezia.awg.** { *; }
-# Suppress the secondary warning about R8's own record-desugaring shim (RecordTag).
--dontwarn com.android.tools.r8.**
+# RecordTag MUST be kept — amneziawg-android uses Java records that reference
+# this R8 desugaring shim at runtime. Do NOT suppress with -dontwarn.
+-keep class com.android.tools.r8.RecordTag { *; }
 
 # Preserve line numbers for non-obfuscated stack traces (optional, increases size slightly)
 #-keepattributes SourceFile,LineNumberTable
