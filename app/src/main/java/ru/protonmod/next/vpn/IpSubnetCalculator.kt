@@ -26,9 +26,12 @@ import java.net.InetAddress
 object IpSubnetCalculator {
 
     /**
-     * Check if a string is a valid IP address or CIDR notation
+     * Check if a string is a valid IPv4 address or IPv4 CIDR notation.
+     * IPv6 addresses are explicitly rejected since this calculator is IPv4-only.
      */
     fun isValidIpOrCidr(input: String): Boolean {
+        // Reject IPv6 addresses (contain colons) immediately
+        if (input.contains(":")) return false
         return try {
             when {
                 input.contains("/") -> {
@@ -129,6 +132,9 @@ object IpSubnetCalculator {
         var ranges = mutableListOf<Pair<Long, Long>>(Pair(0L, 0xFFFFFFFFL))
 
         for (raw in excludedCidrs) {
+            // Skip IPv6 entries — this calculator is IPv4-only; passing IPv6 CIDRs
+            // would produce nonsensical bit-shifted ranges and invalid CIDR strings.
+            if (raw.substringBefore("/").contains(":")) continue
             val cidr = normalizeIp(raw)
             val excRange = cidrToRange(cidr) ?: continue
             val newRanges = mutableListOf<Pair<Long, Long>>()

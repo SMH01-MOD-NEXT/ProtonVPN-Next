@@ -574,10 +574,10 @@ class AmneziaVpnManager @Inject constructor(
                 selectedDomains.forEach { domain ->
                     try {
                         val addresses = InetAddress.getAllByName(domain)
-                        addresses.forEach { addr ->
+                        addresses.filterIsInstance<java.net.Inet4Address>().forEach { addr ->
                             val ip = addr.hostAddress
                             if (ip != null) {
-                                selectedIps.add(if (ip.contains(":")) "$ip/128" else "$ip/32")
+                                selectedIps.add("$ip/32")
                                 ProtonLogger.v(TAG, "Split-tunnel domain $domain resolved to $ip")
                             }
                         }
