@@ -41,6 +41,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -81,8 +83,10 @@ fun CaptchaScreen(
     }
     DisposableEffect(captchaHttpClient) {
         onDispose {
-            captchaHttpClient.dispatcher.executorService.shutdown()
-            captchaHttpClient.connectionPool.evictAll()
+            CoroutineScope(Dispatchers.IO).launch {
+                captchaHttpClient.dispatcher.executorService.shutdown()
+                captchaHttpClient.connectionPool.evictAll()
+            }
         }
     }
 
