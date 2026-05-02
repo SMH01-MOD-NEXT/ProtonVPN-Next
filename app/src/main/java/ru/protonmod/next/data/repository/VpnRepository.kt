@@ -323,53 +323,8 @@ class VpnRepository @Inject constructor(
                 return@withContext Result.failure(Exception("No servers available"))
             }
 
-            // Fetch server loads and merge with current list
-            ProtonLogger.d(TAG, "Fetching server loads for ${serversList.size} servers...")
-            val loadsResponse = try {
-                vpnApi.getLoads(bearer, sessionId)
-            } catch (e: Exception) {
-                ProtonLogger.w(TAG, "Failed to initiate loads request: ${e.message}")
-                null
-            }
-
-            if (loadsResponse?.isSuccessful == true) {
-                val loadsBody = loadsResponse.body()?.string()
-                val loadsData = loadsBody?.let {
-                    try { json.decodeFromString<LoadsResponse>(it) } catch (e: Exception) { 
-                        ProtonLogger.e(TAG, "Failed to parse loads JSON", e)
-                        null 
-                    }
-                }
-
-                val loadsMap = loadsData?.loads?.associate { it.id to it.load } ?: emptyMap()
-                ProtonLogger.d(TAG, "Successfully updated loads for ${loadsMap.size} server IDs")
-
-                serversList.forEach { logical ->
-                    val logicalLoad = loadsMap[logical.id]
-                    if (logicalLoad != null) {
-                        logical.averageLoad = logicalLoad
-                        logical.servers.forEach { it.load = loadsMap[it.id] ?: logicalLoad }
-                    } else {
-                        var totalLoad = 0
-                        var activeServers = 0
-                        logical.servers.forEach { physical ->
-                            val load = loadsMap[physical.id]
-                            if (load != null) {
-                                physical.load = load
-                                totalLoad += load
-                                activeServers++
-                            }
-                        }
-                        if (activeServers > 0) logical.averageLoad = totalLoad / activeServers
-                    }
-                }
-            } else {
-                ProtonLogger.w(TAG, "Failed to fetch fresh server loads (HTTP ${loadsResponse?.code()}). Keeping existing loads.")
-                val dbServers = serverDao.getAllServers().associateBy({ it.id }, { it.averageLoad })
-                serversList.forEach { it.averageLoad = dbServers[it.id] ?: 0 }
-            }
-
-            // Save to DB only if we actually got new data (either statusId changed or it was forceRefresh)
+            // Step 1: Persist the server list to the DB FIRST so the large in-memory object
+            // graph can be garbage-collected before we decompress the loads response.
             if (response.code() == 200 && (newStatusId != cacheInfo?.statusId || forceRefresh)) {
                 serverDao.insertServers(serversList.map { ServerMapper.toEntity(it) })
                 ProtonLogger.d(TAG, "Saved servers to local database")
@@ -384,8 +339,46 @@ class VpnRepository @Inject constructor(
             )
             serversCacheDao.saveCacheInfo(newCacheInfo)
 
-            val logicalServers = serversList.filter { it.tier <= userTier }
-            
+            // Step 2: Hint GC before the loads fetch so the heap has room to decompress
+            // the gzip response. The large serversList is no longer referenced from this
+            // point forward; we will read the final result back from the DB instead.
+            val serverCount = serversList.size
+            System.gc()
+
+            // Step 3: Fetch server loads and apply them directly to the DB rows.
+            ProtonLogger.d(TAG, "Fetching server loads for $serverCount servers...")
+            val loadsResponse = try {
+                vpnApi.getLoads(bearer, sessionId)
+            } catch (e: Exception) {
+                ProtonLogger.w(TAG, "Failed to initiate loads request: ${e.message}")
+                null
+            }
+
+            if (loadsResponse?.isSuccessful == true) {
+                val loadsBody = loadsResponse.body()?.string()
+                val loadsData = loadsBody?.let {
+                    try { json.decodeFromString<LoadsResponse>(it) } catch (e: Exception) {
+                        ProtonLogger.e(TAG, "Failed to parse loads JSON", e)
+                        null
+                    }
+                }
+
+                val loadsMap = loadsData?.loads?.associate { it.id to it.load } ?: emptyMap()
+                ProtonLogger.d(TAG, "Successfully updated loads for ${loadsMap.size} server IDs")
+
+                // Apply loads directly to the DB instead of the in-memory list.
+                loadsMap.forEach { (id, load) ->
+                    serverDao.updateServerLoad(id, load)
+                }
+            } else {
+                ProtonLogger.w(TAG, "Failed to fetch fresh server loads (HTTP ${loadsResponse?.code()}). Keeping existing loads.")
+            }
+
+            // Step 4: Read the final server list back from the DB (with loads applied).
+            val logicalServers = serverDao.getAllServers()
+                .map { ServerMapper.toDomain(it) }
+                .filter { it.tier <= userTier }
+
             // Localize cities for the result
             logicalServers.forEach { server ->
                 server.localizedCity = cityRepository.getLocalizedCityName(

@@ -51,6 +51,9 @@ interface ServerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertServers(servers: List<ServerEntity>)
 
+    @Query("UPDATE servers SET averageLoad = :load WHERE id = :id")
+    suspend fun updateServerLoad(id: String, load: Int)
+
     @Query("DELETE FROM servers")
     suspend fun clearAllServers()
 }
