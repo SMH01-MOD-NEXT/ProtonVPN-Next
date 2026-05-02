@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.data.network
 
+import java.net.Inet4Address
 import java.net.InetAddress
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
@@ -35,7 +36,9 @@ class DohFallbackStore @Inject constructor() {
             }
         }
         if (inetAddresses.isNotEmpty()) {
-            fallbackIps[hostname] = inetAddresses
+            // Prefer IPv4 over IPv6 so that callers attempt reachable addresses first
+            // on networks without IPv6 connectivity.
+            fallbackIps[hostname] = inetAddresses.sortedWith(compareBy { if (it is Inet4Address) 0 else 1 })
         }
     }
 

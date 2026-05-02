@@ -23,6 +23,8 @@ import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.utils.ProtonLogger
 import java.io.IOException
+import java.net.Inet4Address
+import java.net.InetAddress
 import javax.inject.Inject
 import kotlinx.coroutines.runBlocking
 
@@ -73,7 +75,9 @@ class DohFallbackInterceptor @Inject constructor(
             } else fallbackIps
 
             if (ips.isNotEmpty()) {
-                val ip = ips.random().hostAddress
+                // Use the first IP: the list is sorted IPv4-first so this prefers IPv4
+                // on networks without IPv6 connectivity.
+                val ip = ips.first().hostAddress
                 if (ip != null) {
                     currentRequest = buildIpRequest(request, ip, originalHost)
                 }
@@ -93,8 +97,8 @@ class DohFallbackInterceptor @Inject constructor(
 
             if (altHosts.isEmpty()) throw e
 
-            // Retry with a random discovered IP
-            val altIp = altHosts.random().hostAddress
+            // Retry with the first discovered IP (list is IPv4-first, so prefer IPv4)
+            val altIp = altHosts.first().hostAddress
             if (altIp == null) throw e
 
             try {
@@ -137,6 +141,7 @@ class DohFallbackInterceptor @Inject constructor(
         ProtonLogger.i("DohFallback", "Discovered ${altHosts.size} alternative IPs for $host: $ipAddresses")
 
         fallbackStore.setFallbackIps(host, altHosts)
+        // getFallbackIps returns addresses already sorted IPv4-first (see DohFallbackStore).
         return fallbackStore.getFallbackIps(host) ?: emptyList()
     }
 }

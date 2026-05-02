@@ -53,6 +53,7 @@ import org.amnezia.awg.backend.Tunnel
 import java.io.IOException
 import java.net.*
 import java.util.concurrent.TimeUnit
+import java.net.Inet4Address
 import javax.inject.Provider
 import javax.inject.Singleton
 import javax.net.ssl.HostnameVerifier
@@ -347,6 +348,11 @@ object NetworkModule {
                     }
                 }
             }
+
+            // Prefer IPv4 over IPv6 to avoid ENETUNREACH on IPv4-only networks.
+            // OkHttp connects in the order addresses are returned, so placing IPv4
+            // first ensures it is tried before any IPv6 address.
+            result.sortWith(compareBy { if (it is Inet4Address) 0 else 1 })
 
             // Log the resolve result for debugging connectivity issues in restricted regions
             ProtonLogger.i("NetworkManager", "Resolved $hostname to: ${result.joinToString(", ") { it.hostAddress ?: "unknown" }}")
