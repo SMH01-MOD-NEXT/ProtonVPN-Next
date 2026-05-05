@@ -23,6 +23,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 import okhttp3.OkHttp
 import ru.protonmod.next.data.local.SettingsManager
@@ -94,9 +95,12 @@ class ProtonNextApp : Application(), Configuration.Provider {
         // Start background server load updates
         vpnRepository.startAutoUpdate()
 
-        // Sync servers on network changes
+        // Sync servers on network changes.
+        // Debounce by 2 s so rapid connectivity toggles (e.g. WiFi → mobile → WiFi)
+        // collapse into a single refresh, preventing multiple concurrent forced fetches
+        // that would exhaust the heap with large API payloads (OOM in loads deserialization).
         MainScope().launch {
-            networkMonitor.networkChanged.collect { timestamp ->
+            networkMonitor.networkChanged.debounce(2_000).collect { timestamp ->
                 if (timestamp > 0) {
                     vpnRepository.refreshServersOnNetworkChange()
                 }

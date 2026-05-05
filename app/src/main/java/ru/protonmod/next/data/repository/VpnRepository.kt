@@ -203,6 +203,14 @@ class VpnRepository @Inject constructor(
                 ProtonLogger.d(TAG, "Joining existing servers fetch request")
                 activeFetch!!
             } else {
+                // Cancel any in-flight fetch before starting a forced refresh.
+                // Without this, the old coroutine is orphaned but keeps running,
+                // holding large API payloads in memory concurrently with the new
+                // fetch and causing OOM during loads JSON deserialization.
+                if (forceRefresh && activeFetch?.isActive == true) {
+                    ProtonLogger.d(TAG, "Force refresh: cancelling in-flight fetch to free memory")
+                    activeFetch?.cancel()
+                }
                 _isUpdating.value = true
                 val newFetch = managerScope.async {
                     try {
@@ -323,26 +331,31 @@ class VpnRepository @Inject constructor(
                 return@withContext Result.failure(Exception("No servers available"))
             }
 
-            // Step 1: Persist the server list to the DB FIRST so the large in-memory object
-            // graph can be garbage-collected before we decompress the loads response.
-            if (response.code() == 200 && (newStatusId != cacheInfo?.statusId || forceRefresh)) {
-                serverDao.insertServers(serversList.map { ServerMapper.toEntity(it) })
-                ProtonLogger.d(TAG, "Saved servers to local database")
+            // Step 1: Persist the server list to the DB and immediately drop the reference
+            // so the large in-memory object graph can be garbage-collected before we
+            // decompress the loads response. Capture serverCount inside run{} so that
+            // serversList goes out of scope as soon as the block exits.
+            val serverCount = run {
+                if (response.code() == 200 && (newStatusId != cacheInfo?.statusId || forceRefresh)) {
+                    serverDao.insertServers(serversList.map { ServerMapper.toEntity(it) })
+                    ProtonLogger.d(TAG, "Saved servers to local database")
+                }
+
+                // Update cache metadata
+                val newCacheInfo = ServersCacheEntity(
+                    cachedAt = now,
+                    expiresAt = now + CACHE_DURATION_MILLIS,
+                    lastModified = newLastModified,
+                    statusId = newStatusId
+                )
+                serversCacheDao.saveCacheInfo(newCacheInfo)
+
+                serversList.size // capture size; serversList goes out of scope after this block
             }
 
-            // Update cache metadata
-            val newCacheInfo = ServersCacheEntity(
-                cachedAt = now,
-                expiresAt = now + CACHE_DURATION_MILLIS,
-                lastModified = newLastModified,
-                statusId = newStatusId
-            )
-            serversCacheDao.saveCacheInfo(newCacheInfo)
-
             // Step 2: Hint GC before the loads fetch so the heap has room to decompress
-            // the gzip response. The large serversList is no longer referenced from this
-            // point forward; we will read the final result back from the DB instead.
-            val serverCount = serversList.size
+            // the gzip response. serversList is no longer referenced from this point
+            // forward; we will read the final result back from the DB instead.
             System.gc()
 
             // Step 3: Fetch server loads and apply them directly to the DB rows.
