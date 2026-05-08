@@ -49,6 +49,7 @@ import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.WarpManager
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -70,11 +71,16 @@ class VpnRepository @Inject constructor(
     @ApplicationScope private val managerScope: CoroutineScope
 ) {
     private var autoUpdateJob: Job? = null
+    private var networkChangeJob: Job? = null
     private val fetchMutex = Mutex()
 
     // Variable for storing the currently executing fetch request
     private var activeFetch: Deferred<Result<List<LogicalServer>>>? = null
     private var cachedServers: List<LogicalServer> = emptyList()
+
+    // Set to true when a force-refresh is requested while a fetch is already in-flight.
+    // Checked in the fetch's finally block so a new force-refresh is triggered once safe.
+    private val pendingForceRefresh = AtomicBoolean(false)
 
     private val _isUpdating = MutableStateFlow(false)
     val isUpdating: StateFlow<Boolean> = _isUpdating.asStateFlow()
@@ -203,22 +209,35 @@ class VpnRepository @Inject constructor(
                 ProtonLogger.d(TAG, "Joining existing servers fetch request")
                 activeFetch!!
             } else {
-                // Cancel any in-flight fetch before starting a forced refresh.
-                // Without this, the old coroutine is orphaned but keeps running,
-                // holding large API payloads in memory concurrently with the new
-                // fetch and causing OOM during loads JSON deserialization.
+                // If a fetch is already in-flight, do NOT cancel it. Cancelling a coroutine
+                // that is blocked on an OkHttp HTTP/2 call aborts the call mid-execution and
+                // can violate OkHttp's TaskRunner internal invariants (check() in afterRun),
+                // crashing the app with IllegalStateException: Check failed.
+                // Instead, set a flag so the running fetch triggers a new force-refresh once
+                // it completes cleanly.
                 if (forceRefresh && activeFetch?.isActive == true) {
-                    ProtonLogger.d(TAG, "Force refresh: cancelling in-flight fetch to free memory")
-                    activeFetch?.cancel()
+                    ProtonLogger.d(TAG, "Force refresh requested while fetch is in-flight; deferring until current fetch completes")
+                    pendingForceRefresh.set(true)
                 }
                 _isUpdating.value = true
+                val capturedAccessToken = accessToken
+                val capturedSessionId = sessionId
+                val capturedUserTier = userTier
                 val newFetch = managerScope.async {
                     try {
-                        performGetServers(accessToken, sessionId, userTier, forceRefresh)
+                        performGetServers(capturedAccessToken, capturedSessionId, capturedUserTier, forceRefresh)
                     } finally {
                         fetchMutex.withLock {
                             activeFetch = null
                             _isUpdating.value = false
+                        }
+                        // If a force-refresh was requested while this fetch was running,
+                        // kick off a new fetch now that OkHttp has cleanly finished.
+                        if (pendingForceRefresh.getAndSet(false)) {
+                            val session = sessionDao.getSession()
+                            if (session != null) {
+                                getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = true)
+                            }
                         }
                     }
                 }
@@ -516,9 +535,14 @@ class VpnRepository @Inject constructor(
 
     /**
      * Triggered by NetworkMonitor to refresh servers when connectivity changes.
+     * Debounced by 2 seconds so rapid network transitions (e.g. Wi-Fi → mobile)
+     * do not queue up multiple parallel force-refresh requests.
      */
     fun refreshServersOnNetworkChange() {
-        managerScope.launch {
+        // Cancel any pending (not yet started) debounce job; never cancels an in-flight OkHttp call.
+        networkChangeJob?.cancel()
+        networkChangeJob = managerScope.launch {
+            delay(2_000L)
             val session = sessionDao.getSession() ?: return@launch
             ProtonLogger.i(TAG, "Network changed. Refreshing server list.")
             getServers(session.accessToken, session.sessionId, session.userTier, forceRefresh = true)
