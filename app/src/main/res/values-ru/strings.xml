@@ -126,17 +126,17 @@
     <string name="api_proxy_username">Имя пользователя (необязательно)</string>
     <string name="api_proxy_password">Пароль (необязательно)</string>
     <string name="api_bypass_strategy_byedpi">ByeDPI</string>
-    <string name="api_bypass_strategy_byedpi_desc">Обход блокировок DPI с помощью продвинутой фрагментации пакетов и обмана.</string>
-    <string name="byedpi_flags_title">ФЛАГИ ЛУЧШЕЙ СТРАТЕГИИ</string>
-    <string name="byedpi_flags_label">Флаги ByeDPI</string>
-    <string name="byedpi_sni_title">SNI хост</string>
+    <string name="api_bypass_strategy_byedpi_desc">Bypass DPI blocks using advanced packet fragmentation and deception.</string>
+    <string name="byedpi_flags_title">BEST STRATEGY FLAGS</string>
+    <string name="byedpi_flags_label">ByeDPI Flags</string>
+    <string name="byedpi_sni_title">SNI Host</string>
     <string name="byedpi_sni_hint">google.com</string>
-    <string name="byedpi_flags_none">Еще не протестировано</string>
-    <string name="byedpi_test_results_title">Результаты теста</string>
-    <string name="btn_apply">Применить</string>
-    <string name="btn_copy">Копировать</string>
-    <string name="btn_start_test">Найти рабочую стратегию</string>
-    <string name="btn_stop_test">Остановить тест</string>
+    <string name="byedpi_flags_none">Not tested yet</string>
+    <string name="byedpi_test_results_title">Test Results</string>
+    <string name="btn_apply">Apply</string>
+    <string name="btn_copy">Copy</string>
+    <string name="btn_start_test">Find Working Strategy</string>
+    <string name="btn_stop_test">Stop Testing</string>
     <!-- Country Spoofing -->
     <string name="settings_country_spoofing_title">Подмена страны</string>
     <string name="settings_country_spoofing_description">Подмена кода страны, отправляемого в API, для имитации другого физического местоположения.</string>
@@ -476,7 +476,6 @@
     <string name="ota_status_up_to_date">Установлена актуальная версия</string>
     <string name="ota_btn_check">Проверить обновления</string>
     <string name="ota_downloading">Загрузка обновления… %1$d%%</string>
-
     <!-- VPN Pause -->
     <string name="btn_pause">Пауза</string>
     <string name="btn_resume">Возобновить</string>
@@ -490,12 +489,10 @@
     <string name="pause_unit_minutes">Минуты</string>
     <string name="pause_unit_hours">Часы</string>
     <string name="btn_start_pause">Запустить паузу</string>
-
     <!-- Battery Optimization -->
     <string name="battery_optimization_title">Оптимизация батареи активна</string>
     <string name="battery_optimization_desc">Android может отключать VPN для экономии энергии. Пожалуйста, отключите оптимизацию для этого приложения.</string>
     <string name="btn_fix">Исправить</string>
-
     <!-- Trusted Wi-Fi -->
     <string name="settings_trusted_wifi">Доверенные сети</string>
     <string name="settings_trusted_wifi_desc">Управление Wi-Fi и мобильными сетями, в которых VPN не требуется</string>
@@ -507,23 +504,6 @@
     <string name="trusted_wifi_empty">Доверенные сети еще не добавлены.</string>
     <string name="trusted_wifi_permission_title">Требуется доступ к сети</string>
     <string name="trusted_wifi_permission_desc">Android требует разрешение на доступ к местоположению для идентификации Wi-Fi сетей. Мобильные сети определяются по имени оператора. Это используется только для автоматизации.</string>
-
-    <string name="app_name" translatable="false">Proton VPN-Next</string>
-    <string name="location_format" translatable="false">%1$s • %2$s</string>
-    <string name="location_city_format" translatable="false">%1$s, %2$s</string>
-    <string name="desc_chevron_right" translatable="false">›</string>
-    <string name="preview_country_name" translatable="false">United States</string>
-    <string name="preview_server_name" translatable="false">US-FREE#1</string>
-    <string name="url_sentry" translatable="false">https://sentry.io/</string>
-    <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg" translatable="false">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
-    <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
-    <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
-    <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
-    <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
-    <string name="location_load" translatable="false">%1$d%%</string>
-
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ОБНАРУЖЕНА НЕОФИЦИАЛЬНАЯ СБОРКА!</string>
     <string name="tamper_warning_desc">Эта версия Proton VPN-Next была модифицирована неизвестной третьей стороной. Ваша безопасность, конфиденциальность и данные находятся под ВЫСОКИМ РИСКОМ. Эта сборка может содержать вредоносное ПО, шпионские программы или трекеры, крадущие ваши учетные данные.</string>
