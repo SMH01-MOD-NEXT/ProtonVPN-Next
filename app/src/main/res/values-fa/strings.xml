@@ -470,7 +470,6 @@
     <string name="ota_status_up_to_date">برنامه بروز است</string>
     <string name="ota_btn_check">بررسی برای بروزرسانی</string>
     <string name="ota_downloading">در حال دانلود بروزرسانی… %1$d%%</string>
-
     <!-- VPN Pause -->
     <string name="btn_pause">توقف</string>
     <string name="btn_resume">ادامه</string>
@@ -484,12 +483,10 @@
     <string name="pause_unit_minutes">دقیقه</string>
     <string name="pause_unit_hours">ساعت</string>
     <string name="btn_start_pause">شروع توقف</string>
-
     <!-- Battery Optimization -->
     <string name="battery_optimization_title">بهینه‌سازی باتری فعال است</string>
     <string name="battery_optimization_desc">اندروید ممکن است برای صرفه‌جویی در مصرف انرژی، VPN را قطع کند. لطفاً بهینه‌سازی را برای این برنامه غیرفعال کنید.</string>
     <string name="btn_fix">رفع مشکل</string>
-
     <!-- Trusted Wi-Fi -->
     <string name="settings_trusted_wifi">شبکه‌های Wi-Fi قابل اعتماد</string>
     <string name="settings_trusted_wifi_desc">مدیریت شبکه‌هایی که در آن‌ها VPN لازم نیست</string>
@@ -501,23 +498,6 @@
     <string name="trusted_wifi_empty">هنوز هیچ شبکه مورد اعتمادی اضافه نشده است.</string>
     <string name="trusted_wifi_permission_title">دسترسی به موقعیت مکانی لازم است</string>
     <string name="trusted_wifi_permission_desc">اندروید برای خواندن نام Wi-Fi (SSID) به مجوز موقعیت مکانی نیاز دارد. این فقط برای شناسایی شبکه‌های مورد اعتماد استفاده می‌شود.</string>
-
-    <string name="app_name" translatable="false">Proton VPN-Next</string>
-    <string name="location_format" translatable="false">%1$s • %2$s</string>
-    <string name="location_city_format" translatable="false">%1$s, %2$s</string>
-    <string name="desc_chevron_right" translatable="false">›</string>
-    <string name="preview_country_name" translatable="false">United States</string>
-    <string name="preview_server_name" translatable="false">US-FREE#1</string>
-    <string name="url_sentry" translatable="false">https://sentry.io/</string>
-    <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg" translatable="false">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
-    <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
-    <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
-    <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
-    <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
-    <string name="location_load" translatable="false">%1$d%%</string>
-
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">نسخه غیررسمی شناسایی شد!</string>
     <string name="tamper_warning_desc">این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما در معرض خطر بسیار بالایی قرار دارند. این برنامه ممکن است حاوی بدافزار، جاسوس‌افزار یا ردیاب‌هایی باشد که اطلاعات حساس شما را سرقت می‌کنند.</string>
