@@ -15,6 +15,24 @@
 - **USE AT YOUR OWN RISK:** This software is provided "as is" without any warranties. The developer assumes **no responsibility** for your accounts, data, or any potential consequences (such as account restrictions) resulting from the use of this unofficial client.
 - **SUPPORT PROTON:** If you value privacy and enjoy Proton's services, we highly recommend subscribing to an official **Proton VPN paid plan**. Supporting the original creators ensures the continued development of the secure infrastructure we all rely on.
 
+### 🚨 About Fakes & Counterfeit APKs
+> **Warning:** Counterfeit versions of this app have been found in the wild. These fake APKs are **dangerous** — they may contain malware, steal your credentials, or silently redirect update checks to attacker-controlled servers.
+
+**The ONLY official sources for Proton VPN-Next are:**
+- ✅ This GitHub repository: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
+- ✅ Official releases published on this repo's [Releases page](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR/releases)
+
+**Known fake/counterfeit distribution channels (DO NOT use):**
+- ❌ Telegram channel `t.me/Getmodpcs` — distributes a tampered APK that modifies the update server to point to their Telegram channel. This fake has been caught sending non-JSON responses to the app and may contain malware.
+
+**How to verify you have the real app:**
+1. Check the package name must be `ru.protonmod.next` (NOT `ch.protonvpn.android` or any other name).
+2. Verify the APK signature matches the one published in this repository.
+3. Only install from the official GitHub Releases page linked above.
+4. **Never install APKs shared via Telegram, random websites, or third-party app stores.**
+
+If you encounter a fake version, please open an issue on this repository so we can track and warn other users.
+
 ### 📱 System Requirements
 - **Operating System:** Android 10+ (API level 29 or higher)
 - **Device Architecture:** **64-bit only** (arm64-v8a or x86_64)
@@ -74,6 +92,24 @@ Ensure you have the Android SDK and JDK 17 installed.
 - **НЕОФИЦИАЛЬНЫЙ КЛИЕНТ:** Данное приложение **НЕ ЯВЛЯЕТСЯ** официальным продуктом Proton AG и никак не связано с официальной командой разработчиков Proton.
 - **ИСПОЛЬЗУЙТЕ НА СВОЙ СТРАХ И РИСК:** Программное обеспечение предоставляется по принципу «как есть». Разработчик **не несет ответственности** за ваши аккаунты, сохранность данных или любые возможные последствия (включая блокировки аккаунтов), возникшие в результате использования этого клиента.
 - **ПОДДЕРЖИТЕ PROTON:** Если вы цените приватность и вам нравятся продукты Proton, мы настоятельно рекомендуем **оформить платную подписку** на официальном сайте. Поддержка оригинальных создателей гарантирует развитие защищенной инфраструктуры, которой мы все пользуемся.
+
+### 🚨 О фейках и поддельных APK
+> **Внимание:** В сети обнаружены поддельные версии этого приложения. Такие APK **опасны** — они могут содержать вредоносное ПО, красть ваши данные или перенаправлять проверки обновлений на серверы злоумышленников.
+
+**ЕДИНСТВЕННЫЕ официальные источники Proton VPN-Next:**
+- ✅ Этот репозиторий GitHub: [SMH01-MIRRORS/ProtonVPN-Next-MIRROR](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
+- ✅ Официальные релизы на [странице Releases](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR/releases) этого репозитория
+
+**Известные поддельные каналы распространения (НЕ использовать):**
+- ❌ Telegram-канал `t.me/Getmodpcs` — распространяет модифицированный APK, который изменяет сервер обновлений на свой Telegram-канал. Этот фейк был замечен в отправке некорректных ответов и может содержать вредоносный код.
+
+**Как убедиться, что у вас настоящее приложение:**
+1. Имя пакета должно быть `ru.protonmod.next` (НЕ `ch.protonvpn.android` и никакое другое).
+2. Проверьте подпись APK — она должна совпадать с опубликованной в этом репозитории.
+3. Устанавливайте приложение только со страницы официальных релизов GitHub.
+4. **Никогда не устанавливайте APK из Telegram, сторонних сайтов или магазинов приложений.**
+
+Если вы столкнулись с поддельной версией, пожалуйста, создайте issue в этом репозитории.
 
 ### 📱 Системные требования
 - **Операционная система:** Android 10+ (API 29 и выше)
