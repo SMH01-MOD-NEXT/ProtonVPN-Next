@@ -126,17 +126,17 @@
     <string name="api_proxy_username">نام کاربری (اختیاری)</string>
     <string name="api_proxy_password">رمز عبور (اختیاری)</string>
     <string name="api_bypass_strategy_byedpi">ByeDPI</string>
-    <string name="api_bypass_strategy_byedpi_desc">دور زدن مسدودسازی DPI با استفاده از تکه‌تکه کردن پیشرفته بسته‌ها و فریبکاری.</string>
-    <string name="byedpi_flags_title">فلگ‌های بهترین استراتژی</string>
-    <string name="byedpi_flags_label">فلگ‌های ByeDPI</string>
-    <string name="byedpi_sni_title">هاست SNI</string>
+    <string name="api_bypass_strategy_byedpi_desc">Bypass DPI blocks using advanced packet fragmentation and deception.</string>
+    <string name="byedpi_flags_title">BEST STRATEGY FLAGS</string>
+    <string name="byedpi_flags_label">ByeDPI Flags</string>
+    <string name="byedpi_sni_title">SNI Host</string>
     <string name="byedpi_sni_hint">google.com</string>
-    <string name="byedpi_flags_none">هنوز تست نشده است</string>
-    <string name="byedpi_test_results_title">نتایج تست</string>
-    <string name="btn_apply">اعمال</string>
-    <string name="btn_copy">کپی</string>
-    <string name="btn_start_test">یافتن استراتژی فعال</string>
-    <string name="btn_stop_test">توقف تست</string>
+    <string name="byedpi_flags_none">Not tested yet</string>
+    <string name="byedpi_test_results_title">Test Results</string>
+    <string name="btn_apply">Apply</string>
+    <string name="btn_copy">Copy</string>
+    <string name="btn_start_test">Find Working Strategy</string>
+    <string name="btn_stop_test">Stop Testing</string>
     <!-- Country Spoofing -->
     <string name="settings_country_spoofing_title">جعل کشور</string>
     <string name="settings_country_spoofing_description">جایگزینی کد کشور ارسال شده به API برای شبیه‌سازی یک مکان فیزیکی متفاوت.</string>
@@ -249,7 +249,7 @@
     <string name="about_github">GitHub</string>
     <string name="about_telegram">Telegram</string>
     <string name="about_codeberg">Codeberg</string>
-    <string name="about_crowdin">کمک در ترجمه</string>
+    <string name="about_crowdin">Help with Translation</string>
     <string name="about_website">وب‌سایت رسمی</string>
     <string name="about_sentry">طراحی شده توسط Sentry</string>
     <!-- Licenses Screen -->
@@ -257,15 +257,15 @@
     <string name="license_app_title">Proton VPN-Next</string>
     <string name="license_app_desc">GNU General Public License v3.0</string>
     <string name="license_androidx_title">کتابخانه‌های AndroidX</string>
-    <string name="license_apache_2">مجوز Apache 2.0</string>
+    <string name="license_apache_2">Apache License 2.0</string>
     <string name="license_compose_title">Jetpack Compose</string>
     <string name="license_kotlin_title">کتابخانه استاندارد Kotlin</string>
     <string name="license_hilt_title">Dagger Hilt</string>
-    <string name="license_retrofit_title">Retrofit و OkHttp</string>
-    <string name="license_proton_go_vpn_title">کتابخانه Proton GO VPN</string>
+    <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
     <string name="license_amneziawg_title">AmneziaWG Android</string>
     <string name="license_sentry_title">Sentry SDK</string>
-    <string name="license_room_title">پایگاه داده Room</string>
+    <string name="license_room_title">Room Database</string>
     <string name="license_leakcanary_title">LeakCanary</string>
     <string name="license_android_svg_title">Android SVG</string>
     <string name="license_bsl">Business Source License 1.1</string>
@@ -470,7 +470,6 @@
     <string name="ota_status_up_to_date">برنامه بروز است</string>
     <string name="ota_btn_check">بررسی برای بروزرسانی</string>
     <string name="ota_downloading">در حال دانلود بروزرسانی… %1$d%%</string>
-
     <!-- VPN Pause -->
     <string name="btn_pause">توقف</string>
     <string name="btn_resume">ادامه</string>
@@ -484,12 +483,10 @@
     <string name="pause_unit_minutes">دقیقه</string>
     <string name="pause_unit_hours">ساعت</string>
     <string name="btn_start_pause">شروع توقف</string>
-
     <!-- Battery Optimization -->
     <string name="battery_optimization_title">بهینه‌سازی باتری فعال است</string>
     <string name="battery_optimization_desc">اندروید ممکن است برای صرفه‌جویی در مصرف انرژی، VPN را قطع کند. لطفاً بهینه‌سازی را برای این برنامه غیرفعال کنید.</string>
     <string name="btn_fix">رفع مشکل</string>
-
     <!-- Trusted Wi-Fi -->
     <string name="settings_trusted_wifi">شبکه‌های Wi-Fi قابل اعتماد</string>
     <string name="settings_trusted_wifi_desc">مدیریت شبکه‌هایی که در آن‌ها VPN لازم نیست</string>
@@ -501,23 +498,6 @@
     <string name="trusted_wifi_empty">هنوز هیچ شبکه مورد اعتمادی اضافه نشده است.</string>
     <string name="trusted_wifi_permission_title">دسترسی به موقعیت مکانی لازم است</string>
     <string name="trusted_wifi_permission_desc">اندروید برای خواندن نام Wi-Fi (SSID) به مجوز موقعیت مکانی نیاز دارد. این فقط برای شناسایی شبکه‌های مورد اعتماد استفاده می‌شود.</string>
-
-    <string name="app_name" translatable="false">Proton VPN-Next</string>
-    <string name="location_format" translatable="false">%1$s • %2$s</string>
-    <string name="location_city_format" translatable="false">%1$s, %2$s</string>
-    <string name="desc_chevron_right" translatable="false">›</string>
-    <string name="preview_country_name" translatable="false">United States</string>
-    <string name="preview_server_name" translatable="false">US-FREE#1</string>
-    <string name="url_sentry" translatable="false">https://sentry.io/</string>
-    <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg" translatable="false">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
-    <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
-    <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
-    <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
-    <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
-    <string name="location_load" translatable="false">%1$d%%</string>
-
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">نسخه غیررسمی شناسایی شد!</string>
     <string name="tamper_warning_desc">این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما در معرض خطر بسیار بالایی قرار دارند. این برنامه ممکن است حاوی بدافزار، جاسوس‌افزار یا ردیاب‌هایی باشد که اطلاعات حساس شما را سرقت می‌کنند.</string>
