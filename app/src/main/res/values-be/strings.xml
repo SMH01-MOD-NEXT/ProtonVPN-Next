@@ -336,6 +336,7 @@
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Актыўны сеанс не знойдзены. Увайдзіце яшчэ раз.</string>
     <string name="error_unknown">Невядомая памылка</string>
+    <string name="error_captcha_expired">Сесія капчы скончылася. Націсніце \"Увайсці\", каб паспрабаваць зноў.</string>
     <string name="unknown">Невядома</string>
     <!-- Profiles Screen -->
     <string name="profiles_title">Профілі</string>
