@@ -500,8 +500,8 @@
     <string name="trusted_wifi_permission_desc">Android requires location permission to identify Wi-Fi networks. Mobile networks are identified by carrier name. This is used only for automation.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">UNOFFICIAL BUILD DETECTED!</string>
-    <string name="tamper_warning_desc">This version of Proton VPN-Next has been modified by an unknown third party. Your security, privacy, and data are at HIGH RISK. This build may contain malware, spyware, or trackers that steal your credentials.</string>
-    <string name="tamper_warning_action">We strongly recommend installing the official version from our GitHub or Telegram channel immediately to protect your identity.</string>
-    <string name="tamper_btn_ignore">I Understand the Risk</string>
-    <string name="tamper_btn_official">Get Official App</string>
+    <string name="tamper_warning_desc">This version of Proton VPN-Next has been modified by an unknown third party. Your security, privacy, and data are at HIGH RISK.</string>
+    <string name="tamper_btn_accept_risks">I Understand the Risk and Accept Consequences</string>
+    <string name="tamper_btn_download_official">Get Official App</string>
+    <string name="tamper_btn_back">Back</string>
 </resources>
