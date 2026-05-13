@@ -506,8 +506,8 @@
     <string name="trusted_wifi_permission_desc">Android требует разрешение на доступ к местоположению для идентификации Wi-Fi сетей. Мобильные сети определяются по имени оператора. Это используется только для автоматизации.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ОБНАРУЖЕНА НЕОФИЦИАЛЬНАЯ СБОРКА!</string>
-    <string name="tamper_warning_desc">Эта версия Proton VPN-Next была модифицирована неизвестной третьей стороной. Ваша безопасность, конфиденциальность и данные находятся под ВЫСОКИМ РИСКОМ. Эта сборка может содержать вредоносное ПО, шпионские программы или трекеры, крадущие ваши учетные данные.</string>
-    <string name="tamper_warning_action">Мы настоятельно рекомендуем немедленно установить официальную версию из нашего репозитория GitHub или Telegram-канала, чтобы защитить вашу личность.</string>
-    <string name="tamper_btn_ignore">Я осознаю риск</string>
-    <string name="tamper_btn_official">Скачать оригинал</string>
+    <string name="tamper_warning_desc">Эта версия Proton VPN-Next была модифицирована неизвестной третьей стороной. Ваша безопасность, конфиденциальность и данные находятся под ВЫСОКИМ РИСКОМ.</string>
+    <string name="tamper_btn_accept_risks">Я осознаю риск и принимаю последствия</string>
+    <string name="tamper_btn_download_official">Скачать оригинал</string>
+    <string name="tamper_btn_back">Назад</string>
 </resources>
