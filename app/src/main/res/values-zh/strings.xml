@@ -497,8 +497,8 @@
     <string name="trusted_wifi_permission_desc">Android 需要位置权限才能读取 Wi-Fi 名称 (SSID)。这仅用于识别受信任的网络。</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">检测到非官方版本！</string>
-    <string name="tamper_warning_desc">此版本的 Proton VPN-Next 已被未知的第三方修改。您的安全、隐私和数据正面临 极高风险。此版本可能包含恶意软件、间谍软件或窃取您凭据的追踪器。</string>
-    <string name="tamper_warning_action">我们强烈建议您立即从我们的 GitHub 或 Telegram 频道安装官方版本，以保护您的身份安全。</string>
-    <string name="tamper_btn_ignore">我了解风险</string>
-    <string name="tamper_btn_official">获取官方版本</string>
+    <string name="tamper_warning_desc">此版本的 Proton VPN-Next 已被未知的第三方修改。您的安全、隐私和数据正面临高度风险。</string>
+    <string name="tamper_btn_accept_risks">我了解风险并接受后果</string>
+    <string name="tamper_btn_download_official">下载官方版本</string>
+    <string name="tamper_btn_back">返回</string>
 </resources>
