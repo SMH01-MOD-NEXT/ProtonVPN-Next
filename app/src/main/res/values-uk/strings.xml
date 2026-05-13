@@ -506,8 +506,8 @@
     <string name="trusted_wifi_permission_desc">Android потребує дозвіл на доступ до місцезнаходження для читання назви Wi-Fi (SSID). Це використовується тільки для ідентифікації довірених мереж.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ВИЯВЛЕНО НЕОФІЦІЙНУ ЗБІРКУ!</string>
-    <string name="tamper_warning_desc">Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані перебувають під ВИСОКИМ РИЗИКОМ. Ця збірка може містити шкідливе ПЗ, шпигунські програми або трекери, що викрадають ваші облікові дані.</string>
-    <string name="tamper_warning_action">Ми наполегливо рекомендуємо негайно встановити офіційну версію з нашого GitHub або Telegram-каналу, щоб захистити вашу особу.</string>
-    <string name="tamper_btn_ignore">Я усвідомлюю ризик</string>
-    <string name="tamper_btn_official">Завантажити оригінал</string>
+    <string name="tamper_warning_desc">Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані знаходяться під ВИСОКИМ РИЗИКОМ.</string>
+    <string name="tamper_btn_accept_risks">Я усвідомлюю ризик і приймаю наслідки</string>
+    <string name="tamper_btn_download_official">Завантажити оригінал</string>
+    <string name="tamper_btn_back">Назад</string>
 </resources>
