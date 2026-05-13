@@ -330,6 +330,7 @@
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">نشست فعال یافت نشد. لطفاً دوباره وارد شوید.</string>
     <string name="error_unknown">خطای ناشناخته</string>
+    <string name="error_captcha_expired">جلسه کپچا منقضی شده است. لطفا برای تلاش مجدد روی ورود کلیک کنید.</string>
     <string name="unknown">نامشخص</string>
     <!-- Profiles Screen -->
     <string name="profiles_title">پروفایل‌ها</string>
