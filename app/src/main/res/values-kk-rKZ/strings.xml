@@ -330,6 +330,7 @@
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">Active session not found. Please log in again.</string>
     <string name="error_unknown">Unknown error</string>
+    <string name="error_captcha_expired">Captcha session expired. Please click Login to try again.</string>
     <string name="unknown">Unknown</string>
     <!-- Profiles Screen -->
     <string name="profiles_title">Profiles</string>
