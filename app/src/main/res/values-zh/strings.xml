@@ -327,6 +327,7 @@
     <!-- Errors and ViewModels -->
     <string name="error_session_not_found">未找到活动会话。请重新登录。</string>
     <string name="error_unknown">未知错误</string>
+    <string name="error_captcha_expired">验证码会话已过期。请点击“登录”重试。</string>
     <string name="unknown">未知</string>
     <!-- Profiles Screen -->
     <string name="profiles_title">配置方案</string>
