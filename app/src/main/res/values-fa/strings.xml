@@ -500,8 +500,8 @@
     <string name="trusted_wifi_permission_desc">اندروید برای خواندن نام Wi-Fi (SSID) به مجوز موقعیت مکانی نیاز دارد. این فقط برای شناسایی شبکه‌های مورد اعتماد استفاده می‌شود.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">نسخه غیررسمی شناسایی شد!</string>
-    <string name="tamper_warning_desc">این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما در معرض خطر بسیار بالایی قرار دارند. این برنامه ممکن است حاوی بدافزار، جاسوس‌افزار یا ردیاب‌هایی باشد که اطلاعات حساس شما را سرقت می‌کنند.</string>
-    <string name="tamper_warning_action">ما اکیداً توصیه می‌کنیم برای محافظت از هویت خود، بلافاصله نسخه رسمی را از گیت‌هاب یا کانال تلگرام ما نصب کنید.</string>
-    <string name="tamper_btn_ignore">خطر را می‌پذیرم</string>
-    <string name="tamper_btn_official">دریافت نسخه اصلی</string>
+    <string name="tamper_warning_desc">این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما در معرض خطر بسیار بالایی قرار دارند.</string>
+    <string name="tamper_btn_accept_risks">خطر را می‌پذیرم</string>
+    <string name="tamper_btn_download_official">دریافت نسخه اصلی</string>
+    <string name="tamper_btn_back">بازگشت</string>
 </resources>
