@@ -398,6 +398,8 @@
     <string name="debug_btn_refresh_cert">Обновить сертификат принудительно</string>
     <string name="debug_btn_refresh_session">Обновить сеанс принудительно</string>
     <string name="debug_session_refreshed">Сеанс успешно обновлен!</string>
+    <string name="debug_btn_simulate_expired_cert">Симулировать истекший сертификат</string>
+    <string name="debug_cert_simulated">Истечение сертификата симулировано. Баннер должен появиться на дашборде.</string>
     <string name="debug_exports_header">Экспорт и Диагностика</string>
     <string name="debug_btn_export_logs">Экспорт Logcat в Downloads</string>
     <string name="debug_btn_export_config">Экспорт WG конфига (.conf)</string>
