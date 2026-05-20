@@ -398,6 +398,8 @@
     <string name="debug_btn_refresh_cert">Абнавіць сертыфікат прымусова</string>
     <string name="debug_btn_refresh_session">Абнавіць сеанс прымусова</string>
     <string name="debug_session_refreshed">Сеанс паспяхова абноўлены!</string>
+    <string name="debug_btn_simulate_expired_cert">Сімуляваць пратэрмінаваны сертыфікат</string>
+    <string name="debug_cert_simulated">Заканчэнне тэрміну дзеяння сертыфіката сімулявана. Банэр павінен з\'явіцца на дашбордзе.</string>
     <string name="debug_exports_header">Экспарт і дыягностыка</string>
     <string name="debug_btn_export_logs">Экспарт Logcat у Downloads</string>
     <string name="debug_btn_export_config">Экспарт канфігурацыі WG (.conf)</string>
