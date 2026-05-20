@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2026 SMH01
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ This program is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+<resources>
+    <!-- Welcome Screen -->
+    <string name="welcome_title">Welcome to Proton VPN-Next</string>
+    <string name="welcome_subtitle">Take control of your digital life with secure, private, and fast VPN. No logs, no tracking.</string>
+    <string name="btn_create_account">Create Account</string>
+    <string name="btn_login">Log In</string>
+    <string name="btn_continue_guest">Continue as Guest</string>
+    <!-- Login Screen -->
+    <string name="login_title">Welcome Back</string>
+    <string name="login_subtitle">Log in to your Proton account</string>
+    <string name="hint_username">Email or Username</string>
+    <string name="hint_password">Password</string>
+    <string name="forgot_password">Forgot password?</string>
+    <string name="desc_back_button">Navigate back</string>
+    <string name="desc_back">Back</string>
+    <string name="desc_toggle_password">Toggle password visibility</string>
+    <string name="title_2fa">Two-Factor Authentication</string>
+    <string name="msg_2fa_instruction">Enter the 6-digit TOTP code from your authenticator app.</string>
+    <string name="hint_2fa_code">6-digit Code</string>
+    <string name="btn_verify">Verify</string>
+    <!-- Dashboard Screen -->
+    <string name="dashboard_title">Proton VPN-Next</string>
+    <string name="btn_retry">Retry</string>
+    <string name="error_system_appops">System error: please reinstall the app.</string>
+    <string name="title_recent_connections">Recent connections</string>
+    <string name="status_connected">Connected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_verifying">Verifying…</string>
+    <string name="status_disconnecting">Disconnecting…</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_not_connected">Not connected</string>
+    <string name="desc_toggle_connection">Toggle Connection</string>
+    <string name="desc_country">Country</string>
+    <string name="status_vpn">VPN</string>
+    <string name="label_fastest_server">Fastest Server</string>
+    <string name="label_select_location">Select location</string>
+    <string name="label_server_unavailable">Server unavailable</string>
+    <string name="desc_change_server">Change server</string>
+    <string name="btn_disconnect">Disconnect</string>
+    <string name="btn_quick_connect">Quick Connect</string>
+    <!-- VPN Certificate Messages -->
+    <string name="cert_msg_expiring_soon">Certificate expires in %1$dh. Refreshing soon…</string>
+    <string name="cert_msg_expired">Your VPN certificate has expired and needs to be renewed.</string>
+    <string name="cert_msg_refreshing">Refreshing VPN certificate…</string>
+    <string name="cert_msg_refresh_failed">Failed to refresh certificate: %1$s. Retrying in 15 minutes.</string>
+    <string name="cert_msg_auto_refresh_failed">Auto-refresh failed. Please update manually to ensure connection.</string>
+    <string name="cert_btn_refresh_now">Refresh Now</string>
+    <!-- Countries Screen -->
+    <string name="countries_title">Select Country</string>
+    <string name="desc_more_options">More options</string>
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_connection">Connection Settings</string>
+    <string name="settings_kill_switch">Kill Switch</string>
+    <string name="settings_kill_switch_desc">Kill Switch</string>
+    <string name="settings_auto_connect">Auto Connect</string>
+    <string name="settings_auto_connect_desc">Connect to VPN on startup</string>
+    <string name="settings_split_tunneling">Split Tunneling</string>
+    <string name="settings_split_tunneling_desc">Exclude apps or IPs from VPN</string>
+    <string name="settings_excluded_apps">Excluded Apps</string>
+    <string name="settings_included_apps">VPN-only Apps</string>
+    <string name="settings_excluded_ips">Excluded IP Addresses</string>
+    <string name="settings_included_ips">VPN-only IP Addresses</string>
+    <string name="settings_excluded_domains">Excluded Domains</string>
+    <string name="settings_included_domains">VPN-only Domains</string>
+    <string name="settings_privacy">Privacy &amp; Notifications</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_desc">Receive VPN status notifications</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_version_short">v%1$s</string>
+    <string name="settings_licenses">Open Source Licenses</string>
+    <string name="settings_privacy_policy">Privacy Policy</string>
+    <string name="settings_disclaimer">Disclaimer</string>
+    <string name="settings_legal">Legal Information</string>
+    <string name="welcome_agreement_text">By continuing, you agree to our %1$s and %2$s.</string>
+    <string name="settings_licenses_desc">Third-party software used in the app</string>
+    <string name="settings_on">On</string>
+    <string name="settings_off">Off</string>
+    <string name="settings_port">Port</string>
+    <string name="settings_port_desc">Selection of connection port</string>
+    <string name="settings_port_auto">Auto</string>
+    <string name="settings_reset_obfuscation">Reset to Standard ProtonVPN-Next</string>
+    <string name="settings_api_bypass">API Block Bypass</string>
+    <string name="settings_api_bypass_desc">Ensures successful login and server retrieval by routing API requests through alternative channels when blocked.</string>
+    <string name="api_bypass_vpn_detected">Active VPN connection detected. API bypass is automatically disabled as it is not required.</string>
+    <string name="api_bypass_disabled_by_vpn">Disabled (VPN Active)</string>
+    <string name="api_bypass_strategy_title">ROUTING STRATEGY</string>
+    <string name="api_bypass_strategy_netlify">Netlify Proxy</string>
+    <string name="api_bypass_strategy_netlify_desc">Routes API requests through a secure Netlify proxy.</string>
+    <string name="api_bypass_strategy_cloudflare">Cloudflare Proxy</string>
+    <string name="api_bypass_strategy_cloudflare_desc">Routes API requests through a high-performance Cloudflare worker.</string>
+    <string name="api_bypass_strategy_mirrors">Proton Mirrors (DoH)</string>
+    <string name="api_bypass_strategy_mirrors_desc">Discovers and uses dynamic Proton API mirrors via DNS-over-HTTPS fallback.</string>
+    <string name="api_bypass_strategy_warp">WARP (Cloudflare)</string>
+    <string name="api_bypass_strategy_warp_desc">Uses a temporary WARP tunnel for API requests. High reliability.</string>
+    <string name="warp_fetching_config">Fetching WARP configuration…</string>
+    <string name="warp_permission_title">VPN Permission Required</string>
+    <string name="warp_permission_desc">WARP needs permission to create a local tunnel for API bypass. No data is sent outside Cloudflare.</string>
+    <string name="btn_allow">Allow</string>
+    <string name="btn_accept">Accept</string>
+    <string name="api_bypass_strategy_custom">Custom Proxy (SOCKS5/HTTPS)</string>
+    <string name="api_bypass_strategy_custom_desc">Routes API requests through your own SOCKS5 or HTTPS proxy server.</string>
+    <string name="api_proxy_host">Proxy Host</string>
+    <string name="api_proxy_port">Proxy Port</string>
+    <string name="api_proxy_type">Proxy Type</string>
+    <string name="api_proxy_type_http">HTTPS / HTTP</string>
+    <string name="api_proxy_type_socks">SOCKS5</string>
+    <string name="api_proxy_username">Username (Optional)</string>
+    <string name="api_proxy_password">Password (Optional)</string>
+    <string name="api_bypass_strategy_byedpi">ByeDPI</string>
+    <string name="api_bypass_strategy_byedpi_desc">Bypass DPI blocks using advanced packet fragmentation and deception.</string>
+    <string name="byedpi_flags_title">BEST STRATEGY FLAGS</string>
+    <string name="byedpi_flags_label">ByeDPI Flags</string>
+    <string name="byedpi_sni_title">SNI Host</string>
+    <string name="byedpi_sni_hint">google.com</string>
+    <string name="byedpi_flags_none">Not tested yet</string>
+    <string name="byedpi_test_results_title">Test Results</string>
+    <string name="btn_apply">Apply</string>
+    <string name="btn_copy">Copy</string>
+    <string name="btn_start_test">Find Working Strategy</string>
+    <string name="btn_stop_test">Stop Testing</string>
+    <!-- Country Spoofing -->
+    <string name="settings_country_spoofing_title">Country Spoofing</string>
+    <string name="settings_country_spoofing_description">Override the country code sent to the API to simulate a different physical location.</string>
+    <string name="settings_country_spoofing_null_label">Null Spoof</string>
+    <string name="settings_country_spoofing_null_desc">Do not send any country code header to the API.</string>
+    <string name="settings_country_spoofing_code_label">Country Code (ISO 3166&#8211;1 alpha&#8211;2)</string>
+    <string name="settings_country_spoofing_code_hint">e.g. US, DE, RU</string>
+    <string name="settings_country_spoofing_update_toast">Updating server list…</string>
+    <!-- Custom DNS -->
+    <string name="settings_custom_dns">Custom DNS</string>
+    <string name="settings_custom_dns_default">Default (Proton DNS)</string>
+    <string name="settings_custom_dns_title">Custom DNS Server</string>
+    <string name="settings_custom_dns_desc">Enter an IPv4 or IPv6 address. Leave blank to use Proton\'s default secure DNS.</string>
+    <string name="settings_custom_dns_reset">Reset Default</string>
+    <string name="settings_custom_dns_placeholder">e.g. 1.1.1.1 or 2606:4700:4700::1111</string>
+    <!-- Customization -->
+    <string name="settings_customization">Customization</string>
+    <string name="settings_app_theme">App Theme</string>
+    <string name="settings_load_display_mode">Server Load Display</string>
+    <string name="load_mode_all">Line and Percentages</string>
+    <string name="load_mode_line">Line only</string>
+    <string name="load_mode_percent">Percentages only</string>
+    <string name="load_mode_hidden">Hidden</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_gold_light">Gold Light</string>
+    <string name="theme_gold_dark">Gold Dark</string>
+    <string name="theme_gold_amoled">Gold AMOLED</string>
+    <string name="theme_surfshark">Surfshark</string>
+    <string name="theme_nord">NordVPN</string>
+    <string name="theme_ipvanish">IPVanish</string>
+    <string name="theme_purevpn">PureVPN</string>
+    <string name="theme_mullvad">Mullvad</string>
+    <string name="theme_windscribe">Windscribe</string>
+    <!-- Error Reporting Settings -->
+    <string name="settings_error_reporting">Error Reporting</string>
+    <string name="settings_error_reporting_desc">Manage crash reports and analytics</string>
+    <string name="settings_crash_reports">Send Crash Reports</string>
+    <string name="settings_crash_reports_desc">Detailed reports when the app stops working unexpectedly</string>
+    <string name="settings_analytics">Send Analytics</string>
+    <string name="settings_analytics_desc">Anonymous usage data to help us understand how the app is used</string>
+    <string name="settings_sentry_performance">App Performance</string>
+    <string name="settings_sentry_performance_desc">Collect anonymous traces and startup performance data</string>
+    <string name="settings_sentry_non_fatal">Non-fatal Errors</string>
+    <string name="settings_sentry_non_fatal_desc">Send reports for caught exceptions and minor logic issues</string>
+    <string name="settings_sentry_anr">ANR Detection</string>
+    <string name="settings_sentry_anr_desc">Detect when the app becomes unresponsive for more than 5 seconds</string>
+    <string name="settings_sentry_metrics">App Metrics</string>
+    <string name="settings_sentry_metrics_desc">Track application health with numeric data like counters and gauges</string>
+    <string name="settings_sentry_logs">Send Logs</string>
+    <string name="settings_sentry_logs_desc">Include anonymous system logs to help debug complex issues</string>
+    <string name="settings_sentry_session_replay">Session Replays</string>
+    <string name="settings_sentry_session_replay_desc">Anonymous interaction playback to debug UI issues</string>
+    <!-- Kill Switch Screen -->
+    <string name="kill_switch_title">Kill Switch</string>
+    <string name="kill_switch_subtitle">Kill Switch</string>
+    <string name="kill_switch_desc">To ensure your traffic is always protected, use the Kill Switch provided by Android. This prevents data leaks if the VPN connection drops.</string>
+    <string name="kill_switch_step_1">1. Tap the button below to open VPN settings.</string>
+    <string name="kill_switch_step_2">2. Tap the settings icon next to Proton VPN-Next.</string>
+    <string name="kill_switch_step_3">3. Enable \"Always-on VPN\" and \"Block connections without VPN\".</string>
+    <string name="kill_switch_button">Open VPN Settings</string>
+    <!-- Obfuscation Params -->
+    <string name="obfuscation_jc">Junk Packet Count (Jc)</string>
+    <string name="obfuscation_jmin">Junk Packet Min Size (Jmin)</string>
+    <string name="obfuscation_jmax">Junk Packet Max Size (Jmax)</string>
+    <string name="obfuscation_s1">Init Packet Junk Size (S1)</string>
+    <string name="obfuscation_s2">Response Packet Junk Size (S2)</string>
+    <string name="obfuscation_s3">Cookie Reply Junk Size (S3)</string>
+    <string name="obfuscation_s4">Transport Packet Junk Size (S4)</string>
+    <string name="obfuscation_h1">Init Packet Magic (H1)</string>
+    <string name="obfuscation_h2">Response Packet Magic (H2)</string>
+    <string name="obfuscation_h3">Underload Packet Magic (H3)</string>
+    <string name="obfuscation_h4">Transport Packet Magic (H4)</string>
+    <string name="obfuscation_i1">Special Junk (I1)</string>
+    <string name="obfuscation_i2">Special Junk (I2)</string>
+    <string name="obfuscation_i3">Special Junk (I3)</string>
+    <string name="obfuscation_i4">Special Junk (I4)</string>
+    <string name="obfuscation_i5">Special Junk (I5)</string>
+    <!-- Obfuscation Modes -->
+    <string name="obfuscation_mode_easy">Easy</string>
+    <string name="obfuscation_mode_advanced">Advanced</string>
+    <string name="obfuscation_junk_level">Junk Intensity</string>
+    <string name="obfuscation_junk_low">Low (Standard)</string>
+    <string name="obfuscation_junk_medium">Medium</string>
+    <string name="obfuscation_junk_high">High</string>
+    <string name="obfuscation_junk_custom">Custom</string>
+    <string name="obfuscation_regenerate_i1">Regenerate Identification</string>
+    <string name="obfuscation_i1_desc">Unique identification string used to bypass DPI. Regenerate if connection is unstable.</string>
+    <!-- Settings: Protocol & Obfuscation -->
+    <string name="settings_protocol">Protocol</string>
+    <string name="protocol_title">Protocol</string>
+    <string name="protocol_amneziawg">AmneziaWG</string>
+    <string name="protocol_amneziawg_desc">Advanced WireGuard protocol with obfuscation</string>
+    <string name="obfuscation_title">Obfuscation</string>
+    <string name="obfuscation_enable">Enable Obfuscation</string>
+    <string name="obfuscation_enable_desc">Bypass DPI and VPN blocking</string>
+    <string name="obfuscation_info_desc">Adjust AmneziaWG parameters to hide VPN traffic and bypass connection blocks in restricted networks.</string>
+    <string name="obfuscation_config">Configuration</string>
+    <string name="obfuscation_config_standard">Standard Proton VPN-Next Config</string>
+    <string name="obfuscation_save_config">Save as new config</string>
+    <string name="obfuscation_config_name">Configuration name</string>
+    <string name="obfuscation_category_junk">Junk Parameters</string>
+    <string name="obfuscation_category_magic">Packet Sizes (Magic)</string>
+    <string name="obfuscation_category_headers">Headers</string>
+    <string name="obfuscation_category_advanced">Advanced</string>
+    <string name="custom_config">Custom Config</string>
+    <!-- About App Screen -->
+    <string name="about_community">Community</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_telegram">Telegram</string>
+    <string name="about_codeberg">Codeberg</string>
+    <string name="about_crowdin">Help with Translation</string>
+    <string name="about_website">Official Website</string>
+    <string name="about_sentry">Powered by Sentry</string>
+    <!-- Licenses Screen -->
+    <string name="licenses_title">Licenses</string>
+    <string name="license_app_title">Proton VPN-Next</string>
+    <string name="license_app_desc">GNU General Public License v3.0</string>
+    <string name="license_androidx_title">AndroidX Libraries</string>
+    <string name="license_apache_2">Apache License 2.0</string>
+    <string name="license_compose_title">Jetpack Compose</string>
+    <string name="license_kotlin_title">Kotlin Standard Library</string>
+    <string name="license_hilt_title">Dagger Hilt</string>
+    <string name="license_retrofit_title">Retrofit &amp; OkHttp</string>
+    <string name="license_proton_go_vpn_title">Proton GO VPN lib</string>
+    <string name="license_amneziawg_title">AmneziaWG Android</string>
+    <string name="license_sentry_title">Sentry SDK</string>
+    <string name="license_room_title">Room Database</string>
+    <string name="license_leakcanary_title">LeakCanary</string>
+    <string name="license_android_svg_title">Android SVG</string>
+    <string name="license_bsl">Business Source License 1.1</string>
+    <!-- Split Tunneling -->
+    <string name="settings_st_mode">Split Tunneling Mode</string>
+    <string name="st_mode_exclude">Exclude Mode</string>
+    <string name="st_mode_exclude_desc">Selected apps and IPs will bypass the VPN</string>
+    <string name="st_mode_include">Include Mode</string>
+    <string name="st_mode_include_desc">Only selected apps and IPs will use the VPN</string>
+    <string name="st_enabled_subtitle">VPN connection will follow split tunneling rules</string>
+    <string name="st_disabled_subtitle">All traffic goes through VPN</string>
+    <plurals name="st_apps_selected">
+        <item quantity="one">%1$d app selected</item>
+        <item quantity="other">%1$d apps selected</item>
+    </plurals>
+    <plurals name="st_ips_selected">
+        <item quantity="one">%1$d IP selected</item>
+        <item quantity="other">%1$d IPs selected</item>
+    </plurals>
+    <plurals name="st_domains_selected">
+        <item quantity="one">%1$d domain selected</item>
+        <item quantity="other">%1$d domains selected</item>
+    </plurals>
+    <string name="st_search_apps_hint">Search apps</string>
+    <string name="st_show_system_apps">Show system apps</string>
+    <string name="st_selected_apps_header">Selected Apps (%1$d)</string>
+    <string name="st_available_apps_header">Available Apps (%1$d)</string>
+    <string name="st_ip_hint">e.g., 192.168.1.0/24</string>
+    <string name="st_add_ip_desc">Add IP</string>
+    <string name="st_invalid_ip_error">Invalid IP address format</string>
+    <string name="st_excluded_ips_header">Excluded IPs (%1$d)</string>
+    <string name="st_included_ips_header">Included IPs (%1$d)</string>
+    <string name="st_no_ips_added">No IP addresses added yet</string>
+    <string name="st_remove_ip_desc">Remove IP</string>
+    <string name="st_domain_hint">e.g., example.com</string>
+    <string name="st_add_domain_desc">Add Domain</string>
+    <string name="st_invalid_domain_error">Invalid domain format</string>
+    <string name="st_excluded_domains_header">Excluded Domains (%1$d)</string>
+    <string name="st_included_domains_header">Included Domains (%1$d)</string>
+    <string name="st_no_domains_added">No domains added yet</string>
+    <string name="st_remove_domain_desc">Remove Domain</string>
+    <!-- Notification -->
+    <string name="notification_channel_name">VPN Status</string>
+    <string name="notification_channel_desc">Shows the current connection status of the VPN</string>
+    <string name="notification_title_connected">Connected to %1$s</string>
+    <string name="notification_title_verifying">Verifying connection…</string>
+    <string name="notification_title_disconnected">Disconnected</string>
+    <string name="notification_title_connecting">Connecting…</string>
+    <string name="notification_action_disconnect">Disconnect</string>
+    <!-- Speed Units -->
+    <string name="unit_kb_s">KiB/s</string>
+    <string name="unit_mb_s">MiB/s</string>
+    <string name="unit_gb_s">GiB/s</string>
+    <string name="unit_b_s">B/s</string>
+    <string name="unit_kb">KiB</string>
+    <string name="unit_mb">MiB</string>
+    <string name="unit_gb">GiB</string>
+    <string name="unit_b">B</string>
+    <string name="label_download">Download</string>
+    <string name="label_upload">Upload</string>
+    <string name="label_speed">Speed</string>
+    <!-- Errors and ViewModels -->
+    <string name="error_session_not_found">Active session not found. Please log in again.</string>
+    <string name="error_unknown">Unknown error</string>
+    <string name="error_captcha_expired">Captcha session expired. Please click Login to try again.</string>
+    <string name="unknown">Unknown</string>
+    <!-- Profiles Screen -->
+    <string name="profiles_title">Profiles</string>
+    <string name="desc_create_profile">Create Profile</string>
+    <string name="desc_edit_profile">Edit Profile</string>
+    <string name="profiles_empty_title">No profiles yet</string>
+    <string name="profiles_empty_desc">Create a profile to quickly connect with specific settings.</string>
+    <string name="profile_feature_obfuscation">Obfuscation</string>
+    <string name="profile_feature_connect_go">Connect &amp; Go</string>
+    <string name="profile_server_info">Server: %1$s</string>
+    <string name="profile_city_info">🏙️ %1$s, %2$s</string>
+    <string name="profile_country_info">%1$s %2$s</string>
+    <string name="profile_fastest_info">⚡ %1$s</string>
+    <string name="profile_info_format">%1$s • %2$s • %3$s</string>
+    <!-- Edit Profile Screen -->
+    <string name="title_create_profile">Create Profile</string>
+    <string name="title_edit_profile">Edit Profile</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_edit">Edit</string>
+    <string name="category_general">General</string>
+    <string name="label_profile_name">Profile Name</string>
+    <string name="location_server">Server: %1$s</string>
+    <string name="location_fastest">Fastest</string>
+    <string name="label_location">Location</string>
+    <string name="category_connection">Connection</string>
+    <string name="label_protocol">Protocol</string>
+    <string name="label_port">Port</string>
+    <string name="category_advanced">Advanced</string>
+    <string name="label_obfuscation">Obfuscation</string>
+    <string name="obfuscation_desc">Bypass deep packet inspection</string>
+    <string name="label_obfuscation_config">Obfuscation Config</string>
+    <string name="category_automation">Automation</string>
+    <string name="label_connect_go_website">Connect &amp; Go (Website)</string>
+    <string name="label_enter_url">Enter URL</string>
+    <string name="label_not_configured">Not configured</string>
+    <string name="automation_desc">Automatically open this website in your browser once the VPN connection is established.</string>
+    <string name="title_select_country">Select Country</string>
+    <string name="title_select_city">Select City</string>
+    <string name="title_select_server">Select Server</string>
+    <string name="location_fastest_in_country">Fastest in %1$s</string>
+    <string name="location_fastest_in_city">Fastest in %1$s</string>
+    <string name="title_select_obfuscation_config">Select Obfuscation Config</string>
+    <string name="btn_create_new_config">Create New Config</string>
+    <string name="connect_go_title">Connect &amp; Go</string>
+    <string name="connect_go_desc">Enter the URL to open upon connection (e.g., https://example.com)</string>
+    <string name="title_select_protocol">Select Protocol</string>
+    <string name="custom_config_name">Custom Config %1$d</string>
+    <string name="title_edit_obfuscation_config">Edit Obfuscation Config</string>
+    <string name="error_empty_profile_name">Profile name cannot be empty</string>
+    <!-- Debug Tools -->
+    <string name="settings_debug">Debug Tools</string>
+    <string name="debug_title">Debug Dashboard</string>
+    <string name="debug_session_header">VPN Session &amp; Certificate</string>
+    <string name="debug_cert_id">Cert ID: %1$s</string>
+    <string name="debug_cert_issued">Issued: %1$s</string>
+    <string name="debug_cert_expires">Expires: %1$s</string>
+    <string name="debug_btn_refresh_cert">Force Refresh Certificate</string>
+    <string name="debug_btn_refresh_session">Force Refresh Session</string>
+    <string name="debug_session_refreshed">Session refreshed successfully!</string>
+    <string name="debug_exports_header">Exports &amp; Diagnostics</string>
+    <string name="debug_btn_export_logs">Export Logcat to Downloads</string>
+    <string name="debug_btn_export_config">Export WG Config (.conf)</string>
+    <string name="debug_danger_header">Danger Zone</string>
+    <string name="debug_btn_nuke">Clear All Data (Factory Reset)</string>
+    <string name="debug_nuke_confirm">Are you sure? All settings, accounts, and server caches will be permanently deleted.</string>
+    <string name="debug_device_header">Device Information</string>
+    <string name="debug_select_server">Select server for config export</string>
+    <!-- Sentry Debug -->
+    <string name="debug_sentry_header">Sentry SDK Testing</string>
+    <string name="debug_btn_crash_java">Trigger Java Crash</string>
+    <string name="debug_btn_crash_native">Trigger Native Crash</string>
+    <string name="debug_btn_anr">Trigger ANR (5s)</string>
+    <string name="debug_btn_oom">Trigger OutOfMemory</string>
+    <string name="debug_btn_background_crash">Background Thread Crash</string>
+    <string name="debug_btn_capture_exception">Capture Non-fatal Exception</string>
+    <string name="debug_btn_arithmetic_error">Arithmetic Error (1/0)</string>
+    <string name="debug_btn_null_pointer">NullPointer Exception</string>
+    <string name="debug_btn_fake_crash">Fake App Crash</string>
+    <string name="title_quick_connect_config">Quick Connect Configuration</string>
+    <string name="qc_strategy_fastest">Fastest Server</string>
+    <string name="qc_strategy_fastest_desc">Always connect to the fastest available server.</string>
+    <string name="qc_strategy_recent">Last Connected</string>
+    <string name="qc_strategy_recent_desc">Connect to the server from your last session.</string>
+    <string name="qc_header_profiles">USE PROFILE</string>
+    <string name="qc_header_recent">RECENT SERVERS</string>
+    <string name="qc_strategy_profile_desc">Connect with specific profile settings.</string>
+    <string name="tile_subtitle_connected">Connected: %s</string>
+    <string name="tile_subtitle_fastest">Quick Connect: Fastest</string>
+    <string name="tile_subtitle_last">Quick Connect: Last Used</string>
+    <string name="tile_subtitle_specific">Quick Connect: %s</string>
+    <string name="obfuscation_btn_generate_from_domain">Generate from Domain</string>
+    <string name="obfuscation_dialog_domain_title">Enter Domain</string>
+    <string name="obfuscation_dialog_domain_desc">Enter a domain (e.g., google.com) to generate a QUIC-based identification string.</string>
+    <string name="settings_widget">Widget</string>
+    <string name="settings_widget_add_to_home">Add to Home Screen</string>
+    <string name="settings_widget_add_to_home_desc">Place a VPN widget on your home screen</string>
+    <string name="captcha_title">Security Check</string>
+    <string name="captcha_message">To keep your account secure, please complete the verification below.</string>
+    <string name="captcha_proxy_active">Anti-blocking proxy is active</string>
+    <string name="desc_close">Close</string>
+    <!-- Token Login & Session Management -->
+    <string name="btn_login_tokens">Login via Tokens</string>
+    <string name="title_login_tokens">Token-based Login</string>
+    <string name="msg_login_tokens_desc">Paste your session JSON below to log in directly. Keep this data secret!</string>
+    <string name="hint_session_json">Session JSON</string>
+    <string name="debug_btn_export_session">Export Session (Clipboard)</string>
+    <string name="debug_btn_import_session">Import Session</string>
+    <string name="debug_btn_fetch_domains">Fetch Available Domains (Clipboard)</string>
+    <string name="debug_export_session_title">Export Sensitive Data</string>
+    <string name="debug_export_session_msg">This will copy your full session (including tokens and private keys) to the clipboard. DO NOT share this with anyone!</string>
+    <string name="debug_import_session_warning">WARNING: Importing a session will overwrite your current one. Use with caution.</string>
+    <string name="debug_btn_copy">Copy to Clipboard</string>
+    <string name="btn_import">Import</string>
+    <string name="btn_logout">Log Out</string>
+    <string name="logout_confirmation">Are you sure you want to log out?</string>
+    <!-- OTA Updates -->
+    <string name="ota_title">Software Update</string>
+    <string name="ota_new_version">New version available: %1$s</string>
+    <string name="ota_changelog">What\'s new:</string>
+    <string name="ota_btn_update">Update Now</string>
+    <string name="ota_btn_install">Install</string>
+    <string name="ota_btn_later">Later</string>
+    <string name="ota_force_title">Update Required</string>
+    <string name="ota_force_desc">A critical update is available. Please update the app to continue using Proton VPN-Next.</string>
+    <string name="ota_check_frequency">Check for Updates</string>
+    <string name="ota_channel">Update Channel</string>
+    <string name="ota_channel_stable">Stable</string>
+    <string name="ota_channel_nightly">Nightly</string>
+    <string name="ota_channel_unavailable">Unavailable</string>
+    <string name="ota_freq_hourly">Hourly</string>
+    <string name="ota_freq_daily">Daily</string>
+    <string name="ota_freq_weekly">Weekly</string>
+    <string name="ota_freq_monthly">Monthly</string>
+    <string name="ota_freq_disabled">Disabled</string>
+    <string name="ota_status_checking">Checking for updates…</string>
+    <string name="ota_status_up_to_date">App is up to date</string>
+    <string name="ota_btn_check">Check for Updates</string>
+    <string name="ota_downloading">Downloading update… %1$d%%</string>
+    <!-- VPN Pause -->
+    <string name="btn_pause">Pause</string>
+    <string name="btn_resume">Resume</string>
+    <string name="pause_active_title">VPN is Paused</string>
+    <string name="pause_active_desc">Connection will automatically resume in %1$s.</string>
+    <string name="pause_dialog_title">Pause VPN</string>
+    <string name="pause_dialog_desc">Select how long you want to pause the VPN connection.</string>
+    <string name="pause_option">Pause for %1$d minutes</string>
+    <string name="pause_custom">Custom duration</string>
+    <string name="pause_unit_seconds">Seconds</string>
+    <string name="pause_unit_minutes">Minutes</string>
+    <string name="pause_unit_hours">Hours</string>
+    <string name="btn_start_pause">Start Pause</string>
+    <!-- Battery Optimization -->
+    <string name="battery_optimization_title">Battery Optimization Active</string>
+    <string name="battery_optimization_desc">Android may disconnect the VPN to save power. Please disable optimization for this app.</string>
+    <string name="btn_fix">Fix</string>
+    <!-- Trusted Wi-Fi -->
+    <string name="settings_trusted_wifi">Trusted Networks</string>
+    <string name="settings_trusted_wifi_desc">Manage Wi-Fi and mobile networks where VPN is not required</string>
+    <string name="settings_auto_connect_untrusted">Auto-connect on Untrusted</string>
+    <string name="settings_auto_connect_untrusted_desc">Automatically connect VPN when joining unknown networks</string>
+    <string name="trusted_wifi_title">Trusted Wi-Fi &amp; Mobile</string>
+    <string name="trusted_wifi_desc">The VPN will automatically disconnect when you connect to these Wi-Fi or mobile networks.</string>
+    <string name="trusted_wifi_add">Add current network: %1$s</string>
+    <string name="trusted_wifi_empty">No trusted networks added yet.</string>
+    <string name="trusted_wifi_permission_title">Network Access Required</string>
+    <string name="trusted_wifi_permission_desc">Android requires location permission to identify Wi-Fi networks. Mobile networks are identified by carrier name. This is used only for automation.</string>
+    <!-- Anti-Tamper / Scary Warning -->
+    <string name="tamper_warning_title">UNOFFICIAL BUILD DETECTED!</string>
+    <string name="tamper_warning_desc">This version of Proton VPN-Next has been modified by an unknown third party. Your security, privacy, and data are at HIGH RISK.</string>
+    <string name="tamper_btn_accept_risks">I Understand the Risk and Accept Consequences</string>
+    <string name="tamper_btn_download_official">Get Official App</string>
+    <string name="tamper_btn_back">Back</string>
+    <!-- Integrity failure overlay strings -->
+    <string name="tamper_integrity_failure_title">CRITICAL INTEGRITY FAILURE</string>
+    <string name="tamper_integrity_failure_desc">This application has been tampered with and is no longer safe to use. Mismatched resources detected.</string>
+    <string name="tamper_btn_exit">EXIT</string>
+</resources>
