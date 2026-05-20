@@ -477,7 +477,6 @@
     <string name="ota_status_up_to_date">Усталявана актуальная версія</string>
     <string name="ota_btn_check">Праверыць абнаўленні</string>
     <string name="ota_downloading">Спампоўванне абнаўлення… %1$d%%</string>
-
     <!-- VPN Pause -->
     <string name="btn_pause">Паўза</string>
     <string name="btn_resume">Аднавіць</string>
@@ -491,12 +490,10 @@
     <string name="pause_unit_minutes">Хвіліны</string>
     <string name="pause_unit_hours">Гадзіны</string>
     <string name="btn_start_pause">Запусціць паўзу</string>
-
     <!-- Battery Optimization -->
     <string name="battery_optimization_title">Аптымізацыя батарэі актыўная</string>
     <string name="battery_optimization_desc">Android можа адключаць VPN для эканоміі энергіі. Калі ласка, адключыце аптымізацыю для гэтай праграмы.</string>
     <string name="btn_fix">Выправіць</string>
-
     <!-- Trusted Wi-Fi -->
     <string name="settings_trusted_wifi">Давераныя сеткі Wi-Fi</string>
     <string name="settings_trusted_wifi_desc">Кіраванне сеткамі, у якіх VPN не патрабуецца</string>
@@ -508,14 +505,13 @@
     <string name="trusted_wifi_empty">Давераныя сеткі яшчэ не дададзены.</string>
     <string name="trusted_wifi_permission_title">Патрабуецца доступ да месцазнаходжання</string>
     <string name="trusted_wifi_permission_desc">Android патрабуе дазвол на доступ да месцазнаходжання для чытання назвы Wi-Fi (SSID). Гэта выкарыстоўваецца толькі для ідэнтыфікацыі давераных сетак.</string>
-
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ВЫЯЎЛЕНА НЕАФІЦЫЙНАЯ ЗБОРКА!</string>
     <string name="tamper_warning_desc">Гэтая версія Proton VPN-Next была мадыфікавана невядомым трэцім бокам. Ваша бяспека, прыватнасць і даныя знаходзяцца пад ВЫСОКАЙ РЫЗЫКАЙ.</string>
     <string name="tamper_btn_accept_risks">Я ўсведамляю рызыку і прымаю наступствы</string>
     <string name="tamper_btn_download_official">Спампаваць арыгінал</string>
     <string name="tamper_btn_back">Назад</string>
-
+    <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">КРЫТЫЧНАЯ ПАМЫЛКА ЦЭЛАСНАСЦІ</string>
     <string name="tamper_integrity_failure_desc">Гэта дадатак было мадыфікавана і больш не з\'яўляецца бяспечным. Выяўлена неадпаведнасць рэсурсаў.</string>
     <string name="tamper_btn_exit">ВЫХАД</string>
