@@ -392,6 +392,8 @@
     <string name="debug_btn_refresh_cert">Force Refresh Certificate</string>
     <string name="debug_btn_refresh_session">Force Refresh Session</string>
     <string name="debug_session_refreshed">Session refreshed successfully!</string>
+    <string name="debug_btn_simulate_expired_cert">Simulate Expired Certificate</string>
+    <string name="debug_cert_simulated">Certificate expiration simulated. Banner should appear on dashboard.</string>
     <string name="debug_exports_header">Exports &amp; Diagnostics</string>
     <string name="debug_btn_export_logs">Export Logcat to Downloads</string>
     <string name="debug_btn_export_config">Export WG Config (.conf)</string>
