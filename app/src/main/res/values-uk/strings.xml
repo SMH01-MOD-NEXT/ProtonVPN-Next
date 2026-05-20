@@ -398,6 +398,8 @@
     <string name="debug_btn_refresh_cert">Оновити сертифікат примусово</string>
     <string name="debug_btn_refresh_session">Оновити сесію принусово</string>
     <string name="debug_session_refreshed">Сесію успішно оновлено!</string>
+    <string name="debug_btn_simulate_expired_cert">Симулювати протермінований сертифікат</string>
+    <string name="debug_cert_simulated">Закінчення терміну дії сертифіката симульовано. Банер має з\'явитися на дашборді.</string>
     <string name="debug_exports_header">Експорт та Діагностика</string>
     <string name="debug_btn_export_logs">Експорт Logcat у Downloads</string>
     <string name="debug_btn_export_config">Експорт WG конфігурації (.conf)</string>
