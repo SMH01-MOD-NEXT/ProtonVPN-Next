@@ -392,6 +392,8 @@
     <string name="debug_btn_refresh_cert">تازه‌سازی اجباری گواهی</string>
     <string name="debug_btn_refresh_session">تازه‌سازی اجباری نشست</string>
     <string name="debug_session_refreshed">نشست با موفقیت تازه‌سازی شد!</string>
+    <string name="debug_btn_simulate_expired_cert">شبیه‌سازی گواهی منقضی شده</string>
+    <string name="debug_cert_simulated">انقضای گواهی شبیه‌سازی شد. بنر باید در داشبورد ظاهر شود.</string>
     <string name="debug_exports_header">خروجی‌ها و تشخیص</string>
     <string name="debug_btn_export_logs">خروجی Logcat به Downloads</string>
     <string name="debug_btn_export_config">خروجی پیکربندی WG (.conf)</string>
