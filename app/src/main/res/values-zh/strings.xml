@@ -389,6 +389,8 @@
     <string name="debug_btn_refresh_cert">强制刷新证书</string>
     <string name="debug_btn_refresh_session">强制刷新会话</string>
     <string name="debug_session_refreshed">会话刷新成功！</string>
+    <string name="debug_btn_simulate_expired_cert">模拟过期证书</string>
+    <string name="debug_cert_simulated">已模拟证书过期。横幅应出现在仪表板上。</string>
     <string name="debug_exports_header">导出与诊断</string>
     <string name="debug_btn_export_logs">导出 Logcat 到下载目录</string>
     <string name="debug_btn_export_config">导出 WG 配置 (.conf)</string>
