@@ -84,7 +84,7 @@ data class UserResponse(
 @Serializable
 data class UserInfo(
     @SerialName("ID") val id: String,
-    @SerialName("Name") val name: String
+    @SerialName("Name") val name: String? = null
 )
 
 @Serializable
