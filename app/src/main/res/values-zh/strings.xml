@@ -23,7 +23,6 @@
     <string name="btn_create_account">创建账户</string>
     <string name="btn_login">登录</string>
     <string name="btn_continue_guest">以访客身份继续</string>
-
     <!-- Troubleshooting -->
     <string name="troubleshoot_title">连接出现问题？</string>
     <string name="troubleshoot_desc">我们检测到连接 Proton 服务时遇到困难。请尝试选择另一种路由策略来绕过封锁。</string>
@@ -32,7 +31,6 @@
     <string name="troubleshoot_strategy_byedpi">ByeDPI (深度包检测绕过)</string>
     <string name="troubleshoot_btn_next">下一步</string>
     <string name="troubleshoot_btn_skip">跳过并重试</string>
-
     <!-- ByeDPI Tester Overhaul -->
     <string name="byedpi_tester_title">ByeDPI 策略测试器</string>
     <string name="byedpi_tester_desc">测试多种数据包分片技术，找到适用于您网络的技术。</string>
@@ -42,7 +40,6 @@
     <string name="byedpi_tester_running">正在测试策略 %1$d / %2$d…</string>
     <string name="byedpi_tester_success">找到可用策略！</string>
     <string name="byedpi_tester_failed">未找到可用策略。</string>
-
     <!-- Setup Wizard -->
     <string name="setup_initial_config">初始配置</string>
     <string name="setup_choose_connection">选择连接方式</string>
@@ -52,7 +49,6 @@
     <string name="setup_btn_finish">完成</string>
     <string name="setup_please_wait">请稍候…</string>
     <string name="setup_please_wait_subtitle">正在优化您的体验</string>
-
     <string name="setup_showcase_speed_title">极速</string>
     <string name="setup_showcase_speed_desc">体验专为流媒体和浏览优化的高速服务器。</string>
     <string name="setup_showcase_privacy_title">隐私优先</string>
@@ -61,7 +57,6 @@
     <string name="setup_showcase_security_desc">强加密和 AmneziaWG 等先进协议。</string>
     <string name="setup_showcase_bypass_title">绕过封锁</string>
     <string name="setup_showcase_bypass_desc">使用智能路由技术轻松绕过审查。</string>
-
     <!-- Login Screen -->
     <string name="login_title">欢迎回来</string>
     <string name="login_subtitle">登录您的 Proton 账户</string>
@@ -427,6 +422,8 @@
     <string name="debug_cert_issued">签发时间：%1$s</string>
     <string name="debug_cert_expires">过期时间：%1$s</string>
     <string name="debug_btn_refresh_cert">强制刷新证书</string>
+    <string name="debug_btn_refresh_session">强制刷新会话</string>
+    <string name="debug_session_refreshed">会话刷新成功！</string>
     <string name="debug_btn_simulate_expired_cert">模拟过期证书</string>
     <string name="debug_cert_simulated">已模拟证书过期。横幅应出现在仪表板上。</string>
     <string name="debug_exports_header">导出与诊断</string>
@@ -508,7 +505,6 @@
     <string name="ota_status_up_to_date">应用已是最新版本</string>
     <string name="ota_btn_check">检查更新</string>
     <string name="ota_downloading">正在下载更新… %1$d%%</string>
-
     <!-- VPN Pause -->
     <string name="btn_pause">暂停</string>
     <string name="btn_resume">恢复</string>
@@ -522,12 +518,10 @@
     <string name="pause_unit_minutes">分钟</string>
     <string name="pause_unit_hours">小时</string>
     <string name="btn_start_pause">开始暂停</string>
-
     <!-- Battery Optimization -->
     <string name="battery_optimization_title">电池优化已开启</string>
     <string name="battery_optimization_desc">Android 可能会为了省电而断开 VPN。请为该应用禁用优化。</string>
     <string name="btn_fix">去设置</string>
-
     <!-- Trusted Wi-Fi -->
     <string name="settings_trusted_wifi">信任的 Wi-Fi 网络</string>
     <string name="settings_trusted_wifi_desc">管理不需要 VPN 的网络</string>
@@ -539,30 +533,13 @@
     <string name="trusted_wifi_empty">尚未添加受信任的网络。</string>
     <string name="trusted_wifi_permission_title">需要访问位置信息</string>
     <string name="trusted_wifi_permission_desc">Android 需要位置权限才能读取 Wi-Fi 名称 (SSID)。这仅用于识别受信任的网络。</string>
-
-    <string name="app_name" translatable="false">Proton VPN-Next</string>
-    <string name="location_format" translatable="false">%1$s • %2$s</string>
-    <string name="location_city_format" translatable="false">%1$s, %2$s</string>
-    <string name="desc_chevron_right" translatable="false">›</string>
-    <string name="preview_country_name" translatable="false">United States</string>
-    <string name="preview_server_name" translatable="false">US-FREE#1</string>
-    <string name="url_sentry" translatable="false">https://sentry.io/</string>
-    <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg" translatable="false">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
-    <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
-    <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
-    <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
-    <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
-    <string name="location_load" translatable="false">%1$d%%</string>
-
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">检测到非官方版本！</string>
     <string name="tamper_warning_desc">此版本的 Proton VPN-Next 已被未知的第三方修改。您的安全、隐私和数据正面临高度风险。</string>
     <string name="tamper_btn_accept_risks">我了解风险并接受后果</string>
     <string name="tamper_btn_download_official">下载官方版本</string>
     <string name="tamper_btn_back">返回</string>
-
+    <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">严重完整性校验失败</string>
     <string name="tamper_integrity_failure_desc">此应用程序已被篡改，不再安全。检测到不匹配的资源。</string>
     <string name="tamper_btn_exit">退出</string>
