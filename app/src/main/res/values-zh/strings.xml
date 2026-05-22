@@ -19,9 +19,44 @@
     <!-- Welcome Screen -->
     <string name="welcome_title">欢迎使用 Proton VPN-Next</string>
     <string name="welcome_subtitle">通过安全、私密且快速的 VPN 掌控您的数字生活。无日志，无追踪。</string>
+    <string name="welcome_get_started">开始使用</string>
     <string name="btn_create_account">创建账户</string>
     <string name="btn_login">登录</string>
     <string name="btn_continue_guest">以访客身份继续</string>
+    <!-- Troubleshooting -->
+    <string name="troubleshoot_title">连接出现问题？</string>
+    <string name="troubleshoot_desc">我们检测到连接 Proton 服务时遇到困难。请尝试选择另一种路由策略来绕过封锁。</string>
+    <string name="troubleshoot_strategy_none">不使用绕过（重试）</string>
+    <string name="troubleshoot_strategy_warp">WARP（推荐）</string>
+    <string name="troubleshoot_strategy_byedpi">ByeDPI (深度包检测绕过)</string>
+    <string name="troubleshoot_btn_next">下一步</string>
+    <string name="troubleshoot_btn_skip">跳过并重试</string>
+    <!-- ByeDPI Tester Overhaul -->
+    <string name="byedpi_tester_title">ByeDPI 策略测试器</string>
+    <string name="byedpi_tester_desc">测试多种数据包分片技术，找到适用于您网络的技术。</string>
+    <string name="byedpi_mode_fast">快速 (前 10 个)</string>
+    <string name="byedpi_mode_medium">中等 (前 30 个)</string>
+    <string name="byedpi_mode_full">完整 (全部)</string>
+    <string name="byedpi_tester_running">正在测试策略 %1$d / %2$d…</string>
+    <string name="byedpi_tester_success">找到可用策略！</string>
+    <string name="byedpi_tester_failed">未找到可用策略。</string>
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">初始配置</string>
+    <string name="setup_choose_connection">选择连接方式</string>
+    <string name="setup_hide_traffic">对运营商 (ISP) 隐藏 VPN 流量</string>
+    <string name="setup_complete_title">设置完成</string>
+    <string name="setup_complete_desc">您已准备好安全且私密地浏览。</string>
+    <string name="setup_btn_finish">完成</string>
+    <string name="setup_please_wait">请稍候…</string>
+    <string name="setup_please_wait_subtitle">正在优化您的体验</string>
+    <string name="setup_showcase_speed_title">极速</string>
+    <string name="setup_showcase_speed_desc">体验专为流媒体和浏览优化的高速服务器。</string>
+    <string name="setup_showcase_privacy_title">隐私优先</string>
+    <string name="setup_showcase_privacy_desc">受瑞士隐私法保护的严格无日志政策。</string>
+    <string name="setup_showcase_security_title">军工级安全</string>
+    <string name="setup_showcase_security_desc">强加密和 AmneziaWG 等先进协议。</string>
+    <string name="setup_showcase_bypass_title">绕过封锁</string>
+    <string name="setup_showcase_bypass_desc">使用智能路由技术轻松绕过审查。</string>
     <!-- Login Screen -->
     <string name="login_title">欢迎回来</string>
     <string name="login_subtitle">登录您的 Proton 账户</string>
@@ -508,4 +543,5 @@
     <string name="tamper_integrity_failure_title">严重完整性校验失败</string>
     <string name="tamper_integrity_failure_desc">此应用程序已被篡改，不再安全。检测到不匹配的资源。</string>
     <string name="tamper_btn_exit">退出</string>
+    <string name="btn_skip">跳过</string>
 </resources>
