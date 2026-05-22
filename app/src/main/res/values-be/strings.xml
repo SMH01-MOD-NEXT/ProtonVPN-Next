@@ -23,7 +23,6 @@
     <string name="btn_create_account"> Стварыць уліковы запіс</string>
     <string name="btn_login">Увайсці</string>
     <string name="btn_continue_guest">Працягнуць як госць</string>
-
     <!-- Troubleshooting -->
     <string name="troubleshoot_title">Праблемы з падключэннем?</string>
     <string name="troubleshoot_desc">Мы заўважылі цяжкасці з падключэннем да сэрвісаў Proton. Паспрабуйце выбраць альтэрнатыўную стратэгію маршрутызацыі для абыходу блакіровак.</string>
@@ -32,7 +31,6 @@
     <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
     <string name="troubleshoot_btn_next">Далей</string>
     <string name="troubleshoot_btn_skip">Прапусціць і паўтарыць</string>
-
     <!-- ByeDPI Tester Overhaul -->
     <string name="byedpi_tester_title">Тэстар стратэгій ByeDPI</string>
     <string name="byedpi_tester_desc">Пратэстуйце некалькі тэхнік фрагментацыі пакетаў, каб знайсці прыдатную для вашай сеткі.</string>
@@ -42,7 +40,6 @@
     <string name="byedpi_tester_running">Тэсціраванне стратэгіі %1$d з %2$d…</string>
     <string name="byedpi_tester_success">Працоўная стратэгія знойдзена!</string>
     <string name="byedpi_tester_failed">Працоўная стратэгія не знойдзена.</string>
-
     <!-- Setup Wizard -->
     <string name="setup_initial_config">Пачатковая канфігурацыя</string>
     <string name="setup_choose_connection">Выберыце спосаб падключэння</string>
@@ -52,7 +49,6 @@
     <string name="setup_btn_finish">Завяршыць</string>
     <string name="setup_please_wait">Пачакайце, калі ласка…</string>
     <string name="setup_please_wait_subtitle">Аптымізуем працу праграмы</string>
-
     <string name="setup_showcase_speed_title">Маланкава хутка</string>
     <string name="setup_showcase_speed_desc">Выкарыстоўвайце высакахуткасныя серверы, аптымізаваныя для стрымінгу і прагляду.</string>
     <string name="setup_showcase_privacy_title">Прыватнасць вышэй за ўсё</string>
@@ -61,7 +57,6 @@
     <string name="setup_showcase_security_desc">Моцнае шыфраванне і прасунутыя пратаколы, такія як AmneziaWG.</string>
     <string name="setup_showcase_bypass_title">Абыход блакіровак</string>
     <string name="setup_showcase_bypass_desc">Лёгка абыходзьце цэнзуру з дапамогай разумных тэхнік маршрутызацыі.</string>
-
     <!-- Login Screen -->
     <string name="login_title">З вяртаннем</string>
     <string name="login_subtitle">Увайдзіце ў свой уліковы запіс Proton</string>
@@ -436,6 +431,8 @@
     <string name="debug_cert_issued">Выдадзены: %1$s</string>
     <string name="debug_cert_expires">Міне: %1$s</string>
     <string name="debug_btn_refresh_cert">Абнавіць сертыфікат прымусова</string>
+    <string name="debug_btn_refresh_session">Абнавіць сеанс прымусова</string>
+    <string name="debug_session_refreshed">Сеанс паспяхова абноўлены!</string>
     <string name="debug_btn_simulate_expired_cert">Сімуляваць пратэрмінаваны сертыфікат</string>
     <string name="debug_cert_simulated">Заканчэнне тэрміну дзеяння сертыфіката сімулявана. Банэр павінен з\'явіцца на дашбордзе.</string>
     <string name="debug_exports_header">Экспарт і дыягностыка</string>
@@ -517,7 +514,6 @@
     <string name="ota_status_up_to_date">Усталявана актуальная версія</string>
     <string name="ota_btn_check">Праверыць абнаўленні</string>
     <string name="ota_downloading">Спампоўванне абнаўлення… %1$d%%</string>
-
     <!-- VPN Pause -->
     <string name="btn_pause">Паўза</string>
     <string name="btn_resume">Аднавіць</string>
@@ -531,12 +527,10 @@
     <string name="pause_unit_minutes">Хвіліны</string>
     <string name="pause_unit_hours">Гадзіны</string>
     <string name="btn_start_pause">Запусціць паўзу</string>
-
     <!-- Battery Optimization -->
     <string name="battery_optimization_title">Аптымізацыя батарэі актыўная</string>
     <string name="battery_optimization_desc">Android можа адключаць VPN для эканоміі энергіі. Калі ласка, адключыце аптымізацыю для гэтай праграмы.</string>
     <string name="btn_fix">Выправіць</string>
-
     <!-- Trusted Wi-Fi -->
     <string name="settings_trusted_wifi">Давераныя сеткі Wi-Fi</string>
     <string name="settings_trusted_wifi_desc">Кіраванне сеткамі, у якіх VPN не патрабуецца</string>
@@ -548,14 +542,13 @@
     <string name="trusted_wifi_empty">Давераныя сеткі яшчэ не дададзены.</string>
     <string name="trusted_wifi_permission_title">Патрабуецца доступ да месцазнаходжання</string>
     <string name="trusted_wifi_permission_desc">Android патрабуе дазвол на доступ да месцазнаходжання для чытання назвы Wi-Fi (SSID). Гэта выкарыстоўваецца толькі для ідэнтыфікацыі давераных сетак.</string>
-
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ВЫЯЎЛЕНА НЕАФІЦЫЙНАЯ ЗБОРКА!</string>
     <string name="tamper_warning_desc">Гэтая версія Proton VPN-Next была мадыфікавана невядомым трэцім бокам. Ваша бяспека, прыватнасць і даныя знаходзяцца пад ВЫСОКАЙ РЫЗЫКАЙ.</string>
     <string name="tamper_btn_accept_risks">Я ўсведамляю рызыку і прымаю наступствы</string>
     <string name="tamper_btn_download_official">Спампаваць арыгінал</string>
     <string name="tamper_btn_back">Назад</string>
-
+    <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">КРЫТЫЧНАЯ ПАМЫЛКА ЦЭЛАСНАСЦІ</string>
     <string name="tamper_integrity_failure_desc">Гэта дадатак было мадыфікавана і больш не з\'яўляецца бяспечным. Выяўлена неадпаведнасць рэсурсаў.</string>
     <string name="tamper_btn_exit">ВЫХАД</string>
