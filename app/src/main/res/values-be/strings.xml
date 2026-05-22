@@ -19,9 +19,44 @@
     <!-- Welcome Screen -->
     <string name="welcome_title">Вітаем у Proton VPN-Next</string>
     <string name="welcome_subtitle">Кіруйце сваім лічбавым жыццём з дапамогай бяспечнага, прыватнага і хуткага VPN. Без журналаў і сачэння.</string>
+    <string name="welcome_get_started">Пачаць</string>
     <string name="btn_create_account">Стварыць уліковы запіс</string>
     <string name="btn_login">Увайсці</string>
     <string name="btn_continue_guest">Працягнуць як госць</string>
+    <!-- Troubleshooting -->
+    <string name="troubleshoot_title">Праблемы з падключэннем?</string>
+    <string name="troubleshoot_desc">Мы заўважылі цяжкасці з падключэннем да сэрвісаў Proton. Паспрабуйце выбраць альтэрнатыўную стратэгію маршрутызацыі для абыходу блакіровак.</string>
+    <string name="troubleshoot_strategy_none">Без абыходу (паспрабаваць зноў)</string>
+    <string name="troubleshoot_strategy_warp">WARP (рэкамендуецца)</string>
+    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
+    <string name="troubleshoot_btn_next">Далей</string>
+    <string name="troubleshoot_btn_skip">Прапусціць і паўтарыць</string>
+    <!-- ByeDPI Tester Overhaul -->
+    <string name="byedpi_tester_title">Тэстар стратэгій ByeDPI</string>
+    <string name="byedpi_tester_desc">Пратэстуйце некалькі тэхнік фрагментацыі пакетаў, каб знайсці прыдатную для вашай сеткі.</string>
+    <string name="byedpi_mode_fast">Хуткі (Топ 10)</string>
+    <string name="byedpi_mode_medium">Сярэдні (Топ 30)</string>
+    <string name="byedpi_mode_full">Поўны (Усе)</string>
+    <string name="byedpi_tester_running">Тэсціраванне стратэгіі %1$d з %2$d…</string>
+    <string name="byedpi_tester_success">Працоўная стратэгія знойдзена!</string>
+    <string name="byedpi_tester_failed">Працоўная стратэгія не знойдзена.</string>
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">Пачатковая канфігурацыя</string>
+    <string name="setup_choose_connection">Выберыце спосаб падключэння</string>
+    <string name="setup_hide_traffic">Схаваць VPN-трафік ад вашага правайдэра</string>
+    <string name="setup_complete_title">Налада завершана</string>
+    <string name="setup_complete_desc">Вы гатовыя да бяспечнага і прыватнага прагляду.</string>
+    <string name="setup_btn_finish">Завяршыць</string>
+    <string name="setup_please_wait">Пачакайце, калі ласка…</string>
+    <string name="setup_please_wait_subtitle">Аптымізуем працу праграмы</string>
+    <string name="setup_showcase_speed_title">Маланкава хутка</string>
+    <string name="setup_showcase_speed_desc">Выкарыстоўвайце высакахуткасныя серверы, аптымізаваныя для стрымінгу і прагляду.</string>
+    <string name="setup_showcase_privacy_title">Прыватнасць вышэй за ўсё</string>
+    <string name="setup_showcase_privacy_desc">Строгая палітыка адсутнасці логаў, абароненая швейцарскімі законамі аб прыватнасці.</string>
+    <string name="setup_showcase_security_title">Бяспека ваеннага ўзроўню</string>
+    <string name="setup_showcase_security_desc">Моцнае шыфраванне і прасунутыя пратаколы, такія як AmneziaWG.</string>
+    <string name="setup_showcase_bypass_title">Абыход блакіровак</string>
+    <string name="setup_showcase_bypass_desc">Лёгка абыходзьце цэнзуру з дапамогай разумных тэхнік маршрутызацыі.</string>
     <!-- Login Screen -->
     <string name="login_title">З вяртаннем</string>
     <string name="login_subtitle">Увайдзіце ў свой уліковы запіс Proton</string>
@@ -517,4 +552,5 @@
     <string name="tamper_integrity_failure_title">КРЫТЫЧНАЯ ПАМЫЛКА ЦЭЛАСНАСЦІ</string>
     <string name="tamper_integrity_failure_desc">Гэта дадатак было мадыфікавана і больш не з\'яўляецца бяспечным. Выяўлена неадпаведнасць рэсурсаў.</string>
     <string name="tamper_btn_exit">ВЫХАД</string>
+    <string name="btn_skip">Прапусціць</string>
 </resources>
