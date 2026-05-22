@@ -19,9 +19,44 @@
     <!-- Welcome Screen -->
     <string name="welcome_title">Добро пожаловать в Proton VPN-Next</string>
     <string name="welcome_subtitle">Возьмите управление своей цифровой жизнью с безопасным, приватным и быстрым VPN. Без журналов, без отслеживания.</string>
+    <string name="welcome_get_started">Начать</string>
     <string name="btn_create_account">Создать аккаунт</string>
     <string name="btn_login">Войти</string>
     <string name="btn_continue_guest">Продолжить как гость</string>
+    <!-- Troubleshooting -->
+    <string name="troubleshoot_title">Проблемы с подключением?</string>
+    <string name="troubleshoot_desc">Мы обнаружили трудности с подключением к сервисам Proton. Попробуйте выбрать альтернативную стратегию маршрутизации для обхода блокировок.</string>
+    <string name="troubleshoot_strategy_none">Без обхода (попробовать снова)</string>
+    <string name="troubleshoot_strategy_warp">WARP (рекомендуется)</string>
+    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
+    <string name="troubleshoot_btn_next">Далее</string>
+    <string name="troubleshoot_btn_skip">Пропустить и повторить</string>
+    <!-- ByeDPI Tester Overhaul -->
+    <string name="byedpi_tester_title">Тестер стратегий ByeDPI</string>
+    <string name="byedpi_tester_desc">Протестируйте несколько техник фрагментации пакетов, чтобы найти подходящую для вашей сети.</string>
+    <string name="byedpi_mode_fast">Быстрый (Топ 10)</string>
+    <string name="byedpi_mode_medium">Средний (Топ 30)</string>
+    <string name="byedpi_mode_full">Полный (Все)</string>
+    <string name="byedpi_tester_running">Тестирование стратегии %1$d из %2$d…</string>
+    <string name="byedpi_tester_success">Рабочая стратегия найдена!</string>
+    <string name="byedpi_tester_failed">Рабочая стратегия не найдена.</string>
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">Начальная настройка</string>
+    <string name="setup_choose_connection">Выберите способ подключения</string>
+    <string name="setup_hide_traffic">Скрыть VPN-трафик от провайдера (ISP)</string>
+    <string name="setup_complete_title">Настройка завершена</string>
+    <string name="setup_complete_desc">Вы готовы к безопасному и приватному просмотру.</string>
+    <string name="setup_btn_finish">Завершить</string>
+    <string name="setup_please_wait">Пожалуйста, подождите…</string>
+    <string name="setup_please_wait_subtitle">Оптимизируем работу приложения</string>
+    <string name="setup_showcase_speed_title">Молниеносно быстро</string>
+    <string name="setup_showcase_speed_desc">Испытайте высокоскоростные серверы, оптимизированные для стриминга и серфинга.</string>
+    <string name="setup_showcase_privacy_title">Приватность прежде всего</string>
+    <string name="setup_showcase_privacy_desc">Строгая политика отсутствия логов, защищенная швейцарскими законами о конфиденциальности.</string>
+    <string name="setup_showcase_security_title">Безопасность военного уровня</string>
+    <string name="setup_showcase_security_desc">Сильное шифрование и продвинутые протоколы, такие как AmneziaWG.</string>
+    <string name="setup_showcase_bypass_title">Обход блокировок</string>
+    <string name="setup_showcase_bypass_desc">Легко обходите цензуру с помощью умных техник маршрутизации.</string>
     <!-- Login Screen -->
     <string name="login_title">С возвращением</string>
     <string name="login_subtitle">Войдите в свой аккаунт Proton</string>
@@ -517,4 +552,5 @@
     <string name="tamper_integrity_failure_title">КРИТИЧЕСКАЯ ОШИБКА ЦЕЛОСТНОСТИ</string>
     <string name="tamper_integrity_failure_desc">Это приложение было модифицировано и более не является безопасным. Обнаружено несовпадение ресурсов.</string>
     <string name="tamper_btn_exit">ВЫХОД</string>
+    <string name="btn_skip">Пропустить</string>
 </resources>
