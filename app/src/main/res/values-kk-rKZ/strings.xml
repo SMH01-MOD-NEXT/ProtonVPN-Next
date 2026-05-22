@@ -19,9 +19,44 @@
     <!-- Welcome Screen -->
     <string name="welcome_title">Welcome to Proton VPN-Next</string>
     <string name="welcome_subtitle">Take control of your digital life with secure, private, and fast VPN. No logs, no tracking.</string>
+    <string name="welcome_get_started">Get Started</string>
     <string name="btn_create_account">Create Account</string>
     <string name="btn_login">Log In</string>
     <string name="btn_continue_guest">Continue as Guest</string>
+    <!-- Troubleshooting -->
+    <string name="troubleshoot_title">Connection Issues?</string>
+    <string name="troubleshoot_desc">We detected difficulty connecting to Proton services. Try selecting an alternative routing strategy to bypass blocks.</string>
+    <string name="troubleshoot_strategy_none">No Bypass (Try Again)</string>
+    <string name="troubleshoot_strategy_warp">WARP (Recommended)</string>
+    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
+    <string name="troubleshoot_btn_next">Next</string>
+    <string name="troubleshoot_btn_skip">Skip &amp; Retry</string>
+    <!-- ByeDPI Tester Overhaul -->
+    <string name="byedpi_tester_title">ByeDPI Strategy Tester</string>
+    <string name="byedpi_tester_desc">Test multiple packet fragmentation techniques to find what works in your network.</string>
+    <string name="byedpi_mode_fast">Fast (Top 10)</string>
+    <string name="byedpi_mode_medium">Medium (Top 30)</string>
+    <string name="byedpi_mode_full">Full (All)</string>
+    <string name="byedpi_tester_running">Testing strategy %1$d of %2$d…</string>
+    <string name="byedpi_tester_success">Found working strategy!</string>
+    <string name="byedpi_tester_failed">No working strategy found.</string>
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">Initial Configuration</string>
+    <string name="setup_choose_connection">Choose how you want to connect</string>
+    <string name="setup_hide_traffic">Hide VPN traffic from your ISP</string>
+    <string name="setup_complete_title">Setup Complete</string>
+    <string name="setup_complete_desc">You are ready to browse securely and privately.</string>
+    <string name="setup_btn_finish">Finish</string>
+    <string name="setup_please_wait">Please wait…</string>
+    <string name="setup_please_wait_subtitle">Optimizing your experience</string>
+    <string name="setup_showcase_speed_title">Lightning Fast</string>
+    <string name="setup_showcase_speed_desc">Experience high-speed servers optimized for streaming and browsing.</string>
+    <string name="setup_showcase_privacy_title">Privacy First</string>
+    <string name="setup_showcase_privacy_desc">Strict no-logs policy backed by Swiss privacy laws.</string>
+    <string name="setup_showcase_security_title">Military-Grade Security</string>
+    <string name="setup_showcase_security_desc">Strong encryption and advanced protocols like AmneziaWG.</string>
+    <string name="setup_showcase_bypass_title">Bypass Blocks</string>
+    <string name="setup_showcase_bypass_desc">Effortlessly circumvent censorship with smart routing techniques.</string>
     <!-- Login Screen -->
     <string name="login_title">Welcome Back</string>
     <string name="login_subtitle">Log in to your Proton account</string>
@@ -511,4 +546,5 @@
     <string name="tamper_integrity_failure_title">CRITICAL INTEGRITY FAILURE</string>
     <string name="tamper_integrity_failure_desc">This application has been tampered with and is no longer safe to use. Mismatched resources detected.</string>
     <string name="tamper_btn_exit">EXIT</string>
+    <string name="btn_skip">Skip</string>
 </resources>
