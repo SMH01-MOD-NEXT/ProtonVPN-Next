@@ -23,7 +23,6 @@
     <string name="btn_create_account">Створити акаунт</string>
     <string name="btn_login">Увійти</string>
     <string name="btn_continue_guest">Продовжити як гість</string>
-
     <!-- Troubleshooting -->
     <string name="troubleshoot_title">Проблеми з підключенням?</string>
     <string name="troubleshoot_desc">Ми виявили труднощі з підключенням до сервісів Proton. Спробуйте вибрати альтернативну стратегію маршрутизації для обходу блокувань.</string>
@@ -32,7 +31,6 @@
     <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
     <string name="troubleshoot_btn_next">Далі</string>
     <string name="troubleshoot_btn_skip">Пропустити та повторити</string>
-
     <!-- ByeDPI Tester Overhaul -->
     <string name="byedpi_tester_title">Тестер стратегій ByeDPI</string>
     <string name="byedpi_tester_desc">Протестуйте кілька технік фрагментації пакетів, щоб знайти ту, що працює у вашій мережі.</string>
@@ -42,7 +40,6 @@
     <string name="byedpi_tester_running">Тестування стратегії %1$d з %2$d…</string>
     <string name="byedpi_tester_success">Робочу стратегію знайдено!</string>
     <string name="byedpi_tester_failed">Робочу стратегію не знайдено.</string>
-
     <!-- Setup Wizard -->
     <string name="setup_initial_config">Початкова конфігурація</string>
     <string name="setup_choose_connection">Оберіть спосіб підключення</string>
@@ -52,7 +49,6 @@
     <string name="setup_btn_finish">Завершити</string>
     <string name="setup_please_wait">Будь ласка, зачекайте…</string>
     <string name="setup_please_wait_subtitle">Оптимізуємо роботу додатка</string>
-
     <string name="setup_showcase_speed_title">Блискавично швидко</string>
     <string name="setup_showcase_speed_desc">Відчуйте високошвидкісні сервери, оптимізовані для стрімінгу та серфінгу.</string>
     <string name="setup_showcase_privacy_title">Приватність понад усе</string>
@@ -61,7 +57,6 @@
     <string name="setup_showcase_security_desc">Сильне шифрування та просунуті протоколи, такі як AmneziaWG.</string>
     <string name="setup_showcase_bypass_title">Обійти блокування</string>
     <string name="setup_showcase_bypass_desc">Легко обходьте цензуру за допомогою розумних технік маршрутизації.</string>
-
     <!-- Login Screen -->
     <string name="login_title">З поверненням</string>
     <string name="login_subtitle">Увійдіть у свій акаунт Proton</string>
@@ -436,6 +431,8 @@
     <string name="debug_cert_issued">Видано: %1$s</string>
     <string name="debug_cert_expires">Закінчується: %1$s</string>
     <string name="debug_btn_refresh_cert">Оновити сертифікат примусово</string>
+    <string name="debug_btn_refresh_session">Оновити сесію принусово</string>
+    <string name="debug_session_refreshed">Сесію успішно оновлено!</string>
     <string name="debug_btn_simulate_expired_cert">Симулювати протермінований сертифікат</string>
     <string name="debug_cert_simulated">Закінчення терміну дії сертифіката симульовано. Банер має з\'явитися на дашборді.</string>
     <string name="debug_exports_header">Експорт та Діагностика</string>
@@ -517,7 +514,6 @@
     <string name="ota_status_up_to_date">Встановлена актуальна версія</string>
     <string name="ota_btn_check">Перевірити оновлення</string>
     <string name="ota_downloading">Завантаження оновлення… %1$d%%</string>
-
     <!-- VPN Pause -->
     <string name="btn_pause">Пауза</string>
     <string name="btn_resume">Відновити</string>
@@ -531,12 +527,10 @@
     <string name="pause_unit_minutes">Хвилини</string>
     <string name="pause_unit_hours">Години</string>
     <string name="btn_start_pause">Запустити паузу</string>
-
     <!-- Battery Optimization -->
     <string name="battery_optimization_title">Оптимізація батареї активна</string>
     <string name="battery_optimization_desc">Android може відключати VPN для економії енергії. Будь ласка, вимкніть оптимізацію для цього додатка.</string>
     <string name="btn_fix">Виправити</string>
-
     <!-- Trusted Wi-Fi -->
     <string name="settings_trusted_wifi">Довірені Wi-Fi мережі</string>
     <string name="settings_trusted_wifi_desc">Керування мережами, в яких VPN не потрібен</string>
@@ -548,30 +542,13 @@
     <string name="trusted_wifi_empty">Довірені мережі ще не додані.</string>
     <string name="trusted_wifi_permission_title">Потрібен доступ до місцезнаходження</string>
     <string name="trusted_wifi_permission_desc">Android потребує дозвіл на доступ до місцезнаходження для читання назви Wi-Fi (SSID). Це використовується тільки для ідентифікації довірених мереж.</string>
-
-    <string name="app_name" translatable="false">Proton VPN-Next</string>
-    <string name="location_format" translatable="false">%1$s • %2$s</string>
-    <string name="location_city_format" translatable="false">%1$s, %2$s</string>
-    <string name="desc_chevron_right" translatable="false">›</string>
-    <string name="preview_country_name" translatable="false">United States</string>
-    <string name="preview_server_name" translatable="false">US-FREE#1</string>
-    <string name="url_sentry" translatable="false">https://sentry.io/</string>
-    <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
-    <string name="url_codeberg" translatable="false">https://codeberg.org/SMH01/ProtonVPN-Next</string>
-    <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
-    <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
-    <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
-    <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
-    <string name="vpn_speed_format" translatable="false">↑ %1$s ↓ %2$s</string>
-    <string name="location_load" translatable="false">%1$d%%</string>
-
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ВИЯВЛЕНО НЕОФІЦІЙНУ ЗБІРКУ!</string>
     <string name="tamper_warning_desc">Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані знаходяться під ВИСОКИМ РИЗИКОМ.</string>
     <string name="tamper_btn_accept_risks">Я усвідомлюю ризик і приймаю наслідки</string>
     <string name="tamper_btn_download_official">Завантажити оригінал</string>
     <string name="tamper_btn_back">Назад</string>
-
+    <!-- Integrity failure overlay strings -->
     <string name="tamper_integrity_failure_title">КРИТИЧНА ПОМИЛКА ЦІЛІСНОСТІ</string>
     <string name="tamper_integrity_failure_desc">Цей додаток було модифікована і більше не є безпечним. Виявлено невідповідність ресурсів.</string>
     <string name="tamper_btn_exit">ВИХІД</string>
