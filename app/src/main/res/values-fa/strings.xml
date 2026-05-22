@@ -19,9 +19,44 @@
     <!-- Welcome Screen -->
     <string name="welcome_title">به Proton VPN-Next خوش آمدید</string>
     <string name="welcome_subtitle">زندگی دیجیتال خود را با VPN امن، خصوصی و سریع کنترل کنید. بدون لاگ، بدون ردیابی.</string>
+    <string name="welcome_get_started">شروع کنید</string>
     <string name="btn_create_account">ایجاد حساب کاربری</string>
     <string name="btn_login">ورود</string>
     <string name="btn_continue_guest">ادامه به عنوان مهمان</string>
+    <!-- Troubleshooting -->
+    <string name="troubleshoot_title">مشکل در اتصال؟</string>
+    <string name="troubleshoot_desc">ما متوجه دشواری در اتصال به سرویس‌های پروتون شدیم. برای دور زدن محدودیت‌ها، یک استراتژی مسیریابی جایگزین انتخاب کنید.</string>
+    <string name="troubleshoot_strategy_none">بدون دور زدن (تلاش مجدد)</string>
+    <string name="troubleshoot_strategy_warp">WARP (پیشنهادی)</string>
+    <string name="troubleshoot_strategy_byedpi">ByeDPI (Deep Packet Inspection)</string>
+    <string name="troubleshoot_btn_next">بعدی</string>
+    <string name="troubleshoot_btn_skip">رد کردن و تلاش مجدد</string>
+    <!-- ByeDPI Tester Overhaul -->
+    <string name="byedpi_tester_title">تستر استراتژی ByeDPI</string>
+    <string name="byedpi_tester_desc">چندین تکنیک تکه‌تکه کردن بسته را تست کنید تا آنچه در شبکه شما کار می‌کند را بیابید.</string>
+    <string name="byedpi_mode_fast">سریع (۱۰ تای برتر)</string>
+    <string name="byedpi_mode_medium">متوسط (۳۰ تای برتر)</string>
+    <string name="byedpi_mode_full">کامل (همه)</string>
+    <string name="byedpi_tester_running">در حال تست استراتژی %1$d از %2$d…</string>
+    <string name="byedpi_tester_success">استراتژی فعال پیدا شد!</string>
+    <string name="byedpi_tester_failed">استراتژی فعالی پیدا نشد.</string>
+    <!-- Setup Wizard -->
+    <string name="setup_initial_config">پیکربندی اولیه</string>
+    <string name="setup_choose_connection">نحوه اتصال خود را انتخاب کنید</string>
+    <string name="setup_hide_traffic">مخفی کردن ترافیک VPN از ارائه‌دهنده اینترنت (ISP)</string>
+    <string name="setup_complete_title">نصب کامل شد</string>
+    <string name="setup_complete_desc">شما آماده‌اید تا به صورت ایمن و خصوصی مرور کنید.</string>
+    <string name="setup_btn_finish">پایان</string>
+    <string name="setup_please_wait">لطفاً صبر کنید…</string>
+    <string name="setup_please_wait_subtitle">بهینه‌سازی تجربه شما</string>
+    <string name="setup_showcase_speed_title">سرعت برق‌آسا</string>
+    <string name="setup_showcase_speed_desc">سرورهای پرسرعت بهینه‌سازی شده برای استریم و وب‌گردی را تجربه کنید.</string>
+    <string name="setup_showcase_privacy_title">اولویت با حریم خصوصی</string>
+    <string name="setup_showcase_privacy_desc">سیاست سختگیرانه عدم ثبت گزارش تحت حمایت قوانین حریم خصوصی سوئیس.</string>
+    <string name="setup_showcase_security_title">امنیت در سطح نظامی</string>
+    <string name="setup_showcase_security_desc">رمزگذاری قوی و پروتکل‌های پیشرفته مانند AmneziaWG.</string>
+    <string name="setup_showcase_bypass_title">دور زدن مسدودسازی‌ها</string>
+    <string name="setup_showcase_bypass_desc">با تکنیک‌های مسیریابی هوشمند به راحتی سانسور را دور بزنید.</string>
     <!-- Login Screen -->
     <string name="login_title">خوش آمدید</string>
     <string name="login_subtitle">وارد حساب پروتون خود شوید</string>
@@ -511,4 +546,5 @@
     <string name="tamper_integrity_failure_title">خطای بحرانی در یکپارچگی</string>
     <string name="tamper_integrity_failure_desc">این برنامه دستکاری شده است و دیگر برای استفاده ایمن نیست. منابع ناهماهنگ شناسایی شدند.</string>
     <string name="tamper_btn_exit">خروج</string>
+    <string name="btn_skip">رد کردن</string>
 </resources>
