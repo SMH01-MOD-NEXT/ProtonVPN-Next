@@ -1,7 +1,9 @@
 # --- General Optimizations ---
--optimizationpasses 5
+# NOTE: Do NOT add -mergeinterfacesaggressively here. It causes VerifyError crashes
+# on Android 10 (API 29) by producing bytecode incompatible with the stricter ART
+# verifier when used with Jetpack Compose's complex interface hierarchy (ANDROID-190).
+-optimizationpasses 1
 -allowaccessmodification
--mergeinterfacesaggressively
 
 # --- Kotlin Serialization ---
 -keepattributes *Annotation*, EnclosingMethod, Signature
