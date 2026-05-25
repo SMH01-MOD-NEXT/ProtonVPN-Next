@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.vpn
 
+import dagger.Lazy
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,7 +39,7 @@ interface AmneziaConfigGenerator {
 
 @Singleton
 class AmneziaConfigGeneratorImpl @Inject constructor(
-    private val nextConfigGenerator: NextConfigGenerator,
+    private val nextConfigGenerator: Lazy<NextConfigGenerator>,
     private val ipSubnetCalculator: IpSubnetCalculator
 ) : AmneziaConfigGenerator {
     override fun buildConfig(
@@ -59,7 +60,7 @@ class AmneziaConfigGeneratorImpl @Inject constructor(
             else -> if (selectedIps.isEmpty()) listOf("0.0.0.0/0") else ipSubnetCalculator.complementOfExcluded(selectedIps)
         }
 
-        return nextConfigGenerator.buildConfig(
+        return nextConfigGenerator.get().buildConfig(
             serverPublicKey = serverPublicKey,
             privateKey = privateKey,
             localIp = localIp,

@@ -23,8 +23,10 @@ import javax.inject.Singleton
 @Singleton
 class NextConfigGenerator @Inject constructor() {
 
-    init {
-        System.loadLibrary("next")
+    companion object {
+        init {
+            System.loadLibrary("next")
+        }
     }
 
     fun buildConfig(
