@@ -197,12 +197,12 @@ class AuthRepository @Inject constructor(
                         sessionId = finalUid,
                         userId = nativeResult.userId,
                         userTier = userTier,
-                        wgPrivateKey = keys?.first?.privateKeyX25519,
-                        wgPublicKeyPem = keys?.first?.publicKeyPem,
-                        wgCertificate = keys?.third,
-                        vpnIpv4 = keys?.second?.ipv4,
-                        vpnIpv6 = keys?.second?.ipv6,
-                        vpnDns = keys?.second?.dns?.joinToString(",")
+                        wgPrivateKey = keys.first.privateKeyX25519,
+                        wgPublicKeyPem = keys.first.publicKeyPem,
+                        wgCertificate = keys.third,
+                        vpnIpv4 = keys.second.ipv4,
+                        vpnIpv6 = keys.second.ipv6,
+                        vpnDns = keys.second.dns?.joinToString(",")
                     )
 
                     vpnRepository.getServers(finalAccessToken, finalUid, userTier)
@@ -271,12 +271,12 @@ class AuthRepository @Inject constructor(
                         sessionId = finalUid,
                         userId = response.userId ?: "",
                         userTier = 0,
-                        wgPrivateKey = keys?.first?.privateKeyX25519,
-                        wgPublicKeyPem = keys?.first?.publicKeyPem,
-                        wgCertificate = keys?.third,
-                        vpnIpv4 = keys?.second?.ipv4,
-                        vpnIpv6 = keys?.second?.ipv6,
-                        vpnDns = keys?.second?.dns?.joinToString(",")
+                        wgPrivateKey = keys.first.privateKeyX25519,
+                        wgPublicKeyPem = keys.first.publicKeyPem,
+                        wgCertificate = keys.third,
+                        vpnIpv4 = keys.second.ipv4,
+                        vpnIpv6 = keys.second.ipv6,
+                        vpnDns = keys.second.dns?.joinToString(",")
                     )
 
                     vpnRepository.getServers(finalAccessToken, finalUid, 0)
@@ -363,12 +363,12 @@ class AuthRepository @Inject constructor(
                     sessionId = sessionId,
                     userId = finalUserId,
                     userTier = userTier,
-                    wgPrivateKey = keys?.first?.privateKeyX25519,
-                    wgPublicKeyPem = keys?.first?.publicKeyPem,
-                    wgCertificate = keys?.third,
-                    vpnIpv4 = keys?.second?.ipv4,
-                    vpnIpv6 = keys?.second?.ipv6,
-                    vpnDns = keys?.second?.dns?.joinToString(",")
+                    wgPrivateKey = keys.first.privateKeyX25519,
+                    wgPublicKeyPem = keys.first.publicKeyPem,
+                    wgCertificate = keys.third,
+                    vpnIpv4 = keys.second.ipv4,
+                    vpnIpv6 = keys.second.ipv6,
+                    vpnDns = keys.second.dns?.joinToString(",")
                 )
 
                 vpnRepository.getServers(fullToken, sessionId, userTier)
@@ -423,19 +423,19 @@ class AuthRepository @Inject constructor(
         }
     }
 
-    private suspend fun registerAndGetVpnKeys(accessToken: String, sessionId: String): Triple<VpnKeyPair, CreateCertificateResponse, String>? {
-        return try {
+    private suspend fun registerAndGetVpnKeys(accessToken: String, sessionId: String): Triple<VpnKeyPair, CreateCertificateResponse, String> {
+        try {
             val vpnKeyPair = cryptoWrapper.generateVpnKeyPair()
             val regResult = vpnRepository.registerWireGuardKey(accessToken, sessionId, vpnKeyPair.publicKeyPem)
 
             if (regResult.isSuccess) {
                 val response = regResult.getOrNull()!!
-                Triple(vpnKeyPair, response, response.certificate ?: "")
-            } else null
+                return Triple(vpnKeyPair, response, response.certificate ?: "")
+            } else {
+                throw Exception("WireGuard key registration failed: ${regResult.exceptionOrNull()?.message ?: "unknown error"}")
+            }
         } catch (e: CancellationException) {
-            null
-        } catch (e: Exception) {
-            null
+            throw e
         }
     }
 
@@ -444,6 +444,7 @@ class AuthRepository @Inject constructor(
         userTier: Int, wgPrivateKey: String?, wgPublicKeyPem: String?, wgCertificate: String?,
         vpnIpv4: String? = null, vpnIpv6: String? = null, vpnDns: String? = null
     ) {
+        require(!wgPrivateKey.isNullOrEmpty()) { "Cannot save session without a VPN private key" }
         sessionDao.saveSession(
             SessionEntity(
                 accessToken = accessToken, refreshToken = refreshToken, sessionId = sessionId,
