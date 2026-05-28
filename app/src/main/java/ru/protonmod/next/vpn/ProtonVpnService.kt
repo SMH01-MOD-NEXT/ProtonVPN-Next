@@ -49,7 +49,6 @@ import org.amnezia.awg.backend.Tunnel
 import org.amnezia.awg.backend.TunnelActionHandler
 import org.amnezia.awg.config.Config
 import ru.protonmod.next.R
-import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.state.ConnectedServerState
 import java.io.ByteArrayInputStream
 import java.util.Locale
@@ -67,9 +66,6 @@ open class AmneziaVpnServiceBase : AbstractBackend.VpnService()
  */
 @AndroidEntryPoint
 class ProtonVpnService : AmneziaVpnServiceBase() {
-
-    @Inject
-    lateinit var settingsManager: SettingsManager
 
     @Inject
     lateinit var connectedServerState: ConnectedServerState
