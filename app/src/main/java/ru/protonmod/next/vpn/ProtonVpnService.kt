@@ -43,6 +43,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import org.amnezia.awg.backend.AbstractBackend
 import org.amnezia.awg.backend.GoBackend
 import org.amnezia.awg.backend.Tunnel
@@ -325,12 +326,14 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
                 ProtonLogger.i(TAG, "Action DISCONNECT: Stopping tunnel gracefully")
                 isManualDisconnect = true
                 isCurrentlyConnecting = false
-                try {
-                    // Bring the tunnel down gracefully
-                    backend.setState(tunnel, Tunnel.State.DOWN, null)
-                } catch (e: Exception) {
-                    ProtonLogger.e(TAG, "Failed to stop VPN tunnel cleanly", e)
-                    stopForegroundOrService()
+                serviceScope.launch(Dispatchers.IO) {
+                    try {
+                        // Bring the tunnel down gracefully off the main thread
+                        backend.setState(tunnel, Tunnel.State.DOWN, null)
+                    } catch (e: Exception) {
+                        ProtonLogger.e(TAG, "Failed to stop VPN tunnel cleanly", e)
+                        stopForegroundOrService()
+                    }
                 }
             }
             ACTION_UPDATE_SETTINGS -> {
@@ -772,15 +775,22 @@ class ProtonVpnService : AmneziaVpnServiceBase() {
             ProtonLogger.w(TAG, "Receiver already unregistered", e)
         }
 
-        // Cancel all ongoing coroutines (like stats job)
+        // Ensure the tunnel is cleanly shut down on an IO thread BEFORE cancelling the scope,
+        // so we don't block the main thread and trigger a Background ANR (awgTurnOff is a
+        // long-running JNI/Go call).
+        serviceScope.launch(Dispatchers.IO) {
+            try {
+                withTimeout(5_000) {
+                    backend.setState(tunnel, Tunnel.State.DOWN, null)
+                }
+            } catch (e: Exception) {
+                ProtonLogger.e(TAG, "Error stopping VPN on service destroy", e)
+            }
+        }
+
+        // Cancel all ongoing coroutines (like stats job) after the shutdown is launched
         serviceScope.cancel()
 
-        // Ensure the tunnel is cleanly shut down
-        try {
-            backend.setState(tunnel, Tunnel.State.DOWN, null)
-        } catch (e: Exception) {
-            ProtonLogger.e(TAG, "Error stopping VPN on service destroy", e)
-        }
         super.onDestroy()
     }
 }
