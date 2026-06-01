@@ -149,55 +149,50 @@ fun CountriesScreen(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                val isSuccess = uiState is CountriesUiState.Success
-                
                 AnimatedContent(
-                    targetState = isSuccess,
+                    targetState = uiState,
                     label = "countries_state_root",
                     modifier = Modifier.weight(1f)
-                ) { success ->
-                    if (!success) {
-                        when (val state = uiState) {
-                            is CountriesUiState.Loading -> {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    ExpressiveCircularProgressIndicator(color = colors.brandNorm)
-                                }
+                ) { state ->
+                    when (state) {
+                        is CountriesUiState.Loading -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                ExpressiveCircularProgressIndicator(color = colors.brandNorm)
                             }
-                            is CountriesUiState.Error -> {
-                                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Text(state.message, color = colors.notificationError)
-                                        Spacer(modifier = Modifier.height(8.dp))
-                                        Button(
-                                            onClick = { viewModel.loadServers() },
-                                            colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
-                                        ) {
-                                            Text(stringResource(R.string.btn_retry), color = colors.textInverted)
-                                        }
+                        }
+                        is CountriesUiState.Error -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(state.message, color = colors.notificationError)
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { viewModel.loadServers() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
+                                    ) {
+                                        Text(stringResource(R.string.btn_retry), color = colors.textInverted)
                                     }
                                 }
                             }
-                            else -> {}
                         }
-                    } else {
-                        val state = uiState as CountriesUiState.Success
-                        val countries = remember(state.countries) { state.countries.toImmutableList() }
-                        
-                        CountriesListContent(
-                            countries = countries,
-                            connectedServer = connectedServer,
-                            onCountryClick = { country ->
-                                checkVpnAndConnect {
-                                    viewModel.selectCountry(country.code)
-                                    onNavigateToHome()
-                                }
-                            },
-                            onCountryMore = { country ->
-                                viewModel.expandCitiesForCountry(country.code)
-                            },
-                            isTablet = isTablet,
-                            loadDisplayMode = state.loadDisplayMode
-                        )
+                        is CountriesUiState.Success -> {
+                            val countries = remember(state.countries) { state.countries.toImmutableList() }
+                            
+                            CountriesListContent(
+                                countries = countries,
+                                connectedServer = connectedServer,
+                                onCountryClick = { country ->
+                                    checkVpnAndConnect {
+                                        viewModel.selectCountry(country.code)
+                                        onNavigateToHome()
+                                    }
+                                },
+                                onCountryMore = { country ->
+                                    viewModel.expandCitiesForCountry(country.code)
+                                },
+                                isTablet = isTablet,
+                                loadDisplayMode = state.loadDisplayMode
+                            )
+                        }
                     }
                 }
 
