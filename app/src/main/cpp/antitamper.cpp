@@ -300,14 +300,23 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
     auto officialLibs = next::getOfficialLibs();
 
     while (std::getline(maps, line)) {
-        // 1. Frida/Xposed/Bypass Tools Detection
-        if (line.find(XOR_STR("frida")) != std::string::npos ||
+        // 1. Frida/Xposed/Bypass Tools Detection (name-based)
+        bool isFridaByName = (line.find(XOR_STR("frida")) != std::string::npos ||
             line.find(XOR_STR("xposed")) != std::string::npos ||
             line.find(XOR_STR("libgadget")) != std::string::npos ||
-            line.find(XOR_STR("substrate")) != std::string::npos) {
+            line.find(XOR_STR("substrate")) != std::string::npos);
+
+        // Detect anonymous executable memfd mappings that may be renamed Frida gadgets.
+        // A memfd line looks like: <range> r-xp 00000000 00:01 <inode> /memfd:<name> (deleted)
+        bool isSuspiciousMemfd = (!isFridaByName &&
+            line.find(XOR_STR("memfd:")) != std::string::npos &&
+            (line.find(XOR_STR("r-xp")) != std::string::npos || line.find(XOR_STR("rwxp")) != std::string::npos));
+
+        if (isFridaByName || isSuspiciousMemfd) {
             LOGE("AntiTamper: Suspicious library detected in memory: %s", line.c_str());
             reportSecurityEvent(env, XOR_STR("Suspicious library detected: ") + line);
-            allGood = false;
+            // Flush the Sentry event and terminate the process — do not allow execution to continue.
+            SentryManager::flushAndTerminate(env);
         }
 
         // 2. Check for App APK Mapping
@@ -1310,12 +1319,20 @@ void AntiTamper::renderLoop() {
             std::ifstream maps(XOR_STR("/proc/self/maps"));
             std::string line;
             while (std::getline(maps, line)) {
-                if (line.find(XOR_STR("frida")) != std::string::npos ||
+                bool isFridaByName = (line.find(XOR_STR("frida")) != std::string::npos ||
                     line.find(XOR_STR("xposed")) != std::string::npos ||
-                    line.find(XOR_STR("libgadget")) != std::string::npos) {
-                    LOGE("AntiTamper: Late-attached hook detected in memory!");
-                    g_force_error = true;
-                    break;
+                    line.find(XOR_STR("libgadget")) != std::string::npos);
+                bool isSuspiciousMemfd = (!isFridaByName &&
+                    line.find(XOR_STR("memfd:")) != std::string::npos &&
+                    (line.find(XOR_STR("r-xp")) != std::string::npos || line.find(XOR_STR("rwxp")) != std::string::npos));
+                if (isFridaByName || isSuspiciousMemfd) {
+                    LOGE("AntiTamper: Late-attached hook detected in memory: %s", line.c_str());
+                    // Report and terminate — do not allow the attacker to keep running.
+                    JNIEnv* scanEnv = nullptr;
+                    g_vm->GetEnv((void**)&scanEnv, JNI_VERSION_1_6);
+                    SentryManager::reportSecurityEvent(scanEnv, XOR_STR("Late-attached hook detected: ") + line);
+                    SentryManager::flushAndTerminate(scanEnv);
+                    break; // unreachable, but keeps the compiler happy
                 }
             }
             last_security_scan = now;

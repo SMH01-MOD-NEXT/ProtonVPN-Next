@@ -62,6 +62,35 @@ void SentryManager::reportSecurityEvent(JNIEnv* env, const std::string& event) {
     __android_log_print(ANDROID_LOG_INFO, TAG, "Security event forwarded to Sentry Android: %s", event.c_str());
 }
 
+void SentryManager::flushAndTerminate(JNIEnv* env) {
+    if (!env) {
+        // No JNI env — can't flush, just die.
+        abort();
+        return;
+    }
+
+    jclass bridgeClass = env->FindClass(XOR_STR("ru/protonmod/next/vpn/SentryBridge").c_str());
+    if (!bridgeClass) {
+        env->ExceptionClear();
+        abort();
+        return;
+    }
+
+    jmethodID flushMethod = env->GetStaticMethodID(bridgeClass, XOR_STR("flushAndTerminate").c_str(), XOR_STR("()V").c_str());
+    if (!flushMethod) {
+        env->ExceptionClear();
+        abort();
+        return;
+    }
+
+    // This calls Sentry.flush(3000) then killProcess() on the Kotlin side.
+    // The process will not return from this call.
+    env->CallStaticVoidMethod(bridgeClass, flushMethod);
+
+    // Fallback: if the JVM call somehow returns, abort hard.
+    abort();
+}
+
 void SentryManager::reportLog(JNIEnv* env, int level, const char* tag, const char* message) {
     if (!env) return;
 

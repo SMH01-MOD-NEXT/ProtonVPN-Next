@@ -57,6 +57,17 @@ object SentryBridge {
     }
 
     /**
+     * Flushes pending Sentry events and terminates the process.
+     * Called from native code when a critical security violation (e.g. Frida) is detected.
+     */
+    @JvmStatic
+    fun flushAndTerminate() {
+        // Give Sentry 3 seconds to deliver the security event before we die.
+        Sentry.flush(3000)
+        android.os.Process.killProcess(android.os.Process.myPid())
+    }
+
+    /**
      * Reports a log message to Sentry Android Logs explorer.
      * Called from native code.
      */

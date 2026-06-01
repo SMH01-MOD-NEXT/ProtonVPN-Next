@@ -55,6 +55,14 @@ public:
      * @param message Log message.
      */
     static void reportLog(JNIEnv* env, int level, const char* tag, const char* message);
+
+    /**
+     * Flushes pending Sentry events (gives SDK time to deliver them) then
+     * terminates the process. Call this after reportSecurityEvent() whenever
+     * a critical violation (e.g. Frida/Xposed injection) is detected.
+     * @param env JNI environment.
+     */
+    static void flushAndTerminate(JNIEnv* env);
 };
 
 } // namespace next
