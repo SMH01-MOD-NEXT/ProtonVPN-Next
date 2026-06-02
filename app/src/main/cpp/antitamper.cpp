@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/ptrace.h>
+#include <dirent.h>
 #include "imgui.h"
 #include "imgui_impl_opengl3.h"
 
@@ -338,6 +339,16 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
                 continue;
             }
 
+            // If the .so is from /data/app/ but belongs to a DIFFERENT package, this is a
+            // foreign library injection (e.g. GameGuardian, GameKiller). Terminate immediately.
+            if (line.find(XOR_STR("/data/app/")) != std::string::npos &&
+                line.find(pkgName) == std::string::npos) {
+                LOGE("AntiTamper: Foreign library injection detected: %s", line.c_str());
+                reportSecurityEvent(env, XOR_STR("Unofficial library mapping: ") + line);
+                SentryManager::flushAndTerminate(env);
+                break; // unreachable
+            }
+
             bool foundInWhitelist = false;
             for (const auto& official : officialLibs) {
                 if (line.find(official) != std::string::npos) {
@@ -346,7 +357,7 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
                 }
             }
 
-            // If it's an .so in our app context but NOT in our whitelist
+            // If it's an .so in our own app context but NOT in our whitelist (tampered own lib)
             if (!foundInWhitelist) {
                 LOGE("AntiTamper: Unofficial library mapping detected: %s", line.c_str());
                 reportSecurityEvent(env, XOR_STR("Unofficial library mapping: ") + line);
@@ -375,6 +386,46 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
 
 bool AntiTamper::checkHooks(JNIEnv* env, jobject context) {
     bool allGood = true;
+
+    // 0. Detect known game-hacking tools (GameGuardian, GameKiller, etc.)
+    // These tools inject native libraries into other processes to read/write memory.
+    {
+        const char* hackerPkgs[] = {
+            "com.ztheone.gamedaemon",      // GameGuardian daemon
+            "catch_.me_.if_.you_.can_",    // GameGuardian service alias
+            "com.cih.gamecih",             // GameCIH
+            "com.cih.gamecih2",
+            "com.gk.speed.booster.tool",   // GameKiller (rebranded GameGuardian clone)
+            "com.gk.speedbooster",
+            "org.sbtools.gamehack",        // SB Game Hacker
+            "com.zune.gamekiller",
+            nullptr
+        };
+        jclass pmClass = env->FindClass(XOR_STR("android/content/pm/PackageManager").c_str());
+        jclass contextClass = env->GetObjectClass(context);
+        jmethodID getPmMethod = env->GetMethodID(contextClass, XOR_STR("getPackageManager").c_str(), XOR_STR("()Landroid/content/pm/PackageManager;").c_str());
+        jobject pm = env->CallObjectMethod(context, getPmMethod);
+        jmethodID getPackageInfoMethod = env->GetMethodID(pmClass, XOR_STR("getPackageInfo").c_str(), XOR_STR("(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;").c_str());
+
+        for (int i = 0; hackerPkgs[i] != nullptr; i++) {
+            jstring jPkg = env->NewStringUTF(hackerPkgs[i]);
+            jobject pkgInfo = nullptr;
+            // Suppress the NameNotFoundException — it just means package isn't installed
+            pkgInfo = env->CallObjectMethod(pm, getPackageInfoMethod, jPkg, 0);
+            if (env->ExceptionCheck()) {
+                env->ExceptionClear();
+                pkgInfo = nullptr;
+            }
+            env->DeleteLocalRef(jPkg);
+            if (pkgInfo != nullptr) {
+                LOGE("AntiTamper: Game-hacking tool detected: %s", hackerPkgs[i]);
+                reportSecurityEvent(env, std::string(XOR_STR("Game hacking tool installed: ")) + hackerPkgs[i]);
+                SentryManager::flushAndTerminate(env);
+                break; // unreachable
+            }
+        }
+    }
+
     // 1. Check for Mocked PackageManager
     jclass contextClass = env->GetObjectClass(context);
     jmethodID getPackageManagerMethod = env->GetMethodID(contextClass, XOR_STR("getPackageManager").c_str(), XOR_STR("()Landroid/content/pm/PackageManager;").c_str());
@@ -1318,6 +1369,7 @@ void AntiTamper::renderLoop() {
 
             std::ifstream maps(XOR_STR("/proc/self/maps"));
             std::string line;
+            std::string pkgName = next::AntiTamper::getExpectedPackageName();
             while (std::getline(maps, line)) {
                 bool isFridaByName = (line.find(XOR_STR("frida")) != std::string::npos ||
                     line.find(XOR_STR("xposed")) != std::string::npos ||
@@ -1325,14 +1377,57 @@ void AntiTamper::renderLoop() {
                 bool isSuspiciousMemfd = (!isFridaByName &&
                     line.find(XOR_STR("memfd:")) != std::string::npos &&
                     (line.find(XOR_STR("r-xp")) != std::string::npos || line.find(XOR_STR("rwxp")) != std::string::npos));
-                if (isFridaByName || isSuspiciousMemfd) {
+                // Detect foreign .so injection from another app's /data/app/ directory
+                bool isForeignInjection = (line.find(XOR_STR(".so")) != std::string::npos &&
+                    line.find(XOR_STR("/data/app/")) != std::string::npos &&
+                    line.find(pkgName) == std::string::npos);
+                if (isFridaByName || isSuspiciousMemfd || isForeignInjection) {
                     LOGE("AntiTamper: Late-attached hook detected in memory: %s", line.c_str());
-                    // Report and terminate — do not allow the attacker to keep running.
                     JNIEnv* scanEnv = nullptr;
                     g_vm->GetEnv((void**)&scanEnv, JNI_VERSION_1_6);
                     SentryManager::reportSecurityEvent(scanEnv, XOR_STR("Late-attached hook detected: ") + line);
                     SentryManager::flushAndTerminate(scanEnv);
                     break; // unreachable, but keeps the compiler happy
+                }
+            }
+
+            // Scan running processes for known game-hacking tools via /proc/*/cmdline
+            {
+                const char* hackerProcs[] = {
+                    "gameguardian", "gamedaemon", "gamekiller",
+                    "speed.booster.tool", "gamecih", "gamehack",
+                    nullptr
+                };
+                DIR* procDir = opendir(XOR_STR("/proc").c_str());
+                if (procDir) {
+                    struct dirent* entry;
+                    while ((entry = readdir(procDir)) != nullptr) {
+                        // Only process numeric directories (PIDs)
+                        bool allDigits = true;
+                        for (char* c = entry->d_name; *c; c++) {
+                            if (*c < '0' || *c > '9') { allDigits = false; break; }
+                        }
+                        if (!allDigits || entry->d_name[0] == '\0') continue;
+
+                        std::string cmdlinePath = std::string(XOR_STR("/proc/")) + entry->d_name + XOR_STR("/cmdline");
+                        std::ifstream cmdlineFile(cmdlinePath);
+                        if (!cmdlineFile.is_open()) continue;
+                        std::string cmdline;
+                        std::getline(cmdlineFile, cmdline);
+                        if (cmdline.empty()) continue;
+
+                        for (int i = 0; hackerProcs[i] != nullptr; i++) {
+                            if (cmdline.find(hackerProcs[i]) != std::string::npos) {
+                                LOGE("AntiTamper: Game-hacking process detected: %s", cmdline.c_str());
+                                JNIEnv* scanEnv = nullptr;
+                                g_vm->GetEnv((void**)&scanEnv, JNI_VERSION_1_6);
+                                SentryManager::reportSecurityEvent(scanEnv, std::string(XOR_STR("Game hacking process running: ")) + cmdline.substr(0, 64));
+                                SentryManager::flushAndTerminate(scanEnv);
+                                break; // unreachable
+                            }
+                        }
+                    }
+                    closedir(procDir);
                 }
             }
             last_security_scan = now;

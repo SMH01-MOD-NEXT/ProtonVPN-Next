@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <sys/ptrace.h>
 #include <android/log.h>
 #include <android/native_window_jni.h>
 #include <android/asset_manager_jni.h>
@@ -263,6 +264,10 @@ static jobject loginNative(JNIEnv* env, jobject /* thiz */, jstring username, js
 extern "C" jint JNI_OnLoad(JavaVM* vm, void* /* reserved */) {
     JNIEnv* env;
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) return JNI_ERR;
+
+    // Claim our own ptrace slot so no external process (GameGuardian, GameKiller, etc.)
+    // can attach and read/write our process memory via ptrace(PTRACE_ATTACH).
+    ptrace(PTRACE_TRACEME, 0, nullptr, nullptr);
 
     // Register NextConfigGenerator methods
     {
