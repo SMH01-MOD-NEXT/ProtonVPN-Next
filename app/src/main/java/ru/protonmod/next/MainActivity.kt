@@ -310,10 +310,16 @@ fun ProtonNextAppNavHost(
         LaunchedEffect(startDestination) {
             // Only navigate if startDestination actually changed after the NavHost was already initialized.
             // When NavHost is first created, it handles startDestination itself.
+            // Guard strictly against self-navigation (currentRoute == startDestination) which can occur
+            // after a low-memory background/foreground cycle causing the activity to restart and the
+            // startDestination StateFlow to re-emit the same value. Self-navigation to /welcome
+            // triggers duplicate OnDrawListener registrations in ViewTreeObserver on Android 16,
+            // leading to IndexOutOfBoundsException in dispatchOnDraw.
             if (startDestination.isNotEmpty() && currentRoute != null && currentRoute != startDestination) {
                 ru.protonmod.next.utils.ProtonLogger.d("MainActivity", "startDestination changed to: $startDestination, navigating. Current route: $currentRoute")
                 navController.navigate(startDestination) {
                     popUpTo(0) { inclusive = true }
+                    launchSingleTop = true
                 }
             }
         }

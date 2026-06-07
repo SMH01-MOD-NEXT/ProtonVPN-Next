@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
@@ -51,8 +53,19 @@ fun ExpressiveBackground(
     alpha: Float = 0.8f,
     step: SetupStep = SetupStep.WELCOME
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "expressive_bg")
     val colors = ProtonNextTheme.colors
+
+    // Only run infinite animations when the lifecycle is RESUMED. This prevents
+    // OnDrawListener accumulation in ViewTreeObserver during background/foreground
+    // transitions on Android 16, which causes IndexOutOfBoundsException in dispatchOnDraw.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val isResumed by remember {
+        derivedStateOf { lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED) }
+    }
+
+    // Pass isRunning=isResumed so the infinite transition stops registering draw callbacks
+    // when the app is backgrounded or the activity is not yet fully resumed.
+    val infiniteTransition = rememberInfiniteTransition(label = "expressive_bg", isRunning = isResumed)
 
     // --- Dynamic Background Positions based on Step ---
     val blob1TargetPosition = remember(step) {
