@@ -378,6 +378,7 @@ fun DashboardScreen(
     var showPauseDialog by remember { mutableStateOf(false) }
 
     val errorAppOpsMsg = stringResource(R.string.error_system_appops)
+    val errorVpnDialogNotFound = stringResource(R.string.error_vpn_permission_dialog_not_found)
 
     val checkVpnAndConnect: (LogicalServer) -> Unit = { server ->
         try {
@@ -391,6 +392,9 @@ fun DashboardScreen(
         } catch (_: SecurityException) {
             android.widget.Toast.makeText(context, errorAppOpsMsg, android.widget.Toast.LENGTH_LONG).show()
             viewModel.toggleConnection(server)
+        } catch (_: android.content.ActivityNotFoundException) {
+            pendingServer = null
+            android.widget.Toast.makeText(context, errorVpnDialogNotFound, android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
@@ -406,6 +410,9 @@ fun DashboardScreen(
         } catch (_: SecurityException) {
             android.widget.Toast.makeText(context, errorAppOpsMsg, android.widget.Toast.LENGTH_LONG).show()
             viewModel.quickConnect()
+        } catch (_: android.content.ActivityNotFoundException) {
+            isQuickConnectPending = false
+            android.widget.Toast.makeText(context, errorVpnDialogNotFound, android.widget.Toast.LENGTH_LONG).show()
         }
     }
 
