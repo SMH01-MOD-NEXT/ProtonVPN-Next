@@ -19,6 +19,8 @@ package ru.protonmod.next
 
 import android.content.Context
 import io.sentry.android.core.SentryAndroid
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.utils.PiiScrubber
 import ru.protonmod.next.vpn.SentryBridge
@@ -30,11 +32,19 @@ import ru.protonmod.next.vpn.SentryBridge
  */
 object FlavorInitializer {
     @JvmStatic
-    fun initialize(context: Context) {
+    fun initializeOnMainThread(context: Context) {
         // Honeypot: A fake environment check that modders might try to skip.
+        // Kept on the main thread intentionally.
         verifySecurityEnvironment(context)
+    }
 
-        // Read settings synchronously for app startup to avoid ANR
+    /**
+     * Performs the heavy Sentry SDK initialization.
+     * Must be called from a background coroutine (Dispatchers.IO) to avoid
+     * blocking the main thread and triggering a Background ANR.
+     */
+    suspend fun initialize(context: Context) = withContext(Dispatchers.IO) {
+        // Read settings synchronously — SharedPreferences reads are thread-safe
         val settingsManager = SettingsManager(context)
         val isAnalyticsEnabled = settingsManager.isAnalyticsEnabledSync()
         val isPerformanceEnabled = settingsManager.isPerformanceEnabledSync()
@@ -43,7 +53,7 @@ object FlavorInitializer {
         val isMetricsEnabled = settingsManager.isMetricsEnabledSync()
         val isLogsEnabled = settingsManager.isLogsEnabledSync()
 
-        // Sentry initialization
+        // Sentry initialization (blocking I/O — runs on Dispatchers.IO)
         SentryAndroid.init(context) { options ->
             options.dsn = SentryBridge.getSentryDsn()
             options.isDebug = BuildConfig.DEBUG // Helpful for local development

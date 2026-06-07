@@ -22,6 +22,7 @@ import android.webkit.WebView
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
@@ -88,8 +89,16 @@ class ProtonNextApp : Application(), Configuration.Provider {
             // Fallback for OkHttp 4.x where this method doesn't exist
         }
 
-        // Initialize flavor-specific components (e.g., Firebase for Google flavor)
-        FlavorInitializer.initialize(this)
+        // Run the honeypot security check synchronously on the main thread.
+        FlavorInitializer.initializeOnMainThread(this)
+
+        // Initialize Sentry on a background thread to avoid blocking the main thread.
+        // SentryAndroid.init() calls initializeIntegrationsAndProcessors which performs
+        // blocking I/O and was causing a Background ANR (see ANDROID-1GV).
+        // The Sentry SDK queues any events captured before init completes, so nothing is lost.
+        MainScope().launch(Dispatchers.IO) {
+            FlavorInitializer.initialize(this@ProtonNextApp)
+        }
 
         // Initialize logger settings from sync storage
         val settings = SettingsManager(this)
