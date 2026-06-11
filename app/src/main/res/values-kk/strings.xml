@@ -523,17 +523,6 @@
     <string name="battery_optimization_title">Батареяны оңтайландыру белсенді</string>
     <string name="battery_optimization_desc">Android қуатты үнемдеу үшін VPN-ді ажыратуы мүмкін. Осы қолданба үшін оңтайландыруды өшіріңіз.</string>
     <string name="btn_fix">Түзету</string>
-    <!-- Trusted Wi-Fi -->
-    <string name="settings_trusted_wifi">Сенімді Wi-Fi желілері</string>
-    <string name="settings_trusted_wifi_desc">VPN қажет емес желілерді басқару</string>
-    <string name="settings_auto_connect_untrusted">Бөтен желілерде автоматты қосылу</string>
-    <string name="settings_auto_connect_untrusted_desc">Белгісіз Wi-Fi желілеріне кіргенде VPN-ді автоматты түрде қосу</string>
-    <string name="trusted_wifi_title">Сенімді желілер</string>
-    <string name="trusted_wifi_desc">Осы Wi-Fi желілеріне қосылғанда VPN автоматты түрде ажыратылады.</string>
-    <string name="trusted_wifi_add">Ағымдағы желіні қосу: %1$s</string>
-    <string name="trusted_wifi_empty">Сенімді желілер әлі қосылмаған.</string>
-    <string name="trusted_wifi_permission_title">Орналасқан жерге кіру рұқсаты қажет</string>
-    <string name="trusted_wifi_permission_desc">Android Wi-Fi атауын (SSID) оқу үшін орналасқан жерге кіру рұқсатын талап етеді. Бұл тек сенімді желілерді анықтау үшін пайдаланылады.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">РЕСМИ ЕМЕС ЖИНАҚ АНЫҚТАЛДЫ!</string>
     <string name="tamper_warning_desc">Proton VPN-Next нұсқасын белгісіз үшінші тарап өзгерткен. Сіздің қауіпсіздігіңіз, құпиялылығыңыз бен деректеріңізге ЖОҒАРЫ ҚАУІП төніп тұр.</string>
@@ -558,7 +547,6 @@
     <string name="backup_cat_dns">DNS параметрлері</string>
     <string name="backup_cat_spoof_country">Елді жалған көрсету</string>
     <string name="backup_cat_ota">Жаңарту параметрлері</string>
-    <string name="backup_cat_trusted_wifi">Сенімді желілер</string>
     <string name="backup_cat_sentry">Аналитика және краш-есептер</string>
     <string name="backup_export_success">Параметрлер сәтті экспортталды</string>
     <string name="backup_export_error">Параметрлерді экспорттау сәтсіз аяқталды</string>
