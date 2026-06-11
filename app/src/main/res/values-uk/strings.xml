@@ -529,17 +529,6 @@
     <string name="battery_optimization_title">Оптимізація батареї активна</string>
     <string name="battery_optimization_desc">Android може відключати VPN для економії енергії. Будь ласка, вимкніть оптимізацію для цього додатка.</string>
     <string name="btn_fix">Виправити</string>
-    <!-- Trusted Wi-Fi -->
-    <string name="settings_trusted_wifi">Довірені Wi-Fi мережі</string>
-    <string name="settings_trusted_wifi_desc">Керування мережами, в яких VPN не потрібен</string>
-    <string name="settings_auto_connect_untrusted">Автоконект у чужих мережах</string>
-    <string name="settings_auto_connect_untrusted_desc">Автоматично підключати VPN при вході в невідомі Wi-Fi мережі</string>
-    <string name="trusted_wifi_title">Довірені мережі</string>
-    <string name="trusted_wifi_desc">VPN буде автоматично відключатися при підключенні до цих Wi-Fi мереж.</string>
-    <string name="trusted_wifi_add">Додати поточну мережу: %1$s</string>
-    <string name="trusted_wifi_empty">Довірені мережі ще не додані.</string>
-    <string name="trusted_wifi_permission_title">Потрібен доступ до місцезнаходження</string>
-    <string name="trusted_wifi_permission_desc">Android потребує дозвіл на доступ до місцезнаходження для читання назви Wi-Fi (SSID). Це використовується тільки для ідентифікації довірених мереж.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ВИЯВЛЕНО НЕОФІЦІЙНУ ЗБІРКУ!</string>
     <string name="tamper_warning_desc">Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані знаходяться під ВИСОКИМ РИЗИКОМ.</string>
@@ -564,7 +553,6 @@
     <string name="backup_cat_dns">Налаштування DNS</string>
     <string name="backup_cat_spoof_country">Підміна країни</string>
     <string name="backup_cat_ota">Налаштування оновлень</string>
-    <string name="backup_cat_trusted_wifi">Довірені мережі</string>
     <string name="backup_cat_sentry">Аналітика та звіти про збої</string>
     <string name="backup_export_success">Налаштування успішно експортовані</string>
     <string name="backup_export_error">Помилка при експорті налаштувань</string>
