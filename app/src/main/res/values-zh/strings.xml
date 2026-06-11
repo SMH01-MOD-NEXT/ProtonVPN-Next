@@ -520,17 +520,6 @@
     <string name="battery_optimization_title">电池优化已开启</string>
     <string name="battery_optimization_desc">Android 可能会为了省电而断开 VPN。请为该应用禁用优化。</string>
     <string name="btn_fix">去设置</string>
-    <!-- Trusted Wi-Fi -->
-    <string name="settings_trusted_wifi">信任的 Wi-Fi 网络</string>
-    <string name="settings_trusted_wifi_desc">管理不需要 VPN 的网络</string>
-    <string name="settings_auto_connect_untrusted">非信任网络自动连接</string>
-    <string name="settings_auto_connect_untrusted_desc">加入未知 Wi-Fi 时自动连接 VPN</string>
-    <string name="trusted_wifi_title">受信任的网络</string>
-    <string name="trusted_wifi_desc">连接到这些 Wi-Fi 网络时，VPN 将自动断开。</string>
-    <string name="trusted_wifi_add">添加当前 Wi-Fi: %1$s</string>
-    <string name="trusted_wifi_empty">尚未添加受信任的网络。</string>
-    <string name="trusted_wifi_permission_title">需要访问位置信息</string>
-    <string name="trusted_wifi_permission_desc">Android 需要位置权限才能读取 Wi-Fi 名称 (SSID)。这仅用于识别受信任的网络。</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">检测到非官方版本！</string>
     <string name="tamper_warning_desc">此版本的 Proton VPN-Next 已被未知的第三方修改。您的安全、隐私和数据正面临高度风险。</string>
@@ -555,7 +544,6 @@
     <string name="backup_cat_dns">DNS 设置</string>
     <string name="backup_cat_spoof_country">国家伪装</string>
     <string name="backup_cat_ota">更新设置</string>
-    <string name="backup_cat_trusted_wifi">受信任的网络</string>
     <string name="backup_cat_sentry">分析与错误报告</string>
     <string name="backup_export_success">设置导出成功</string>
     <string name="backup_export_error">设置导出失败</string>
