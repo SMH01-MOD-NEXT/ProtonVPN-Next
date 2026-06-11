@@ -529,17 +529,6 @@
     <string name="battery_optimization_title">Оптимизация батареи активна</string>
     <string name="battery_optimization_desc">Android может отключать VPN для экономии энергии. Пожалуйста, отключите оптимизацию для этого приложения.</string>
     <string name="btn_fix">Исправить</string>
-    <!-- Trusted Wi-Fi -->
-    <string name="settings_trusted_wifi">Доверенные сети</string>
-    <string name="settings_trusted_wifi_desc">Управление Wi-Fi и мобильными сетями, в которых VPN не требуется</string>
-    <string name="settings_auto_connect_untrusted">Автоконнект в чужих сетях</string>
-    <string name="settings_auto_connect_untrusted_desc">Автоматически подключать VPN при входе в неизвестные сети</string>
-    <string name="trusted_wifi_title">Доверенные Wi-Fi и мобильные сети</string>
-    <string name="trusted_wifi_desc">VPN будет автоматически отключаться при подключении к этим сетям.</string>
-    <string name="trusted_wifi_add">Добавить текущую сеть: %1$s</string>
-    <string name="trusted_wifi_empty">Доверенные сети еще не добавлены.</string>
-    <string name="trusted_wifi_permission_title">Требуется доступ к сети</string>
-    <string name="trusted_wifi_permission_desc">Android требует разрешение на доступ к местоположению для идентификации Wi-Fi сетей. Мобильные сети определяются по имени оператора. Это используется только для автоматизации.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ОБНАРУЖЕНА НЕОФИЦИАЛЬНАЯ СБОРКА!</string>
     <string name="tamper_warning_desc">Эта версия Proton VPN-Next была модифицирована неизвестной третьей стороной. Ваша безопасность, конфиденциальность и данные находятся под ВЫСОКИМ РИСКОМ.</string>
@@ -564,7 +553,6 @@
     <string name="backup_cat_dns">Настройки DNS</string>
     <string name="backup_cat_spoof_country">Подмена страны</string>
     <string name="backup_cat_ota">Настройки обновлений</string>
-    <string name="backup_cat_trusted_wifi">Доверенные сети</string>
     <string name="backup_cat_sentry">Аналитика и отчеты о сбоях</string>
     <string name="backup_export_success">Настройки успешно экспортированы</string>
     <string name="backup_export_error">Ошибка при экспорте настроек</string>
