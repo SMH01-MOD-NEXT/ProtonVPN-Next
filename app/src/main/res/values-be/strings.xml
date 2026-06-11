@@ -529,17 +529,6 @@
     <string name="battery_optimization_title">Аптымізацыя батарэі актыўная</string>
     <string name="battery_optimization_desc">Android можа адключаць VPN для эканоміі энергіі. Адключыце аптымізацыю для гэтай праграмы.</string>
     <string name="btn_fix">Выправіць</string>
-    <!-- Trusted Wi-Fi -->
-    <string name="settings_trusted_wifi">Давераныя сеткі</string>
-    <string name="settings_trusted_wifi_desc">Кіраванне сеткамі, у якіх VPN не патрабуецца</string>
-    <string name="settings_auto_connect_untrusted">Аўтападключэнне ў недавераных сетках</string>
-    <string name="settings_auto_connect_untrusted_desc">Аўтаматычна падключаць VPN пры далучэнні да невядомыя сетак Wi-Fi</string>
-    <string name="trusted_wifi_title">Давераныя сеткі</string>
-    <string name="trusted_wifi_desc">VPN будзе аўтаматычна адключацца пры падключэнні да гэтых сетак Wi-Fi.</string>
-    <string name="trusted_wifi_add">Дадаць бягучую сетку: %1$s</string>
-    <string name="trusted_wifi_empty">Давераныя сеткі яшчэ не дададзены.</string>
-    <string name="trusted_wifi_permission_title">Патрабуецца доступ да сеткі</string>
-    <string name="trusted_wifi_permission_desc">Android патрабуе дазвол на доступ да месцазнаходжання, каб вызначыць сеткі Wi-Fi (SSID). Гэты дазвол будзе выкарыстаны толькі для вызначэння давераных сетак.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ВЫЯЎЛЕНА НЕАФІЦЫЙНАЯ ЗБОРКА!</string>
     <string name="tamper_warning_desc">Гэтая версія Proton VPN-Next была мадыфікавана невядомым рэсурсам. Ваша бяспека, прыватнасць і даныя знаходзяцца пад ВЫСОКАЙ ПАГРОЗАЙ.</string>
@@ -564,7 +553,6 @@
     <string name="backup_cat_dns">Налады DNS</string>
     <string name="backup_cat_spoof_country">Падмена краіны</string>
     <string name="backup_cat_ota">Налады абнаўлення</string>
-    <string name="backup_cat_trusted_wifi">Давераныя сеткі</string>
     <string name="backup_cat_sentry">Аналітыка і справаздачы аб збоях</string>
     <string name="backup_export_success">Налады паспяхова экспартаваны</string>
     <string name="backup_export_error">Не ўдалося экспартаваць налады</string>
