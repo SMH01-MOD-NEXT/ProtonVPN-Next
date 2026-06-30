@@ -19,19 +19,22 @@ package ru.protonmod.next.data.repository
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
+import retrofit2.HttpException
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ota.UpdateInfo
 import ru.protonmod.next.data.model.ota.UpdateResponse
 import ru.protonmod.next.data.network.ota.UpdateApi
 import ru.protonmod.next.utils.ProtonLogger
 import javax.inject.Inject
 import javax.inject.Singleton
-
-import kotlinx.coroutines.flow.first
-import retrofit2.HttpException
-import ru.protonmod.next.data.local.SettingsManager
 
 private val json = Json { ignoreUnknownKeys = true }
 
@@ -91,50 +94,51 @@ class UpdateRepository @Inject constructor(
     }
 
 
-    suspend fun checkForUpdates(): UpdateInfo? {
-        if (BuildConfig.IS_PRIVACY_BUILD) return null
+    suspend fun checkForUpdates(): UpdateInfo? = coroutineScope {
+        if (BuildConfig.IS_PRIVACY_BUILD) return@coroutineScope null
 
         val frequency = settingsManager.otaUpdateFrequency.first()
-        if (frequency == "disabled") return null
+        if (frequency == "disabled") return@coroutineScope null
 
         val selectedChannel = BuildConfig.UPDATE_CHANNEL
-        var bestUpdate: UpdateInfo? = null
-        for (url in updateUrls) {
-            try {
-                val urlWithCacheBuster = if (url.contains("?")) {
-                    "$url&t=${System.currentTimeMillis()}"
-                } else {
-                    "$url?t=${System.currentTimeMillis()}"
-                }
 
-                val response = fetchUpdateResponse(urlWithCacheBuster)
-                
-                val channelUpdates = if (selectedChannel == "nightly") {
-                    response.nightly
-                } else {
-                    response.stable
-                }
+        val updates = updateUrls.map { url ->
+            async {
+                try {
+                    withTimeoutOrNull(10_000) {
+                        val urlWithCacheBuster = if (url.contains("?")) {
+                            "$url&t=${System.currentTimeMillis()}"
+                        } else {
+                            "$url?t=${System.currentTimeMillis()}"
+                        }
 
-                val updateInfo = if (BuildConfig.DEBUG) {
-                    channelUpdates?.debug
-                } else {
-                    channelUpdates?.release
-                }
-                
-                if (updateInfo != null) {
-                    if (updateInfo.versionCode > BuildConfig.VERSION_CODE) {
-                        if (bestUpdate == null || updateInfo.versionCode > bestUpdate.versionCode) {
-                            bestUpdate = updateInfo
+                        val response = fetchUpdateResponse(urlWithCacheBuster)
+
+                        val channelUpdates = if (selectedChannel == "nightly") {
+                            response.nightly
+                        } else {
+                            response.stable
+                        }
+
+                        if (BuildConfig.DEBUG) {
+                            channelUpdates?.debug
+                        } else {
+                            channelUpdates?.release
                         }
                     }
+                } catch (e: HttpException) {
+                    val errorBody = e.response()?.errorBody()?.string()
+                    ProtonLogger.e("UpdateRepository", "HTTP ${e.code()} from $url: $errorBody", e)
+                    null
+                } catch (e: Exception) {
+                    ProtonLogger.e("UpdateRepository", "Failed to fetch updates from $url", e)
+                    null
                 }
-            } catch (e: HttpException) {
-                val errorBody = e.response()?.errorBody()?.string()
-                ProtonLogger.e("UpdateRepository", "HTTP ${e.code()} from $url: $errorBody", e)
-            } catch (e: Exception) {
-                ProtonLogger.e("UpdateRepository", "Failed to fetch updates from $url", e)
             }
-        }
-        return bestUpdate
+        }.awaitAll()
+
+        return@coroutineScope updates.filterNotNull()
+            .filter { it.versionCode > BuildConfig.VERSION_CODE }
+            .maxByOrNull { it.versionCode }
     }
 }
