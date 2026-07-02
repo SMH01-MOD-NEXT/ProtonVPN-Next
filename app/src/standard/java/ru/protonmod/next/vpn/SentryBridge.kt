@@ -62,9 +62,12 @@ object SentryBridge {
      */
     @JvmStatic
     fun flushAndTerminate() {
-        // Give Sentry 3 seconds to deliver the security event before we die.
-        Sentry.flush(3000)
-        android.os.Process.killProcess(android.os.Process.myPid())
+        // Run flush and kill on a background thread to avoid blocking the main thread (ANR).
+        Thread {
+            // Give Sentry 3 seconds to deliver the security event before we die.
+            Sentry.flush(3000)
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }.start()
     }
 
     /**

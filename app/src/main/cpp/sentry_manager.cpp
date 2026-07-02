@@ -92,11 +92,19 @@ void SentryManager::flushAndTerminate(JNIEnv* env) {
         return;
     }
 
-    // In privacy flavor, this just calls Process.killProcess()
-    // In other flavors, it calls Sentry.flush(3000) then killProcess()
+    // In privacy flavor, this just calls Process.killProcess().
+    // In other flavors, it dispatches a background thread that calls
+    // Sentry.flush(3000) then killProcess(), and returns immediately so
+    // the main-thread Looper is not blocked (avoids ANR).
     env->CallStaticVoidMethod(bridgeClass, flushMethod);
 
-    // Fallback: if the JVM call somehow returns, abort hard.
+    // The Kotlin side is now responsible for terminating the process.
+    // Block this native thread briefly to give the background thread time
+    // to kill the process before we fall through.
+    struct timespec ts = {4, 0}; // 4 seconds > the 3-second Sentry flush timeout
+    nanosleep(&ts, nullptr);
+
+    // Hard fallback only if the process is somehow still alive after 4 s.
     abort();
 }
 
