@@ -19,14 +19,20 @@ package ru.protonmod.next.data.local
 
 import android.content.Context
 import androidx.core.content.edit
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.PreferencesSerializer
 import androidx.datastore.preferences.core.Preferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import androidx.datastore.preferences.multiprocess.MultiProcessDataStoreFactory
+import java.io.File
 import ru.protonmod.next.utils.ProtonLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
@@ -42,15 +48,29 @@ import ru.protonmod.next.utils.system.SystemUtils
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.dataStore by preferencesDataStore(name = "settings")
-
 @Singleton
 class SettingsManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
+
+    private val dataStore: DataStore<Preferences> = getOrCreateDataStore(context)
     private val prefs = context.getSharedPreferences("boot_settings", Context.MODE_PRIVATE)
 
     companion object {
+        @Volatile
+        private var dataStoreInstance: DataStore<Preferences>? = null
+
+        private fun getOrCreateDataStore(context: Context): DataStore<Preferences> =
+            dataStoreInstance ?: synchronized(this) {
+                dataStoreInstance ?: MultiProcessDataStoreFactory.create(
+                    serializer = PreferencesSerializer,
+                    scope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+                    produceFile = {
+                        File(context.applicationContext.filesDir, "datastore/settings.preferences_pb")
+                    }
+                ).also { dataStoreInstance = it }
+            }
+
         const val STRATEGY_NETLIFY = "netlify"
         const val STRATEGY_CLOUDFLARE = "cloudflare"
         const val STRATEGY_DENO = "deno"
@@ -151,17 +171,17 @@ class SettingsManager @Inject constructor(
         const val DEFAULT_I1 = "<b 0xce000000010897a297ecc34cd6dd000044d0ec2e2e1ea2991f467ace4222129b5a098823784694b4897b9986ae0b7280135fa85e196d9ad980b150122129ce2a9379531b0fd3e871ca5fdb883c369832f730e272d7b8b74f393f9f0fa43f11e510ecb2219a52984410c204cf875585340c62238e14ad04dff382f2c200e0ee22fe743b9c6b8b043121c5710ec289f471c91ee414fca8b8be8419ae8ce7ffc53837f6ade262891895f3f4cecd31bc93ac5599e18e4f01b472362b8056c3172b513051f8322d1062997ef4a383b01706598d08d48c221d30e74c7ce000cdad36b706b1bf9b0607c32ec4b3203a4ee21ab64df336212b9758280803fcab14933b0e7ee1e04a7becce3e2633f4852585c567894a5f9efe9706a151b615856647e8b7dba69ab357b3982f554549bef9256111b2d67afde0b496f16962d4957ff654232aa9e845b61463908309cfd9de0a6abf5f425f577d7e5f6440652aa8da5f73588e82e9470f3b21b27b28c649506ae1a7f5f15b876f56abc4615f49911549b9bb39dd804fde182bd2dcec0c33bad9b138ca07d4a4a1650a2c2686acea05727e2a78962a840ae428f55627516e73c83dd8893b02358e81b524b4d99fda6df52b3a8d7a5291326e7ac9d773c5b43b8444554ef5aea104a738ed650aa979674bbed38da58ac29d87c29d387d80b526065baeb073ce65f075ccb56e47533aef357dceaa8293a523c5f6f790be90e4731123d3c6152a70576e90b4ab5bc5ead01576c68ab633ff7d36dcde2a0b2c68897e1acfc4d6483aaaeb635dd63c96b2b6a7a2bfe042f6aed82e5363aa850aace12ee3b1a93f30d8ab9537df483152a5527faca21efc9981b304f11fc95336f5b9637b174c5a0659e2b22e159a9fed4b8e93047371175b1d6d9cc8ab745f3b2281537d1c75fb9451871864efa5d184c38c185fd203de206751b92620f7c369e031d2041e152040920ac2c5ab5340bfc9d0561176abf10a147287ea90758575ac6a9f5ac9f390d0d5b23ee12af583383d994e22c0cf42383834bcd3ada1b3825a0664d8f3fb678261d57601ddf94a8a68a7c273a18c08aa99c7ad8c6c42eab67718843597ec9930457359dfdfbce024afc2dcf9348579a57d8d3490b2fa99f278f1c37d87dad9b221acd575192ffae1784f8e60ec7cee4068b6b988f0433d96d6a1b1865f4e155e9fe020279f434f3bf1bd117b717b92f6cd1cc9bea7d45978bcc3f24bda631a36910110a6ec06da35f8966c9279d130347594f13e9e07514fa370754d1424c0a1545c5070ef9fb2acd14233e8a50bfc5978b5bdf8bc1714731f798d21e2004117c61f2989dd44f0cf027b27d4019e81ed4b5c31db347c4a3a4d85048d7093cf16753d7b0d15e078f5c7a5205dc2f87e330a1f716738dce1c6180e9d02869b5546f1c4d2748f8c90d9693cba4e0079297d22fd61402dea32ff0eb69ebd65a5d0b687d87e3a8b2c42b648aa723c7c7daf37abcc4bb85caea2ee8f55bec20e913b3324ab8f5c3304f820d42ad1b9f2ffc1a3af9927136b4419e1e579ab4c2ae3c776d293d397d575df181e6cae0a4ada5d67ecea171cca3288d57c7bbdaee3befe745fb7d634f70386d873b90c4d6c6596bb65af68f9e5121e67ebf0d89d3c909ceedfb32ce9575a7758ff080724e1ab5d5f43074ecb53a479af21ed03d7b6899c36631c0166f9d47e5e1d4528a5d3d3f744029c4b1c190cbfbad06f5f83f7ad0429fa9a2719c56ffe3783460e166de2d8>"
     }
 
-    val killSwitchEnabled: Flow<Boolean> = context.dataStore.data.map { it[KILL_SWITCH] ?: false }
-    val autoConnectEnabled: Flow<Boolean> = context.dataStore.data.map { it[AUTO_CONNECT] ?: false }
-    val notificationsEnabled: Flow<Boolean> = context.dataStore.data.map { it[NOTIFICATIONS] ?: true }
+    val killSwitchEnabled: Flow<Boolean> = dataStore.data.map { it[KILL_SWITCH] ?: false }
+    val autoConnectEnabled: Flow<Boolean> = dataStore.data.map { it[AUTO_CONNECT] ?: false }
+    val notificationsEnabled: Flow<Boolean> = dataStore.data.map { it[NOTIFICATIONS] ?: true }
 
     val defaultTheme: AppTheme
         get() = if (SystemUtils.isNothingDevice()) AppTheme.NOTHING else AppTheme.DARK
 
-    val otaUpdateFrequency: Flow<String> = context.dataStore.data.map { it[OTA_UPDATE_FREQUENCY] ?: "daily" }
-    val otaLastCheckTime: Flow<Long> = context.dataStore.data.map { it[OTA_LAST_CHECK_TIME] ?: 0L }
+    val otaUpdateFrequency: Flow<String> = dataStore.data.map { it[OTA_UPDATE_FREQUENCY] ?: "daily" }
+    val otaLastCheckTime: Flow<Long> = dataStore.data.map { it[OTA_LAST_CHECK_TIME] ?: 0L }
 
-    val appTheme: Flow<ru.protonmod.next.ui.theme.AppTheme> = context.dataStore.data.map { preferences ->
+    val appTheme: Flow<ru.protonmod.next.ui.theme.AppTheme> = dataStore.data.map { preferences ->
         val themeString = preferences[APP_THEME] ?: return@map defaultTheme
         try {
             ru.protonmod.next.ui.theme.AppTheme.valueOf(themeString)
@@ -170,7 +190,7 @@ class SettingsManager @Inject constructor(
         }
     }
 
-    val serverLoadDisplayMode: Flow<ServerLoadDisplayMode> = context.dataStore.data.map { preferences ->
+    val serverLoadDisplayMode: Flow<ServerLoadDisplayMode> = dataStore.data.map { preferences ->
         val modeString = preferences[SERVER_LOAD_DISPLAY_MODE] ?: ServerLoadDisplayMode.ALL.name
         try {
             ServerLoadDisplayMode.valueOf(modeString)
@@ -179,38 +199,38 @@ class SettingsManager @Inject constructor(
         }
     }
 
-    val splitTunnelingEnabled: Flow<Boolean> = context.dataStore.data.map { it[SPLIT_TUNNELING_ENABLED] ?: false }
-    val splitTunnelingMode: Flow<String> = context.dataStore.data.map { it[SPLIT_TUNNELING_MODE] ?: "exclude" }
-    val excludedApps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_APPS] ?: emptySet() }
-    val excludedIps: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_IPS] ?: emptySet() }
-    val excludedDomains: Flow<Set<String>> = context.dataStore.data.map { it[EXCLUDED_DOMAINS] ?: emptySet() }
+    val splitTunnelingEnabled: Flow<Boolean> = dataStore.data.map { it[SPLIT_TUNNELING_ENABLED] ?: false }
+    val splitTunnelingMode: Flow<String> = dataStore.data.map { it[SPLIT_TUNNELING_MODE] ?: "exclude" }
+    val excludedApps: Flow<Set<String>> = dataStore.data.map { it[EXCLUDED_APPS] ?: emptySet() }
+    val excludedIps: Flow<Set<String>> = dataStore.data.map { it[EXCLUDED_IPS] ?: emptySet() }
+    val excludedDomains: Flow<Set<String>> = dataStore.data.map { it[EXCLUDED_DOMAINS] ?: emptySet() }
 
-    val stShowSystemApps: Flow<Boolean> = context.dataStore.data.map { it[ST_SHOW_SYSTEM_APPS] ?: false }
+    val stShowSystemApps: Flow<Boolean> = dataStore.data.map { it[ST_SHOW_SYSTEM_APPS] ?: false }
 
-    val vpnPort: Flow<Int> = context.dataStore.data.map { it[VPN_PORT] ?: 0 }
-    val customDns: Flow<String> = context.dataStore.data.map { it[CUSTOM_DNS] ?: "" }
+    val vpnPort: Flow<Int> = dataStore.data.map { it[VPN_PORT] ?: 0 }
+    val customDns: Flow<String> = dataStore.data.map { it[CUSTOM_DNS] ?: "" }
 
-    val apiBypassEnabled: Flow<Boolean> = context.dataStore.data.map { it[API_BYPASS_ENABLED] ?: false }
-    val apiBypassStrategy: Flow<String> = context.dataStore.data.map { it[API_BYPASS_STRATEGY] ?: "netlify" }
+    val apiBypassEnabled: Flow<Boolean> = dataStore.data.map { it[API_BYPASS_ENABLED] ?: false }
+    val apiBypassStrategy: Flow<String> = dataStore.data.map { it[API_BYPASS_STRATEGY] ?: "netlify" }
 
-    val byeDpiFlags: Flow<String> = context.dataStore.data.map { it[BYEDPI_FLAGS] ?: "-s1 -d1" }
-    val byeDpiSni: Flow<String> = context.dataStore.data.map { it[BYEDPI_SNI] ?: "google.com" }
+    val byeDpiFlags: Flow<String> = dataStore.data.map { it[BYEDPI_FLAGS] ?: "-s1 -d1" }
+    val byeDpiSni: Flow<String> = dataStore.data.map { it[BYEDPI_SNI] ?: "google.com" }
 
-    val apiProxyHost: Flow<String> = context.dataStore.data.map { it[API_PROXY_HOST] ?: "" }
-    val apiProxyPort: Flow<Int> = context.dataStore.data.map { it[API_PROXY_PORT] ?: 1080 }
-    val apiProxyType: Flow<String> = context.dataStore.data.map { it[API_PROXY_TYPE] ?: PROXY_TYPE_SOCKS }
-    val apiProxyUsername: Flow<String> = context.dataStore.data.map { it[API_PROXY_USERNAME] ?: "" }
-    val apiProxyPassword: Flow<String> = context.dataStore.data.map { it[API_PROXY_PASSWORD] ?: "" }
+    val apiProxyHost: Flow<String> = dataStore.data.map { it[API_PROXY_HOST] ?: "" }
+    val apiProxyPort: Flow<Int> = dataStore.data.map { it[API_PROXY_PORT] ?: 1080 }
+    val apiProxyType: Flow<String> = dataStore.data.map { it[API_PROXY_TYPE] ?: PROXY_TYPE_SOCKS }
+    val apiProxyUsername: Flow<String> = dataStore.data.map { it[API_PROXY_USERNAME] ?: "" }
+    val apiProxyPassword: Flow<String> = dataStore.data.map { it[API_PROXY_PASSWORD] ?: "" }
 
-    val spoofCountryEnabled: Flow<Boolean> = context.dataStore.data.map { it[SPOOF_COUNTRY_ENABLED] ?: false }
-    val spoofCountryNull: Flow<Boolean> = context.dataStore.data.map { it[SPOOF_COUNTRY_NULL] ?: false }
-    val spoofCountryCode: Flow<String> = context.dataStore.data.map { it[SPOOF_COUNTRY_CODE] ?: "" }
+    val spoofCountryEnabled: Flow<Boolean> = dataStore.data.map { it[SPOOF_COUNTRY_ENABLED] ?: false }
+    val spoofCountryNull: Flow<Boolean> = dataStore.data.map { it[SPOOF_COUNTRY_NULL] ?: false }
+    val spoofCountryCode: Flow<String> = dataStore.data.map { it[SPOOF_COUNTRY_CODE] ?: "" }
 
-    val obfuscationEnabled: Flow<Boolean> = context.dataStore.data.map { it[OBFUSCATION_ENABLED] ?: false }
-    val obfuscationAdvancedMode: Flow<Boolean> = context.dataStore.data.map { it[OBFUSCATION_ADVANCED_MODE] ?: false }
-    val selectedProfileId: Flow<String> = context.dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
+    val obfuscationEnabled: Flow<Boolean> = dataStore.data.map { it[OBFUSCATION_ENABLED] ?: false }
+    val obfuscationAdvancedMode: Flow<Boolean> = dataStore.data.map { it[OBFUSCATION_ADVANCED_MODE] ?: false }
+    val selectedProfileId: Flow<String> = dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
 
-    val setupStep: Flow<SetupStep> = context.dataStore.data.map { preferences ->
+    val setupStep: Flow<SetupStep> = dataStore.data.map { preferences ->
         val stepString = preferences[SETUP_STEP] ?: SetupStep.WELCOME.name
         try {
             SetupStep.valueOf(stepString)
@@ -219,16 +239,16 @@ class SettingsManager @Inject constructor(
         }
     }
 
-    val allowLanEnabled: Flow<Boolean> = context.dataStore.data.map { it[ALLOW_LAN_CONNECTIONS] ?: false }
+    val allowLanEnabled: Flow<Boolean> = dataStore.data.map { it[ALLOW_LAN_CONNECTIONS] ?: false }
 
-    val analyticsEnabled: Flow<Boolean> = context.dataStore.data.map { it[ANALYTICS_ENABLED] ?: true }
-    val crashReportsEnabled: Flow<Boolean> = context.dataStore.data.map { it[CRASH_REPORTS_ENABLED] ?: true }
-    val sentryPerformanceEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_PERFORMANCE_ENABLED] ?: true }
-    val sentryNonFatalEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_NON_FATAL_ENABLED] ?: true }
-    val sentrySessionReplayEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_SESSION_REPLAY_ENABLED] ?: true }
-    val sentryAnrEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_ANR_ENABLED] ?: true }
-    val sentryMetricsEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_METRICS_ENABLED] ?: true }
-    val sentryLogsEnabled: Flow<Boolean> = context.dataStore.data.map { it[SENTRY_LOGS_ENABLED] ?: true }
+    val analyticsEnabled: Flow<Boolean> = dataStore.data.map { it[ANALYTICS_ENABLED] ?: true }
+    val crashReportsEnabled: Flow<Boolean> = dataStore.data.map { it[CRASH_REPORTS_ENABLED] ?: true }
+    val sentryPerformanceEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_PERFORMANCE_ENABLED] ?: true }
+    val sentryNonFatalEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_NON_FATAL_ENABLED] ?: true }
+    val sentrySessionReplayEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_SESSION_REPLAY_ENABLED] ?: true }
+    val sentryAnrEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_ANR_ENABLED] ?: true }
+    val sentryMetricsEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_METRICS_ENABLED] ?: true }
+    val sentryLogsEnabled: Flow<Boolean> = dataStore.data.map { it[SENTRY_LOGS_ENABLED] ?: true }
 
     /** Synchronous check for app startup initializers to avoid ANR from runBlocking */
     fun isAnalyticsEnabledSync(): Boolean = prefs.getBoolean("analytics_enabled", true)
@@ -261,15 +281,15 @@ class SettingsManager @Inject constructor(
     fun isSpoofCountryNullSync(): Boolean = prefs.getBoolean("spoof_country_null", false)
     fun getSpoofCountryCodeSync(): String = prefs.getString("spoof_country_code", "") ?: ""
 
-    val quickConnectStrategy: Flow<String> = context.dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
-    val quickConnectTargetId: Flow<String?> = context.dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
-    val isIpHidden: Flow<Boolean> = context.dataStore.data.map { it[IP_HIDDEN] ?: false }
+    val quickConnectStrategy: Flow<String> = dataStore.data.map { it[QUICK_CONNECT_STRATEGY] ?: "fastest" }
+    val quickConnectTargetId: Flow<String?> = dataStore.data.map { it[QUICK_CONNECT_TARGET_ID] }
+    val isIpHidden: Flow<Boolean> = dataStore.data.map { it[IP_HIDDEN] ?: false }
 
-    val pauseEndTime: Flow<Long> = context.dataStore.data.map { it[PAUSE_END_TIME] ?: 0L }
+    val pauseEndTime: Flow<Long> = dataStore.data.map { it[PAUSE_END_TIME] ?: 0L }
 
-    val policyAcceptedVersion: Flow<Int> = context.dataStore.data.map { it[POLICY_ACCEPTED_VERSION] ?: 0 }
+    val policyAcceptedVersion: Flow<Int> = dataStore.data.map { it[POLICY_ACCEPTED_VERSION] ?: 0 }
 
-    val customProfiles: Flow<List<ObfuscationProfile>> = context.dataStore.data.map { preferences ->
+    val customProfiles: Flow<List<ObfuscationProfile>> = dataStore.data.map { preferences ->
         val jsonString = preferences[CUSTOM_PROFILES] ?: "[]"
         try {
             val array = JSONArray(jsonString)
@@ -307,211 +327,211 @@ class SettingsManager @Inject constructor(
         }
     }
 
-    val awgJc: Flow<Int> = context.dataStore.data.map { it[AWG_JC] ?: 3 }
-    val awgJmin: Flow<Int> = context.dataStore.data.map { it[AWG_JMIN] ?: 1 }
-    val awgJmax: Flow<Int> = context.dataStore.data.map { it[AWG_JMAX] ?: 3 }
-    val awgS1: Flow<Int> = context.dataStore.data.map { it[AWG_S1] ?: 0 }
-    val awgS2: Flow<Int> = context.dataStore.data.map { it[AWG_S2] ?: 0 }
-    val awgS3: Flow<Int> = context.dataStore.data.map { it[AWG_S3] ?: 0 }
-    val awgS4: Flow<Int> = context.dataStore.data.map { it[AWG_S4] ?: 0 }
-    val awgH1: Flow<String> = context.dataStore.data.map { it[AWG_H1] ?: "1" }
-    val awgH2: Flow<String> = context.dataStore.data.map { it[AWG_H2] ?: "2" }
-    val awgH3: Flow<String> = context.dataStore.data.map { it[AWG_H3] ?: "3" }
-    val awgH4: Flow<String> = context.dataStore.data.map { it[AWG_H4] ?: "4" }
-    val awgI1: Flow<String> = context.dataStore.data.map { it[AWG_I1] ?: DEFAULT_I1 }
-    val awgI2: Flow<String> = context.dataStore.data.map { it[AWG_I2] ?: "" }
-    val awgI3: Flow<String> = context.dataStore.data.map { it[AWG_I3] ?: "" }
-    val awgI4: Flow<String> = context.dataStore.data.map { it[AWG_I4] ?: "" }
-    val awgI5: Flow<String> = context.dataStore.data.map { it[AWG_I5] ?: "" }
-    val awgJunkLevel: Flow<Int> = context.dataStore.data.map { it[AWG_JUNK_LEVEL] ?: 0 }
+    val awgJc: Flow<Int> = dataStore.data.map { it[AWG_JC] ?: 3 }
+    val awgJmin: Flow<Int> = dataStore.data.map { it[AWG_JMIN] ?: 1 }
+    val awgJmax: Flow<Int> = dataStore.data.map { it[AWG_JMAX] ?: 3 }
+    val awgS1: Flow<Int> = dataStore.data.map { it[AWG_S1] ?: 0 }
+    val awgS2: Flow<Int> = dataStore.data.map { it[AWG_S2] ?: 0 }
+    val awgS3: Flow<Int> = dataStore.data.map { it[AWG_S3] ?: 0 }
+    val awgS4: Flow<Int> = dataStore.data.map { it[AWG_S4] ?: 0 }
+    val awgH1: Flow<String> = dataStore.data.map { it[AWG_H1] ?: "1" }
+    val awgH2: Flow<String> = dataStore.data.map { it[AWG_H2] ?: "2" }
+    val awgH3: Flow<String> = dataStore.data.map { it[AWG_H3] ?: "3" }
+    val awgH4: Flow<String> = dataStore.data.map { it[AWG_H4] ?: "4" }
+    val awgI1: Flow<String> = dataStore.data.map { it[AWG_I1] ?: DEFAULT_I1 }
+    val awgI2: Flow<String> = dataStore.data.map { it[AWG_I2] ?: "" }
+    val awgI3: Flow<String> = dataStore.data.map { it[AWG_I3] ?: "" }
+    val awgI4: Flow<String> = dataStore.data.map { it[AWG_I4] ?: "" }
+    val awgI5: Flow<String> = dataStore.data.map { it[AWG_I5] ?: "" }
+    val awgJunkLevel: Flow<Int> = dataStore.data.map { it[AWG_JUNK_LEVEL] ?: 0 }
 
     suspend fun setKillSwitch(enabled: Boolean) {
-        context.dataStore.edit { it[KILL_SWITCH] = enabled }
+        dataStore.edit { it[KILL_SWITCH] = enabled }
     }
 
     suspend fun setAutoConnect(enabled: Boolean) {
-        context.dataStore.edit { it[AUTO_CONNECT] = enabled }
+        dataStore.edit { it[AUTO_CONNECT] = enabled }
     }
 
     suspend fun setNotifications(enabled: Boolean) {
-        context.dataStore.edit { it[NOTIFICATIONS] = enabled }
+        dataStore.edit { it[NOTIFICATIONS] = enabled }
     }
 
     suspend fun setOtaUpdateFrequency(frequency: String) {
-        context.dataStore.edit { it[OTA_UPDATE_FREQUENCY] = frequency }
+        dataStore.edit { it[OTA_UPDATE_FREQUENCY] = frequency }
     }
 
     suspend fun setOtaLastCheckTime(time: Long) {
-        context.dataStore.edit { it[OTA_LAST_CHECK_TIME] = time }
+        dataStore.edit { it[OTA_LAST_CHECK_TIME] = time }
     }
 
     suspend fun setAppTheme(theme: ru.protonmod.next.ui.theme.AppTheme) {
-        context.dataStore.edit { it[APP_THEME] = theme.name }
+        dataStore.edit { it[APP_THEME] = theme.name }
     }
 
     suspend fun setServerLoadDisplayMode(mode: ServerLoadDisplayMode) {
-        context.dataStore.edit { it[SERVER_LOAD_DISPLAY_MODE] = mode.name }
+        dataStore.edit { it[SERVER_LOAD_DISPLAY_MODE] = mode.name }
     }
 
     suspend fun setSplitTunnelingEnabled(enabled: Boolean) {
-        context.dataStore.edit { it[SPLIT_TUNNELING_ENABLED] = enabled }
+        dataStore.edit { it[SPLIT_TUNNELING_ENABLED] = enabled }
     }
 
     suspend fun setSplitTunnelingMode(mode: String) {
-        context.dataStore.edit { it[SPLIT_TUNNELING_MODE] = mode }
+        dataStore.edit { it[SPLIT_TUNNELING_MODE] = mode }
     }
 
     suspend fun setExcludedApps(apps: Set<String>) {
-        context.dataStore.edit { it[EXCLUDED_APPS] = apps }
+        dataStore.edit { it[EXCLUDED_APPS] = apps }
     }
 
     suspend fun setExcludedIps(ips: Set<String>) {
-        context.dataStore.edit { it[EXCLUDED_IPS] = ips }
+        dataStore.edit { it[EXCLUDED_IPS] = ips }
     }
 
     suspend fun setExcludedDomains(domains: Set<String>) {
-        context.dataStore.edit { it[EXCLUDED_DOMAINS] = domains }
+        dataStore.edit { it[EXCLUDED_DOMAINS] = domains }
     }
 
     suspend fun setStShowSystemApps(enabled: Boolean) {
-        context.dataStore.edit { it[ST_SHOW_SYSTEM_APPS] = enabled }
+        dataStore.edit { it[ST_SHOW_SYSTEM_APPS] = enabled }
     }
 
     suspend fun setVpnPort(port: Int) {
-        context.dataStore.edit { it[VPN_PORT] = port }
+        dataStore.edit { it[VPN_PORT] = port }
     }
 
     suspend fun setCustomDns(dnsIp: String) {
-        context.dataStore.edit { it[CUSTOM_DNS] = dnsIp }
+        dataStore.edit { it[CUSTOM_DNS] = dnsIp }
     }
 
     suspend fun setApiBypassEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("api_bypass_enabled", enabled) }
-        context.dataStore.edit { it[API_BYPASS_ENABLED] = enabled }
+        dataStore.edit { it[API_BYPASS_ENABLED] = enabled }
     }
 
     suspend fun setApiBypassStrategy(strategy: String) {
         ProtonLogger.d("SettingsManager", "Setting strategy to: $strategy")
         prefs.edit { putString("api_bypass_strategy", strategy) }
-        context.dataStore.edit { it[API_BYPASS_STRATEGY] = strategy }
+        dataStore.edit { it[API_BYPASS_STRATEGY] = strategy }
     }
 
     suspend fun setByeDpiFlags(flags: String) {
         prefs.edit { putString("byedpi_flags", flags) }
-        context.dataStore.edit { it[BYEDPI_FLAGS] = flags }
+        dataStore.edit { it[BYEDPI_FLAGS] = flags }
     }
 
     suspend fun setByeDpiSni(sni: String) {
         prefs.edit { putString("byedpi_sni", sni) }
-        context.dataStore.edit { it[BYEDPI_SNI] = sni }
+        dataStore.edit { it[BYEDPI_SNI] = sni }
     }
 
     suspend fun setApiProxyHost(host: String) {
         prefs.edit { putString("api_proxy_host", host) }
-        context.dataStore.edit { it[API_PROXY_HOST] = host }
+        dataStore.edit { it[API_PROXY_HOST] = host }
     }
 
     suspend fun setApiProxyPort(port: Int) {
         prefs.edit { putInt("api_proxy_port", port) }
-        context.dataStore.edit { it[API_PROXY_PORT] = port }
+        dataStore.edit { it[API_PROXY_PORT] = port }
     }
 
     suspend fun setApiProxyType(type: String) {
         prefs.edit { putString("api_proxy_type", type) }
-        context.dataStore.edit { it[API_PROXY_TYPE] = type }
+        dataStore.edit { it[API_PROXY_TYPE] = type }
     }
 
     suspend fun setApiProxyUsername(username: String) {
         prefs.edit { putString("api_proxy_username", username) }
-        context.dataStore.edit { it[API_PROXY_USERNAME] = username }
+        dataStore.edit { it[API_PROXY_USERNAME] = username }
     }
 
     suspend fun setApiProxyPassword(password: String) {
         prefs.edit { putString("api_proxy_password", password) }
-        context.dataStore.edit { it[API_PROXY_PASSWORD] = password }
+        dataStore.edit { it[API_PROXY_PASSWORD] = password }
     }
 
     suspend fun setSpoofCountryEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("spoof_country_enabled", enabled) }
-        context.dataStore.edit { it[SPOOF_COUNTRY_ENABLED] = enabled }
+        dataStore.edit { it[SPOOF_COUNTRY_ENABLED] = enabled }
     }
 
     suspend fun setSpoofCountryNull(enabled: Boolean) {
         prefs.edit { putBoolean("spoof_country_null", enabled) }
-        context.dataStore.edit { it[SPOOF_COUNTRY_NULL] = enabled }
+        dataStore.edit { it[SPOOF_COUNTRY_NULL] = enabled }
     }
 
     suspend fun setSpoofCountryCode(code: String) {
         prefs.edit { putString("spoof_country_code", code) }
-        context.dataStore.edit { it[SPOOF_COUNTRY_CODE] = code }
+        dataStore.edit { it[SPOOF_COUNTRY_CODE] = code }
     }
 
     suspend fun setObfuscationEnabled(enabled: Boolean) {
-        context.dataStore.edit { it[OBFUSCATION_ENABLED] = enabled }
+        dataStore.edit { it[OBFUSCATION_ENABLED] = enabled }
     }
 
     suspend fun setObfuscationAdvancedMode(enabled: Boolean) {
-        context.dataStore.edit { it[OBFUSCATION_ADVANCED_MODE] = enabled }
+        dataStore.edit { it[OBFUSCATION_ADVANCED_MODE] = enabled }
     }
 
     suspend fun setAllowLanEnabled(enabled: Boolean) {
-        context.dataStore.edit { it[ALLOW_LAN_CONNECTIONS] = enabled }
+        dataStore.edit { it[ALLOW_LAN_CONNECTIONS] = enabled }
     }
 
     suspend fun setSelectedProfileId(id: String) {
-        context.dataStore.edit { it[SELECTED_PROFILE_ID] = id }
+        dataStore.edit { it[SELECTED_PROFILE_ID] = id }
     }
 
     suspend fun setAnalyticsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("analytics_enabled", enabled) }
-        context.dataStore.edit { it[ANALYTICS_ENABLED] = enabled }
+        dataStore.edit { it[ANALYTICS_ENABLED] = enabled }
         ProtonLogger.isAnalyticsEnabled = enabled
     }
 
     suspend fun setCrashReportsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("crash_reports_enabled", enabled) }
-        context.dataStore.edit { it[CRASH_REPORTS_ENABLED] = enabled }
+        dataStore.edit { it[CRASH_REPORTS_ENABLED] = enabled }
     }
 
     suspend fun setSentryPerformanceEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("sentry_performance_enabled", enabled) }
-        context.dataStore.edit { it[SENTRY_PERFORMANCE_ENABLED] = enabled }
+        dataStore.edit { it[SENTRY_PERFORMANCE_ENABLED] = enabled }
     }
 
     suspend fun setSentryNonFatalEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("sentry_non_fatal_enabled", enabled) }
-        context.dataStore.edit { it[SENTRY_NON_FATAL_ENABLED] = enabled }
+        dataStore.edit { it[SENTRY_NON_FATAL_ENABLED] = enabled }
         ProtonLogger.isNonFatalEnabled = enabled
     }
 
     suspend fun setSentrySessionReplayEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("sentry_session_replay_enabled", enabled) }
-        context.dataStore.edit { it[SENTRY_SESSION_REPLAY_ENABLED] = enabled }
+        dataStore.edit { it[SENTRY_SESSION_REPLAY_ENABLED] = enabled }
     }
 
     suspend fun setSentryAnrEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("sentry_anr_enabled", enabled) }
-        context.dataStore.edit { it[SENTRY_ANR_ENABLED] = enabled }
+        dataStore.edit { it[SENTRY_ANR_ENABLED] = enabled }
     }
 
     suspend fun setSentryMetricsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("sentry_metrics_enabled", enabled) }
-        context.dataStore.edit { it[SENTRY_METRICS_ENABLED] = enabled }
+        dataStore.edit { it[SENTRY_METRICS_ENABLED] = enabled }
     }
 
     suspend fun setSentryLogsEnabled(enabled: Boolean) {
         prefs.edit { putBoolean("sentry_logs_enabled", enabled) }
-        context.dataStore.edit { it[SENTRY_LOGS_ENABLED] = enabled }
+        dataStore.edit { it[SENTRY_LOGS_ENABLED] = enabled }
     }
 
     suspend fun setPolicyAcceptedVersion(version: Int) {
         ProtonLogger.d("SettingsManager", "Saving policy accepted version: $version")
-        context.dataStore.edit { it[POLICY_ACCEPTED_VERSION] = version }
+        dataStore.edit { it[POLICY_ACCEPTED_VERSION] = version }
         ProtonLogger.d("SettingsManager", "Policy accepted version saved.")
     }
 
     suspend fun setQuickConnectStrategy(strategy: String, targetId: String? = null) {
-        context.dataStore.edit { 
+        dataStore.edit { 
             it[QUICK_CONNECT_STRATEGY] = strategy
             if (targetId != null) {
                 it[QUICK_CONNECT_TARGET_ID] = targetId
@@ -522,15 +542,15 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun setIpHidden(hidden: Boolean) {
-        context.dataStore.edit { it[IP_HIDDEN] = hidden }
+        dataStore.edit { it[IP_HIDDEN] = hidden }
     }
 
     suspend fun setPauseEndTime(time: Long) {
-        context.dataStore.edit { it[PAUSE_END_TIME] = time }
+        dataStore.edit { it[PAUSE_END_TIME] = time }
     }
 
     suspend fun setSetupStep(step: SetupStep) {
-        context.dataStore.edit { it[SETUP_STEP] = step.name }
+        dataStore.edit { it[SETUP_STEP] = step.name }
     }
 
     suspend fun saveCustomProfiles(profiles: List<ObfuscationProfile>) {
@@ -560,7 +580,7 @@ class SettingsManager @Inject constructor(
             }
             array.put(obj)
         }
-        context.dataStore.edit { it[CUSTOM_PROFILES] = array.toString() }
+        dataStore.edit { it[CUSTOM_PROFILES] = array.toString() }
     }
 
     suspend fun setAwgParams(
@@ -569,7 +589,7 @@ class SettingsManager @Inject constructor(
         i1: String, i2: String = "", i3: String = "", i4: String = "", i5: String = "",
         junkLevel: Int = 3
     ) {
-        context.dataStore.edit {
+        dataStore.edit {
             it[AWG_JC] = jc
             it[AWG_JMIN] = jmin
             it[AWG_JMAX] = jmax
@@ -592,11 +612,11 @@ class SettingsManager @Inject constructor(
 
     suspend fun clearAll() {
         prefs.edit { clear() }
-        context.dataStore.edit { it.clear() }
+        dataStore.edit { it.clear() }
     }
 
     suspend fun getAllPreferences(): Map<String, String> {
-        val prefs = context.dataStore.data.first()
+        val prefs = dataStore.data.first()
         return prefs.asMap().entries.associate { (key, value) ->
             val stringValue = when (value) {
                 is Set<*> -> Json.encodeToString(value as Set<String>)
@@ -607,7 +627,7 @@ class SettingsManager @Inject constructor(
     }
 
     suspend fun importPreferences(preferences: Map<String, String>) {
-        context.dataStore.edit { settings ->
+        dataStore.edit { settings ->
             preferences.forEach { (keyName, value) ->
                 val key = findKey(keyName) ?: return@forEach
                 
