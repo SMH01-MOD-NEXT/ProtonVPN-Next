@@ -427,6 +427,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore.preferences.multiprocess)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.android.svg)
     implementation(libs.kotlinx.collections.immutable)
