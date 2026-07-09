@@ -171,7 +171,7 @@
     <string name="settings_custom_dns_title">Пользовательский DNS-сервер</string>
     <string name="settings_custom_dns_desc">Введите IPv4 или IPv6 адрес. Оставьте пустым, чтобы использовать безопасный DNS Proton по умолчанию.</string>
     <string name="settings_custom_dns_reset">Сбросить</string>
-    <string name="settings_custom_dns_placeholder">напр. 1.1.1.1, 8.8.8.8, 2001:4860:4860::8888</string>
+    <string name="settings_custom_dns_placeholder">напр. 1.1.1.1 или 94.140.14.14</string>
     <!-- Customization -->
     <string name="settings_customization">Кастомизация</string>
     <string name="settings_app_theme">Тема приложения</string>
@@ -269,11 +269,6 @@
     <string name="license_kotlin_title">Стандартная библиотека Kotlin</string>
     <string name="license_retrofit_title">Retrofit и OkHttp</string>
     <string name="license_room_title">База данных Room</string>
-    <string name="license_fsl_apache" translatable="false">Functional Source License, v1.1, Apache 2.0 Future License (FSL-1.1-Apache-2.0)</string>
-    <string name="license_mit" translatable="false">MIT License</string>
-    <string name="license_bouncycastle_title">Bouncy Castle Crypto API</string>
-    <string name="license_bcrypt_title">Библиотека BCrypt</string>
-    <string name="license_kotlinx_title">Библиотеки Kotlinx</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Режим раздельного туннелирования</string>
     <string name="st_mode_exclude">Режим исключения</string>
