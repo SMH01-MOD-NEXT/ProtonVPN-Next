@@ -538,4 +538,16 @@
     <string name="byedpi_test_desc">Протестуйте різні стратегії, щоб знайти найкращу для вашої мережі.</string>
     <string name="byedpi_auto_test_title">Оптимізація з\'єднання…</string>
     <string name="byedpi_auto_test_desc">Ми підбираємо найкращу стратегію підключення для вашого регіону.</string>
+    <!-- Extended Cert Settings -->
+    <string name="settings_cert_management">Керування сертифікатом</string>
+    <string name="settings_cert_management_desc">Керування налаштуваннями ротації та постійності VPN сертифіката.</string>
+    <string name="settings_extended_cert">Розширений сертифікат (1 рік)</string>
+    <string name="settings_extended_cert_enabled">Активний постійний сертифікат. Ротацію вимкнено.</string>
+    <string name="settings_extended_cert_disabled">Активний тимчасовий сертифікат. Регулярна ротація.</string>
+    <string name="settings_cert_current_header">ПОТОЧНИЙ СЕРТИФІКАТ</string>
+    <string name="settings_cert_id">ID сертифіката</string>
+    <string name="settings_cert_issued">Видано</string>
+    <string name="settings_cert_expires">Дійсний до</string>
+    <string name="settings_cert_loading">Завантаження...</string>
+    <string name="settings_cert_refresh_desc">Запросити новий сертифікат у Proton</string>
 </resources>
