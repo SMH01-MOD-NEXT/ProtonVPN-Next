@@ -529,4 +529,16 @@
     <string name="byedpi_test_desc">测试不同的策略以找到最适合您网络的策略。</string>
     <string name="byedpi_auto_test_title">正在优化连接…</string>
     <string name="byedpi_auto_test_desc">我们正在为您的地区寻找最佳连接策略。</string>
+    <!-- Extended Cert Settings -->
+    <string name="settings_cert_management">证书管理</string>
+    <string name="settings_cert_management_desc">管理您的VPN证书轮换和持久性设置。</string>
+    <string name="settings_extended_cert">扩展证书（1年）</string>
+    <string name="settings_extended_cert_enabled">持久证书已激活。轮换已禁用。</string>
+    <string name="settings_extended_cert_disabled">临时证书已激活。定期轮换。</string>
+    <string name="settings_cert_current_header">当前证书</string>
+    <string name="settings_cert_id">证书 ID</string>
+    <string name="settings_cert_issued">签发时间</string>
+    <string name="settings_cert_expires">到期时间</string>
+    <string name="settings_cert_loading">加载中...</string>
+    <string name="settings_cert_refresh_desc">向 Proton 请求新证书</string>
 </resources>
