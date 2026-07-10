@@ -532,4 +532,16 @@
     <string name="byedpi_test_desc">استراتژی‌های مختلف را تست کنید تا بهترین مورد را برای شبکه خود بیابید.</string>
     <string name="byedpi_auto_test_title">بهینه‌سازی اتصال…</string>
     <string name="byedpi_auto_test_desc">ما در حال یافتن بهترین استراتژی اتصال برای منطقه شما هستیم.</string>
+    <!-- Extended Cert Settings -->
+    <string name="settings_cert_management">مدیریت گواهینامه</string>
+    <string name="settings_cert_management_desc">تنظیمات چرخش و پایداری گواهینامه VPN خود را مدیریت کنید.</string>
+    <string name="settings_extended_cert">گواهینامه تمدید شده (1 ساله)</string>
+    <string name="settings_extended_cert_enabled">گواهینامه دائمی فعال است. چرخش غیرفعال شد.</string>
+    <string name="settings_extended_cert_disabled">گواهینامه موقت فعال است. به طور منظم می چرخد.</string>
+    <string name="settings_cert_current_header">گواهینامه فعلی</string>
+    <string name="settings_cert_id">شناسه گواهینامه</string>
+    <string name="settings_cert_issued">صادر شده</string>
+    <string name="settings_cert_expires">انقضا</string>
+    <string name="settings_cert_loading">در حال بارگذاری...</string>
+    <string name="settings_cert_refresh_desc">درخواست گواهینامه جدید از Proton</string>
 </resources>
