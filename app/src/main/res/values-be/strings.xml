@@ -538,4 +538,16 @@
     <string name="byedpi_test_desc">Пратэстуйце розныя стратэгіі, каб знайсці лепшую для вашай сеткі.</string>
     <string name="byedpi_auto_test_title">Аптымізацыя падключэння…</string>
     <string name="byedpi_auto_test_desc">Мы падбіраем лепшую стратэгію падключэння для вашага рэгіёна.</string>
+    <!-- Extended Cert Settings -->
+    <string name="settings_cert_management">Кіраванне сертыфікатам</string>
+    <string name="settings_cert_management_desc">Кіраванне наладамі ратацыі і сталасці VPN сертыфіката.</string>
+    <string name="settings_extended_cert">Пашыраны сертыфікат (1 год)</string>
+    <string name="settings_extended_cert_enabled">Актыўны сталы сертыфікат. Ратацыя адключана.</string>
+    <string name="settings_extended_cert_disabled">Актыўны часовы сертыфікат. Рэгулярная ратацыя.</string>
+    <string name="settings_cert_current_header">БЯГУЧЫ СЕРТЫФІКАТ</string>
+    <string name="settings_cert_id">ID сертыфіката</string>
+    <string name="settings_cert_issued">Выдадзены</string>
+    <string name="settings_cert_expires">Дзейнічае да</string>
+    <string name="settings_cert_loading">Загрузка...</string>
+    <string name="settings_cert_refresh_desc">Запытаць новы сертыфікат у Proton</string>
 </resources>
