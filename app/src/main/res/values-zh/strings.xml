@@ -541,4 +541,27 @@
     <string name="settings_cert_expires">到期时间</string>
     <string name="settings_cert_loading">加载中...</string>
     <string name="settings_cert_refresh_desc">向 Proton 请求新证书</string>
+    <!-- Dashboard redesign: statistics card & map overlays -->
+    <string name="stats_title_traffic">Traffic</string>
+    <string name="stats_title_analytics">Analytics</string>
+    <string name="stats_title_usage">Usage time</string>
+    <string name="stats_today">Today</string>
+    <string name="stats_month">Month</string>
+    <string name="stats_year">Year</string>
+    <string name="stats_live_connection">Live connection</string>
+    <string name="stats_daily_chart">Daily</string>
+    <string name="stats_monthly_chart">Monthly</string>
+    <string name="stats_yearly_chart">Yearly</string>
+    <string name="stats_disabled">Statistics are disabled</string>
+    <string name="stats_enable">Enable</string>
+    <string name="stats_toggle_desc">Toggle statistics collection</string>
+    <string name="stats_prev_desc">Previous slide</string>
+    <string name="stats_next_desc">Next slide</string>
+    <string name="dashboard_ip_address">IP address</string>
+    <string name="dashboard_protected">Protected</string>
+    <string name="dashboard_unprotected">Unprotected</string>
+    <string name="dashboard_connecting">Connecting</string>
+    <string name="dashboard_no_recents">No recent connections yet</string>
+    <string name="qc_lowest_load">Lowest load</string>
+    <string name="qc_last_used">Last used</string>
 </resources>
