@@ -39,6 +39,9 @@
     <string name="setup_initial_config">پیکربندی اولیه</string>
     <string name="setup_choose_connection">نحوه اتصال خود را انتخاب کنید</string>
     <string name="setup_hide_traffic">مخفی کردن ترافیک VPN از ارائه‌دهنده اینترنت (ISP)</string>
+    <string name="setup_telemetry_title">Telemetry preferences</string>
+    <string name="setup_telemetry_desc">Choose exactly which diagnostic data the Standard build may send. You can change every option later in Settings.</string>
+    <string name="setup_telemetry_default_note">Only crash reports and handled errors are enabled by default. Logs, analytics, metrics, performance traces, ANR detection and session replay require your explicit consent.</string>
     <string name="setup_complete_title">نصب کامل شد</string>
     <string name="setup_complete_desc">شما آماده‌اید تا به صورت ایمن و خصوصی مرور کنید.</string>
     <string name="setup_btn_finish">پایان</string>
