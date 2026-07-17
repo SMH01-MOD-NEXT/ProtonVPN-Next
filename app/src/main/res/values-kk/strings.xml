@@ -39,6 +39,9 @@
     <string name="setup_initial_config">Бастапқы конфигурация</string>
     <string name="setup_choose_connection">Қосылу әдісін таңдаңыз</string>
     <string name="setup_hide_traffic">VPN трафигін провайдерден жасыру</string>
+    <string name="setup_telemetry_title">Telemetry preferences</string>
+    <string name="setup_telemetry_desc">Choose exactly which diagnostic data the Standard build may send. You can change every option later in Settings.</string>
+    <string name="setup_telemetry_default_note">Only crash reports and handled errors are enabled by default. Logs, analytics, metrics, performance traces, ANR detection and session replay require your explicit consent.</string>
     <string name="setup_complete_title">Орнату аяқталды</string>
     <string name="setup_complete_desc">Сіз қауіпсіз және құпия шолуға дайынсыз.</string>
     <string name="setup_btn_finish">Аяқтау</string>
