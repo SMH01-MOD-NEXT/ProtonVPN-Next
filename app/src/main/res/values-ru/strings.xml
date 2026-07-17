@@ -39,6 +39,9 @@
     <string name="setup_initial_config">Начальная настройка</string>
     <string name="setup_choose_connection">Выберите способ подключения</string>
     <string name="setup_hide_traffic">Скрыть VPN-трафик от провайдера (ISP)</string>
+    <string name="setup_telemetry_title">Настройки телеметрии</string>
+    <string name="setup_telemetry_desc">Выберите, какие диагностические данные может отправлять Standard-версия. Все параметры можно изменить позже в настройках.</string>
+    <string name="setup_telemetry_default_note">По умолчанию включены только отчёты о сбоях и обработанных ошибках. Логи, аналитика, метрики, трассировка производительности, обнаружение ANR и повторы сеансов требуют явного согласия.</string>
     <string name="setup_complete_title">Настройка завершена</string>
     <string name="setup_complete_desc">Вы готовы к безопасному и приватному просмотру.</string>
     <string name="setup_btn_finish">Завершить</string>
