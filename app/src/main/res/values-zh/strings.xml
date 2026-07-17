@@ -39,6 +39,9 @@
     <string name="setup_initial_config">初始配置</string>
     <string name="setup_choose_connection">选择连接方式</string>
     <string name="setup_hide_traffic">对运营商 (ISP) 隐藏 VPN 流量</string>
+    <string name="setup_telemetry_title">Telemetry preferences</string>
+    <string name="setup_telemetry_desc">Choose exactly which diagnostic data the Standard build may send. You can change every option later in Settings.</string>
+    <string name="setup_telemetry_default_note">Only crash reports and handled errors are enabled by default. Logs, analytics, metrics, performance traces, ANR detection and session replay require your explicit consent.</string>
     <string name="setup_complete_title">设置完成</string>
     <string name="setup_complete_desc">您已准备好安全且私密地浏览。</string>
     <string name="setup_btn_finish">完成</string>
