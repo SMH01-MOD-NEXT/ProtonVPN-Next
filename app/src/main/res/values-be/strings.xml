@@ -309,7 +309,7 @@
     <string name="st_included_ips_header">Уключаныя IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адрасы пакуль не дададзены</string>
     <string name="st_remove_ip_desc">Выдаліць IP</string>
-    <string name="st_domain_hint">напрыклад, example.com</string>
+    <string name="st_domain_hint">напрыклад, example.com ці *.ru</string>
     <string name="st_add_domain_desc">Дадаць дамен</string>
     <string name="st_invalid_domain_error">Памылковы фармат дамена</string>
     <string name="st_excluded_domains_header">Выключаныя дамены (%1$d)</string>
@@ -633,7 +633,8 @@
     <string name="netshield_lists_never_updated">Спісы яшчэ не спампаваныя</string>
     <string name="netshield_lists_error">Не атрымалася абнавіць спісы: %1$s</string>
     <string name="netshield_update_lists">Абнаўленне спісаў</string>
-    <string name="netshield_saved_estimate_note">Статыстыка абнаўляецца кожныя пяць хвілін. Захаваныя даныя - гэта прыблізная інфармацыя, заснаваная на заблакіраваных запытах рэкламы і трэкераў.</string>
+    <string name="netshield_saved_estimate_note">Статыстыка абнаўляецца аўтаматычна. Захаваныя даныя — гэта прыблізная інфармацыя, заснаваная на заблакаваных запытах рэкламы і трэкераў.</string>
+    <string name="netshield_malware_blocked">Заблакавана шкоднасных даменаў</string>
     <string name="netshield_ads_blocked">Рэклама заблакіравана</string>
     <string name="netshield_trackers_blocked">Трэкеры спыніліся</string>
     <string name="netshield_data_saved">Дадзеныя захаваны</string>
