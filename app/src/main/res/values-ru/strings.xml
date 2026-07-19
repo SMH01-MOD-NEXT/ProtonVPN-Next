@@ -309,7 +309,7 @@
     <string name="st_included_ips_header">Включенные IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адреса еще не добавлены</string>
     <string name="st_remove_ip_desc">Удалить IP</string>
-    <string name="st_domain_hint">например, example.com</string>
+    <string name="st_domain_hint">например, example.com или *.ru</string>
     <string name="st_add_domain_desc">Добавить домен</string>
     <string name="st_invalid_domain_error">Неверный формат домена</string>
     <string name="st_excluded_domains_header">Исключенные домены (%1$d)</string>
@@ -633,7 +633,8 @@
     <string name="netshield_lists_never_updated">Списки ещё не загружены</string>
     <string name="netshield_lists_error">Не удалось обновить списки: %1$s</string>
     <string name="netshield_update_lists">Обновить списки</string>
-    <string name="netshield_saved_estimate_note">Статистика обновляется каждые пять минут. Сэкономленный трафик — оценка на основе заблокированных запросов рекламы и трекеров.</string>
+    <string name="netshield_saved_estimate_note">Статистика обновляется автоматически. Сэкономленный трафик — оценка на основе заблокированных запросов рекламы и трекеров.</string>
+    <string name="netshield_malware_blocked">Вредоносных доменов заблокировано</string>
     <string name="netshield_ads_blocked">Рекламы заблокировано</string>
     <string name="netshield_trackers_blocked">Трекеров остановлено</string>
     <string name="netshield_data_saved">Трафика сэкономлено</string>
