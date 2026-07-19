@@ -303,7 +303,7 @@
     <string name="st_included_ips_header">Қосылған IP-лер (%1$d)</string>
     <string name="st_no_ips_added">Әзірге IP мекенжайлары қосылмаған</string>
     <string name="st_remove_ip_desc">IP-ді алып тастау</string>
-    <string name="st_domain_hint">мысалы, example.com</string>
+    <string name="st_domain_hint">мысалы, example.com немесе *.ru</string>
     <string name="st_add_domain_desc">Домен қосу</string>
     <string name="st_invalid_domain_error">Домен форматы жарамсыз</string>
     <string name="st_excluded_domains_header">Алып тасталған домендер (%1$d)</string>
@@ -627,7 +627,8 @@
     <string name="netshield_lists_never_updated">Тізімдер әлі жүктелмеді</string>
     <string name="netshield_lists_error">Тізімдерді жаңарту мүмкін болмады: %1$s</string>
     <string name="netshield_update_lists">Тізімдерді жаңарту</string>
-    <string name="netshield_saved_estimate_note">Статистика әр бес минут сайын жаңартылады. Сақталған деректер – блокталған жарнама мен трекер сұрауларына негізделген болжам.</string>
+    <string name="netshield_saved_estimate_note">Статистика автоматты түрде жаңартылады. Үнемделген деректер — бұғатталған жарнама және трекер сұрауларына негізделген болжам.</string>
+    <string name="netshield_malware_blocked">Зиянды домендер бұғатталды</string>
     <string name="netshield_ads_blocked">Жарнамалар бұғатталған</string>
     <string name="netshield_trackers_blocked">Трекерлер тоқтады</string>
     <string name="netshield_data_saved">Деректер сақталды</string>
