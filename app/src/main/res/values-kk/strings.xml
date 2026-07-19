@@ -303,7 +303,7 @@
     <string name="st_included_ips_header">Қосылған IP-лер (%1$d)</string>
     <string name="st_no_ips_added">Әзірге IP мекенжайлары қосылмаған</string>
     <string name="st_remove_ip_desc">IP-ді алып тастау</string>
-    <string name="st_domain_hint">мысалы, example.com немесе *.ru</string>
+    <string name="st_domain_hint">мысалы, example.com немесе *.ru, *.рф</string>
     <string name="st_add_domain_desc">Домен қосу</string>
     <string name="st_invalid_domain_error">Домен форматы жарамсыз</string>
     <string name="st_excluded_domains_header">Алып тасталған домендер (%1$d)</string>
@@ -654,4 +654,6 @@
     <string name="verification_auto_reconnect_title">Автоматты қайта қосу</string>
     <string name="verification_auto_reconnect_desc">Анықталған ақаулықтан кейін туннельді қайта іске қосыңыз</string>
     <string name="verification_note">Растауды өшіру VPN шифрлауын өшірмейді. Ол тек белсенді қосылым тексерулерін және денсаулыққа негізделген қайта қосылымдарды өткізіп жібереді.</string>
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
 </resources>
