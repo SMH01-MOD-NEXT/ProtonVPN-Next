@@ -309,7 +309,7 @@
     <string name="st_included_ips_header">Включені IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адреси ще не додано</string>
     <string name="st_remove_ip_desc">Видалити IP</string>
-    <string name="st_domain_hint">напр. example.com або *.ru</string>
+    <string name="st_domain_hint">напр. example.com або *.ru, *.рф</string>
     <string name="st_add_domain_desc">Додати домен</string>
     <string name="st_invalid_domain_error">Неправильний формат домену</string>
     <string name="st_excluded_domains_header">Виключені домени (%1$d)</string>
@@ -660,4 +660,6 @@
     <string name="verification_auto_reconnect_title">Автоматичне повторне підключення</string>
     <string name="verification_auto_reconnect_desc">Перезапустіть тунель після виявлення збою</string>
     <string name="verification_note">Вимкнення перевірки не вимикає шифрування VPN. Він пропускає лише активні зонди підключення та повторне підключення на основі справності.</string>
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
 </resources>
