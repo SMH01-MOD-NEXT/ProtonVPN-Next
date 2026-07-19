@@ -300,7 +300,7 @@
     <string name="st_included_ips_header">包含的 IP (%1$d)</string>
     <string name="st_no_ips_added">尚未添加 IP 地址</string>
     <string name="st_remove_ip_desc">移除 IP</string>
-    <string name="st_domain_hint">例如 example.com 或 *.ru</string>
+    <string name="st_domain_hint">例如 example.com 或 *.ru, *.рф</string>
     <string name="st_add_domain_desc">添加域名</string>
     <string name="st_invalid_domain_error">无效的域名格式</string>
     <string name="st_excluded_domains_header">排除的域名 (%1$d)</string>
@@ -651,4 +651,6 @@
     <string name="verification_auto_reconnect_title">自动重新连接</string>
     <string name="verification_auto_reconnect_desc">检测到故障后重新启动隧道</string>
     <string name="verification_note">禁用验证不会禁用 VPN 加密。它仅跳过活动连接探测和基于运行状况的重新连接。</string>
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
 </resources>
