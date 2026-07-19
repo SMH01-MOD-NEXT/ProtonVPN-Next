@@ -309,7 +309,7 @@
     <string name="st_included_ips_header">Включені IP (%1$d)</string>
     <string name="st_no_ips_added">IP-адреси ще не додано</string>
     <string name="st_remove_ip_desc">Видалити IP</string>
-    <string name="st_domain_hint">напр. example.com</string>
+    <string name="st_domain_hint">напр. example.com або *.ru</string>
     <string name="st_add_domain_desc">Додати домен</string>
     <string name="st_invalid_domain_error">Неправильний формат домену</string>
     <string name="st_excluded_domains_header">Виключені домени (%1$d)</string>
@@ -633,7 +633,8 @@
     <string name="netshield_lists_never_updated">Списки ще не завантажені</string>
     <string name="netshield_lists_error">Не вдалося оновити списки: %1$s</string>
     <string name="netshield_update_lists">Оновити списки</string>
-    <string name="netshield_saved_estimate_note">Статистика оновлюється кожні п\'ять хвилин. Збережені дані – це оцінка на основі заблокованої реклами та запитів трекера.</string>
+    <string name="netshield_saved_estimate_note">Статистика оновлюється автоматично. Збережені дані — це оцінка на основі заблокованих запитів реклами та трекерів.</string>
+    <string name="netshield_malware_blocked">Заблоковано шкідливих доменів</string>
     <string name="netshield_ads_blocked">Оголошення заблоковано</string>
     <string name="netshield_trackers_blocked">Трекери зупинилися</string>
     <string name="netshield_data_saved">Дані збережено</string>
