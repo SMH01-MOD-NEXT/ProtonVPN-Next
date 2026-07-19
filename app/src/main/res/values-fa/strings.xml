@@ -303,7 +303,7 @@
     <string name="st_included_ips_header">IPهای گنجانده شده (%1$d)</string>
     <string name="st_no_ips_added">هنوز هیچ آدرس IP اضافه نشده است</string>
     <string name="st_remove_ip_desc">حذف IP</string>
-    <string name="st_domain_hint">مثلاً example.com یا *.ru</string>
+    <string name="st_domain_hint">مثلاً example.com یا *.ru, *.рф</string>
     <string name="st_add_domain_desc">افزودن دامنه</string>
     <string name="st_invalid_domain_error">فرمت دامنه نامعتبر است</string>
     <string name="st_excluded_domains_header">دامنه‌های حذف شده (%1$d)</string>
@@ -654,4 +654,6 @@
     <string name="verification_auto_reconnect_title">اتصال مجدد خودکار</string>
     <string name="verification_auto_reconnect_desc">پس از شناسایی خرابی، تونل را دوباره راه اندازی کنید</string>
     <string name="verification_note">غیرفعال کردن تأیید، رمزگذاری VPN را غیرفعال نمی کند. این فقط از کاوشگرهای اتصال فعال و اتصال مجدد مبتنی بر سلامت چشم پوشی می کند.</string>
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
 </resources>
