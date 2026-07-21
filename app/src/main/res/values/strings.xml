@@ -538,6 +538,8 @@
     <string name="captcha_title">Security Check</string>
     <string name="captcha_message">To keep your account secure, please complete the verification below.</string>
     <string name="captcha_proxy_active">Anti-blocking proxy is active</string>
+    <string name="captcha_webview_unavailable_title">WebView Not Available</string>
+    <string name="captcha_webview_unavailable_message">Android WebView is required to complete the security check. Please enable Android System WebView or Chrome in your device settings and try again.</string>
     <string name="desc_close">Close</string>
 
     <!-- Token Login & Session Management -->

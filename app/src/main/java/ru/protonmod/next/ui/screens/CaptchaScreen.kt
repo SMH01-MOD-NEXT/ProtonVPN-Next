@@ -18,6 +18,8 @@
 package ru.protonmod.next.ui.screens
 
 import android.annotation.SuppressLint
+import android.util.AndroidRuntimeException
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.RenderProcessGoneDetail
@@ -199,6 +201,7 @@ fun CaptchaScreen(
                     .weight(1f)
             ) {
                 var webView by remember { mutableStateOf<WebView?>(null) }
+                var webViewUnavailable by remember { mutableStateOf(false) }
 
                 val proxyBaseUrl = when (apiBypassStrategy) {
                     SettingsManager.STRATEGY_CLOUDFLARE -> "https://api.protonnext.qzz.io"
@@ -207,6 +210,7 @@ fun CaptchaScreen(
                 }
 
                 LaunchedEffect(webUrl, sessionId, webView) {
+                    if (webViewUnavailable) return@LaunchedEffect
                     val wv = webView ?: return@LaunchedEffect
 
                     // Normalize to direct URL so shouldInterceptRequest can match it
@@ -243,9 +247,34 @@ fun CaptchaScreen(
                     wv.loadUrl(optimizedUrl, extraHeaders)
                 }
 
+                if (webViewUnavailable) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(32.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.captcha_webview_unavailable_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = colors.textNorm,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = stringResource(R.string.captcha_webview_unavailable_message),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.textWeak
+                            )
+                        }
+                    }
+                } else {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { context ->
+                        try {
                         WebView(context).apply {
                             setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
@@ -435,9 +464,15 @@ fun CaptchaScreen(
                             }
                             webView = this
                         }
+                        } catch (e: AndroidRuntimeException) {
+                            ProtonLogger.e("CaptchaScreen", "WebView unavailable", e)
+                            webViewUnavailable = true
+                            View(context)
+                        }
                     },
                     update = { /* No-op */ }
                 )
+                } // end else (webViewUnavailable)
 
                 androidx.compose.animation.AnimatedVisibility(
                     visible = isLoading,
