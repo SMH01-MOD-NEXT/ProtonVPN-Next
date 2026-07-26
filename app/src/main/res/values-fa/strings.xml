@@ -39,6 +39,9 @@
     <string name="setup_initial_config">پیکربندی اولیه</string>
     <string name="setup_choose_connection">نحوه اتصال خود را انتخاب کنید</string>
     <string name="setup_hide_traffic">مخفی کردن ترافیک VPN از ارائه‌دهنده اینترنت (ISP)</string>
+    <string name="setup_telemetry_title">ترجیحات تله متری</string>
+    <string name="setup_telemetry_desc">دقیقاً انتخاب کنید که بیلد استاندارد کدام داده‌های تشخیصی را ارسال کند. بعداً می‌توانید همه گزینه‌ها را در تنظیمات تغییر دهید.</string>
+    <string name="setup_telemetry_default_note">فقط گزارش های خرابی و خطاهای رسیدگی شده به طور پیش فرض فعال هستند. گزارش‌ها، تجزیه و تحلیل‌ها، معیارها، ردیابی عملکرد، شناسایی ANR و پخش مجدد جلسه به رضایت صریح شما نیاز دارد.</string>
     <string name="setup_complete_title">نصب کامل شد</string>
     <string name="setup_complete_desc">شما آماده‌اید تا به صورت ایمن و خصوصی مرور کنید.</string>
     <string name="setup_btn_finish">پایان</string>
@@ -487,6 +490,11 @@
     <string name="battery_optimization_title">بهینه‌سازی باتری فعال است</string>
     <string name="battery_optimization_desc">اندروید ممکن است برای صرفه‌جویی در مصرف انرژی، VPN را قطع کند. لطفاً بهینه‌سازی را برای این برنامه غیرفعال کنید.</string>
     <string name="btn_fix">رفع مشکل</string>
+    <!-- Connection warnings -->
+    <string name="ipv6_blocked_title">اتصال IPv6 مسدود شده است</string>
+    <string name="ipv6_blocked_desc">این سرور فقط از طریق IPv6 قابل دسترسی است. IPv6 برای جلوگیری از نشت ترافیک غیرفعال است. لطفاً سرور دیگری را انتخاب کنید یا دوباره امتحان کنید.</string>
+    <string name="proxy_config_invalid_title">پیکربندی پروکسی نیاز به توجه دارد</string>
+    <string name="proxy_config_invalid_desc">زنجیره پراکسی فعال است، اما پیوند VLESS یا VMess نامعتبر است. پیوند را در تنظیمات برطرف کنید و دوباره وصل شوید.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">نسخه غیررسمی شناسایی شد!</string>
     <string name="tamper_warning_desc">این نسخه از Proton VPN-Next توسط یک شخص ثالث ناشناس اصلاح شده است. امنیت، حریم خصوصی و داده‌های شما در معرض خطر بسیار بالایی قرار دارند.</string>
@@ -544,14 +552,7 @@
     <string name="settings_cert_expires">انقضا</string>
     <string name="settings_cert_loading">در حال بارگذاری...</string>
     <string name="settings_cert_refresh_desc">درخواست گواهینامه جدید از Proton</string>
-
-    <string name="setup_telemetry_title">ترجیحات تله متری</string>
-    <string name="setup_telemetry_desc">دقیقاً انتخاب کنید که بیلد استاندارد کدام داده‌های تشخیصی را ارسال کند. بعداً می‌توانید همه گزینه‌ها را در تنظیمات تغییر دهید.</string>
-    <string name="setup_telemetry_default_note">فقط گزارش های خرابی و خطاهای رسیدگی شده به طور پیش فرض فعال هستند. گزارش‌ها، تجزیه و تحلیل‌ها، معیارها، ردیابی عملکرد، شناسایی ANR و پخش مجدد جلسه به رضایت صریح شما نیاز دارد.</string>
-    <string name="ipv6_blocked_title">اتصال IPv6 مسدود شده است</string>
-    <string name="ipv6_blocked_desc">این سرور فقط از طریق IPv6 قابل دسترسی است. IPv6 برای جلوگیری از نشت ترافیک غیرفعال است. لطفاً سرور دیگری را انتخاب کنید یا دوباره امتحان کنید.</string>
-    <string name="proxy_config_invalid_title">پیکربندی پروکسی نیاز به توجه دارد</string>
-    <string name="proxy_config_invalid_desc">زنجیره پراکسی فعال است، اما پیوند VLESS یا VMess نامعتبر است. پیوند را در تنظیمات برطرف کنید و دوباره وصل شوید.</string>
+    <!-- Dashboard redesign: statistics card & map overlays -->
     <string name="stats_title_traffic">ترافیک</string>
     <string name="stats_title_analytics">تجزیه و تحلیل</string>
     <string name="stats_title_usage">زمان استفاده</string>
@@ -631,7 +632,6 @@
     <string name="netshield_ads_blocked">تبلیغات مسدود شده است</string>
     <string name="netshield_trackers_blocked">ردیاب ها متوقف شدند</string>
     <string name="netshield_data_saved">داده ها ذخیره شد</string>
-
     <string name="verification_title">تأیید اتصال</string>
     <string name="verification_settings_subtitle">پروب ها، تشخیص شکست و اتصال مجدد خودکار</string>
     <string name="verification_description">کنترل کنید که برنامه چگونه یک تونل جدید را تأیید می کند، خرابی های اتصال را تشخیص می دهد و به طور خودکار دوباره وصل می شود.</string>
@@ -654,7 +654,8 @@
     <string name="verification_auto_reconnect_title">اتصال مجدد خودکار</string>
     <string name="verification_auto_reconnect_desc">پس از شناسایی خرابی، تونل را دوباره راه اندازی کنید</string>
     <string name="verification_note">غیرفعال کردن تأیید، رمزگذاری VPN را غیرفعال نمی کند. این فقط از کاوشگرهای اتصال فعال و اتصال مجدد مبتنی بر سلامت چشم پوشی می کند.</string>
-
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
     <string name="reconnect_required_title">برای اعمال تغییرات دوباره وصل شوید</string>
     <string name="reconnect_required_message">تنظیمات اتصال در حالی که VPN متصل است تغییر کرد. پیکربندی جدید پس از اتصال مجدد اعمال می‌شود.</string>
     <string name="reconnect_required_message_manual">تنظیمات اتصال در حالی که VPN متصل است تغییر کرد. پیکربندی جدید پس از قطع و وصل دوباره اعمال می‌شود.</string>
