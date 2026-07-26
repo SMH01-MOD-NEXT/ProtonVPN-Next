@@ -39,6 +39,9 @@
     <string name="setup_initial_config">Пачатковая канфігурацыя</string>
     <string name="setup_choose_connection">Выберыце спосаб падключэння</string>
     <string name="setup_hide_traffic">Схаваць VPN-трафік ад вашага правайдэра</string>
+    <string name="setup_telemetry_title">Параметры тэлеметрыі</string>
+    <string name="setup_telemetry_desc">Выберыце, якія менавіта дыягнастычныя даныя можа адпраўляць зборка Standard. Вы можаце змяніць усе параметры пазней у наладах.</string>
+    <string name="setup_telemetry_default_note">Па змаўчанні ўключаны толькі справаздачы аб збоях і апрацаваныя памылкі. Журналы, аналітыка, паказчыкі, адсочванне прадукцыйнасці, выяўленне ANR і прайграванне сеансу патрабуюць вашай відавочнай згоды.</string>
     <string name="setup_complete_title">Налада завершана</string>
     <string name="setup_complete_desc">Вы гатовыя да бяспечнага і прыватнага прагляду.</string>
     <string name="setup_btn_finish">Завяршыць</string>
@@ -493,6 +496,11 @@
     <string name="battery_optimization_title">Аптымізацыя батарэі актыўная</string>
     <string name="battery_optimization_desc">Android можа адключаць VPN для эканоміі энергіі. Адключыце аптымізацыю для гэтай праграмы.</string>
     <string name="btn_fix">Выправіць</string>
+    <!-- Connection warnings -->
+    <string name="ipv6_blocked_title">Злучэнне IPv6 заблакавана</string>
+    <string name="ipv6_blocked_desc">Гэты сервер даступны толькі праз IPv6. IPv6 адключаны, каб прадухіліць уцечку трафіку. Выберыце іншы сервер або паўтарыце спробу.</string>
+    <string name="proxy_config_invalid_title">Канфігурацыя проксі патрабуе ўвагі</string>
+    <string name="proxy_config_invalid_desc">Ланцужок проксі ўключаны, але спасылка VLESS або VMess несапраўдная. Выпраўце спасылку ў наладах і паўторна падключыцеся.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ВЫЯЎЛЕНА НЕАФІЦЫЙНАЯ ЗБОРКА!</string>
     <string name="tamper_warning_desc">Гэтая версія Proton VPN-Next была мадыфікавана невядомым рэсурсам. Ваша бяспека, прыватнасць і даныя знаходзяцца пад ВЫСОКАЙ ПАГРОЗАЙ.</string>
@@ -550,14 +558,7 @@
     <string name="settings_cert_expires">Дзейнічае да</string>
     <string name="settings_cert_loading">Загрузка...</string>
     <string name="settings_cert_refresh_desc">Запытаць новы сертыфікат у Proton</string>
-
-    <string name="setup_telemetry_title">Параметры тэлеметрыі</string>
-    <string name="setup_telemetry_desc">Выберыце, якія менавіта дыягнастычныя даныя можа адпраўляць зборка Standard. Вы можаце змяніць усе параметры пазней у наладах.</string>
-    <string name="setup_telemetry_default_note">Па змаўчанні ўключаны толькі справаздачы аб збоях і апрацаваныя памылкі. Журналы, аналітыка, паказчыкі, адсочванне прадукцыйнасці, выяўленне ANR і прайграванне сеансу патрабуюць вашай відавочнай згоды.</string>
-    <string name="ipv6_blocked_title">Злучэнне IPv6 заблакавана</string>
-    <string name="ipv6_blocked_desc">Гэты сервер даступны толькі праз IPv6. IPv6 адключаны, каб прадухіліць уцечку трафіку. Выберыце іншы сервер або паўтарыце спробу.</string>
-    <string name="proxy_config_invalid_title">Канфігурацыя проксі патрабуе ўвагі</string>
-    <string name="proxy_config_invalid_desc">Ланцужок проксі ўключаны, але спасылка VLESS або VMess несапраўдная. Выпраўце спасылку ў наладах і паўторна падключыцеся.</string>
+    <!-- Dashboard redesign: statistics card & map overlays -->
     <string name="stats_title_traffic">Рух</string>
     <string name="stats_title_analytics">Аналітыка</string>
     <string name="stats_title_usage">Час выкарыстання</string>
@@ -637,7 +638,6 @@
     <string name="netshield_ads_blocked">Рэклама заблакіравана</string>
     <string name="netshield_trackers_blocked">Трэкеры спыніліся</string>
     <string name="netshield_data_saved">Дадзеныя захаваны</string>
-
     <string name="verification_title">Праверка злучэння</string>
     <string name="verification_settings_subtitle">Зонды, выяўленне збояў і аўтаматычнае паўторнае падключэнне</string>
     <string name="verification_description">Кіруйце тым, як праграма правярае новы тунэль, выяўляе збой злучэння і аўтаматычна паўторна падключаецца.</string>
@@ -660,7 +660,8 @@
     <string name="verification_auto_reconnect_title">Аўтаматычнае паўторнае падключэнне</string>
     <string name="verification_auto_reconnect_desc">Перазапусціце тунэль пасля выяўленага збою</string>
     <string name="verification_note">Адключэнне праверкі не адключае шыфраванне VPN. Ён прапускае толькі актыўныя зонды падключэння і паўторнае падключэнне на аснове стану здароўя.</string>
-
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
     <string name="reconnect_required_title">Патрэбна перападключэнне</string>
     <string name="reconnect_required_message">Налады падключэння зменены, пакуль VPN актыўны. Новая канфігурацыя пачне дзейнічаць пасля перападключэння.</string>
     <string name="reconnect_required_message_manual">Налады падключэння зменены, пакуль VPN актыўны. Новая канфігурацыя пачне дзейнічаць пасля адключэння і паўторнага падключэння.</string>
