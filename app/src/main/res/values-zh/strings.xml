@@ -39,6 +39,9 @@
     <string name="setup_initial_config">初始配置</string>
     <string name="setup_choose_connection">选择连接方式</string>
     <string name="setup_hide_traffic">对运营商 (ISP) 隐藏 VPN 流量</string>
+    <string name="setup_telemetry_title">遥测首选项</string>
+    <string name="setup_telemetry_desc">准确选择标准版本可以发送哪些诊断数据。您可以稍后在“设置”中更改每个选项。</string>
+    <string name="setup_telemetry_default_note">默认情况下仅启用崩溃报告和已处理的错误。日志、分析、指标、性能跟踪、ANR 检测和会话重播需要您的明确同意。</string>
     <string name="setup_complete_title">设置完成</string>
     <string name="setup_complete_desc">您已准备好安全且私密地浏览。</string>
     <string name="setup_btn_finish">完成</string>
@@ -484,6 +487,11 @@
     <string name="battery_optimization_title">电池优化已开启</string>
     <string name="battery_optimization_desc">Android 可能会为了省电而断开 VPN。请为该应用禁用优化。</string>
     <string name="btn_fix">去设置</string>
+    <!-- Connection warnings -->
+    <string name="ipv6_blocked_title">IPv6 连接被阻止</string>
+    <string name="ipv6_blocked_desc">该服务器只能通过 IPv6 访问。 IPv6 被禁用以防止流量泄漏。请选择其他服务器或重试。</string>
+    <string name="proxy_config_invalid_title">代理配置需要注意的地方</string>
+    <string name="proxy_config_invalid_desc">代理链接已启用，但 VLESS 或 VMess 链接无效。修复“设置”中的链接并重新连接。</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">检测到非官方版本！</string>
     <string name="tamper_warning_desc">此版本的 Proton VPN-Next 已被未知的第三方修改。您的安全、隐私和数据正面临高度风险。</string>
@@ -541,14 +549,7 @@
     <string name="settings_cert_expires">到期时间</string>
     <string name="settings_cert_loading">加载中...</string>
     <string name="settings_cert_refresh_desc">向 Proton 请求新证书</string>
-
-    <string name="setup_telemetry_title">遥测首选项</string>
-    <string name="setup_telemetry_desc">准确选择标准版本可以发送哪些诊断数据。您可以稍后在“设置”中更改每个选项。</string>
-    <string name="setup_telemetry_default_note">默认情况下仅启用崩溃报告和已处理的错误。日志、分析、指标、性能跟踪、ANR 检测和会话重播需要您的明确同意。</string>
-    <string name="ipv6_blocked_title">IPv6 连接被阻止</string>
-    <string name="ipv6_blocked_desc">该服务器只能通过 IPv6 访问。 IPv6 被禁用以防止流量泄漏。请选择其他服务器或重试。</string>
-    <string name="proxy_config_invalid_title">代理配置需要注意的地方</string>
-    <string name="proxy_config_invalid_desc">代理链接已启用，但 VLESS 或 VMess 链接无效。修复“设置”中的链接并重新连接。</string>
+    <!-- Dashboard redesign: statistics card & map overlays -->
     <string name="stats_title_traffic">交通</string>
     <string name="stats_title_analytics">分析</string>
     <string name="stats_title_usage">使用时间</string>
@@ -628,7 +629,6 @@
     <string name="netshield_ads_blocked">广告被屏蔽</string>
     <string name="netshield_trackers_blocked">追踪器停止了</string>
     <string name="netshield_data_saved">数据已保存</string>
-
     <string name="verification_title">连接验证</string>
     <string name="verification_settings_subtitle">探针、故障检测和自动重新连接</string>
     <string name="verification_description">控制应用程序如何验证新隧道、检测连接故障以及自动重新连接。</string>
@@ -651,7 +651,8 @@
     <string name="verification_auto_reconnect_title">自动重新连接</string>
     <string name="verification_auto_reconnect_desc">检测到故障后重新启动隧道</string>
     <string name="verification_note">禁用验证不会禁用 VPN 加密。它仅跳过活动连接探测和基于运行状况的重新连接。</string>
-
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
     <string name="reconnect_required_title">重新连接以应用更改</string>
     <string name="reconnect_required_message">VPN 连接期间修改了连接设置。新配置将在重新连接后生效。</string>
     <string name="reconnect_required_message_manual">VPN 连接期间修改了连接设置。新配置将在断开并重新连接后生效。</string>
