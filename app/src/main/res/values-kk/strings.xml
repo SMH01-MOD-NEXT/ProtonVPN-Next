@@ -39,6 +39,9 @@
     <string name="setup_initial_config">Бастапқы конфигурация</string>
     <string name="setup_choose_connection">Қосылу әдісін таңдаңыз</string>
     <string name="setup_hide_traffic">VPN трафигін провайдерден жасыру</string>
+    <string name="setup_telemetry_title">Телеметриялық таңдаулар</string>
+    <string name="setup_telemetry_desc">Стандартты құрастыру жібере алатын диагностикалық деректерді дәл таңдаңыз. Әр опцияны кейінірек \"Параметрлер\" бөлімінен өзгертуге болады.</string>
+    <string name="setup_telemetry_default_note">Әдепкі бойынша тек бұзылу есептері мен өңделген қателер қосылады. Журналдар, аналитика, көрсеткіштер, өнімділік іздері, ANR анықтау және сеансты қайталау сіздің нақты келісіміңізді талап етеді.</string>
     <string name="setup_complete_title">Орнату аяқталды</string>
     <string name="setup_complete_desc">Сіз қауіпсіз және құпия шолуға дайынсыз.</string>
     <string name="setup_btn_finish">Аяқтау</string>
@@ -487,6 +490,11 @@
     <string name="battery_optimization_title">Батареяны оңтайландыру белсенді</string>
     <string name="battery_optimization_desc">Android қуатты үнемдеу үшін VPN-ді ажыратуы мүмкін. Осы қолданба үшін оңтайландыруды өшіріңіз.</string>
     <string name="btn_fix">Түзету</string>
+    <!-- Connection warnings -->
+    <string name="ipv6_blocked_title">IPv6 қосылымы блокталды</string>
+    <string name="ipv6_blocked_desc">Бұл серверге тек IPv6 арқылы қол жеткізуге болады. IPv6 трафиктің ағып кетуін болдырмау үшін өшірілген. Басқа серверді таңдаңыз немесе әрекетті қайталаңыз.</string>
+    <string name="proxy_config_invalid_title">Прокси конфигурациясына назар аудару қажет</string>
+    <string name="proxy_config_invalid_desc">Проксиді тізбектеу қосулы, бірақ VLESS немесе VMess сілтемесі жарамсыз. Параметрлердегі сілтемені түзетіп, қайта қосылыңыз.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">РЕСМИ ЕМЕС ЖИНАҚ АНЫҚТАЛДЫ!</string>
     <string name="tamper_warning_desc">Proton VPN-Next нұсқасын белгісіз үшінші тарап өзгерткен. Сіздің қауіпсіздігіңіз, құпиялылығыңыз бен деректеріңізге ЖОҒАРЫ ҚАУІП төніп тұр.</string>
@@ -544,14 +552,7 @@
     <string name="settings_cert_expires">Мерзімі аяқталады</string>
     <string name="settings_cert_loading">Жүктелуде...</string>
     <string name="settings_cert_refresh_desc">Proton-нан жаңа сертификат сұрау</string>
-
-    <string name="setup_telemetry_title">Телеметриялық таңдаулар</string>
-    <string name="setup_telemetry_desc">Стандартты құрастыру жібере алатын диагностикалық деректерді дәл таңдаңыз. Әр опцияны кейінірек "Параметрлер" бөлімінен өзгертуге болады.</string>
-    <string name="setup_telemetry_default_note">Әдепкі бойынша тек бұзылу есептері мен өңделген қателер қосылады. Журналдар, аналитика, көрсеткіштер, өнімділік іздері, ANR анықтау және сеансты қайталау сіздің нақты келісіміңізді талап етеді.</string>
-    <string name="ipv6_blocked_title">IPv6 қосылымы блокталды</string>
-    <string name="ipv6_blocked_desc">Бұл серверге тек IPv6 арқылы қол жеткізуге болады. IPv6 трафиктің ағып кетуін болдырмау үшін өшірілген. Басқа серверді таңдаңыз немесе әрекетті қайталаңыз.</string>
-    <string name="proxy_config_invalid_title">Прокси конфигурациясына назар аудару қажет</string>
-    <string name="proxy_config_invalid_desc">Проксиді тізбектеу қосулы, бірақ VLESS немесе VMess сілтемесі жарамсыз. Параметрлердегі сілтемені түзетіп, қайта қосылыңыз.</string>
+    <!-- Dashboard redesign: statistics card & map overlays -->
     <string name="stats_title_traffic">Жол қозғалысы</string>
     <string name="stats_title_analytics">Аналитика</string>
     <string name="stats_title_usage">Қолдану уақыты</string>
@@ -631,7 +632,6 @@
     <string name="netshield_ads_blocked">Жарнамалар бұғатталған</string>
     <string name="netshield_trackers_blocked">Трекерлер тоқтады</string>
     <string name="netshield_data_saved">Деректер сақталды</string>
-
     <string name="verification_title">Қосылымды тексеру</string>
     <string name="verification_settings_subtitle">Зондтар, ақауларды анықтау және автоматты қайта қосу</string>
     <string name="verification_description">Қолданбаның жаңа туннельді қалай тексеретінін, қосылым ақауларын анықтайтынын және автоматты түрде қайта қосылатынын басқарыңыз.</string>
@@ -654,7 +654,8 @@
     <string name="verification_auto_reconnect_title">Автоматты қайта қосу</string>
     <string name="verification_auto_reconnect_desc">Анықталған ақаулықтан кейін туннельді қайта іске қосыңыз</string>
     <string name="verification_note">Растауды өшіру VPN шифрлауын өшірмейді. Ол тек белсенді қосылым тексерулерін және денсаулыққа негізделген қайта қосылымдарды өткізіп жібереді.</string>
-
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
     <string name="reconnect_required_title">Қайта қосылу қажет</string>
     <string name="reconnect_required_message">VPN қосулы кезде қосылым параметрлері өзгертілді. Жаңа конфигурация қайта қосылғаннан кейін қолданылады.</string>
     <string name="reconnect_required_message_manual">VPN қосулы кезде қосылым параметрлері өзгертілді. Жаңа конфигурация ажыратып, қайта қосылғаннан кейін қолданылады.</string>
