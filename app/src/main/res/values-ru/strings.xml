@@ -174,7 +174,7 @@
     <string name="settings_custom_dns_title">Пользовательский DNS-сервер</string>
     <string name="settings_custom_dns_desc">Введите IPv4 или IPv6 адрес. Оставьте пустым, чтобы использовать безопасный DNS Proton по умолчанию.</string>
     <string name="settings_custom_dns_reset">Сбросить</string>
-    <string name="settings_custom_dns_placeholder">напр. 1.1.1.1, 8.8.8.8, 2001:4860:4860::8888</string>
+    <string name="settings_custom_dns_placeholder">напр. 1.1.1.1 или 94.140.14.14</string>
     <!-- Customization -->
     <string name="settings_customization">Кастомизация</string>
     <string name="settings_app_theme">Тема приложения</string>
@@ -272,11 +272,6 @@
     <string name="license_kotlin_title">Стандартная библиотека Kotlin</string>
     <string name="license_retrofit_title">Retrofit и OkHttp</string>
     <string name="license_room_title">База данных Room</string>
-    <string name="license_fsl_apache" translatable="false">Functional Source License, v1.1, Apache 2.0 Future License (FSL-1.1-Apache-2.0)</string>
-    <string name="license_mit" translatable="false">MIT License</string>
-    <string name="license_bouncycastle_title">Bouncy Castle Crypto API</string>
-    <string name="license_bcrypt_title">Библиотека BCrypt</string>
-    <string name="license_kotlinx_title">Библиотеки Kotlinx</string>
     <!-- Split Tunneling -->
     <string name="settings_st_mode">Режим раздельного туннелирования</string>
     <string name="st_mode_exclude">Режим исключения</string>
@@ -586,6 +581,8 @@
     <string name="dashboard_no_recents">Недавних подключений пока нет</string>
     <string name="qc_lowest_load">Наименьшая нагрузка</string>
     <string name="qc_last_used">Последнее использованное</string>
+    <string name="vpn_session_name">Proton VPN-Next (AWGBox)</string>
+    <string name="notification_channel_silent_name">Статус VPN (без звука)</string>
     <string name="obfuscation_transport_mode">Защита подключения</string>
     <string name="obfuscation_transport_awg">Параметры AWG</string>
     <string name="obfuscation_transport_proxy_chain">Цепочка прокси</string>
@@ -618,7 +615,6 @@
     <string name="proxy_chain_drag">Изменить порядок прокси</string>
     <string name="proxy_chain_proton_server">Сервер Proton</string>
     <string name="proxy_chain_proton_server_desc">Здесь устанавливается зашифрованный туннель AWG.</string>
-
     <string name="netshield_title">NetShield</string>
     <string name="netshield_settings_subtitle">Локальная блокировка вредоносных сайтов, рекламы и трекеров</string>
     <string name="netshield_description">NetShield локально блокирует нежелательные домены внутри VPN-туннеля. История DNS-запросов не сохраняется.</string>
@@ -642,10 +638,6 @@
     <string name="netshield_ads_blocked">Рекламы заблокировано</string>
     <string name="netshield_trackers_blocked">Трекеров остановлено</string>
     <string name="netshield_data_saved">Трафика сэкономлено</string>
-
-    <string name="vpn_session_name">Proton VPN-Next (AWGBox)</string>
-    <string name="notification_channel_silent_name">Статус VPN (без звука)</string>
-
     <string name="verification_title">Проверка подключения</string>
     <string name="verification_settings_subtitle">Проверки, обнаружение отвалов и автореконнекты</string>
     <string name="verification_description">Настройте проверку нового туннеля, обнаружение обрывов подключения и автоматические переподключения.</string>
@@ -670,7 +662,6 @@
     <string name="verification_note">Отключение проверки не отключает шифрование VPN. Оно лишь пропускает активные проверки доступности и переподключения по состоянию туннеля.</string>
     <string name="settings_tor_mode">Режим Tor</string>
     <string name="settings_tor_mode_desc">Направлять трафик VPN через Tor. Пока режим активен, UDP-трафик блокируется.</string>
-
     <string name="reconnect_required_title">Нужно переподключение</string>
     <string name="reconnect_required_message">Настройки подключения изменены во время активного VPN. Новая конфигурация применится после переподключения.</string>
     <string name="reconnect_required_message_manual">Настройки подключения изменены во время активного VPN. Новая конфигурация применится после отключения и повторного подключения.</string>
