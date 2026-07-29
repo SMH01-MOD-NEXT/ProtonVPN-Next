@@ -39,6 +39,9 @@
     <string name="setup_initial_config">Початкова конфігурація</string>
     <string name="setup_choose_connection">Оберіть спосіб підключення</string>
     <string name="setup_hide_traffic">Приховати VPN-трафік від вашого провайдера</string>
+    <string name="setup_telemetry_title">Параметри телеметрії</string>
+    <string name="setup_telemetry_desc">Виберіть, які саме діагностичні дані може надсилати збірка Standard. Ви можете змінити кожен параметр пізніше в налаштуваннях.</string>
+    <string name="setup_telemetry_default_note">За умовчанням увімкнено лише звіти про збої та оброблені помилки. Журнали, аналітика, показники, відстеження продуктивності, виявлення ANR і відтворення сеансу потребують вашої явної згоди.</string>
     <string name="setup_complete_title">Налаштування завершено</string>
     <string name="setup_complete_desc">Ви готові до безпечного та приватного перегляду.</string>
     <string name="setup_btn_finish">Завершити</string>
@@ -441,6 +444,8 @@
     <string name="captcha_title">Перевірка на людяність</string>
     <string name="captcha_message">Для забезпечення безпеки акаунта, будь ласка, пройдіть перевірку нижче.</string>
     <string name="captcha_proxy_active">Антиблокувальний проксі активний</string>
+    <string name="captcha_webview_missing_title">Verification unavailable</string>
+    <string name="captcha_webview_missing_message">Android System WebView is missing or is being updated on this device, so the security check cannot be displayed. Install or enable it in system settings, then try again.</string>
     <string name="desc_close">Закрити</string>
     <!-- Token Login & Session Management -->
     <string name="btn_login_tokens">Вхід за токенами</string>
@@ -493,6 +498,11 @@
     <string name="battery_optimization_title">Оптимізація батареї активна</string>
     <string name="battery_optimization_desc">Android може відключати VPN для економії енергії. Будь ласка, вимкніть оптимізацію для цього додатка.</string>
     <string name="btn_fix">Виправити</string>
+    <!-- Connection warnings -->
+    <string name="ipv6_blocked_title">З’єднання IPv6 заблоковано</string>
+    <string name="ipv6_blocked_desc">Цей сервер доступний лише через IPv6. IPv6 вимкнено, щоб запобігти витоку трафіку. Виберіть інший сервер або повторіть спробу.</string>
+    <string name="proxy_config_invalid_title">Конфігурація проксі потребує уваги</string>
+    <string name="proxy_config_invalid_desc">З’єднання проксі-серверів увімкнено, але посилання VLESS або VMess недійсне. Виправте посилання в налаштуваннях і повторно підключіться.</string>
     <!-- Anti-Tamper / Scary Warning -->
     <string name="tamper_warning_title">ВИЯВЛЕНО НЕОФІЦІЙНУ ЗБІРКУ!</string>
     <string name="tamper_warning_desc">Ця версія Proton VPN-Next була модифікована невідомою третьою стороною. Ваша безпека, конфіденційність та дані знаходяться під ВИСОКИМ РИЗИКОМ.</string>
@@ -550,14 +560,7 @@
     <string name="settings_cert_expires">Дійсний до</string>
     <string name="settings_cert_loading">Завантаження...</string>
     <string name="settings_cert_refresh_desc">Запросити новий сертифікат у Proton</string>
-
-    <string name="setup_telemetry_title">Параметри телеметрії</string>
-    <string name="setup_telemetry_desc">Виберіть, які саме діагностичні дані може надсилати збірка Standard. Ви можете змінити кожен параметр пізніше в налаштуваннях.</string>
-    <string name="setup_telemetry_default_note">За умовчанням увімкнено лише звіти про збої та оброблені помилки. Журнали, аналітика, показники, відстеження продуктивності, виявлення ANR і відтворення сеансу потребують вашої явної згоди.</string>
-    <string name="ipv6_blocked_title">З’єднання IPv6 заблоковано</string>
-    <string name="ipv6_blocked_desc">Цей сервер доступний лише через IPv6. IPv6 вимкнено, щоб запобігти витоку трафіку. Виберіть інший сервер або повторіть спробу.</string>
-    <string name="proxy_config_invalid_title">Конфігурація проксі потребує уваги</string>
-    <string name="proxy_config_invalid_desc">З’єднання проксі-серверів увімкнено, але посилання VLESS або VMess недійсне. Виправте посилання в налаштуваннях і повторно підключіться.</string>
+    <!-- Dashboard redesign: statistics card & map overlays -->
     <string name="stats_title_traffic">трафік</string>
     <string name="stats_title_analytics">Аналітика</string>
     <string name="stats_title_usage">Час використання</string>
@@ -637,7 +640,6 @@
     <string name="netshield_ads_blocked">Оголошення заблоковано</string>
     <string name="netshield_trackers_blocked">Трекери зупинилися</string>
     <string name="netshield_data_saved">Дані збережено</string>
-
     <string name="verification_title">Перевірка підключення</string>
     <string name="verification_settings_subtitle">Зонди, виявлення збоїв і автоматичне повторне підключення</string>
     <string name="verification_description">Керуйте тим, як програма перевіряє новий тунель, виявляє збої підключення та автоматично повторює підключення.</string>
@@ -660,7 +662,8 @@
     <string name="verification_auto_reconnect_title">Автоматичне повторне підключення</string>
     <string name="verification_auto_reconnect_desc">Перезапустіть тунель після виявлення збою</string>
     <string name="verification_note">Вимкнення перевірки не вимикає шифрування VPN. Він пропускає лише активні зонди підключення та повторне підключення на основі справності.</string>
-
+    <string name="settings_tor_mode">Tor mode</string>
+    <string name="settings_tor_mode_desc">Route VPN traffic through Tor. UDP is blocked while this mode is active.</string>
     <string name="reconnect_required_title">Потрібне перепідключення</string>
     <string name="reconnect_required_message">Налаштування підключення змінено, поки VPN активний. Нова конфігурація застосується після перепідключення.</string>
     <string name="reconnect_required_message_manual">Налаштування підключення змінено, поки VPN активний. Нова конфігурація застосується після відключення та повторного підключення.</string>
