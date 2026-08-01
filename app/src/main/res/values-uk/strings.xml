@@ -686,7 +686,6 @@
     <string name="reconnect_required_dont_show_again">Більше не показувати</string>
     <string name="settings_reconnect_hint">Нагадування про перепідключення</string>
     <string name="settings_reconnect_hint_desc">Попереджати, що змінені налаштування підключення застосовуються лише після перепідключення</string>
-
     <!-- AI Mode -->
     <string name="settings_ai">AI</string>
     <string name="settings_ai_desc">Експериментальний AI асистент для керування додатком</string>

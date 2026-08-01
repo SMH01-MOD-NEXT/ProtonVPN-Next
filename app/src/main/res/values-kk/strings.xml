@@ -680,7 +680,6 @@
     <string name="reconnect_required_dont_show_again">Бұдан былай көрсетілмесін</string>
     <string name="settings_reconnect_hint">Қайта қосылу туралы ескерту</string>
     <string name="settings_reconnect_hint_desc">Өзгертілген қосылым параметрлері тек қайта қосылғаннан кейін қолданылатынын ескерту</string>
-
     <!-- AI Mode -->
     <string name="settings_ai">AI</string>
     <string name="settings_ai_desc">Қолданбаны басқаруға арналған эксперименталды AI ассистенті</string>
