@@ -233,6 +233,19 @@
     <string name="obfuscation_i3">بیهوده خاص (I3)</string>
     <string name="obfuscation_i4">بیهوده خاص (I4)</string>
     <string name="obfuscation_i5">بیهوده خاص (I5)</string>
+    <string name="obfuscation_hp_key">کلید محافظت از هدر</string>
+    <string name="obfuscation_hp_key_desc">فیلدهای هدر با آنتروپی پایین را رمزگذاری می‌کند. به S1-S4 ≥ 12 نیاز دارد.</string>
+    <string name="obfuscation_hp_generate">تولید کلید</string>
+    <string name="obfuscation_cp_addition">افزودن پدینگ محتوا</string>
+    <string name="obfuscation_cp_addition_desc">نویز تصادفی اضافه شده به هر بسته داده (از محدوده هایی مانند 0-100 پشتیبانی می کند).</string>
+    <string name="obfuscation_rekey_after">زمان پس از کلیدگذاری مجدد (Rekey After)</string>
+    <string name="obfuscation_rekey_timeout">مهلت زمانی کلیدگذاری مجدد (Rekey Timeout)</string>
+    <string name="obfuscation_reject_after">زمان پس از رد کردن (Reject After)</string>
+    <string name="obfuscation_keepalive_timeout">مهلت زمانی Keepalive</string>
+    <string name="obfuscation_max_handshake">حداکثر تلاش برای دست‌دادن (Handshake)</string>
+    <string name="obfuscation_persistent_keepalive">بازه زمانی Keepalive</string>
+    <string name="obfuscation_range_hint">از محدوده‌ها پشتیبانی می‌کند (مثلاً ۲۰-۳۰)</string>
+    <string name="obfuscation_hp_warning">محافظت از هدر نیاز دارد که پدینگ S1-S4 حداقل ۱۲ باشد.</string>
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">آسان</string>
     <string name="obfuscation_mode_advanced">پیشرفته</string>
@@ -259,6 +272,8 @@
     <string name="obfuscation_category_magic">اندازه‌های بسته (جادو)</string>
     <string name="obfuscation_category_headers">هدرها</string>
     <string name="obfuscation_category_advanced">پیشرفته</string>
+    <string name="obfuscation_category_mimicry">Mimicry &amp; Protection</string>
+    <string name="obfuscation_category_timings">Timings (Ranges)</string>
     <string name="custom_config">پیکربندی سفارشی</string>
     <!-- About App Screen -->
     <string name="about_community">انجمن</string>
