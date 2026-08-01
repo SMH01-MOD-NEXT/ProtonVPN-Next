@@ -680,4 +680,24 @@
     <string name="reconnect_required_dont_show_again">دیگر نمایش نده</string>
     <string name="settings_reconnect_hint">یادآوری اتصال مجدد</string>
     <string name="settings_reconnect_hint_desc">هشدار بده که تنظیمات تغییریافتهٔ اتصال فقط پس از اتصال مجدد اعمال می‌شوند</string>
+
+    <!-- AI Mode -->
+    <string name="settings_ai">هوش مصنوعی</string>
+    <string name="settings_ai_desc">دستیار هوش مصنوعی آزمایشی برای کنترل برنامه</string>
+    <string name="ai_settings_title">تنظیمات هوش مصنوعی</string>
+    <string name="ai_mode_title">حالت هوش مصنوعی</string>
+    <string name="ai_mode_desc">دستیار هوش مصنوعی را فعال کنید تا به شما در پیکربندی برنامه کمک کند</string>
+    <string name="ai_provider">ارائه‌دهنده هوش مصنوعی</string>
+    <string name="ai_model">مدل هوش مصنوعی</string>
+    <string name="ai_api_key">کلید API</string>
+    <string name="ai_bypass_blocks">دور زدن مسدودسازی هوش مصنوعی (روسیه)</string>
+    <string name="ai_bypass_blocks_desc">استفاده از DNS اختصاصی برای دسترسی به APIهای هوش مصنوعی در مناطق محدود شده</string>
+    <string name="ai_byok_desc">در حال حاضر از حالت Bring Your Own Key (BYOK) پشتیبانی می‌کند.</string>
+    <string name="ai_hint_api_key">کلید API خود را برای ارائه‌دهنده انتخاب شده وارد کنید.</string>
+    <string name="ai_hint_long_press">برای باز کردن نوار فرمان هوش مصنوعی، روی نوار ناوبری طولانی فشار دهید.</string>
+    <string name="ai_input_hint">چیزی بپرسید (مثلاً "پورت را به 1194 تغییر بده")</string>
+    <string name="ai_error_no_key">لطفاً یک کلید API در تنظیمات هوش مصنوعی تنظیم کنید.</string>
+    <string name="ai_processing">در حال پردازش…</string>
+    <string name="ai_success">انجام شد!</string>
+    <string name="ai_error_generic">خطای هوش مصنوعی رخ داد</string>
 </resources>

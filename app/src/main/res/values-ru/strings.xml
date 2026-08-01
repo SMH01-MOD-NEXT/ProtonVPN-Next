@@ -694,10 +694,13 @@
     <string name="ai_mode_title">Режим AI</string>
     <string name="ai_mode_desc">Включите AI ассистента, чтобы он помогал вам настраивать приложение</string>
     <string name="ai_provider">Провайдер AI</string>
+    <string name="ai_model">Модель AI</string>
     <string name="ai_api_key">API Ключ</string>
+    <string name="ai_bypass_blocks">Обход блокировок AI (РФ)</string>
+    <string name="ai_bypass_blocks_desc">Использовать спец. DNS для доступа к AI API в регионах с ограничениями</string>
     <string name="ai_byok_desc">На данный момент поддерживается только режим Bring Your Own Key (BYOK).</string>
     <string name="ai_hint_api_key">Введите ваш API ключ для выбранного провайдера.</string>
-    <string name="ai_hint_swipe">Свайпните вниз от верхней части экрана, чтобы открыть панель команд AI.</string>
+    <string name="ai_hint_long_press">Удерживайте палец на панели навигации, чтобы открыть панель команд AI.</string>
     <string name="ai_input_hint">Спросите что-нибудь (например, \"смени порт на 1194\")</string>
     <string name="ai_error_no_key">Пожалуйста, установите API ключ в настройках AI.</string>
     <string name="ai_processing">Обработка…</string>

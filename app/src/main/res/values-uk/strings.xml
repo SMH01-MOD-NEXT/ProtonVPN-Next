@@ -686,4 +686,24 @@
     <string name="reconnect_required_dont_show_again">Більше не показувати</string>
     <string name="settings_reconnect_hint">Нагадування про перепідключення</string>
     <string name="settings_reconnect_hint_desc">Попереджати, що змінені налаштування підключення застосовуються лише після перепідключення</string>
+
+    <!-- AI Mode -->
+    <string name="settings_ai">AI</string>
+    <string name="settings_ai_desc">Експериментальний AI асистент для керування додатком</string>
+    <string name="ai_settings_title">Налаштування AI</string>
+    <string name="ai_mode_title">Режим AI</string>
+    <string name="ai_mode_desc">Увімкніть AI асистента, щоб він допомагав вам налаштовувати додаток</string>
+    <string name="ai_provider">Провайдер AI</string>
+    <string name="ai_model">Модель AI</string>
+    <string name="ai_api_key">API Ключ</string>
+    <string name="ai_bypass_blocks">Обіхід блокувань AI (РФ)</string>
+    <string name="ai_bypass_blocks_desc">Використовувати спец. DNS для доступу до AI API у регіонах з обмеженнями</string>
+    <string name="ai_byok_desc">На даний момент підтримується лише режим Bring Your Own Key (BYOK).</string>
+    <string name="ai_hint_api_key">Введіть ваш API ключ для обраного провайдера.</string>
+    <string name="ai_hint_long_press">Утримуйте палець на панелі навігації, щоб відкрити панель команд AI.</string>
+    <string name="ai_input_hint">Запитайте щось (наприклад, \"зміни порт на 1194\")</string>
+    <string name="ai_error_no_key">Будь ласка, встановіть API ключ у налаштуваннях AI.</string>
+    <string name="ai_processing">Обробка…</string>
+    <string name="ai_success">Готово!</string>
+    <string name="ai_error_generic">Сталася помилка AI</string>
 </resources>

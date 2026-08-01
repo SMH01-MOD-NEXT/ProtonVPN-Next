@@ -671,7 +671,7 @@ private fun AiSettingsSection(
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_ai)) {
         SettingRowWithIcon(
-            icon = Icons.Rounded.SmartToy,
+            icon = Icons.Rounded.AutoAwesome,
             title = stringResource(R.string.ai_settings_title),
             subtitle = if (state.aiEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
             onClick = { onNavigateToAiSettings?.invoke() }

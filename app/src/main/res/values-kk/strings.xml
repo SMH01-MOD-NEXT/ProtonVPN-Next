@@ -680,4 +680,24 @@
     <string name="reconnect_required_dont_show_again">Бұдан былай көрсетілмесін</string>
     <string name="settings_reconnect_hint">Қайта қосылу туралы ескерту</string>
     <string name="settings_reconnect_hint_desc">Өзгертілген қосылым параметрлері тек қайта қосылғаннан кейін қолданылатынын ескерту</string>
+
+    <!-- AI Mode -->
+    <string name="settings_ai">AI</string>
+    <string name="settings_ai_desc">Қолданбаны басқаруға арналған эксперименталды AI ассистенті</string>
+    <string name="ai_settings_title">AI параметрлері</string>
+    <string name="ai_mode_title">AI режимі</string>
+    <string name="ai_mode_desc">Қолданбаны конфигурациялауға көмектесу үшін AI ассистентін қосыңыз</string>
+    <string name="ai_provider">AI провайдері</string>
+    <string name="ai_model">AI моделі</string>
+    <string name="ai_api_key">API кілті</string>
+    <string name="ai_bypass_blocks">AI блоктарын айналып өту (РФ)</string>
+    <string name="ai_bypass_blocks_desc">Шектеулі аймақтарда AI API-леріне қол жеткізу үшін арнайы DNS пайдаланыңыз</string>
+    <string name="ai_byok_desc">Қазіргі уақытта Bring Your Own Key (BYOK) режимін қолдайды.</string>
+    <string name="ai_hint_api_key">Таңдалған провайдер үшін API кілтін енгізіңіз.</string>
+    <string name="ai_hint_long_press">AI командалық панелін ашу үшін шарлау панелін ұзақ басып тұрыңыз.</string>
+    <string name="ai_input_hint">Бірдеңе сұраңыз (мысалы, \"портты 1194-ке өзгерт\")</string>
+    <string name="ai_error_no_key">AI параметрлерінде API кілтін орнатыңыз.</string>
+    <string name="ai_processing">Өңделуде…</string>
+    <string name="ai_success">Дайын!</string>
+    <string name="ai_error_generic">AI қатесі орын алды</string>
 </resources>

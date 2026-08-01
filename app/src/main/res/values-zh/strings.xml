@@ -677,4 +677,24 @@
     <string name="reconnect_required_dont_show_again">不再显示</string>
     <string name="settings_reconnect_hint">重连提醒</string>
     <string name="settings_reconnect_hint_desc">提醒更改后的连接设置仅在重新连接后生效</string>
+
+    <!-- AI Mode -->
+    <string name="settings_ai">AI</string>
+    <string name="settings_ai_desc">用于应用控制的实验性 AI 助手</string>
+    <string name="ai_settings_title">AI 设置</string>
+    <string name="ai_mode_title">AI 模式</string>
+    <string name="ai_mode_desc">启用 AI 助手以帮助您配置应用</string>
+    <string name="ai_provider">AI 提供商</string>
+    <string name="ai_model">AI 模型</string>
+    <string name="ai_api_key">API 密钥</string>
+    <string name="ai_bypass_blocks">绕过 AI 屏蔽 (俄罗斯)</string>
+    <string name="ai_bypass_blocks_desc">使用专用 DNS 在受限地区访问 AI API</string>
+    <string name="ai_byok_desc">目前支持“自带密钥”(BYOK) 模式。</string>
+    <string name="ai_hint_api_key">输入所选提供商的 API 密钥。</string>
+    <string name="ai_hint_long_press">长按导航栏以打开 AI 命令行。</string>
+    <string name="ai_input_hint">提问（例如，“将端口更改为 1194”）</string>
+    <string name="ai_error_no_key">请在 AI 设置中设置 API 密钥。</string>
+    <string name="ai_processing">处理中…</string>
+    <string name="ai_success">完成！</string>
+    <string name="ai_error_generic">发生 AI 错误</string>
 </resources>

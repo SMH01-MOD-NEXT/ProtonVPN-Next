@@ -686,4 +686,24 @@
     <string name="reconnect_required_dont_show_again">Больш не паказваць</string>
     <string name="settings_reconnect_hint">Нагадванне пра перападключэнне</string>
     <string name="settings_reconnect_hint_desc">Папярэджваць, што змененыя налады падключэння прымяняюцца толькі пасля перападключэння</string>
+
+    <!-- AI Mode -->
+    <string name="settings_ai">AI</string>
+    <string name="settings_ai_desc">Эксперыментальны AI асістэнт для кіравання праграмай</string>
+    <string name="ai_settings_title">Налады AI</string>
+    <string name="ai_mode_title">Рэжым AI</string>
+    <string name="ai_mode_desc">Уключыце AI асістэнта, каб ён дапамагаў вам наладжваць праграму</string>
+    <string name="ai_provider">Правайдэр AI</string>
+    <string name="ai_model">Мадэль AI</string>
+    <string name="ai_api_key">API Ключ</string>
+    <string name="ai_bypass_blocks">Абыход блакіровак AI (РФ)</string>
+    <string name="ai_bypass_blocks_desc">Выкарыстоўваць спец. DNS для доступу да AI API у рэгіёнах з абмежаваннямі</string>
+    <string name="ai_byok_desc">На дадзены момант падтрымліваецца толькі рэжым Bring Your Own Key (BYOK).</string>
+    <string name="ai_hint_api_key">Увядзіце ваш API ключ для выбранага правайдэра.</string>
+    <string name="ai_hint_long_press">Утрымлівайце палец на панэлі навігацыі, каб адкрыць панэль каманд AI.</string>
+    <string name="ai_input_hint">Спытайце што-небудзь (напрыклад, \"змяні порт на 1194\")</string>
+    <string name="ai_error_no_key">Калі ласка, усталюйце API ключ у наладах AI.</string>
+    <string name="ai_processing">Апрацоўка…</string>
+    <string name="ai_success">Гатова!</string>
+    <string name="ai_error_generic">Адбылася памылка AI</string>
 </resources>
