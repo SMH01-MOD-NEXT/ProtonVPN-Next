@@ -275,7 +275,7 @@ class LocalNetShield @Inject constructor(
         private val SOURCES = listOf(
             Source(NetShieldCategory.MALWARE, "https://urlhaus.abuse.ch/downloads/hostfile/", "malware"),
             Source(NetShieldCategory.ADS, "https://adaway.org/hosts.txt", "ads"),
-            Source(NetShieldCategory.TRACKERS, "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/domains/light.txt", "trackers"),
+            Source(NetShieldCategory.TRACKERS, "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/light.txt", "trackers"),
             Source(NetShieldCategory.ADULT, "https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/porn/hosts", "adult"),
         )
     }
