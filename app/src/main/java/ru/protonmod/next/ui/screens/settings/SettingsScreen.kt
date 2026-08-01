@@ -628,14 +628,6 @@ private fun PrivacySettingsSection(
             onClick = onNavigateToKillSwitch
         )
 
-        SettingToggleRow(
-            icon = Icons.Rounded.Hub,
-            title = stringResource(R.string.settings_tor_mode),
-            subtitle = stringResource(R.string.settings_tor_mode_desc),
-            checked = state.torModeEnabled,
-            onCheckedChange = onTorModeChange
-        )
-
         if (BuildConfig.SENTRY_ENABLED) {
             SettingRowWithIcon(
                 icon = Icons.Rounded.BugReport,

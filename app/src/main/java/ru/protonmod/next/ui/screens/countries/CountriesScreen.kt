@@ -51,6 +51,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -187,15 +189,19 @@ fun CountriesScreen(
                                 connectedServer = connectedServer,
                                 onCountryClick = { country ->
                                     checkVpnAndConnect {
+                                        val completesSelection = state.connectionMode != CountryConnectionMode.MULTI_HOP || state.multiHopEntry != null
                                         viewModel.selectCountry(country.code)
-                                        onNavigateToHome()
+                                        if (completesSelection) onNavigateToHome()
                                     }
                                 },
                                 onCountryMore = { country ->
                                     viewModel.expandCitiesForCountry(country.code)
                                 },
                                 isTablet = isTablet,
-                                loadDisplayMode = state.loadDisplayMode
+                                loadDisplayMode = state.loadDisplayMode,
+                                connectionMode = state.connectionMode,
+                                multiHopEntry = state.multiHopEntry,
+                                onModeSelected = viewModel::setConnectionMode
                             )
                         }
                     }
@@ -212,8 +218,9 @@ fun CountriesScreen(
                         connectedServer = connectedServer,
                         onCityClick = { city ->
                             checkVpnAndConnect {
+                                val completesSelection = successState?.connectionMode != CountryConnectionMode.MULTI_HOP || successState?.multiHopEntry != null
                                 viewModel.selectCity(city.name)
-                                onNavigateToHome()
+                                if (completesSelection) onNavigateToHome()
                             }
                         },
                         onCityMore = { city ->
@@ -221,8 +228,9 @@ fun CountriesScreen(
                         },
                         onServerClick = { server ->
                             checkVpnAndConnect {
+                                val completesSelection = successState?.connectionMode != CountryConnectionMode.MULTI_HOP || successState?.multiHopEntry != null
                                 viewModel.selectServer(server)
-                                onNavigateToHome()
+                                if (completesSelection) onNavigateToHome()
                             }
                         },
                         onBack = { viewModel.backToCities() },
@@ -242,7 +250,10 @@ fun CountriesListContent(
     onCountryMore: (CountryDisplayItem) -> Unit,
     modifier: Modifier = Modifier,
     isTablet: Boolean = false,
-    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
+    connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD,
+    multiHopEntry: LogicalServer? = null,
+    onModeSelected: (CountryConnectionMode) -> Unit = {}
 ) {
     val colors = ProtonNextTheme.colors
 
@@ -261,7 +272,11 @@ fun CountriesListContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 item(span = { GridItemSpan(maxLineSpan) }, contentType = "Header") {
-                    MainHeader(title = stringResource(R.string.countries_title))
+                    Column {
+                        MainHeader(title = stringResource(R.string.countries_title))
+                        ConnectionModeSelector(connectionMode, onModeSelected)
+                        MultiHopSelectionHint(connectionMode, multiHopEntry)
+                    }
                 }
 
                 items(countries, key = { it.code }, contentType = { "Country" }) { country ->
@@ -270,7 +285,8 @@ fun CountriesListContent(
                         isConnected = connectedServer?.exitCountry == country.code,
                         onClick = { onCountryClick(country) },
                         onMoreClick = { onCountryMore(country) },
-                        displayMode = loadDisplayMode
+                        displayMode = loadDisplayMode,
+                        showTorBadge = connectionMode == CountryConnectionMode.TOR
                     )
                 }
             }
@@ -286,7 +302,11 @@ fun CountriesListContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item(contentType = "Header") {
-                    MainHeader(title = stringResource(R.string.countries_title))
+                    Column {
+                        MainHeader(title = stringResource(R.string.countries_title))
+                        ConnectionModeSelector(connectionMode, onModeSelected)
+                        MultiHopSelectionHint(connectionMode, multiHopEntry)
+                    }
                 }
 
                 items(countries, key = { it.code }, contentType = { "Country" }) { country ->
@@ -295,11 +315,58 @@ fun CountriesListContent(
                         isConnected = connectedServer?.exitCountry == country.code,
                         onClick = { onCountryClick(country) },
                         onMoreClick = { onCountryMore(country) },
-                        displayMode = loadDisplayMode
+                        displayMode = loadDisplayMode,
+                        showTorBadge = connectionMode == CountryConnectionMode.TOR
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ConnectionModeSelector(
+    selected: CountryConnectionMode,
+    onSelected: (CountryConnectionMode) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        listOf(
+            CountryConnectionMode.STANDARD to R.string.connection_mode_standard,
+            CountryConnectionMode.MULTI_HOP to R.string.connection_mode_multi_hop,
+            CountryConnectionMode.TOR to R.string.connection_mode_tor
+        ).forEach { (mode, label) ->
+            FilterChip(
+                selected = selected == mode,
+                onClick = { onSelected(mode) },
+                label = { Text(stringResource(label)) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MultiHopSelectionHint(mode: CountryConnectionMode, entry: LogicalServer?) {
+    if (mode != CountryConnectionMode.MULTI_HOP) return
+    val colors = ProtonNextTheme.colors
+    Surface(
+        color = colors.backgroundSecondary,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = if (entry == null) {
+                stringResource(R.string.multi_hop_select_entry)
+            } else {
+                stringResource(R.string.multi_hop_select_exit, entry.name)
+            },
+            color = colors.textNorm,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(12.dp)
+        )
     }
 }
 
@@ -310,7 +377,8 @@ fun CountryCard(
     onMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
     isConnected: Boolean = false,
-    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
+    showTorBadge: Boolean = false
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -362,7 +430,23 @@ fun CountryCard(
                             )
                         }
                     }
-                    if (isConnected) {
+                    if (showTorBadge) {
+                        Box(
+                            modifier = Modifier
+                                .offset(x = 5.dp, y = 5.dp)
+                                .size(16.dp)
+                                .background(colors.backgroundNorm, CircleShape)
+                                .padding(2.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = ImageVector.vectorResource(R.drawable.ic_tor_project),
+                                contentDescription = stringResource(R.string.connection_mode_tor),
+                                tint = colors.brandNorm,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    } else if (isConnected) {
                         Box(
                             modifier = Modifier
                                 .offset(x = 4.dp, y = 4.dp)

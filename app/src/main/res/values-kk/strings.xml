@@ -699,4 +699,10 @@
     <string name="ai_processing">Өңделуде…</string>
     <string name="ai_success">Дайын!</string>
     <string name="ai_error_generic">AI қатесі орын алды</string>
+    <string name="connection_mode_standard">Қалыпты</string>
+    <string name="connection_mode_multi_hop">Multi Hop</string>
+    <string name="connection_mode_tor">Tor over VPN</string>
+    <string name="multi_hop_select_entry">Бірінші (кіру) серверін таңдаңыз</string>
+    <string name="multi_hop_select_exit">Кіру: %1$s. Енді екінші (шығу) серверін таңдаңыз</string>
+    <string name="multi_hop_same_server_error">Кіру және шығу серверлері әртүрлі болуы керек</string>
 </resources>

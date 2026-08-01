@@ -178,7 +178,8 @@ class AmneziaVpnManager @Inject constructor(
         val server: PhysicalServer,
         val overridePort: Int?,
         val overrideObfuscation: Boolean?,
-        val obfuscationParams: ObfuscationParams?
+        val obfuscationParams: ObfuscationParams?,
+        val multiHopEntryServer: PhysicalServer?
     )
 
     @Volatile
@@ -597,7 +598,8 @@ class AmneziaVpnManager @Inject constructor(
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null,
         logicalServer: LogicalServer? = null,
-        forceFallback: Boolean = false
+        forceFallback: Boolean = false,
+        multiHopEntryServer: PhysicalServer? = null
     ) {
         // Immediate UI update to avoid "VPN" placeholder
         if (logicalServer != null) {
@@ -632,7 +634,7 @@ class AmneziaVpnManager @Inject constructor(
                     connectedServerState.setConnectedServer(resolved)
                 }
 
-                connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
+                connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback, multiHopEntryServer)
 
                 // Track connection attempt
                 ProtonLogger.recordCount("vpn_connection_attempt", 1.0)
@@ -653,7 +655,8 @@ class AmneziaVpnManager @Inject constructor(
         overridePort: Int? = null,
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null,
-        forceFallback: Boolean = false
+        forceFallback: Boolean = false,
+        multiHopEntryServer: PhysicalServer? = null
     ): Result<Unit> = withContext(dispatcherProvider.io()) {
         try {
             lastConnectionRequest = LastConnectionRequest(
@@ -661,7 +664,8 @@ class AmneziaVpnManager @Inject constructor(
                 server = server,
                 overridePort = overridePort,
                 overrideObfuscation = overrideObfuscation,
-                obfuscationParams = obfuscationParams
+                obfuscationParams = obfuscationParams,
+                multiHopEntryServer = multiHopEntryServer
             )
 
             val serverLogInfo = "${server.id} (Domain: ${server.domain}, LogicalID: $logicalServerId)"
@@ -818,6 +822,21 @@ class AmneziaVpnManager @Inject constructor(
                     p
                 } else port
             }
+            val multiHopEntry = multiHopEntryServer?.let { entryServer ->
+                val entryIp = runCatching {
+                    vpnNetworkMonitor.prepareUnderlyingConnection(
+                        endpointHost = entryServer.domain,
+                        proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled }
+                    ).endpointIpv4
+                }.getOrNull()
+                    ?: vpnNetworkMonitor.resolveIpv4OnUnderlying(entryServer.domain)
+                    ?: entryServer.exitIp?.let(::normalizeIpv4Address)
+                    ?: throw Exception("Unable to resolve Multi Hop entry ${entryServer.domain} over IPv4")
+                val entryPublicKey = entryServer.wgPublicKey
+                    ?: throw Exception("Missing WG Public Key for Multi Hop entry ${entryServer.id}")
+                MultiHopEndpoint(entryPublicKey, entryIp, selectedPort)
+            }
+
             val isObfuscationEnabled = !proxyChainEnabled &&
                 (overrideObfuscation ?: settingsManager.obfuscationEnabled.first())
 
@@ -889,7 +908,8 @@ class AmneziaVpnManager @Inject constructor(
                 proxyServerOverrides = proxyServerOverrides,
                 torModeEnabled = torModeEnabled,
                 torDataDirectory = File(context.noBackupFilesDir, "tor").absolutePath,
-                torExecutablePath = File(context.applicationInfo.nativeLibraryDir, "libtor.so").absolutePath
+                torExecutablePath = File(context.applicationInfo.nativeLibraryDir, "libtor.so").absolutePath,
+                multiHopEntry = multiHopEntry
             )
             
             ProtonLogger.d(TAG, "Generated awgbox config (length=${configStr.length}, endpoint=$targetIp:$selectedPort)")
@@ -953,7 +973,8 @@ class AmneziaVpnManager @Inject constructor(
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null,
         logicalServer: LogicalServer? = null,
-        forceFallback: Boolean = false
+        forceFallback: Boolean = false,
+        multiHopEntryServer: PhysicalServer? = null
     ) {
         // Immediate UI update
         if (logicalServer != null) {
@@ -1000,7 +1021,7 @@ class AmneziaVpnManager @Inject constructor(
                     } catch (_: Exception) {
                     }
                     delay(500.milliseconds)
-                    connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
+                    connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback, multiHopEntryServer)
                 } finally {
                     isReconnecting = false
                 }
@@ -1037,7 +1058,8 @@ class AmneziaVpnManager @Inject constructor(
                 overridePort = request.overridePort,
                 overrideObfuscation = request.overrideObfuscation,
                 obfuscationParams = request.obfuscationParams,
-                logicalServer = connectedServerState.connectedServer.value
+                logicalServer = connectedServerState.connectedServer.value,
+                multiHopEntryServer = request.multiHopEntryServer
             )
         }
     }

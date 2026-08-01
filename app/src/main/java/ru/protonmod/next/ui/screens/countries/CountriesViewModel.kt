@@ -45,6 +45,8 @@ import javax.inject.Inject
 data class CountryDisplayItem(val code: String, val averageLoad: Int)
 data class CityDisplayItem(val name: String, val localizedName: String, val averageLoad: Int)
 
+enum class CountryConnectionMode { STANDARD, MULTI_HOP, TOR }
+
 sealed class BottomSheetContent {
     data class Cities(
         val countryCode: String,
@@ -65,7 +67,9 @@ sealed class CountriesUiState {
         val countries: List<CountryDisplayItem>,
         val bottomSheetContent: BottomSheetContent? = null,
         val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
-        val isBottomSheetOpen: Boolean = false
+        val isBottomSheetOpen: Boolean = false,
+        val connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD,
+        val multiHopEntry: LogicalServer? = null
     ) : CountriesUiState()
     data class Error(val message: String) : CountriesUiState()
 }
@@ -92,6 +96,8 @@ class CountriesViewModel @Inject constructor(
 
     private val _navState = MutableStateFlow<NavigationState>(NavigationState.Countries)
     private val _error = MutableStateFlow<String?>(null)
+    private val _connectionMode = MutableStateFlow(CountryConnectionMode.STANDARD)
+    private val _multiHopEntry = MutableStateFlow<LogicalServer?>(null)
 
     // Memoized countries list to prevent unnecessary instance changes and recalculations.
     // Use distinctUntilChanged to only emit when the content actually changes (including loads).
@@ -109,9 +115,14 @@ class CountriesViewModel @Inject constructor(
     val uiState: StateFlow<CountriesUiState> = combine(
         combine(_countries, vpnRepository.getServersFlow(), _navState) { c, s, n -> Triple(c, s, n) },
         vpnRepository.isUpdating,
-        settingsManager.serverLoadDisplayMode,
-        _error
-    ) { (countries, servers, nav), isUpdating, loadMode, error ->
+        combine(settingsManager.serverLoadDisplayMode, _error, _connectionMode, _multiHopEntry) { load, error, mode, entry ->
+            arrayOf(load, error, mode, entry)
+        }
+    ) { (countries, servers, nav), isUpdating, modeState ->
+        val loadMode = modeState[0] as ServerLoadDisplayMode
+        val error = modeState[1] as String?
+        val connectionMode = modeState[2] as CountryConnectionMode
+        val multiHopEntry = modeState[3] as LogicalServer?
         if (isUpdating && servers.isEmpty()) {
             return@combine CountriesUiState.Loading
         }
@@ -140,7 +151,10 @@ class CountriesViewModel @Inject constructor(
             }
         }
 
-        CountriesUiState.Success(countries, bottomSheetContent, loadMode, nav != NavigationState.Countries)
+        CountriesUiState.Success(
+            countries, bottomSheetContent, loadMode, nav != NavigationState.Countries,
+            connectionMode, multiHopEntry
+        )
     }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CountriesUiState.Loading)
@@ -149,6 +163,16 @@ class CountriesViewModel @Inject constructor(
 
     init {
         initialFetch()
+        viewModelScope.launch {
+            settingsManager.torModeEnabled.collect { enabled ->
+                if (enabled) {
+                    _multiHopEntry.value = null
+                    _connectionMode.value = CountryConnectionMode.TOR
+                } else if (_connectionMode.value == CountryConnectionMode.TOR) {
+                    _connectionMode.value = CountryConnectionMode.STANDARD
+                }
+            }
+        }
     }
 
     private fun initialFetch() {
@@ -168,12 +192,16 @@ class CountriesViewModel @Inject constructor(
         initialFetch()
     }
 
-    private suspend fun connectToServer(server: LogicalServer) {
-        // Reliable server selection: Fallback to any server with min load if status == 1 is absent.
-        val physicalServer = server.servers.filter { it.status == 1 }.minByOrNull { it.load }
+    private fun bestPhysical(server: LogicalServer) =
+        server.servers.filter { it.status == 1 }.minByOrNull { it.load }
             ?: server.servers.minByOrNull { it.load }
 
-        if (physicalServer != null) {
+    private suspend fun connectToServer(server: LogicalServer, entryServer: LogicalServer? = null) {
+        // Reliable server selection: Fallback to any server with min load if status == 1 is absent.
+        val physicalServer = bestPhysical(server)
+        val entryPhysicalServer = entryServer?.let(::bestPhysical)
+
+        if (physicalServer != null && (entryServer == null || entryPhysicalServer != null)) {
             connectedServerState.setConnectedServer(server)
             val tunnelState = amneziaVpnManager.tunnelState.value
             val isConnecting = amneziaVpnManager.isConnecting.value
@@ -185,9 +213,17 @@ class CountriesViewModel @Inject constructor(
                 return
             }
             if (tunnelState == VpnTunnelState.UP || isConnecting) {
-                amneziaVpnManager.reconnect(server.id, physicalServer, session)
+                amneziaVpnManager.reconnect(
+                    server.id, physicalServer, session,
+                    logicalServer = server,
+                    multiHopEntryServer = entryPhysicalServer
+                )
             } else {
-                amneziaVpnManager.connect(server.id, physicalServer, session)
+                amneziaVpnManager.connect(
+                    server.id, physicalServer, session,
+                    logicalServer = server,
+                    multiHopEntryServer = entryPhysicalServer
+                )
             }
         } else {
             _error.value = context.getString(R.string.label_server_unavailable)
@@ -204,7 +240,7 @@ class CountriesViewModel @Inject constructor(
                     .minByOrNull { it.averageLoad } 
                     ?: serversInCountry.minByOrNull { it.averageLoad }
                 
-                bestServer?.let { connectToServer(it) }
+                bestServer?.let { selectForCurrentMode(it) }
             }
         }
     }
@@ -230,7 +266,7 @@ class CountriesViewModel @Inject constructor(
                     .minByOrNull { it.averageLoad }
                     ?: serversInCity.minByOrNull { it.averageLoad }
                     
-                bestServer?.let { connectToServer(it) }
+                bestServer?.let { selectForCurrentMode(it) }
             }
         }
     }
@@ -250,8 +286,39 @@ class CountriesViewModel @Inject constructor(
     }
 
     fun selectServer(server: LogicalServer) {
-        viewModelScope.launch {
+        viewModelScope.launch { selectForCurrentMode(server) }
+    }
+
+    private suspend fun selectForCurrentMode(server: LogicalServer) {
+        if (_connectionMode.value != CountryConnectionMode.MULTI_HOP) {
             connectToServer(server)
+            return
+        }
+        val entry = _multiHopEntry.value
+        if (entry == null) {
+            _multiHopEntry.value = server
+            _navState.value = NavigationState.Countries
+        } else if (entry.id != server.id) {
+            connectToServer(server, entry)
+        } else {
+            _error.value = context.getString(R.string.multi_hop_same_server_error)
+        }
+    }
+
+    fun setConnectionMode(mode: CountryConnectionMode) {
+        viewModelScope.launch {
+            when (mode) {
+                CountryConnectionMode.TOR -> {
+                    _multiHopEntry.value = null
+                    settingsManager.setTorModeEnabled(true)
+                }
+                CountryConnectionMode.MULTI_HOP -> settingsManager.setTorModeEnabled(false)
+                CountryConnectionMode.STANDARD -> {
+                    _multiHopEntry.value = null
+                    settingsManager.setTorModeEnabled(false)
+                }
+            }
+            _connectionMode.value = mode
         }
     }
 }
