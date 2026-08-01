@@ -233,6 +233,19 @@
     <string name="obfuscation_i3">Специальный мусор (i3)</string>
     <string name="obfuscation_i4">Специальный мусор (i4)</string>
     <string name="obfuscation_i5">Специальный мусор (i5)</string>
+    <string name="obfuscation_hp_key">Ключ защиты заголовков</string>
+    <string name="obfuscation_hp_key_desc">Шифрует низкоэнтропийные поля заголовков. Требует S1-S4 ≥ 12.</string>
+    <string name="obfuscation_hp_generate">Сгенерировать ключ</string>
+    <string name="obfuscation_cp_addition">Дополнительный мусор в данных</string>
+    <string name="obfuscation_cp_addition_desc">Случайный мусор, добавляемый к каждому пакету данных (поддерживает диапазоны, например 0-100).</string>
+    <string name="obfuscation_rekey_after">Время пересогласования (Rekey After)</string>
+    <string name="obfuscation_rekey_timeout">Таймаут пересогласования (Rekey Timeout)</string>
+    <string name="obfuscation_reject_after">Время отклонения (Reject After)</string>
+    <string name="obfuscation_keepalive_timeout">Таймаут Keepalive</string>
+    <string name="obfuscation_max_handshake">Макс. попыток рукопожатия</string>
+    <string name="obfuscation_persistent_keepalive">Интервал Keepalive</string>
+    <string name="obfuscation_range_hint">Поддерживает диапазоны (напр. 20-30)</string>
+    <string name="obfuscation_hp_warning">Защита заголовков требует, чтобы отступы S1-S4 были не менее 12.</string>
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Простой</string>
     <string name="obfuscation_mode_advanced">Продвинутый</string>
@@ -259,6 +272,8 @@
     <string name="obfuscation_category_magic">Размеры пакетов (magic)</string>
     <string name="obfuscation_category_headers">Заголовки</string>
     <string name="obfuscation_category_advanced">Дополнительно</string>
+    <string name="obfuscation_category_mimicry">Мимикрия и защита</string>
+    <string name="obfuscation_category_timings">Тайминги (диапазоны)</string>
     <string name="custom_config">Пользовательский конфиг</string>
     <!-- About App Screen -->
     <string name="about_community">Сообщество</string>
