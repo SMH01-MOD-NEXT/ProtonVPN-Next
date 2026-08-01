@@ -199,7 +199,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
 
     private fun initializeLibbox() {
         if (!libboxInitialized.compareAndSet(false, true)) return
-        val workingDir = getExternalFilesDir(null) ?: filesDir
+        val workingDir = getExternalFilesDir(null)?.takeIf { it.exists() || it.mkdirs() } ?: filesDir
         val options = SetupOptions().apply {
             basePath = filesDir.absolutePath
             workingPath = workingDir.absolutePath
