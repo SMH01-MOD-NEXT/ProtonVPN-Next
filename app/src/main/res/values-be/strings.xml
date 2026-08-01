@@ -233,6 +233,19 @@
     <string name="obfuscation_i3">Special Junk (I3)</string>
     <string name="obfuscation_i4">Special Junk (I4)</string>
     <string name="obfuscation_i5">Special Junk (I5)</string>
+    <string name="obfuscation_hp_key">Ключ абароны загалоўкаў</string>
+    <string name="obfuscation_hp_key_desc">Шыфруе нізкаэнтрапійныя палі загалоўкаў. Патрабуе S1-S4 ≥ 12.</string>
+    <string name="obfuscation_hp_generate">Згенераваць ключ</string>
+    <string name="obfuscation_cp_addition">Дадатковае запаўненне кантэнту</string>
+    <string name="obfuscation_cp_addition_desc">Выпадковы шум, які дадаецца да кожнага пакета даных (падтрымлівае дыяпазоны, напрыклад 0-100).</string>
+    <string name="obfuscation_rekey_after">Час перасагласавання (Rekey After)</string>
+    <string name="obfuscation_rekey_timeout">Таймаўт перасагласавання (Rekey Timeout)</string>
+    <string name="obfuscation_reject_after">Час адхілення (Reject After)</string>
+    <string name="obfuscation_keepalive_timeout">Таймаўт Keepalive</string>
+    <string name="obfuscation_max_handshake">Макс. спроб поціску рукі</string>
+    <string name="obfuscation_persistent_keepalive">Інтэрвал Keepalive</string>
+    <string name="obfuscation_range_hint">Падтрымлівае дыяпазоны (напр. 20-30)</string>
+    <string name="obfuscation_hp_warning">Абарона загалоўкаў патрабуе, каб адступы S1-S4 былі не менш за 12.</string>
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Просты</string>
     <string name="obfuscation_mode_advanced">Дадаткова</string>
@@ -259,6 +272,8 @@
     <string name="obfuscation_category_magic">Памеры пакетаў (Magic)</string>
     <string name="obfuscation_category_headers">Загалоўкі</string>
     <string name="obfuscation_category_advanced">Дадаткова</string>
+    <string name="obfuscation_category_mimicry">Mimicry &amp; Protection</string>
+    <string name="obfuscation_category_timings">Timings (Ranges)</string>
     <string name="custom_config">Карыстальніцкая канфігурацыя</string>
     <!-- About App Screen -->
     <string name="about_community">Супольнасць</string>
