@@ -272,8 +272,6 @@
     <string name="obfuscation_category_magic">Размеры пакетов (magic)</string>
     <string name="obfuscation_category_headers">Заголовки</string>
     <string name="obfuscation_category_advanced">Дополнительно</string>
-    <string name="obfuscation_category_mimicry">Мимикрия и защита</string>
-    <string name="obfuscation_category_timings">Тайминги (диапазоны)</string>
     <string name="custom_config">Пользовательский конфиг</string>
     <!-- About App Screen -->
     <string name="about_community">Сообщество</string>
