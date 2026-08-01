@@ -701,8 +701,13 @@
     <string name="ai_error_generic">خطای هوش مصنوعی رخ داد</string>
     <string name="connection_mode_standard">استاندارد</string>
     <string name="connection_mode_multi_hop">Multi Hop</string>
-    <string name="connection_mode_tor">Tor over VPN</string>
+    <string name="connection_mode_tor">Tor</string>
     <string name="multi_hop_select_entry">سرور اول (ورودی) را انتخاب کنید</string>
     <string name="multi_hop_select_exit">ورودی: %1$s. اکنون سرور دوم (خروجی) را انتخاب کنید</string>
     <string name="multi_hop_same_server_error">سرورهای ورودی و خروجی باید متفاوت باشند</string>
+    <string name="multi_hop_add_profile">افزودن نمایه Multi Hop</string>
+    <string name="multi_hop_create_profile">ساخت نمایه Multi Hop</string>
+    <string name="multi_hop_entry">موقعیت ورودی</string>
+    <string name="multi_hop_exit">موقعیت خروجی</string>
+    <string name="multi_hop_profile_desc">برای کشور یا شهر، سریع‌ترین سرور موجود به‌طور خودکار انتخاب می‌شود</string>
 </resources>

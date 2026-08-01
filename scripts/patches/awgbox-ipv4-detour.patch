@@ -1,0 +1,21 @@
+diff --git a/transport/awg/bind.go b/transport/awg/bind.go
+index 19b3ac1..d548e4a 100644
+--- a/transport/awg/bind.go
++++ b/transport/awg/bind.go
+@@ -5,6 +5,7 @@ import (
+ 	"errors"
+ 	"net"
+ 	"net/netip"
++	"strings"
+ 	"sync"
+ 	"syscall"
+ 
+@@ -85,7 +86,7 @@ func (b *bind_adapter) Open(port uint16) (fns []conn.ReceiveFunc, actualPort uin
+ 	}
+ 
+ 	conn6, err := b.connect(netip.IPv6Unspecified(), port)
+-	if err != nil && !errors.Is(err, syscall.EAFNOSUPPORT) {
++	if err != nil && !errors.Is(err, syscall.EAFNOSUPPORT) && !strings.Contains(err.Error(), "missing IPv6 local address") {
+ 		return nil, 0, E.Cause(err, "create ipv6 connection")
+ 	}
+ 	if conn6 != nil {

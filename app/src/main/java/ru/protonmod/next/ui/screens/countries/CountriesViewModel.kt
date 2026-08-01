@@ -31,6 +31,10 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import java.util.UUID
 import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.R
 import ru.protonmod.next.data.repository.VpnRepository
@@ -69,7 +73,9 @@ sealed class CountriesUiState {
         val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
         val isBottomSheetOpen: Boolean = false,
         val connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD,
-        val multiHopEntry: LogicalServer? = null
+        val multiHopEntry: LogicalServer? = null,
+        val multiHopProfiles: List<MultiHopProfile> = emptyList(),
+        val multiHopTargets: List<MultiHopTarget> = emptyList()
     ) : CountriesUiState()
     data class Error(val message: String) : CountriesUiState()
 }
@@ -115,14 +121,15 @@ class CountriesViewModel @Inject constructor(
     val uiState: StateFlow<CountriesUiState> = combine(
         combine(_countries, vpnRepository.getServersFlow(), _navState) { c, s, n -> Triple(c, s, n) },
         vpnRepository.isUpdating,
-        combine(settingsManager.serverLoadDisplayMode, _error, _connectionMode, _multiHopEntry) { load, error, mode, entry ->
-            arrayOf(load, error, mode, entry)
+        combine(settingsManager.serverLoadDisplayMode, _error, _connectionMode, _multiHopEntry, settingsManager.multiHopProfilesJson) { load, error, mode, entry, profiles ->
+            arrayOf(load, error, mode, entry, profiles)
         }
     ) { (countries, servers, nav), isUpdating, modeState ->
         val loadMode = modeState[0] as ServerLoadDisplayMode
         val error = modeState[1] as String?
         val connectionMode = modeState[2] as CountryConnectionMode
         val multiHopEntry = modeState[3] as LogicalServer?
+        val multiHopProfiles = runCatching { Json.decodeFromString<List<MultiHopProfile>>(modeState[4] as String) }.getOrDefault(emptyList())
         if (isUpdating && servers.isEmpty()) {
             return@combine CountriesUiState.Loading
         }
@@ -153,7 +160,7 @@ class CountriesViewModel @Inject constructor(
 
         CountriesUiState.Success(
             countries, bottomSheetContent, loadMode, nav != NavigationState.Countries,
-            connectionMode, multiHopEntry
+            connectionMode, multiHopEntry, multiHopProfiles, buildMultiHopTargets(servers)
         )
     }
         .distinctUntilChanged()
@@ -302,6 +309,35 @@ class CountriesViewModel @Inject constructor(
             connectToServer(server, entry)
         } else {
             _error.value = context.getString(R.string.multi_hop_same_server_error)
+        }
+    }
+
+    fun createMultiHopProfile(entry: MultiHopTarget, exit: MultiHopTarget) {
+        viewModelScope.launch {
+            val current = (uiState.value as? CountriesUiState.Success)?.multiHopProfiles.orEmpty()
+            settingsManager.setMultiHopProfilesJson(Json.encodeToString(current + MultiHopProfile(UUID.randomUUID().toString(), entry, exit)))
+        }
+    }
+
+    fun deleteMultiHopProfile(id: String) {
+        viewModelScope.launch {
+            val current = (uiState.value as? CountriesUiState.Success)?.multiHopProfiles.orEmpty()
+            settingsManager.setMultiHopProfilesJson(Json.encodeToString(current.filterNot { it.id == id }))
+        }
+    }
+
+    fun connectMultiHopProfile(profile: MultiHopProfile) {
+        viewModelScope.launch {
+            settingsManager.setTorModeEnabled(false)
+            _connectionMode.value = CountryConnectionMode.MULTI_HOP
+            val servers = vpnRepository.getCachedServers()
+            val entry = resolveMultiHopTarget(profile.entry, servers)
+            val exit = resolveMultiHopTarget(profile.exit, servers)
+            if (entry == null || exit == null || entry.id == exit.id) {
+                _error.value = context.getString(R.string.multi_hop_same_server_error)
+                return@launch
+            }
+            connectToServer(exit, entry)
         }
     }
 

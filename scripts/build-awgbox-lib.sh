@@ -89,6 +89,7 @@ git -C "$WORK" submodule update --init --depth 1
 # unauthenticated localhost TCP port. The current Tor executable is supplied by
 # the Guardian Project Android package.
 git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-tor-android.patch"
+git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-ipv4-detour.patch"
 
 GOBIN_DIR="$WORK/.bin"
 mkdir -p "$GOBIN_DIR"

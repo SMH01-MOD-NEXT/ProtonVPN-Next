@@ -698,8 +698,13 @@
     <string name="ai_error_generic">发生 AI 错误</string>
     <string name="connection_mode_standard">标准</string>
     <string name="connection_mode_multi_hop">Multi Hop</string>
-    <string name="connection_mode_tor">Tor over VPN</string>
+    <string name="connection_mode_tor">Tor</string>
     <string name="multi_hop_select_entry">选择第一个（入口）服务器</string>
     <string name="multi_hop_select_exit">入口：%1$s。现在选择第二个（出口）服务器</string>
     <string name="multi_hop_same_server_error">入口和出口服务器必须不同</string>
+    <string name="multi_hop_add_profile">添加 Multi Hop 配置</string>
+    <string name="multi_hop_create_profile">创建 Multi Hop 配置</string>
+    <string name="multi_hop_entry">入口位置</string>
+    <string name="multi_hop_exit">出口位置</string>
+    <string name="multi_hop_profile_desc">选择国家或城市时会自动使用最快的可用服务器</string>
 </resources>

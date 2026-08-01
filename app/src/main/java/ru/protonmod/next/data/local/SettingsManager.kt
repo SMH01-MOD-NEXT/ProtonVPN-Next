@@ -138,6 +138,7 @@ class SettingsManager @Inject constructor(
         private val PROXY_CHAIN_ENABLED = booleanPreferencesKey("proxy_chain_enabled")
         private val PROXY_CHAIN_CONFIG = stringPreferencesKey("proxy_chain_config")
         private val TOR_MODE_ENABLED = booleanPreferencesKey("tor_mode_enabled")
+        private val MULTI_HOP_PROFILES = stringPreferencesKey("multi_hop_profiles")
         private val SELECTED_PROFILE_ID = stringPreferencesKey("selected_profile_id")
         private val CUSTOM_PROFILES = stringPreferencesKey("custom_profiles")
 
@@ -310,6 +311,7 @@ class SettingsManager @Inject constructor(
     val proxyChainEnabled: Flow<Boolean> = dataStore.data.map { it[PROXY_CHAIN_ENABLED] ?: false }
     val proxyChainConfig: Flow<String> = dataStore.data.map { it[PROXY_CHAIN_CONFIG] ?: "" }
     val torModeEnabled: Flow<Boolean> = dataStore.data.map { it[TOR_MODE_ENABLED] ?: false }
+    val multiHopProfilesJson: Flow<String> = dataStore.data.map { it[MULTI_HOP_PROFILES] ?: "[]" }
     val selectedProfileId: Flow<String> = dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
 
     val setupStep: Flow<SetupStep> = dataStore.data.map { preferences ->
@@ -662,6 +664,10 @@ class SettingsManager @Inject constructor(
 
     suspend fun setTorModeEnabled(enabled: Boolean) {
         editConnectionSetting(TOR_MODE_ENABLED, false, enabled)
+    }
+
+    suspend fun setMultiHopProfilesJson(json: String) {
+        dataStore.edit { it[MULTI_HOP_PROFILES] = json }
     }
 
     suspend fun setAllowLanEnabled(enabled: Boolean) {

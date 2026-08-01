@@ -201,7 +201,17 @@ fun CountriesScreen(
                                 loadDisplayMode = state.loadDisplayMode,
                                 connectionMode = state.connectionMode,
                                 multiHopEntry = state.multiHopEntry,
-                                onModeSelected = viewModel::setConnectionMode
+                                multiHopProfiles = state.multiHopProfiles,
+                                multiHopTargets = state.multiHopTargets,
+                                onModeSelected = viewModel::setConnectionMode,
+                                onCreateMultiHopProfile = viewModel::createMultiHopProfile,
+                                onDeleteMultiHopProfile = viewModel::deleteMultiHopProfile,
+                                onConnectMultiHopProfile = { profile ->
+                                    checkVpnAndConnect {
+                                        viewModel.connectMultiHopProfile(profile)
+                                        onNavigateToHome()
+                                    }
+                                }
                             )
                         }
                     }
@@ -253,7 +263,12 @@ fun CountriesListContent(
     loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD,
     multiHopEntry: LogicalServer? = null,
-    onModeSelected: (CountryConnectionMode) -> Unit = {}
+    multiHopProfiles: List<MultiHopProfile> = emptyList(),
+    multiHopTargets: List<MultiHopTarget> = emptyList(),
+    onModeSelected: (CountryConnectionMode) -> Unit = {},
+    onCreateMultiHopProfile: (MultiHopTarget, MultiHopTarget) -> Unit = { _, _ -> },
+    onDeleteMultiHopProfile: (String) -> Unit = {},
+    onConnectMultiHopProfile: (MultiHopProfile) -> Unit = {}
 ) {
     val colors = ProtonNextTheme.colors
 
@@ -275,11 +290,13 @@ fun CountriesListContent(
                     Column {
                         MainHeader(title = stringResource(R.string.countries_title))
                         ConnectionModeSelector(connectionMode, onModeSelected)
-                        MultiHopSelectionHint(connectionMode, multiHopEntry)
+                        if (connectionMode == CountryConnectionMode.MULTI_HOP) {
+                            MultiHopProfilesPanel(multiHopProfiles, multiHopTargets, onCreateMultiHopProfile, onDeleteMultiHopProfile, onConnectMultiHopProfile)
+                        }
                     }
                 }
 
-                items(countries, key = { it.code }, contentType = { "Country" }) { country ->
+                if (connectionMode != CountryConnectionMode.MULTI_HOP) items(countries, key = { it.code }, contentType = { "Country" }) { country ->
                     CountryCard(
                         country = country,
                         isConnected = connectedServer?.exitCountry == country.code,
@@ -305,11 +322,13 @@ fun CountriesListContent(
                     Column {
                         MainHeader(title = stringResource(R.string.countries_title))
                         ConnectionModeSelector(connectionMode, onModeSelected)
-                        MultiHopSelectionHint(connectionMode, multiHopEntry)
+                        if (connectionMode == CountryConnectionMode.MULTI_HOP) {
+                            MultiHopProfilesPanel(multiHopProfiles, multiHopTargets, onCreateMultiHopProfile, onDeleteMultiHopProfile, onConnectMultiHopProfile)
+                        }
                     }
                 }
 
-                items(countries, key = { it.code }, contentType = { "Country" }) { country ->
+                if (connectionMode != CountryConnectionMode.MULTI_HOP) items(countries, key = { it.code }, contentType = { "Country" }) { country ->
                     CountryCard(
                         country = country,
                         isConnected = connectedServer?.exitCountry == country.code,
@@ -325,27 +344,86 @@ fun CountriesListContent(
 }
 
 @Composable
-private fun ConnectionModeSelector(
-    selected: CountryConnectionMode,
-    onSelected: (CountryConnectionMode) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        listOf(
-            CountryConnectionMode.STANDARD to R.string.connection_mode_standard,
-            CountryConnectionMode.MULTI_HOP to R.string.connection_mode_multi_hop,
-            CountryConnectionMode.TOR to R.string.connection_mode_tor
-        ).forEach { (mode, label) ->
-            FilterChip(
-                selected = selected == mode,
+private fun ConnectionModeSelector(selected: CountryConnectionMode, onSelected: (CountryConnectionMode) -> Unit) {
+    val colors = ProtonNextTheme.colors
+    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CountryConnectionMode.entries.forEach { mode ->
+            val title = when (mode) {
+                CountryConnectionMode.STANDARD -> stringResource(R.string.connection_mode_standard)
+                CountryConnectionMode.MULTI_HOP -> stringResource(R.string.connection_mode_multi_hop)
+                CountryConnectionMode.TOR -> stringResource(R.string.connection_mode_tor)
+            }
+            Button(
                 onClick = { onSelected(mode) },
-                label = { Text(stringResource(label)) },
-                modifier = Modifier.weight(1f)
-            )
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (selected == mode) colors.brandNorm else colors.backgroundSecondary,
+                    contentColor = if (selected == mode) colors.textInverted else colors.textNorm
+                ),
+                contentPadding = PaddingValues(horizontal = 8.dp)
+            ) {
+                if (mode == CountryConnectionMode.MULTI_HOP) Icon(ImageVector.vectorResource(R.drawable.ic_multi_hop), null, Modifier.size(18.dp))
+                if (mode == CountryConnectionMode.TOR) Icon(ImageVector.vectorResource(R.drawable.ic_tor_project), null, Modifier.size(18.dp))
+                if (mode != CountryConnectionMode.STANDARD) Spacer(Modifier.width(4.dp))
+                Text(title, maxLines = 1)
+            }
         }
     }
+}
+
+@Composable
+private fun MultiHopProfilesPanel(
+    profiles: List<MultiHopProfile>, targets: List<MultiHopTarget>,
+    onCreate: (MultiHopTarget, MultiHopTarget) -> Unit,
+    onDelete: (String) -> Unit, onConnect: (MultiHopProfile) -> Unit
+) {
+    var showEditor by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(onClick = { showEditor = true }, modifier = Modifier.fillMaxWidth()) {
+            Text("+"); Spacer(Modifier.width(8.dp)); Text(stringResource(R.string.multi_hop_add_profile))
+        }
+        profiles.forEach { profile ->
+            val entry = multiHopTargetLabel(profile.entry)
+            val exit = multiHopTargetLabel(profile.exit)
+            Surface(onClick = { onConnect(profile) }, shape = RoundedCornerShape(16.dp), color = ProtonNextTheme.colors.backgroundSecondary) {
+                Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("$entry → $exit", fontWeight = FontWeight.Bold)
+                        val explicitServers = listOf(profile.entry.serverName, profile.exit.serverName).filter(String::isNotBlank)
+                        Text(if (explicitServers.isEmpty()) stringResource(R.string.multi_hop_profile_desc) else explicitServers.joinToString(" → "), style = MaterialTheme.typography.bodySmall)
+                    }
+                    IconButton(onClick = { onDelete(profile.id) }) { Text("×") }
+                }
+            }
+        }
+    }
+    if (showEditor) MultiHopProfileEditor(targets, { entry, exit -> onCreate(entry, exit); showEditor = false }, { showEditor = false })
+}
+
+@Composable
+private fun multiHopTargetLabel(target: MultiHopTarget): String {
+    val context = LocalContext.current
+    val country = remember(target.countryCode) { CountryUtils.getCountryName(context, target.countryCode) }
+    return when (target.kind) {
+        "server" -> "$country · ${target.city} · ${target.serverName}"
+        "city" -> "$country · ${target.city}"
+        else -> country
+    }
+}
+
+@Composable
+private fun MultiHopProfileEditor(targets: List<MultiHopTarget>, onCreate: (MultiHopTarget, MultiHopTarget) -> Unit, onDismiss: () -> Unit) {
+    var entry by remember { mutableStateOf<MultiHopTarget?>(null) }
+    var exit by remember { mutableStateOf<MultiHopTarget?>(null) }
+    var entryMenu by remember { mutableStateOf(false) }; var exitMenu by remember { mutableStateOf(false) }
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(stringResource(R.string.multi_hop_create_profile)) }, text = {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Box { Button(onClick = { entryMenu = true }, Modifier.fillMaxWidth()) { Text(if (entry == null) stringResource(R.string.multi_hop_entry) else multiHopTargetLabel(requireNotNull(entry))) }
+                DropdownMenu(entryMenu, { entryMenu = false }) { targets.forEach { DropdownMenuItem({ Text(multiHopTargetLabel(it)) }, { entry = it; entryMenu = false }) } } }
+            Box { Button(onClick = { exitMenu = true }, Modifier.fillMaxWidth()) { Text(if (exit == null) stringResource(R.string.multi_hop_exit) else multiHopTargetLabel(requireNotNull(exit))) }
+                DropdownMenu(exitMenu, { exitMenu = false }) { targets.forEach { DropdownMenuItem({ Text(multiHopTargetLabel(it)) }, { exit = it; exitMenu = false }) } } }
+        }
+    }, confirmButton = { TextButton(enabled = entry != null && exit != null && entry != exit, onClick = { onCreate(requireNotNull(entry), requireNotNull(exit)) }) { Text(stringResource(R.string.btn_save)) } }, dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_cancel)) } })
 }
 
 @Composable

@@ -707,8 +707,13 @@
     <string name="ai_error_generic">Сталася помилка AI</string>
     <string name="connection_mode_standard">Звичайний</string>
     <string name="connection_mode_multi_hop">Multi Hop</string>
-    <string name="connection_mode_tor">Tor over VPN</string>
+    <string name="connection_mode_tor">Tor</string>
     <string name="multi_hop_select_entry">Виберіть перший (вхідний) сервер</string>
     <string name="multi_hop_select_exit">Вхід: %1$s. Тепер виберіть другий (вихідний) сервер</string>
     <string name="multi_hop_same_server_error">Вхідний і вихідний сервери мають відрізнятися</string>
+    <string name="multi_hop_add_profile">Додати профіль Multi Hop</string>
+    <string name="multi_hop_create_profile">Створити профіль Multi Hop</string>
+    <string name="multi_hop_entry">Вхідна точка</string>
+    <string name="multi_hop_exit">Вихідна точка</string>
+    <string name="multi_hop_profile_desc">Для країни або міста автоматично вибирається найшвидший доступний сервер</string>
 </resources>

@@ -103,6 +103,7 @@ class CountriesViewModelTest {
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
         whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
         whenever(settingsManager.torModeEnabled).thenReturn(flowOf(false))
+        whenever(settingsManager.multiHopProfilesJson).thenReturn(flowOf("[]"))
 
         viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager)
     }
