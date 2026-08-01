@@ -108,9 +108,12 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         val exactDomains = SplitTunnelingDomainRule.exactDomains(selectedDomains)
         val domainSuffixes = SplitTunnelingDomainRule.domainSuffixes(selectedDomains)
         val hasDomainRules = exactDomains.isNotEmpty() || domainSuffixes.isNotEmpty()
-        val includeUsesDomainRouting = isIncludeMode && hasDomainRules
+        val includeUsesAppRouting = isIncludeMode && selectedApps.isNotEmpty()
+        val includeUsesDomainRouting = isIncludeMode && !includeUsesAppRouting && hasDomainRules
         val tunnelOutbound = if (torModeEnabled) "tor" else "proton-awg"
         val routeAddresses = when {
+            includeUsesAppRouting && allowLan -> (LanExclusionUtils.REFINED_ALLOWED_IPS + "2000::/3").sorted()
+            includeUsesAppRouting -> listOf("0.0.0.0/0")
             isIncludeMode && selectedIps.isNotEmpty() && !includeUsesDomainRouting -> selectedIps.sorted()
             allowLan -> (LanExclusionUtils.REFINED_ALLOWED_IPS + "2000::/3").sorted()
             else -> listOf("0.0.0.0/0")

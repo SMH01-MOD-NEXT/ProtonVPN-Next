@@ -90,7 +90,7 @@ class AwgBoxConfigGeneratorTest {
     }
 
     @Test
-    fun `include mode limits routes and does not leak private key to unrelated fields`() {
+    fun `include app mode tunnels all app traffic despite IP and domain selections`() {
         val privateKey = "PRIVATE_KEY_TEST_VALUE"
         val config = generator.buildConfig(
             serverPublicKey = "PUBLIC_KEY",
@@ -101,6 +101,7 @@ class AwgBoxConfigGeneratorTest {
             isIncludeMode = true,
             selectedApps = setOf("org.example.only"),
             selectedIps = setOf("8.8.8.8/32"),
+            selectedDomains = setOf("*.example.com"),
             port = 51820,
             obfuscationParams = AmneziaVpnManager.ObfuscationParams(
                 jc = 0, jmin = 0, jmax = 0, s1 = 0, s2 = 0,
@@ -109,11 +110,13 @@ class AwgBoxConfigGeneratorTest {
         )
         val root = Json.parseToJsonElement(config).jsonObject
         val tun = root.getValue("inbounds").jsonArray.single().jsonObject
+        val route = root.getValue("route").jsonObject
         val routes = tun.getValue("route_address").jsonArray.map { it.jsonPrimitive.content }
 
-        assertEquals(listOf("8.8.8.8/32"), routes)
+        assertEquals(listOf("0.0.0.0/0"), routes)
         assertTrue("include_package" in tun)
         assertFalse("exclude_package" in tun)
+        assertEquals("proton-awg", route.getValue("final").jsonPrimitive.content)
         assertEquals(1, Regex(Regex.escape(privateKey)).findAll(config).count())
     }
 

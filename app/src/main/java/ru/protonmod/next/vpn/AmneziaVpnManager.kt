@@ -870,10 +870,15 @@ class AmneziaVpnManager @Inject constructor(
                 targetIp = targetIp,
                 isIncludeMode = isIncludeMode,
                 allowLan = allowLan,
-                // The VPN process must share the allowed UID set in include mode. Libbox opens
-                // DNS and routed outbound sockets from this process; excluding it leaves selected
-                // apps attached to the TUN but unable to resolve or establish connections.
-                selectedApps = if (isIncludeMode) selectedApps + context.packageName else selectedApps,
+                // When app-based Include filtering is active, the VPN process must share the
+                // allowed UID set because libbox opens DNS and routed outbound sockets from it.
+                // With IP/domain-only rules the package filter must stay empty so every app can
+                // reach those selected destinations.
+                selectedApps = if (isIncludeMode && selectedApps.isNotEmpty()) {
+                    selectedApps + context.packageName
+                } else {
+                    selectedApps
+                },
                 selectedIps = selectedIps,
                 selectedDomains = selectedDomains,
                 port = selectedPort,
