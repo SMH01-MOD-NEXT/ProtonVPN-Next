@@ -233,6 +233,19 @@
     <string name="obfuscation_i3">Арнайы қоқыс (I3)</string>
     <string name="obfuscation_i4">Арнайы қоқыс (I4)</string>
     <string name="obfuscation_i5">Арнайы қоқыс (I5)</string>
+    <string name="obfuscation_hp_key">Тақырыпты қорғау кілті</string>
+    <string name="obfuscation_hp_key_desc">Төмен энтропиялы тақырып өрістерін шифрлайды. S1-S4 ≥ 12 талап етеді.</string>
+    <string name="obfuscation_hp_generate">Кілтті жасау</string>
+    <string name="obfuscation_cp_addition">Мазмұнды толтыру қосымшасы</string>
+    <string name="obfuscation_cp_addition_desc">Әрбір деректер пакетіне қосылатын кездейсоқ шу (0-100 сияқты диапазондарды қолдайды).</string>
+    <string name="obfuscation_rekey_after">Қайта кілттеу уақыты (Rekey After)</string>
+    <string name="obfuscation_rekey_timeout">Қайта кілттеу күту уақыты (Rekey Timeout)</string>
+    <string name="obfuscation_reject_after">Қабылдамау уақыты (Reject After)</string>
+    <string name="obfuscation_keepalive_timeout">Keepalive күту уақыты</string>
+    <string name="obfuscation_max_handshake">Қол алысу әрекеттерінің макс. саны</string>
+    <string name="obfuscation_persistent_keepalive">Keepalive аралығы</string>
+    <string name="obfuscation_range_hint">Диапазондарды қолдайды (мысалы, 20-30)</string>
+    <string name="obfuscation_hp_warning">Тақырыпты қорғау үшін S1-S4 толтыруы кемінде 12 болуы керек.</string>
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Оңай</string>
     <string name="obfuscation_mode_advanced">Кеңейтілген</string>
@@ -259,6 +272,8 @@
     <string name="obfuscation_category_magic">Пакет өлшемдері (Сиқыр)</string>
     <string name="obfuscation_category_headers">Тақырыптар</string>
     <string name="obfuscation_category_advanced">Кеңейтілген</string>
+    <string name="obfuscation_category_mimicry">Mimicry &amp; Protection</string>
+    <string name="obfuscation_category_timings">Timings (Ranges)</string>
     <string name="custom_config">Таңдамалы конфигурация</string>
     <!-- About App Screen -->
     <string name="about_community">Қоғамдастық</string>
