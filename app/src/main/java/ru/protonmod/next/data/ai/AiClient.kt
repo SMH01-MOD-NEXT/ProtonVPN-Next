@@ -18,48 +18,109 @@
 package ru.protonmod.next.data.ai
 
 import okhttp3.*
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.dnsoverhttps.DnsOverHttps
 import org.json.JSONArray
 import org.json.JSONObject
+import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.network.FixedSocks5SocketFactory
 import ru.protonmod.next.utils.ProtonLogger
 import java.io.IOException
 import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Proxy
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
+internal data class AiProxyConfig(
+    val type: String,
+    val host: String,
+    val port: Int,
+    val username: String,
+    val password: String
+)
+
+internal fun selectAiProxyConfig(
+    useBypass: Boolean,
+    strategy: String,
+    type: String,
+    host: String,
+    port: Int,
+    username: String,
+    password: String
+): AiProxyConfig? {
+    if (!useBypass || strategy != SettingsManager.STRATEGY_CUSTOM_PROXY) return null
+    val normalizedHost = host.trim()
+    if (normalizedHost.isEmpty() || port !in 1..65535) return null
+    if (type != SettingsManager.PROXY_TYPE_SOCKS && type != SettingsManager.PROXY_TYPE_HTTP) return null
+    return AiProxyConfig(type, normalizedHost, port, username, password)
+}
+
 @Singleton
 class AiClient @Inject constructor(
-    private val baseOkHttpClient: OkHttpClient
+    private val baseOkHttpClient: OkHttpClient,
+    private val settingsManager: SettingsManager
 ) {
-    private var bypassClient: OkHttpClient? = null
+    @Volatile private var proxyClient: Pair<AiProxyConfig, OkHttpClient>? = null
 
     private fun getClient(useBypass: Boolean): OkHttpClient {
-        if (!useBypass) return baseOkHttpClient
-        
-        return bypassClient ?: synchronized(this) {
-            bypassClient ?: buildBypassClient().also { bypassClient = it }
+        val config = selectAiProxyConfig(
+            useBypass = useBypass,
+            strategy = settingsManager.getApiBypassStrategySync(),
+            type = settingsManager.getApiProxyTypeSync(),
+            host = settingsManager.getApiProxyHostSync(),
+            port = settingsManager.getApiProxyPortSync(),
+            username = settingsManager.getApiProxyUsernameSync(),
+            password = settingsManager.getApiProxyPasswordSync()
+        ) ?: return baseOkHttpClient
+
+        proxyClient?.takeIf { it.first == config }?.let { return it.second }
+        return synchronized(this) {
+            proxyClient?.takeIf { it.first == config }?.second
+                ?: buildProxyClient(config).also { proxyClient = config to it }
         }
     }
 
-    private fun buildBypassClient(): OkHttpClient {
-        val bootstrapClient = baseOkHttpClient.newBuilder().build()
-        val dns = DnsOverHttps.Builder()
-            .client(bootstrapClient)
-            .url("https://dns.comss.one/dns-query".toHttpUrl())
-            .bootstrapDnsHosts(listOf(
-                InetAddress.getByName("77.88.8.8"), // Yandex DNS as bootstrap
-                InetAddress.getByName("8.8.8.8")
-            ))
-            .build()
-
-        return baseOkHttpClient.newBuilder()
-            .dns(dns)
-            .build()
+    private fun buildProxyClient(config: AiProxyConfig): OkHttpClient {
+        val builder = baseOkHttpClient.newBuilder()
+        return if (config.type == SettingsManager.PROXY_TYPE_SOCKS) {
+            // SOCKS5 resolves the AI endpoint on the proxy side, avoiding both local DNS
+            // filtering and exposing a Russian source IP to region-gated providers.
+            builder
+                .proxy(Proxy.NO_PROXY)
+                .dns { hostname ->
+                    listOf(InetAddress.getByAddress(hostname, byteArrayOf(127, 0, 0, 1)))
+                }
+                .socketFactory(
+                    FixedSocks5SocketFactory(
+                        config.host,
+                        config.port,
+                        config.username,
+                        config.password
+                    )
+                )
+                .build()
+        } else {
+            builder
+                .proxy(
+                    Proxy(
+                        Proxy.Type.HTTP,
+                        InetSocketAddress.createUnresolved(config.host, config.port)
+                    )
+                )
+                .proxyAuthenticator { _, response ->
+                    if (config.username.isBlank() || response.request.header("Proxy-Authorization") != null) {
+                        null
+                    } else {
+                        response.request.newBuilder()
+                            .header("Proxy-Authorization", Credentials.basic(config.username, config.password))
+                            .build()
+                    }
+                }
+                .build()
+        }
     }
 
     suspend fun query(

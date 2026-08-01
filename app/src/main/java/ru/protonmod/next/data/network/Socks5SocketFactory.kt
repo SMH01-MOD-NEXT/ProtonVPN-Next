@@ -144,6 +144,46 @@ class Socks5Socket(
     }
 }
 
+/** A SOCKS5 socket factory with immutable settings for dedicated clients such as AI APIs. */
+class FixedSocks5SocketFactory(
+    private val proxyHost: String,
+    private val proxyPort: Int,
+    private val proxyUsername: String = "",
+    private val proxyPassword: String = ""
+) : SocketFactory() {
+    private fun newSocket() = Socks5Socket(proxyHost, proxyPort, proxyUsername, proxyPassword)
+
+    override fun createSocket(): Socket = newSocket()
+
+    override fun createSocket(host: String?, port: Int): Socket = newSocket().apply {
+        connect(InetSocketAddress.createUnresolved(host, port))
+    }
+
+    override fun createSocket(
+        host: String?,
+        port: Int,
+        localHost: InetAddress?,
+        localPort: Int
+    ): Socket = newSocket().apply {
+        bind(InetSocketAddress(localHost, localPort))
+        connect(InetSocketAddress.createUnresolved(host, port))
+    }
+
+    override fun createSocket(host: InetAddress?, port: Int): Socket = newSocket().apply {
+        connect(InetSocketAddress(host, port))
+    }
+
+    override fun createSocket(
+        address: InetAddress?,
+        port: Int,
+        localAddress: InetAddress?,
+        localPort: Int
+    ): Socket = newSocket().apply {
+        bind(InetSocketAddress(localAddress, localPort))
+        connect(InetSocketAddress(address, port))
+    }
+}
+
 class ApiBypassSocketFactory(
     private val context: Context,
     private val vpnManagerProvider: Provider<AmneziaVpnManager>,

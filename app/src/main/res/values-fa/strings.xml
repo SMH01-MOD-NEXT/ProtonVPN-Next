@@ -691,7 +691,7 @@
     <string name="ai_model">مدل هوش مصنوعی</string>
     <string name="ai_api_key">کلید API</string>
     <string name="ai_bypass_blocks">دور زدن مسدودسازی هوش مصنوعی (روسیه)</string>
-    <string name="ai_bypass_blocks_desc">استفاده از DNS اختصاصی برای دسترسی به APIهای هوش مصنوعی در مناطق محدود شده</string>
+    <string name="ai_bypass_blocks_desc">درخواست‌های هوش مصنوعی را از طریق VPN فعال یا پراکسی SOCKS5/HTTPS تنظیم‌شده در پایین هدایت کنید. DNS به‌تنهایی محدودیت منطقه‌ای را دور نمی‌زند.</string>
     <string name="ai_byok_desc">در حال حاضر از حالت Bring Your Own Key (BYOK) پشتیبانی می‌کند.</string>
     <string name="ai_hint_api_key">کلید API خود را برای ارائه‌دهنده انتخاب شده وارد کنید.</string>
     <string name="ai_hint_long_press">برای باز کردن نوار فرمان هوش مصنوعی، روی نوار ناوبری طولانی فشار دهید.</string>

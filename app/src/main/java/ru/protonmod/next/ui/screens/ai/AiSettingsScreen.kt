@@ -49,6 +49,7 @@ import ru.protonmod.next.ui.screens.settings.SettingToggleRow
 @Composable
 fun AiSettingsScreen(
     onBack: () -> Unit,
+    onNavigateToApiBypass: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: AiSettingsViewModel = hiltViewModel()
 ) {
@@ -155,6 +156,12 @@ fun AiSettingsScreen(
                             subtitle = stringResource(R.string.ai_bypass_blocks_desc),
                             checked = uiState.aiBypassBlocks,
                             onCheckedChange = viewModel::setAiBypassBlocks
+                        )
+                        SettingRowWithIcon(
+                            icon = Icons.Rounded.Route,
+                            title = stringResource(R.string.api_bypass_strategy_custom),
+                            subtitle = stringResource(R.string.api_bypass_strategy_custom_desc),
+                            onClick = onNavigateToApiBypass
                         )
                     }
 

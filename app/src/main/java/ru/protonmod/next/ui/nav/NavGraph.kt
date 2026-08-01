@@ -161,7 +161,10 @@ fun NavGraphBuilder.appNavGraph(
     }
 
     composable(Screen.AiSettings.route) {
-        AiSettingsScreen(onBack = { navController.popBackStack() })
+        AiSettingsScreen(
+            onBack = { navController.popBackStack() },
+            onNavigateToApiBypass = { navController.navigate(Screen.ApiBypass.route) }
+        )
     }
 
     composable(Screen.ConnectionVerification.route) {

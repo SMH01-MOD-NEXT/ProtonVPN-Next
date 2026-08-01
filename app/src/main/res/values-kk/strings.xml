@@ -691,7 +691,7 @@
     <string name="ai_model">AI моделі</string>
     <string name="ai_api_key">API кілті</string>
     <string name="ai_bypass_blocks">AI блоктарын айналып өту (РФ)</string>
-    <string name="ai_bypass_blocks_desc">Шектеулі аймақтарда AI API-леріне қол жеткізу үшін арнайы DNS пайдаланыңыз</string>
+    <string name="ai_bypass_blocks_desc">AI сұрауларын белсенді VPN немесе төменде бапталған SOCKS5/HTTPS проксиі арқылы бағыттау. DNS жалғыз өзі аймақтық шектеулерді айналып өтпейді.</string>
     <string name="ai_byok_desc">Қазіргі уақытта Bring Your Own Key (BYOK) режимін қолдайды.</string>
     <string name="ai_hint_api_key">Таңдалған провайдер үшін API кілтін енгізіңіз.</string>
     <string name="ai_hint_long_press">AI командалық панелін ашу үшін шарлау панелін ұзақ басып тұрыңыз.</string>

@@ -805,7 +805,7 @@
     <string name="ai_model">AI Model</string>
     <string name="ai_api_key">API Key</string>
     <string name="ai_bypass_blocks">Bypass AI Blocks (Russia)</string>
-    <string name="ai_bypass_blocks_desc">Use specialized DNS to access AI APIs in restricted regions</string>
+    <string name="ai_bypass_blocks_desc">Route AI requests through the active VPN or the custom SOCKS5/HTTPS proxy configured below. DNS alone cannot bypass regional restrictions.</string>
     <string name="ai_byok_desc">Currently supports Bring Your Own Key (BYOK) mode.</string>
     <string name="ai_hint_api_key">Enter your API key for the selected provider.</string>
     <string name="ai_hint_long_press">Long press on the navigation bar to open the AI command bar.</string>

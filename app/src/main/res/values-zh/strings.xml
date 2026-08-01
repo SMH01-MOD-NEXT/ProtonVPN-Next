@@ -688,7 +688,7 @@
     <string name="ai_model">AI 模型</string>
     <string name="ai_api_key">API 密钥</string>
     <string name="ai_bypass_blocks">绕过 AI 屏蔽 (俄罗斯)</string>
-    <string name="ai_bypass_blocks_desc">使用专用 DNS 在受限地区访问 AI API</string>
+    <string name="ai_bypass_blocks_desc">通过活动 VPN 或下方配置的 SOCKS5/HTTPS 代理路由 AI 请求。仅更换 DNS 无法绕过地区限制。</string>
     <string name="ai_byok_desc">目前支持“自带密钥”(BYOK) 模式。</string>
     <string name="ai_hint_api_key">输入所选提供商的 API 密钥。</string>
     <string name="ai_hint_long_press">长按导航栏以打开 AI 命令行。</string>

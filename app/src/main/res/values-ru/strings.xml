@@ -697,7 +697,7 @@
     <string name="ai_model">Модель AI</string>
     <string name="ai_api_key">API Ключ</string>
     <string name="ai_bypass_blocks">Обход блокировок AI (РФ)</string>
-    <string name="ai_bypass_blocks_desc">Использовать спец. DNS для доступа к AI API в регионах с ограничениями</string>
+    <string name="ai_bypass_blocks_desc">Направлять AI-запросы через активный VPN или настроенный ниже прокси SOCKS5/HTTPS. Один DNS не обходит региональные ограничения.</string>
     <string name="ai_byok_desc">На данный момент поддерживается только режим Bring Your Own Key (BYOK).</string>
     <string name="ai_hint_api_key">Введите ваш API ключ для выбранного провайдера.</string>
     <string name="ai_hint_long_press">Удерживайте палец на панели навигации, чтобы открыть панель команд AI.</string>
