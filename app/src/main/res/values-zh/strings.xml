@@ -233,6 +233,19 @@
     <string name="obfuscation_i3">特殊垃圾 (I3)</string>
     <string name="obfuscation_i4">特殊垃圾 (I4)</string>
     <string name="obfuscation_i5">特殊垃圾 (I5)</string>
+    <string name="obfuscation_hp_key">标头保护密钥</string>
+    <string name="obfuscation_hp_key_desc">加密低熵标头字段。需要 S1-S4 ≥ 12。</string>
+    <string name="obfuscation_hp_generate">生成密钥</string>
+    <string name="obfuscation_cp_addition">内容填充添加</string>
+    <string name="obfuscation_cp_addition_desc">添加到每个数据包的随机噪声（支持 0-100 等范围）。</string>
+    <string name="obfuscation_rekey_after">重新密钥时间 (Rekey After)</string>
+    <string name="obfuscation_rekey_timeout">重新密钥超时 (Rekey Timeout)</string>
+    <string name="obfuscation_reject_after">拒绝时间 (Reject After)</string>
+    <string name="obfuscation_keepalive_timeout">Keepalive 超时</string>
+    <string name="obfuscation_max_handshake">最大握手尝试次数</string>
+    <string name="obfuscation_persistent_keepalive">Keepalive 间隔</string>
+    <string name="obfuscation_range_hint">支持范围（例如 20-30）</string>
+    <string name="obfuscation_hp_warning">标头保护要求 S1-S4 填充至少为 12。</string>
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">简单</string>
     <string name="obfuscation_mode_advanced">高级</string>
@@ -259,6 +272,8 @@
     <string name="obfuscation_category_magic">包大小 (Magic)</string>
     <string name="obfuscation_category_headers">头部</string>
     <string name="obfuscation_category_advanced">高级</string>
+    <string name="obfuscation_category_mimicry">Mimicry &amp; Protection</string>
+    <string name="obfuscation_category_timings">Timings (Ranges)</string>
     <string name="custom_config">自定义配置</string>
     <!-- About App Screen -->
     <string name="about_community">社区</string>
