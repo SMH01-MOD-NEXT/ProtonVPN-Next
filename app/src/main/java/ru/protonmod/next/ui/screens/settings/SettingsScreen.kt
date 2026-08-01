@@ -17,6 +17,9 @@
 
 package ru.protonmod.next.ui.screens.settings
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import androidx.compose.foundation.BorderStroke
 import ru.protonmod.next.ui.utils.isTablet
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,6 +59,8 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
 import androidx.compose.ui.platform.LocalLocale
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
+import ru.protonmod.next.ui.widget.VpnWidgetProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,6 +83,7 @@ fun SettingsScreen(
     onNavigateToCertSettings: (() -> Unit)? = null,
     onNavigateToNetShield: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null,
+    onNavigateToAiSettings: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -135,6 +141,7 @@ fun SettingsScreen(
                 onNavigateToCertSettings = onNavigateToCertSettings,
                 onNavigateToNetShield = onNavigateToNetShield,
                 onNavigateToConnectionVerification = onNavigateToConnectionVerification,
+                onNavigateToAiSettings = onNavigateToAiSettings,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 onCheckForUpdates = viewModel::checkForUpdates,
                 modifier = Modifier
@@ -173,7 +180,8 @@ fun SettingsContent(
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     onNavigateToCertSettings: (() -> Unit)? = null,
     onNavigateToNetShield: (() -> Unit)? = null,
-    onNavigateToConnectionVerification: (() -> Unit)? = null
+    onNavigateToConnectionVerification: (() -> Unit)? = null,
+    onNavigateToAiSettings: (() -> Unit)? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -252,6 +260,11 @@ fun SettingsContent(
                             onNotificationsChange = onNotificationsChange
                         )
 
+                        AiSettingsSection(
+                            state = state,
+                            onNavigateToAiSettings = onNavigateToAiSettings
+                        )
+
                         if (!state.isPrivacyBuild) {
                             UpdateSettingsSection(
                                 state = state,
@@ -319,6 +332,14 @@ fun SettingsContent(
                     onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                     onAllowLanChange = onAllowLanChange,
                     onTorModeChange = onTorModeChange
+                )
+            }
+
+            item(contentType = "AiSettings") {
+                AiSettingsSection(
+                    state = state,
+                    modifier = contentModifier,
+                    onNavigateToAiSettings = onNavigateToAiSettings
                 )
             }
 
@@ -437,7 +458,7 @@ private fun UpdateSettingsSection(
 @Composable
 private fun WidgetSettingsSection(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val appWidgetManager = remember { android.appwidget.AppWidgetManager.getInstance(context) }
+    val appWidgetManager = remember { AppWidgetManager.getInstance(context) }
     val isSupported = remember { appWidgetManager.isRequestPinAppWidgetSupported }
 
     if (isSupported) {
@@ -447,7 +468,7 @@ private fun WidgetSettingsSection(modifier: Modifier = Modifier) {
                 title = stringResource(R.string.settings_widget_add_to_home),
                 subtitle = stringResource(R.string.settings_widget_add_to_home_desc),
                 onClick = {
-                    val myProvider = android.content.ComponentName(context, ru.protonmod.next.ui.widget.VpnWidgetProvider::class.java)
+                    val myProvider = ComponentName(context, VpnWidgetProvider::class.java)
                     appWidgetManager.requestPinAppWidget(myProvider, null, null)
                 }
             )
@@ -538,10 +559,10 @@ private fun CustomizationSettingsSection(
         )
 
         val currentLoadModeName = when (state.serverLoadDisplayMode) {
-            ru.protonmod.next.data.local.ServerLoadDisplayMode.ALL -> stringResource(R.string.load_mode_all)
-            ru.protonmod.next.data.local.ServerLoadDisplayMode.LINE -> stringResource(R.string.load_mode_line)
-            ru.protonmod.next.data.local.ServerLoadDisplayMode.PERCENT -> stringResource(R.string.load_mode_percent)
-            ru.protonmod.next.data.local.ServerLoadDisplayMode.HIDDEN -> stringResource(R.string.load_mode_hidden)
+            ServerLoadDisplayMode.ALL -> stringResource(R.string.load_mode_all)
+            ServerLoadDisplayMode.LINE -> stringResource(R.string.load_mode_line)
+            ServerLoadDisplayMode.PERCENT -> stringResource(R.string.load_mode_percent)
+            ServerLoadDisplayMode.HIDDEN -> stringResource(R.string.load_mode_hidden)
         }
 
         SettingRowWithIcon(
@@ -638,6 +659,22 @@ private fun PrivacySettingsSection(
             subtitle = stringResource(R.string.settings_allow_lan_desc),
             checked = state.allowLanEnabled,
             onCheckedChange = onAllowLanChange
+        )
+    }
+}
+
+@Composable
+private fun AiSettingsSection(
+    state: SettingsUiState,
+    modifier: Modifier = Modifier,
+    onNavigateToAiSettings: (() -> Unit)? = null
+) {
+    SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_ai)) {
+        SettingRowWithIcon(
+            icon = Icons.Rounded.SmartToy,
+            title = stringResource(R.string.ai_settings_title),
+            subtitle = if (state.aiEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
+            onClick = { onNavigateToAiSettings?.invoke() }
         )
     }
 }
@@ -771,7 +808,7 @@ fun TamperSettingsBanner(
             .clickable { onShowDownloads() },
         shape = RoundedCornerShape(12.dp),
         color = colors.notificationError.copy(alpha = 0.1f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, colors.notificationError.copy(alpha = 0.5f))
+        border = BorderStroke(1.dp, colors.notificationError.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier.padding(12.dp),

@@ -63,6 +63,7 @@ import ru.protonmod.next.ui.nav.Screen
 import ru.protonmod.next.ui.nav.appNavGraph
 import ru.protonmod.next.ui.screens.WelcomeScreen
 import ru.protonmod.next.ui.screens.settings.PolicyAcceptanceScreen
+import ru.protonmod.next.ui.screens.ai.AiOverlay
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.ProvideDeviceType
@@ -111,6 +112,8 @@ class MainActivity : ComponentActivity() {
                             viewModel = viewModel,
                             onNavControllerReady = {}
                         )
+                        
+                        AiOverlay()
 
                         val otaViewModel: ru.protonmod.next.ota.OTAUpdateViewModel = hiltViewModel()
                         OTAUpdateOverlay(viewModel = otaViewModel)

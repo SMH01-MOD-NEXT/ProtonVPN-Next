@@ -794,4 +794,21 @@
     <string name="reconnect_required_dont_show_again">Don’t show again</string>
     <string name="settings_reconnect_hint">Reconnect notice</string>
     <string name="settings_reconnect_hint_desc">Warn that changed connection settings apply only after reconnecting</string>
+
+    <!-- AI Mode -->
+    <string name="settings_ai">AI</string>
+    <string name="settings_ai_desc">Experimental AI assistant for app control</string>
+    <string name="ai_settings_title">AI Settings</string>
+    <string name="ai_mode_title">AI Mode</string>
+    <string name="ai_mode_desc">Enable AI assistant to help you configure the app</string>
+    <string name="ai_provider">AI Provider</string>
+    <string name="ai_api_key">API Key</string>
+    <string name="ai_byok_desc">Currently supports Bring Your Own Key (BYOK) mode.</string>
+    <string name="ai_hint_api_key">Enter your API key for the selected provider.</string>
+    <string name="ai_hint_swipe">Swipe down from the top of the screen to open the AI command bar.</string>
+    <string name="ai_input_hint">Ask something (e.g., \"Change port to 1194\")</string>
+    <string name="ai_error_no_key">Please set an API key in AI settings.</string>
+    <string name="ai_processing">Processing…</string>
+    <string name="ai_success">Done!</string>
+    <string name="ai_error_generic">AI error occurred</string>
 </resources>

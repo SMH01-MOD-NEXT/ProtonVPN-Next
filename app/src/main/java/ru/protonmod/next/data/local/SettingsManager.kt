@@ -172,6 +172,10 @@ class SettingsManager @Inject constructor(
 
         private val RECONNECT_HINT_ENABLED = booleanPreferencesKey("reconnect_hint_enabled")
 
+        private val AI_ENABLED = booleanPreferencesKey("ai_enabled")
+        private val AI_PROVIDER = stringPreferencesKey("ai_provider")
+        private val AI_API_KEY = stringPreferencesKey("ai_api_key")
+
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
         private val AWG_JMAX = intPreferencesKey("awg_jmax")
@@ -319,6 +323,10 @@ class SettingsManager @Inject constructor(
 
     /** Whether the "changes apply after reconnect" notice is shown while the tunnel is up. */
     val reconnectHintEnabled: Flow<Boolean> = dataStore.data.map { it[RECONNECT_HINT_ENABLED] ?: true }
+
+    val aiEnabled: Flow<Boolean> = dataStore.data.map { it[AI_ENABLED] ?: false }
+    val aiProvider: Flow<String> = dataStore.data.map { it[AI_PROVIDER] ?: "openai" }
+    val aiApiKey: Flow<String> = dataStore.data.map { it[AI_API_KEY] ?: "" }
 
     // Privacy-first defaults: only crash reports and handled errors are enabled.
     // All optional telemetry requires an explicit user opt-in.
@@ -660,6 +668,18 @@ class SettingsManager @Inject constructor(
         dataStore.edit { it[RECONNECT_HINT_ENABLED] = enabled }
     }
 
+    suspend fun setAiEnabled(enabled: Boolean) {
+        dataStore.edit { it[AI_ENABLED] = enabled }
+    }
+
+    suspend fun setAiProvider(provider: String) {
+        dataStore.edit { it[AI_PROVIDER] = provider }
+    }
+
+    suspend fun setAiApiKey(key: String) {
+        dataStore.edit { it[AI_API_KEY] = key }
+    }
+
     suspend fun setSelectedProfileId(id: String) {
         dataStore.edit { it[SELECTED_PROFILE_ID] = id }
     }
@@ -905,7 +925,7 @@ class SettingsManager @Inject constructor(
                     SENTRY_NON_FATAL_ENABLED.name, SENTRY_SESSION_REPLAY_ENABLED.name,
                     SENTRY_ANR_ENABLED.name, SENTRY_METRICS_ENABLED.name,
                     SENTRY_LOGS_ENABLED.name, RECONNECT_HINT_ENABLED.name,
-                    IP_HIDDEN.name -> {
+                    AI_ENABLED.name, IP_HIDDEN.name -> {
                         val boolValue = value.toBoolean()
                         @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<Boolean>] = boolValue
@@ -934,7 +954,8 @@ class SettingsManager @Inject constructor(
                     API_PROXY_HOST.name, API_PROXY_TYPE.name, API_PROXY_USERNAME.name,
                     API_PROXY_PASSWORD.name, SPOOF_COUNTRY_CODE.name, SELECTED_PROFILE_ID.name,
                     CUSTOM_PROFILES.name, NETSHIELD_LEVEL.name, QUICK_CONNECT_STRATEGY.name,
-                    QUICK_CONNECT_TARGET_ID.name, SETUP_STEP.name, AWG_H1.name,
+                    QUICK_CONNECT_TARGET_ID.name, SETUP_STEP.name, AI_PROVIDER.name,
+                    AI_API_KEY.name, AWG_H1.name,
                     AWG_H2.name, AWG_H3.name, AWG_H4.name, AWG_I1.name, AWG_I2.name,
                     AWG_I3.name, AWG_I4.name, AWG_I5.name, AWG_HEADER_PROTECTION_KEY.name,
                     AWG_CONTENT_PADDING_ADDITION.name, AWG_REKEY_AFTER_TIME.name,
@@ -1009,6 +1030,9 @@ class SettingsManager @Inject constructor(
             POLICY_ACCEPTED_VERSION.name -> POLICY_ACCEPTED_VERSION
             SETUP_STEP.name -> SETUP_STEP
             RECONNECT_HINT_ENABLED.name -> RECONNECT_HINT_ENABLED
+            AI_ENABLED.name -> AI_ENABLED
+            AI_PROVIDER.name -> AI_PROVIDER
+            AI_API_KEY.name -> AI_API_KEY
             AWG_JC.name -> AWG_JC
             AWG_JMIN.name -> AWG_JMIN
             AWG_JMAX.name -> AWG_JMAX

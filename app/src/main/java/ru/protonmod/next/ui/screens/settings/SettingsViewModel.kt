@@ -63,6 +63,7 @@ data class SettingsUiState(
     val notificationsEnabled: Boolean = true,
     val allowLanEnabled: Boolean = false,
     val reconnectHintEnabled: Boolean = true,
+    val aiEnabled: Boolean = false,
 
     // Connection configs
     val splitTunnelingEnabled: Boolean = false,
@@ -313,7 +314,8 @@ class SettingsViewModel @Inject constructor(
         settingsManager.proxyChainEnabled,
         settingsManager.proxyChainConfig,
         settingsManager.torModeEnabled,
-        settingsManager.reconnectHintEnabled
+        settingsManager.reconnectHintEnabled,
+        settingsManager.aiEnabled
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -391,7 +393,8 @@ class SettingsViewModel @Inject constructor(
             proxyChainConfig = args[72] as String,
             isProxyChainConfigValid = ProxyLinkParser.isValid(args[72] as String),
             torModeEnabled = args[73] as Boolean,
-            reconnectHintEnabled = args[74] as Boolean
+            reconnectHintEnabled = args[74] as Boolean,
+            aiEnabled = args[75] as Boolean
         )
     }.stateIn(
         scope = viewModelScope,
