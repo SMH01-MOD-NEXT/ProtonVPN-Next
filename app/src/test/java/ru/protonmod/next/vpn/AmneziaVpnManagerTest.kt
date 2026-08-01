@@ -292,6 +292,40 @@ class AmneziaVpnManagerTest {
     }
 
     @Test
+    fun `include mode adds VPN package to allowed applications`() = runTest(testDispatcher) {
+        val server = PhysicalServer(
+            id = "server_1",
+            domain = "node.protonvpn.com",
+            status = 1,
+            wgPublicKey = "pubkey"
+        )
+        val session = SessionEntity(
+            accessToken = "at",
+            refreshToken = "rt",
+            sessionId = "sid",
+            userId = "uid",
+            wgPrivateKey = "privkey",
+            wgPublicKeyPem = "pubkeypem",
+            wgCertificate = "cert"
+        )
+        whenever(sessionDao.getSession()).thenReturn(session)
+        whenever(settingsManager.splitTunnelingEnabled).thenReturn(flowOf(true))
+        whenever(settingsManager.splitTunnelingMode).thenReturn(flowOf("include"))
+        whenever(settingsManager.excludedApps).thenReturn(flowOf(setOf("org.telegram.messenger")))
+
+        manager.connect("logical_1", server, session)
+        advanceUntilIdle()
+
+        verify(awgBoxConfigGenerator).buildConfig(
+            any(), any(), any(), any(), any(),
+            eq(true),
+            any(),
+            eq(setOf("org.telegram.messenger", "ru.protonmod.next")),
+            any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any()
+        )
+    }
+
+    @Test
     fun `VPN state transitions to CONNECTED when the new VPN network is usable`() = runTest(testDispatcher) {
         whenever(vpnNetworkMonitor.awaitUsable(any(), any(), any())).thenReturn(true)
 
