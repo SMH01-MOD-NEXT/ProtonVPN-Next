@@ -677,7 +677,6 @@
     <string name="reconnect_required_dont_show_again">不再显示</string>
     <string name="settings_reconnect_hint">重连提醒</string>
     <string name="settings_reconnect_hint_desc">提醒更改后的连接设置仅在重新连接后生效</string>
-
     <!-- AI Mode -->
     <string name="settings_ai">AI</string>
     <string name="settings_ai_desc">用于应用控制的实验性 AI 助手</string>
