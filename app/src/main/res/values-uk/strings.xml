@@ -233,6 +233,19 @@
     <string name="obfuscation_i3">Спеціальне сміття (I3)</string>
     <string name="obfuscation_i4">Спеціальне сміття (I4)</string>
     <string name="obfuscation_i5">Спеціальне сміття (I5)</string>
+    <string name="obfuscation_hp_key">Ключ захисту заголовків</string>
+    <string name="obfuscation_hp_key_desc">Шифрує низькоентропійні поля заголовків. Потребує S1-S4 ≥ 12.</string>
+    <string name="obfuscation_hp_generate">Згенерувати ключ</string>
+    <string name="obfuscation_cp_addition">Додаткове заповнення вмісту</string>
+    <string name="obfuscation_cp_addition_desc">Випадковий шум, що додається до кожного пакета даних (підтримує діапазони, наприклад 0-100).</string>
+    <string name="obfuscation_rekey_after">Час переузгодження (Rekey After)</string>
+    <string name="obfuscation_rekey_timeout">Таймаут переузгодження (Rekey Timeout)</string>
+    <string name="obfuscation_reject_after">Час відхилення (Reject After)</string>
+    <string name="obfuscation_keepalive_timeout">Таймаут Keepalive</string>
+    <string name="obfuscation_max_handshake">Макс. спроб рукостискання</string>
+    <string name="obfuscation_persistent_keepalive">Інтервал Keepalive</string>
+    <string name="obfuscation_range_hint">Підтримує діапазони (напр. 20-30)</string>
+    <string name="obfuscation_hp_warning">Захист заголовків потребує, щоб відступи S1-S4 були не менше 12.</string>
     <!-- Obfuscation Modes -->
     <string name="obfuscation_mode_easy">Простий</string>
     <string name="obfuscation_mode_advanced">Розширений</string>
@@ -259,6 +272,8 @@
     <string name="obfuscation_category_magic">Розміри пакетів (Magic)</string>
     <string name="obfuscation_category_headers">Заголовки</string>
     <string name="obfuscation_category_advanced">Розширені</string>
+    <string name="obfuscation_category_mimicry">Mimicry &amp; Protection</string>
+    <string name="obfuscation_category_timings">Timings (Ranges)</string>
     <string name="custom_config">Своя конфігурація</string>
     <!-- About App Screen -->
     <string name="about_community">Спільнота</string>
