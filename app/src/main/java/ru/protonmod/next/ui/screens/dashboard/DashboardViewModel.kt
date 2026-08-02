@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import ru.protonmod.next.vpn.VpnTunnelState
@@ -49,10 +48,6 @@ import ru.protonmod.next.data.local.RecentConnectionEntity
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import ru.protonmod.next.data.local.TrafficStatsDao
 import ru.protonmod.next.data.local.TrafficStatsEntity
 import ru.protonmod.next.data.local.VpnProfileEntity
@@ -75,18 +70,6 @@ data class LocationText(
     val countryCode: String? = null,
     val ip: String,
 )
-
-internal data class IpLocationData(val ip: String, val countryCode: String)
-
-internal fun parseProtonLocation(body: String): IpLocationData? = runCatching {
-    val json = Json.parseToJsonElement(body).jsonObject
-    fun value(vararg keys: String): String = keys.firstNotNullOfOrNull { key ->
-        json[key]?.jsonPrimitive?.contentOrNull?.trim()?.takeIf(String::isNotEmpty)
-    }.orEmpty()
-    val ip = value("IP", "ip")
-    val country = value("Country", "country", "CountryCode")
-    if (ip.isBlank() || country.isBlank()) null else IpLocationData(ip, country)
-}.getOrNull()
 
 sealed class DashboardUiState {
     data object Loading : DashboardUiState()
@@ -136,14 +119,14 @@ class DashboardViewModel @Inject constructor(
     // noProxyClient forces requests outside any system proxy so we always see the device's real IP.
     private val noProxyClient: OkHttpClient = OkHttpClient.Builder()
         .proxy(Proxy.NO_PROXY)
-        .connectTimeout(4, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(4, java.util.concurrent.TimeUnit.SECONDS)
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
         .build()
 
     // defaultClient lets requests travel through whatever route is active (i.e. the VPN tunnel).
     private val defaultClient: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(4, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(4, java.util.concurrent.TimeUnit.SECONDS)
+        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
         .build()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
@@ -276,18 +259,18 @@ class DashboardViewModel @Inject constructor(
             }
         }
 
-        // Restart IP resolution whenever the VPN state, logical server, or selected physical ExitIP changes.
+        // Use collectLatest on both vpnState AND connectedServer.
+        // This ensures that if the server changes while already connected, we restart the delay and fetch the new IP.
         viewModelScope.launch {
             combine(
                 amneziaVpnManager.vpnState,
-                connectedServerState.connectedServer,
-                amneziaVpnManager.exitIp,
-            ) { state, server, exitIp -> Triple(state, server, exitIp) }
-                .collectLatest { (state, server, exitIp) ->
+                connectedServerState.connectedServer
+            ) { state, server ->
+                Pair(state, server)
+            }.collectLatest { (state, server) ->
                 if (state == AmneziaVpnManager.VpnState.CONNECTED && server != null) {
-                    // Match the official client: publish the connected physical server's ExitIP
-                    // immediately, then let Proton's authenticated location endpoint confirm it.
-                    exitIp?.let { publishVpnLocation(it, server.exitCountry) }
+                    // Give the tunnel 1 second to stabilize routing before starting fetch attempts
+                    delay(1000)
 
                     recentConnectionDao.addRecentConnection(
                         RecentConnectionEntity(
@@ -320,11 +303,7 @@ class DashboardViewModel @Inject constructor(
 
     private fun fetchOriginalLocation() {
         viewModelScope.launch {
-            val location = if (amneziaVpnManager.vpnState.value == AmneziaVpnManager.VpnState.DISCONNECTED) {
-                fetchProtonLocation() ?: fetchRealLocation()
-            } else {
-                fetchRealLocation()
-            }
+            val location = fetchRealLocation()
             if (location != null) {
                 val cleanCode = location.countryCode.trim().uppercase().ifBlank { "US" }
                 val localizedCountry = CountryUtils.getCountryName(context, cleanCode)
@@ -340,50 +319,67 @@ class DashboardViewModel @Inject constructor(
 
     private fun fetchVpnLocation(countryCode: String) {
         viewModelScope.launch {
-            // Proton is the primary source. The public providers are intentionally only a fallback.
-            val location = fetchProtonLocation() ?: fetchRealLocation(bypassVpn = false)
-            if (location != null && amneziaVpnManager.tunnelState.value == VpnTunnelState.UP) {
-                publishVpnLocation(location.ip, location.countryCode.ifBlank { countryCode })
+            val unknown = context.getString(R.string.unknown)
+            val originalIp = _originalLocationText.value?.ip
+
+            // Clear connection pool to ensure we don't reuse a pre-VPN connection.
+            withContext(Dispatchers.IO) {
+                defaultClient.connectionPool.evictAll()
+            }
+
+            var location: LocationData? = null
+            
+            // Try up to 3 cycles to get an IP that is NOT the original one (handling routing lag)
+            for (cycle in 1..3) {
+                location = fetchRealLocation(bypassVpn = false)
+                
+                if (location != null) {
+                    // If we got an IP and it's different from original (or original is unknown) - success
+                    if (location.ip != originalIp || originalIp == unknown) {
+                        break 
+                    } else {
+                        ProtonLogger.d("DashboardVM", "Leak detected: fetched IP matches original (cycle $cycle). Waiting...")
+                    }
+                }
+                
+                if (cycle < 3) {
+                    delay(2000)
+                    withContext(Dispatchers.IO) { defaultClient.connectionPool.evictAll() }
+                }
+            }
+
+            // Prioritize API country code if valid, otherwise use the server's declared country code
+            val apiCountryCode = location?.countryCode?.trim()?.uppercase()?.ifBlank { null }
+            val fallbackCountryCode = countryCode.trim().uppercase().ifBlank { "US" }
+            val finalCountryCode = apiCountryCode ?: fallbackCountryCode
+
+            val localizedCountry = CountryUtils.getCountryName(context, finalCountryCode)
+                .ifBlank { finalCountryCode }
+
+            // If API failed to fetch IP after all retries, use "Unknown"
+            val safeIp = location?.ip?.ifBlank { null } ?: unknown
+            
+            // If IP is unknown, country name and code should also be unknown/null for honesty as in official app
+            val (finalCountryName, finalSafeCountryCode) = if (location?.ip.isNullOrBlank()) {
+                unknown to null
+            } else {
+                localizedCountry to finalCountryCode
+            }
+
+            // Guard against race condition: check if tunnel is still active before updating UI
+            if (amneziaVpnManager.tunnelState.value == VpnTunnelState.UP) {
+                _vpnLocationText.value = LocationText(finalCountryName, finalSafeCountryCode, safeIp)
             }
         }
-    }
-
-    private fun publishVpnLocation(ip: String, countryCode: String) {
-        val cleanIp = ip.trim()
-        if (cleanIp.isBlank()) return
-        val cleanCode = countryCode.trim().uppercase().ifBlank { "US" }
-        val localizedCountry = CountryUtils.getCountryName(context, cleanCode).ifBlank { cleanCode }
-        _vpnLocationText.value = LocationText(localizedCountry, cleanCode, cleanIp)
-    }
-
-    private suspend fun fetchProtonLocation(): IpLocationData? {
-        val session = sessionDao.getSession() ?: return null
-        val startedAt = System.currentTimeMillis()
-        val location = withTimeoutOrNull(3_000) {
-            vpnRepository.getUserLocation(session.accessToken, session.sessionId)
-                .getOrNull()
-                ?.let(::parseProtonLocation)
-        }
-        if (location != null) {
-            ProtonLogger.recordDistribution(
-                "proton_location_fetch_latency",
-                (System.currentTimeMillis() - startedAt).toDouble(),
-            )
-            ProtonLogger.recordCount("proton_location_fetch_success", 1.0)
-        } else {
-            ProtonLogger.w("DashboardVM", "Proton location unavailable; using public-IP fallback")
-            ProtonLogger.recordCount("proton_location_fetch_fallback", 1.0)
-        }
-        return location
     }
 
     /**
      * Fetches the user's real location based on IP.
      *
      * @param bypassVpn If true, attempts to bypass the VPN tunnel (used for original IP).
-     * @return [IpLocationData] containing location info, or null in case of an error.
+     * @return [LocationData] object containing location info, or null in case of an error.
      */
-    private suspend fun fetchRealLocation(bypassVpn: Boolean = true): IpLocationData? = withContext(Dispatchers.IO) {
+    private suspend fun fetchRealLocation(bypassVpn: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
         
         // CRITICAL FIX: To truly bypass the VPN tunnel on Android, we must bind the socket
@@ -416,30 +412,38 @@ class DashboardViewModel @Inject constructor(
         )
 
         for (url in endpoints) {
-            try {
-                val request = Request.Builder().url(url).build()
-                client.newCall(request).execute().use { response ->
-                    if (response.isSuccessful) {
-                        val body = response.body.string()
-                        if (body.isNotBlank()) {
-                            val json = JSONObject(body)
-                            val ip = json.optString("ip")
-                                .ifBlank { json.optString("ipAddress") }
-                                .ifBlank { json.optString("query") }
-                            val countryCode = json.optString("cc")
-                                .ifBlank { json.optString("countryCode") }
-                                .ifBlank { json.optString("country_code") }
-                            if (ip.isNotBlank() && countryCode.isNotBlank()) {
-                                val duration = System.currentTimeMillis() - startTime
-                                ProtonLogger.recordDistribution("location_fetch_latency", duration.toDouble())
-                                ProtonLogger.recordCount("location_fetch_success", 1.0)
-                                return@withContext IpLocationData(ip.trim(), countryCode.trim())
+            // Try each endpoint up to 3 times with 1s delay before moving to next
+            for (attempt in 1..3) {
+                try {
+                    val request = Request.Builder().url(url).build()
+                    client.newCall(request).execute().use { response ->
+                        if (response.isSuccessful) {
+                            val body = response.body.string()
+                            if (body.isNotBlank()) {
+                                val json = JSONObject(body)
+                                
+                                val ip = json.optString("ip")
+                                    .ifBlank { json.optString("ipAddress") }
+                                    .ifBlank { json.optString("query") }
+                                
+                                val countryCode = json.optString("cc")
+                                    .ifBlank { json.optString("countryCode") }
+                                    .ifBlank { json.optString("country_code") }
+
+                                if (ip.isNotBlank() && countryCode.isNotBlank()) {
+                                    val duration = System.currentTimeMillis() - startTime
+                                    ProtonLogger.recordDistribution("location_fetch_latency", duration.toDouble())
+                                    ProtonLogger.recordCount("location_fetch_success", 1.0)
+                                    
+                                    return@withContext LocationData(ip.trim(), countryCode.trim())
+                                }
                             }
                         }
                     }
+                } catch (e: Exception) {
+                    ProtonLogger.w("DashboardVM", "Fetch failed from $url (attempt $attempt): ${e.message}")
                 }
-            } catch (e: Exception) {
-                ProtonLogger.w("DashboardVM", "Public-IP fallback failed for $url: ${e.message}")
+                if (attempt < 3) delay(1000)
             }
         }
         
@@ -448,6 +452,7 @@ class DashboardViewModel @Inject constructor(
         null
     }
 
+    private data class LocationData(val ip: String, val countryCode: String)
 
     override fun onCleared() {
         super.onCleared()
