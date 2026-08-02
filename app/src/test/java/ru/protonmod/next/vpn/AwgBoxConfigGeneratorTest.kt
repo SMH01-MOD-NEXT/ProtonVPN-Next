@@ -329,65 +329,6 @@ class AwgBoxConfigGeneratorTest {
         assertEquals("20-30", peer.getValue("persistent_keepalive_interval").jsonPrimitive.content)
     }
 
-    @Test
-    fun `multi hop routes exit endpoint through entry endpoint`() {
-        val config = generator.buildConfig(
-            serverPublicKey = "EXIT_PUBLIC_KEY",
-            privateKey = "PRIVATE_KEY",
-            localIp = "10.2.0.2",
-            dnsServer = "10.2.0.1",
-            targetIp = "198.51.100.20",
-            port = 443,
-            multiHopEntry = MultiHopEndpoint(
-                publicKey = "ENTRY_PUBLIC_KEY",
-                targetIp = "192.0.2.10",
-                port = 443
-            ),
-            obfuscationParams = AmneziaVpnManager.ObfuscationParams(
-                jc = 3, jmin = 1, jmax = 3, s1 = 0, s2 = 0,
-                h1 = "1", h2 = "2", h3 = "3", h4 = "4", i1 = ""
-            )
-        )
-
-        val root = Json.parseToJsonElement(config).jsonObject
-        val endpoints = root.getValue("endpoints").jsonArray.map { it.jsonObject }
-        val entry = endpoints.single { it.getValue("tag").jsonPrimitive.content == "proton-awg-entry" }
-        val exit = endpoints.single { it.getValue("tag").jsonPrimitive.content == "proton-awg" }
-        val entryPeer = entry.getValue("peers").jsonArray.single().jsonObject
-        val exitPeer = exit.getValue("peers").jsonArray.single().jsonObject
-
-        assertEquals("192.0.2.10", entryPeer.getValue("address").jsonPrimitive.content)
-        assertEquals(443, entryPeer.getValue("port").jsonPrimitive.content.toInt())
-        assertEquals("ENTRY_PUBLIC_KEY", entryPeer.getValue("public_key").jsonPrimitive.content)
-        assertEquals("198.51.100.20", exitPeer.getValue("address").jsonPrimitive.content)
-        assertEquals(51820, exitPeer.getValue("port").jsonPrimitive.content.toInt())
-        assertEquals("EXIT_PUBLIC_KEY", exitPeer.getValue("public_key").jsonPrimitive.content)
-        assertTrue("entry hop keeps AWG obfuscation", "jc" in entry)
-        assertFalse("exit hop must not contain AWG obfuscation", "jc" in exit)
-        assertFalse("exit hop must not contain AWG init packets", "i1" in exit)
-        assertEquals("proton-awg-entry", exit.getValue("detour").jsonPrimitive.content)
-        assertEquals("proton-awg", root.getValue("route").jsonObject.getValue("final").jsonPrimitive.content)
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun `rejects Tor combined with multi hop`() {
-        generator.buildConfig(
-            serverPublicKey = "EXIT_PUBLIC_KEY",
-            privateKey = "PRIVATE_KEY",
-            localIp = "10.2.0.2",
-            dnsServer = "10.2.0.1",
-            targetIp = "198.51.100.20",
-            torModeEnabled = true,
-            torDataDirectory = "/data/tor",
-            torExecutablePath = "/data/libtor.so",
-            multiHopEntry = MultiHopEndpoint("ENTRY_PUBLIC_KEY", "192.0.2.10", 443),
-            obfuscationParams = AmneziaVpnManager.ObfuscationParams(
-                jc = 0, jmin = 0, jmax = 0, s1 = 0, s2 = 0,
-                h1 = "", h2 = "", h3 = "", h4 = "", i1 = ""
-            )
-        )
-    }
-
     @Test(expected = IllegalArgumentException::class)
     fun `rejects invalid endpoint port`() {
         generator.buildConfig(

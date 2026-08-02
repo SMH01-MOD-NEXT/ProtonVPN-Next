@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -50,6 +51,7 @@ import ru.protonmod.next.data.local.ConnectionVerificationMode
 import ru.protonmod.next.netshield.LocalNetShield
 import ru.protonmod.next.data.local.SessionEntity
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.PhysicalServer
@@ -178,8 +180,7 @@ class AmneziaVpnManager @Inject constructor(
         val server: PhysicalServer,
         val overridePort: Int?,
         val overrideObfuscation: Boolean?,
-        val obfuscationParams: ObfuscationParams?,
-        val multiHopEntryServer: PhysicalServer?
+        val obfuscationParams: ObfuscationParams?
     )
 
     @Volatile
@@ -309,6 +310,19 @@ class AmneziaVpnManager @Inject constructor(
             ).collectLatest {
                 updateServiceSettings()
             }
+        }
+
+        applicationScope.launch {
+            combine(
+                settingsManager.ipRotationEnabled,
+                settingsManager.ipRotationIntervalMinutes,
+                tunnelState,
+            ) { enabled, intervalMinutes, state -> Triple(enabled, intervalMinutes, state) }
+                .collectLatest { (enabled, intervalMinutes, state) ->
+                    if (!enabled || state != VpnTunnelState.UP) return@collectLatest
+                    delay(intervalMinutes.toLong().minutes)
+                    if (_tunnelState.value == VpnTunnelState.UP) rotateIp()
+                }
         }
 
         applicationScope.launch {
@@ -598,8 +612,7 @@ class AmneziaVpnManager @Inject constructor(
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null,
         logicalServer: LogicalServer? = null,
-        forceFallback: Boolean = false,
-        multiHopEntryServer: PhysicalServer? = null
+        forceFallback: Boolean = false
     ) {
         // Immediate UI update to avoid "VPN" placeholder
         if (logicalServer != null) {
@@ -634,7 +647,7 @@ class AmneziaVpnManager @Inject constructor(
                     connectedServerState.setConnectedServer(resolved)
                 }
 
-                connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback, multiHopEntryServer)
+                connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
 
                 // Track connection attempt
                 ProtonLogger.recordCount("vpn_connection_attempt", 1.0)
@@ -655,8 +668,7 @@ class AmneziaVpnManager @Inject constructor(
         overridePort: Int? = null,
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null,
-        forceFallback: Boolean = false,
-        multiHopEntryServer: PhysicalServer? = null
+        forceFallback: Boolean = false
     ): Result<Unit> = withContext(dispatcherProvider.io()) {
         try {
             lastConnectionRequest = LastConnectionRequest(
@@ -664,8 +676,7 @@ class AmneziaVpnManager @Inject constructor(
                 server = server,
                 overridePort = overridePort,
                 overrideObfuscation = overrideObfuscation,
-                obfuscationParams = obfuscationParams,
-                multiHopEntryServer = multiHopEntryServer
+                obfuscationParams = obfuscationParams
             )
 
             val serverLogInfo = "${server.id} (Domain: ${server.domain}, LogicalID: $logicalServerId)"
@@ -822,21 +833,6 @@ class AmneziaVpnManager @Inject constructor(
                     p
                 } else port
             }
-            val multiHopEntry = multiHopEntryServer?.let { entryServer ->
-                val entryIp = runCatching {
-                    vpnNetworkMonitor.prepareUnderlyingConnection(
-                        endpointHost = entryServer.domain,
-                        proxyChainConfig = proxyChainConfig.takeIf { proxyChainEnabled }
-                    ).endpointIpv4
-                }.getOrNull()
-                    ?: vpnNetworkMonitor.resolveIpv4OnUnderlying(entryServer.domain)
-                    ?: entryServer.exitIp?.let(::normalizeIpv4Address)
-                    ?: throw Exception("Unable to resolve Multi Hop entry ${entryServer.domain} over IPv4")
-                val entryPublicKey = entryServer.wgPublicKey
-                    ?: throw Exception("Missing WG Public Key for Multi Hop entry ${entryServer.id}")
-                MultiHopEndpoint(entryPublicKey, entryIp, selectedPort)
-            }
-
             val isObfuscationEnabled = !proxyChainEnabled &&
                 (overrideObfuscation ?: settingsManager.obfuscationEnabled.first())
 
@@ -903,8 +899,7 @@ class AmneziaVpnManager @Inject constructor(
                 proxyServerOverrides = proxyServerOverrides,
                 torModeEnabled = torModeEnabled,
                 torDataDirectory = File(context.noBackupFilesDir, "tor").absolutePath,
-                torExecutablePath = File(context.applicationInfo.nativeLibraryDir, "libtor.so").absolutePath,
-                multiHopEntry = multiHopEntry
+                torExecutablePath = File(context.applicationInfo.nativeLibraryDir, "libtor.so").absolutePath
             )
             
             ProtonLogger.d(TAG, "Generated awgbox config (length=${configStr.length}, endpoint=$targetIp:$selectedPort)")
@@ -970,8 +965,7 @@ class AmneziaVpnManager @Inject constructor(
         overrideObfuscation: Boolean? = null,
         obfuscationParams: ObfuscationParams? = null,
         logicalServer: LogicalServer? = null,
-        forceFallback: Boolean = false,
-        multiHopEntryServer: PhysicalServer? = null
+        forceFallback: Boolean = false
     ) {
         // Immediate UI update
         if (logicalServer != null) {
@@ -1018,7 +1012,7 @@ class AmneziaVpnManager @Inject constructor(
                     } catch (_: Exception) {
                     }
                     delay(500.milliseconds)
-                    connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback, multiHopEntryServer)
+                    connectInternal(logicalServerId, server, session, overridePort, overrideObfuscation, obfuscationParams, forceFallback)
                 } finally {
                     isReconnecting = false
                 }
@@ -1036,6 +1030,35 @@ class AmneziaVpnManager @Inject constructor(
      * Re-establishes the active tunnel with the same target and overrides, picking up connection
      * settings that were changed after it was established.
      */
+    private suspend fun rotateIp() {
+        val current = connectedServerState.connectedServer.value ?: return
+        val session = sessionDao.getSession() ?: return
+        val candidate = IpRotationSelector.select(
+            servers = vpnRepositoryProvider.get().getCachedServers(),
+            current = current,
+            maxTier = session.userTier,
+            keepCountry = settingsManager.ipRotationKeepCountry.first(),
+        ) ?: run {
+            ProtonLogger.w(TAG, "IP rotation skipped: no eligible alternative server")
+            return
+        }
+        val physicalServer = candidate.servers
+            .filter { it.status == 1 && !it.wgPublicKey.isNullOrBlank() }
+            .minByOrNull { it.load }
+            ?: return
+        val previous = lastConnectionRequest
+        ProtonLogger.action(TAG, "Rotating IP from ${current.id} to ${candidate.id}")
+        reconnect(
+            logicalServerId = candidate.id,
+            server = physicalServer,
+            session = session,
+            overridePort = previous?.overridePort,
+            overrideObfuscation = previous?.overrideObfuscation,
+            obfuscationParams = previous?.obfuscationParams,
+            logicalServer = candidate,
+        )
+    }
+
     fun reconnectCurrent() {
         val request = lastConnectionRequest ?: run {
             ProtonLogger.w(TAG, "Reconnect requested, but no previous connection is known")
@@ -1055,8 +1078,7 @@ class AmneziaVpnManager @Inject constructor(
                 overridePort = request.overridePort,
                 overrideObfuscation = request.overrideObfuscation,
                 obfuscationParams = request.obfuscationParams,
-                logicalServer = connectedServerState.connectedServer.value,
-                multiHopEntryServer = request.multiHopEntryServer
+                logicalServer = connectedServerState.connectedServer.value
             )
         }
     }

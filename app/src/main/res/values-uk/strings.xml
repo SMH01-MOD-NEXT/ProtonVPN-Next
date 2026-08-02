@@ -705,15 +705,16 @@
     <string name="ai_processing">Обробка…</string>
     <string name="ai_success">Готово!</string>
     <string name="ai_error_generic">Сталася помилка AI</string>
-    <string name="connection_mode_standard">Звичайний</string>
-    <string name="connection_mode_multi_hop">Multi Hop</string>
-    <string name="connection_mode_tor">Tor</string>
-    <string name="multi_hop_select_entry">Виберіть перший (вхідний) сервер</string>
-    <string name="multi_hop_select_exit">Вхід: %1$s. Тепер виберіть другий (вихідний) сервер</string>
-    <string name="multi_hop_same_server_error">Вхідний і вихідний сервери мають відрізнятися</string>
-    <string name="multi_hop_add_profile">Додати профіль Multi Hop</string>
-    <string name="multi_hop_create_profile">Створити профіль Multi Hop</string>
-    <string name="multi_hop_entry">Вхідна точка</string>
-    <string name="multi_hop_exit">Вихідна точка</string>
-    <string name="multi_hop_profile_desc">Для країни або міста автоматично вибирається найшвидший доступний сервер</string>
+    <string name="ip_rotation_title">Ротація IP</string>
+    <string name="ip_rotation_description">Автоматично перепідключайтеся до іншого VPN-сервера за розкладом, щоб отримувати нову публічну IP-адресу.</string>
+    <string name="ip_rotation_section_status">Стан</string>
+    <string name="ip_rotation_enable">Увімкнути ротацію IP</string>
+    <string name="ip_rotation_enable_desc">Автоматично змінювати активний VPN-сервер під час підключення.</string>
+    <string name="ip_rotation_interval">Інтервал ротації</string>
+    <string name="ip_rotation_minutes">Кожні %1$d хв.</string>
+    <string name="ip_rotation_location">Розташування</string>
+    <string name="ip_rotation_keep_country">Зберігати поточну країну</string>
+    <string name="ip_rotation_keep_country_desc">Вибирати інший сервер у поточній країні, щоб віртуальне розташування не змінювалося.</string>
+    <string name="ip_rotation_note">Під час ротації VPN короткочасно перепідключається. Активні з’єднання можуть перерватися.</string>
+    <string name="ip_rotation_settings_subtitle">Автоматична зміна VPN-сервера та публічної IP-адреси.</string>
 </resources>

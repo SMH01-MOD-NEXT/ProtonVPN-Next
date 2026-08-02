@@ -25,12 +25,6 @@ import ru.protonmod.next.netshield.NetShieldRuleSet
 import javax.inject.Inject
 import javax.inject.Singleton
 
-data class MultiHopEndpoint(
-    val publicKey: String,
-    val targetIp: String,
-    val port: Int
-)
-
 /** Builds an amnezia-box/sing-box configuration instead of a wg-quick config. */
 interface AwgBoxConfigGenerator {
     fun buildConfig(
@@ -52,8 +46,7 @@ interface AwgBoxConfigGenerator {
         proxyServerOverrides: Map<String, String> = emptyMap(),
         torModeEnabled: Boolean = false,
         torDataDirectory: String? = null,
-        torExecutablePath: String? = null,
-        multiHopEntry: MultiHopEndpoint? = null
+        torExecutablePath: String? = null
     ): String
 }
 
@@ -62,8 +55,6 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
     private val ipSubnetCalculator: IpSubnetCalculator
 ) : AwgBoxConfigGenerator {
     private companion object {
-        const val MULTI_HOP_EXIT_WIREGUARD_PORT = 51820
-
         val IPV4_LITERAL = Regex("^(?:\\d{1,3}\\.){3}\\d{1,3}$")
         const val TOR_FALLBACK_DNS = "1.1.1.1"
         const val TOR_VIRTUAL_ADDR_RANGE = "198.18.0.0/15"
@@ -91,8 +82,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         proxyServerOverrides: Map<String, String>,
         torModeEnabled: Boolean,
         torDataDirectory: String?,
-        torExecutablePath: String?,
-        multiHopEntry: MultiHopEndpoint?
+        torExecutablePath: String?
     ): String {
         require(port in 1..65535) { "Invalid AWG port: $port" }
         require(targetIp.isNotBlank()) { "AWG endpoint is empty" }
@@ -101,18 +91,8 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         val torExecutable = torExecutablePath?.trim()?.takeIf(String::isNotEmpty)
         require(!torModeEnabled || torDataDir != null) { "Tor data directory is required" }
         require(!torModeEnabled || torExecutable != null) { "Tor executable path is required" }
-        require(!torModeEnabled || multiHopEntry == null) { "Tor and Multi Hop cannot be enabled together" }
-        multiHopEntry?.let {
-            require(it.port in 1..65535) { "Invalid Multi Hop entry port: ${it.port}" }
-            require(IPV4_LITERAL.matches(it.targetIp)) { "Multi Hop entry must be an IPv4 address" }
-            require(it.publicKey.isNotBlank()) { "Multi Hop entry public key is empty" }
-        }
 
         val localPrefix = ipSubnetCalculator.normalizeIp(localIp)
-        // Only the outer entry hop uses AWG obfuscation and the selected AWG port.
-        // The inner exit hop is plain WireGuard-over-AWG; a non-obfuscated handshake sent
-        // to an AWG-obfuscated port is ignored by the exit server.
-        val exitPort = if (multiHopEntry != null) MULTI_HOP_EXIT_WIREGUARD_PORT else port
         val proxyChain = proxyChainConfig?.takeIf(String::isNotBlank)
             ?.let(ProxyLinkParser::parseChain)
             .orEmpty()
@@ -168,15 +148,13 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             "mtu" to JsonPrimitive(1408),
             "peers" to JsonArray(listOf(JsonObject(mapOf(
                 "address" to JsonPrimitive(targetIp),
-                "port" to JsonPrimitive(exitPort),
+                "port" to JsonPrimitive(port),
                 "public_key" to JsonPrimitive(serverPublicKey),
                 "allowed_ips" to strings(listOf("0.0.0.0/0")),
                 "persistent_keepalive_interval" to JsonPrimitive(25)
             ))))
         ).apply {
-            if (multiHopEntry != null) {
-                put("detour", JsonPrimitive("proton-awg-entry"))
-            } else if (proxyChain.isNotEmpty()) {
+            if (proxyChain.isNotEmpty()) {
                 put("detour", JsonPrimitive(proxyChain.first().outbound.getValue("tag").let { (it as JsonPrimitive).content }))
             } else {
                 put("jc", JsonPrimitive(obfuscationParams.jc))
@@ -207,51 +185,12 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
 
         val peers = JsonArray(listOf(JsonObject(mapOf(
             "address" to JsonPrimitive(targetIp),
-            "port" to JsonPrimitive(exitPort),
+            "port" to JsonPrimitive(port),
             "public_key" to JsonPrimitive(serverPublicKey),
             "allowed_ips" to strings(listOf("0.0.0.0/0")),
             "persistent_keepalive_interval" to awgValue(obfuscationParams.persistentKeepalive.takeIf { it.isNotBlank() } ?: "25")!!
         ))))
         awg["peers"] = peers
-
-        val entryAwg = multiHopEntry?.let { entry ->
-            linkedMapOf<String, kotlinx.serialization.json.JsonElement>(
-                "type" to JsonPrimitive("awg"),
-                "tag" to JsonPrimitive("proton-awg-entry"),
-                "useIntegratedTun" to JsonPrimitive(false),
-                "address" to strings(listOf(localPrefix)),
-                "private_key" to JsonPrimitive(privateKey),
-                "mtu" to JsonPrimitive(1408),
-                "peers" to JsonArray(listOf(JsonObject(mapOf(
-                    "address" to JsonPrimitive(entry.targetIp),
-                    "port" to JsonPrimitive(entry.port),
-                    "public_key" to JsonPrimitive(entry.publicKey),
-                    "allowed_ips" to strings(listOf("0.0.0.0/0")),
-                    "persistent_keepalive_interval" to awgValue(obfuscationParams.persistentKeepalive.takeIf { it.isNotBlank() } ?: "25")!!
-                ))))
-            ).apply {
-                if (proxyChain.isNotEmpty()) {
-                    put("detour", JsonPrimitive(proxyChain.first().outbound.getValue("tag").let { (it as JsonPrimitive).content }))
-                } else {
-                    put("jc", JsonPrimitive(obfuscationParams.jc))
-                    put("jmin", JsonPrimitive(obfuscationParams.jmin))
-                    put("jmax", JsonPrimitive(obfuscationParams.jmax))
-                    put("s1", JsonPrimitive(obfuscationParams.s1))
-                    put("s2", JsonPrimitive(obfuscationParams.s2))
-                    put("s3", JsonPrimitive(obfuscationParams.s3))
-                    put("s4", JsonPrimitive(obfuscationParams.s4))
-                    awgValue(obfuscationParams.h1)?.let { put("h1", it) }
-                    awgValue(obfuscationParams.h2)?.let { put("h2", it) }
-                    awgValue(obfuscationParams.h3)?.let { put("h3", it) }
-                    awgValue(obfuscationParams.h4)?.let { put("h4", it) }
-                    awgValue(obfuscationParams.i1)?.let { put("i1", it) }
-                    awgValue(obfuscationParams.i2)?.let { put("i2", it) }
-                    awgValue(obfuscationParams.i3)?.let { put("i3", it) }
-                    awgValue(obfuscationParams.i4)?.let { put("i4", it) }
-                    awgValue(obfuscationParams.i5)?.let { put("i5", it) }
-                }
-            }
-        }
 
         val domainRuleOutbound = if (isIncludeMode) tunnelOutbound else "direct"
         val routeRules = buildList {
@@ -383,10 +322,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 put("strategy", JsonPrimitive("ipv4_only"))
             }),
             "inbounds" to JsonArray(listOf(JsonObject(tun))),
-            "endpoints" to JsonArray(buildList {
-                entryAwg?.let { add(JsonObject(it)) }
-                add(JsonObject(awg))
-            }),
+            "endpoints" to JsonArray(listOf(JsonObject(awg))),
             "outbounds" to JsonArray(outbounds),
             "route" to JsonObject(buildMap {
                 put("auto_detect_interface", JsonPrimitive(true))

@@ -699,15 +699,16 @@
     <string name="ai_processing">Өңделуде…</string>
     <string name="ai_success">Дайын!</string>
     <string name="ai_error_generic">AI қатесі орын алды</string>
-    <string name="connection_mode_standard">Қалыпты</string>
-    <string name="connection_mode_multi_hop">Multi Hop</string>
-    <string name="connection_mode_tor">Tor</string>
-    <string name="multi_hop_select_entry">Бірінші (кіру) серверін таңдаңыз</string>
-    <string name="multi_hop_select_exit">Кіру: %1$s. Енді екінші (шығу) серверін таңдаңыз</string>
-    <string name="multi_hop_same_server_error">Кіру және шығу серверлері әртүрлі болуы керек</string>
-    <string name="multi_hop_add_profile">Multi Hop профилін қосу</string>
-    <string name="multi_hop_create_profile">Multi Hop профилін жасау</string>
-    <string name="multi_hop_entry">Кіру нүктесі</string>
-    <string name="multi_hop_exit">Шығу нүктесі</string>
-    <string name="multi_hop_profile_desc">Ел немесе қала үшін ең жылдам қолжетімді сервер автоматты түрде таңдалады</string>
+    <string name="ip_rotation_title">IP ротациясы</string>
+    <string name="ip_rotation_description">Жаңа жалпыға ортақ IP мекенжайын алу үшін кесте бойынша басқа VPN серверіне автоматты түрде қайта қосылыңыз.</string>
+    <string name="ip_rotation_section_status">Күйі</string>
+    <string name="ip_rotation_enable">IP ротациясын қосу</string>
+    <string name="ip_rotation_enable_desc">Қосылым кезінде белсенді VPN серверін автоматты түрде өзгерту.</string>
+    <string name="ip_rotation_interval">Ротация аралығы</string>
+    <string name="ip_rotation_minutes">Әр %1$d минут сайын</string>
+    <string name="ip_rotation_location">Орналасу</string>
+    <string name="ip_rotation_keep_country">Ағымдағы елді сақтау</string>
+    <string name="ip_rotation_keep_country_desc">Виртуалды орналасу өзгермеуі үшін ағымдағы елдегі басқа серверді таңдау.</string>
+    <string name="ip_rotation_note">Ротация кезінде VPN қысқа уақытқа қайта қосылады. Белсенді қосылымдар үзілуі мүмкін.</string>
+    <string name="ip_rotation_settings_subtitle">VPN сервері мен жалпыға ортақ IP мекенжайын автоматты түрде өзгерту.</string>
 </resources>

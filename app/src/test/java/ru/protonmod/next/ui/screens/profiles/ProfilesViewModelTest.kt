@@ -144,7 +144,7 @@ class ProfilesViewModelTest {
         val uiProfile = VpnProfileUiModel(id = "p_1", name = "My Profile", targetCountry = "US")
         viewModel.connectWithProfile(uiProfile)
         advanceUntilIdle()
-        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any(), anyOrNull())
+        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any())
         
         collectJob.cancel()
     }

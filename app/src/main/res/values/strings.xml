@@ -814,15 +814,16 @@
     <string name="ai_processing">Processing…</string>
     <string name="ai_success">Done!</string>
     <string name="ai_error_generic">AI error occurred</string>
-    <string name="connection_mode_standard">Standard</string>
-    <string name="connection_mode_multi_hop">Multi Hop</string>
-    <string name="connection_mode_tor">Tor</string>
-    <string name="multi_hop_select_entry">Select the first (entry) server</string>
-    <string name="multi_hop_select_exit">Entry: %1$s. Now select the second (exit) server</string>
-    <string name="multi_hop_same_server_error">Entry and exit servers must be different</string>
-    <string name="multi_hop_add_profile">Add Multi Hop profile</string>
-    <string name="multi_hop_create_profile">Create Multi Hop profile</string>
-    <string name="multi_hop_entry">Entry location</string>
-    <string name="multi_hop_exit">Exit location</string>
-    <string name="multi_hop_profile_desc">The fastest available server is selected for country or city locations</string>
+    <string name="ip_rotation_title">IP rotation</string>
+    <string name="ip_rotation_description">Automatically reconnect to another VPN server on a schedule to receive a new public IP address.</string>
+    <string name="ip_rotation_section_status">Status</string>
+    <string name="ip_rotation_enable">Enable IP rotation</string>
+    <string name="ip_rotation_enable_desc">Change the active VPN server automatically while connected.</string>
+    <string name="ip_rotation_interval">Rotation interval</string>
+    <string name="ip_rotation_minutes">Every %1$d minutes</string>
+    <string name="ip_rotation_location">Location</string>
+    <string name="ip_rotation_keep_country">Keep current country</string>
+    <string name="ip_rotation_keep_country_desc">Choose another server in the current country so your virtual location does not change.</string>
+    <string name="ip_rotation_note">The VPN briefly reconnects during rotation. Active connections may be interrupted.</string>
+    <string name="ip_rotation_settings_subtitle">Change the VPN server and public IP automatically.</string>
 </resources>

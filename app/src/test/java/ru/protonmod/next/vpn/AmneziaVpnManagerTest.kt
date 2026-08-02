@@ -141,6 +141,9 @@ class AmneziaVpnManagerTest {
             whenever(settingsManager.customDns).thenReturn(flowOf(""))
             whenever(settingsManager.netShieldLevel).thenReturn(flowOf(NetShieldLevel.DISABLED))
             whenever(settingsManager.torModeEnabled).thenReturn(flowOf(false))
+            whenever(settingsManager.ipRotationEnabled).thenReturn(flowOf(false))
+            whenever(settingsManager.ipRotationIntervalMinutes).thenReturn(flowOf(SettingsManager.DEFAULT_IP_ROTATION_INTERVAL_MINUTES))
+            whenever(settingsManager.ipRotationKeepCountry).thenReturn(flowOf(true))
             whenever(localNetShield.activeRuleSets(NetShieldLevel.DISABLED)).thenReturn(emptyList())
             whenever(settingsManager.pauseEndTime).thenReturn(flowOf(0L))
             whenever(settingsManager.allowLanEnabled).thenReturn(flowOf(false))
@@ -177,7 +180,7 @@ class AmneziaVpnManagerTest {
             whenever(vpnRepository.getCachedServers()).thenReturn(emptyList())
             
             whenever(cryptoWrapper.generateVpnKeyPair()).thenReturn(VpnKeyPair("pub", "priv"))
-            whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any(), anyOrNull()))
+            whenever(awgBoxConfigGenerator.buildConfig(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any()))
                 .thenReturn("mock_config")
             val verificationCycle = VpnNetworkMonitor.VerificationCycle(1, emptySet())
             whenever(vpnNetworkMonitor.beginVerificationCycle()).thenReturn(verificationCycle)
@@ -323,7 +326,8 @@ class AmneziaVpnManagerTest {
             eq(true),
             any(),
             eq(setOf("org.telegram.messenger")),
-            any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any(), anyOrNull()
+            any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any()
+
         )
     }
 
@@ -374,7 +378,7 @@ class AmneziaVpnManagerTest {
         verify(awgBoxConfigGenerator).buildConfig(
             any(), any(), any(), any(), any(), any(), 
             eq(true), // allowLan should be true
-            any(), any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any(), anyOrNull()
+            any(), any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any()
         )
     }
 }

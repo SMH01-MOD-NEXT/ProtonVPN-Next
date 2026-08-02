@@ -102,8 +102,6 @@ class CountriesViewModelTest {
         whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(ru.protonmod.next.vpn.VpnTunnelState.DOWN))
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
         whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
-        whenever(settingsManager.torModeEnabled).thenReturn(flowOf(false))
-        whenever(settingsManager.multiHopProfilesJson).thenReturn(flowOf("[]"))
 
         viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager)
     }
@@ -165,7 +163,7 @@ class CountriesViewModelTest {
         
         viewModel.selectCountry("US")
         advanceUntilIdle()
-        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any(), anyOrNull())
+        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any())
         
         collectJob.cancel()
     }
@@ -177,7 +175,7 @@ class CountriesViewModelTest {
         
         viewModel.selectServer(testServers[2]) // DE-FREE-1
         advanceUntilIdle()
-        verify(amneziaVpnManager).connect(eq("de_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any(), anyOrNull())
+        verify(amneziaVpnManager).connect(eq("de_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any())
         
         collectJob.cancel()
     }

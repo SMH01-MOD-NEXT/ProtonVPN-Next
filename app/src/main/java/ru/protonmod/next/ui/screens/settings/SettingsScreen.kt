@@ -83,6 +83,7 @@ fun SettingsScreen(
     onNavigateToCertSettings: (() -> Unit)? = null,
     onNavigateToNetShield: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null,
+    onNavigateToIpRotation: (() -> Unit)? = null,
     onNavigateToAiSettings: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -142,6 +143,7 @@ fun SettingsScreen(
                 onNavigateToNetShield = onNavigateToNetShield,
                 onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                 onNavigateToAiSettings = onNavigateToAiSettings,
+                onNavigateToIpRotation = onNavigateToIpRotation,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 onCheckForUpdates = viewModel::checkForUpdates,
                 modifier = Modifier
@@ -181,7 +183,8 @@ fun SettingsContent(
     onNavigateToCertSettings: (() -> Unit)? = null,
     onNavigateToNetShield: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null,
-    onNavigateToAiSettings: (() -> Unit)? = null
+    onNavigateToAiSettings: (() -> Unit)? = null,
+    onNavigateToIpRotation: (() -> Unit)? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -235,7 +238,8 @@ fun SettingsContent(
                             onReconnectHintChange = onReconnectHintChange,
                             onNavigateToApiBypass = onNavigateToApiBypass,
                             onNavigateToPortSelection = onNavigateToPortSelection,
-                            onNavigateToCertSettings = onNavigateToCertSettings
+                            onNavigateToCertSettings = onNavigateToCertSettings,
+                onNavigateToIpRotation = onNavigateToIpRotation
                         )
 
                         CustomizationSettingsSection(
@@ -306,7 +310,8 @@ fun SettingsContent(
                     modifier = contentModifier,
                     onNavigateToApiBypass = onNavigateToApiBypass,
                     onNavigateToPortSelection = onNavigateToPortSelection,
-                    onNavigateToCertSettings = onNavigateToCertSettings
+                    onNavigateToCertSettings = onNavigateToCertSettings,
+                    onNavigateToIpRotation = onNavigateToIpRotation
                 )
             }
 
@@ -484,7 +489,8 @@ private fun ConnectionSettingsSection(
     modifier: Modifier = Modifier,
     onNavigateToApiBypass: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
-    onNavigateToCertSettings: (() -> Unit)? = null
+    onNavigateToCertSettings: (() -> Unit)? = null,
+    onNavigateToIpRotation: (() -> Unit)? = null
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_connection)) {
         SettingToggleRow(
@@ -501,6 +507,13 @@ private fun ConnectionSettingsSection(
             subtitle = stringResource(R.string.settings_reconnect_hint_desc),
             checked = state.reconnectHintEnabled,
             onCheckedChange = onReconnectHintChange
+        )
+
+        SettingRowWithIcon(
+            icon = Icons.Rounded.Autorenew,
+            title = stringResource(R.string.ip_rotation_title),
+            subtitle = stringResource(R.string.ip_rotation_settings_subtitle),
+            onClick = onNavigateToIpRotation
         )
 
         SettingRowWithIcon(
@@ -626,6 +639,14 @@ private fun PrivacySettingsSection(
             title = stringResource(R.string.settings_kill_switch),
             subtitle = stringResource(R.string.settings_kill_switch_desc),
             onClick = onNavigateToKillSwitch
+        )
+
+        SettingToggleRow(
+            icon = Icons.Rounded.Hub,
+            title = stringResource(R.string.settings_tor_mode),
+            subtitle = stringResource(R.string.settings_tor_mode_desc),
+            checked = state.torModeEnabled,
+            onCheckedChange = onTorModeChange
         )
 
         if (BuildConfig.SENTRY_ENABLED) {

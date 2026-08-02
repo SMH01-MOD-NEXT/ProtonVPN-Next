@@ -699,15 +699,16 @@
     <string name="ai_processing">در حال پردازش…</string>
     <string name="ai_success">انجام شد!</string>
     <string name="ai_error_generic">خطای هوش مصنوعی رخ داد</string>
-    <string name="connection_mode_standard">استاندارد</string>
-    <string name="connection_mode_multi_hop">Multi Hop</string>
-    <string name="connection_mode_tor">Tor</string>
-    <string name="multi_hop_select_entry">سرور اول (ورودی) را انتخاب کنید</string>
-    <string name="multi_hop_select_exit">ورودی: %1$s. اکنون سرور دوم (خروجی) را انتخاب کنید</string>
-    <string name="multi_hop_same_server_error">سرورهای ورودی و خروجی باید متفاوت باشند</string>
-    <string name="multi_hop_add_profile">افزودن نمایه Multi Hop</string>
-    <string name="multi_hop_create_profile">ساخت نمایه Multi Hop</string>
-    <string name="multi_hop_entry">موقعیت ورودی</string>
-    <string name="multi_hop_exit">موقعیت خروجی</string>
-    <string name="multi_hop_profile_desc">برای کشور یا شهر، سریع‌ترین سرور موجود به‌طور خودکار انتخاب می‌شود</string>
+    <string name="ip_rotation_title">چرخش IP</string>
+    <string name="ip_rotation_description">برای دریافت یک نشانی IP عمومی جدید، طبق برنامه به‌طور خودکار به سرور VPN دیگری متصل شوید.</string>
+    <string name="ip_rotation_section_status">وضعیت</string>
+    <string name="ip_rotation_enable">فعال‌سازی چرخش IP</string>
+    <string name="ip_rotation_enable_desc">هنگام اتصال، سرور VPN فعال را به‌طور خودکار تغییر دهید.</string>
+    <string name="ip_rotation_interval">فاصله چرخش</string>
+    <string name="ip_rotation_minutes">هر %1$d دقیقه</string>
+    <string name="ip_rotation_location">موقعیت</string>
+    <string name="ip_rotation_keep_country">حفظ کشور فعلی</string>
+    <string name="ip_rotation_keep_country_desc">سرور دیگری را در کشور فعلی انتخاب کنید تا موقعیت مجازی تغییر نکند.</string>
+    <string name="ip_rotation_note">هنگام چرخش، VPN برای مدت کوتاهی دوباره متصل می‌شود و ممکن است اتصال‌های فعال قطع شوند.</string>
+    <string name="ip_rotation_settings_subtitle">تغییر خودکار سرور VPN و IP عمومی.</string>
 </resources>

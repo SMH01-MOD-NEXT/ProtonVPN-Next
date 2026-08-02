@@ -31,10 +31,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import java.util.UUID
 import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.R
 import ru.protonmod.next.data.repository.VpnRepository
@@ -48,8 +44,6 @@ import javax.inject.Inject
 
 data class CountryDisplayItem(val code: String, val averageLoad: Int)
 data class CityDisplayItem(val name: String, val localizedName: String, val averageLoad: Int)
-
-enum class CountryConnectionMode { STANDARD, MULTI_HOP, TOR }
 
 sealed class BottomSheetContent {
     data class Cities(
@@ -71,11 +65,7 @@ sealed class CountriesUiState {
         val countries: List<CountryDisplayItem>,
         val bottomSheetContent: BottomSheetContent? = null,
         val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
-        val isBottomSheetOpen: Boolean = false,
-        val connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD,
-        val multiHopEntry: LogicalServer? = null,
-        val multiHopProfiles: List<MultiHopProfile> = emptyList(),
-        val multiHopTargets: List<MultiHopTarget> = emptyList()
+        val isBottomSheetOpen: Boolean = false
     ) : CountriesUiState()
     data class Error(val message: String) : CountriesUiState()
 }
@@ -102,8 +92,6 @@ class CountriesViewModel @Inject constructor(
 
     private val _navState = MutableStateFlow<NavigationState>(NavigationState.Countries)
     private val _error = MutableStateFlow<String?>(null)
-    private val _connectionMode = MutableStateFlow(CountryConnectionMode.STANDARD)
-    private val _multiHopEntry = MutableStateFlow<LogicalServer?>(null)
 
     // Memoized countries list to prevent unnecessary instance changes and recalculations.
     // Use distinctUntilChanged to only emit when the content actually changes (including loads).
@@ -121,15 +109,9 @@ class CountriesViewModel @Inject constructor(
     val uiState: StateFlow<CountriesUiState> = combine(
         combine(_countries, vpnRepository.getServersFlow(), _navState) { c, s, n -> Triple(c, s, n) },
         vpnRepository.isUpdating,
-        combine(settingsManager.serverLoadDisplayMode, _error, _connectionMode, _multiHopEntry, settingsManager.multiHopProfilesJson) { load, error, mode, entry, profiles ->
-            arrayOf(load, error, mode, entry, profiles)
-        }
-    ) { (countries, servers, nav), isUpdating, modeState ->
-        val loadMode = modeState[0] as ServerLoadDisplayMode
-        val error = modeState[1] as String?
-        val connectionMode = modeState[2] as CountryConnectionMode
-        val multiHopEntry = modeState[3] as LogicalServer?
-        val multiHopProfiles = runCatching { Json.decodeFromString<List<MultiHopProfile>>(modeState[4] as String) }.getOrDefault(emptyList())
+        settingsManager.serverLoadDisplayMode,
+        _error
+    ) { (countries, servers, nav), isUpdating, loadMode, error ->
         if (isUpdating && servers.isEmpty()) {
             return@combine CountriesUiState.Loading
         }
@@ -158,10 +140,7 @@ class CountriesViewModel @Inject constructor(
             }
         }
 
-        CountriesUiState.Success(
-            countries, bottomSheetContent, loadMode, nav != NavigationState.Countries,
-            connectionMode, multiHopEntry, multiHopProfiles, buildMultiHopTargets(servers)
-        )
+        CountriesUiState.Success(countries, bottomSheetContent, loadMode, nav != NavigationState.Countries)
     }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CountriesUiState.Loading)
@@ -170,16 +149,6 @@ class CountriesViewModel @Inject constructor(
 
     init {
         initialFetch()
-        viewModelScope.launch {
-            settingsManager.torModeEnabled.collect { enabled ->
-                if (enabled) {
-                    _multiHopEntry.value = null
-                    _connectionMode.value = CountryConnectionMode.TOR
-                } else if (_connectionMode.value == CountryConnectionMode.TOR) {
-                    _connectionMode.value = CountryConnectionMode.STANDARD
-                }
-            }
-        }
     }
 
     private fun initialFetch() {
@@ -199,16 +168,12 @@ class CountriesViewModel @Inject constructor(
         initialFetch()
     }
 
-    private fun bestPhysical(server: LogicalServer) =
-        server.servers.filter { it.status == 1 }.minByOrNull { it.load }
+    private suspend fun connectToServer(server: LogicalServer) {
+        // Reliable server selection: Fallback to any server with min load if status == 1 is absent.
+        val physicalServer = server.servers.filter { it.status == 1 }.minByOrNull { it.load }
             ?: server.servers.minByOrNull { it.load }
 
-    private suspend fun connectToServer(server: LogicalServer, entryServer: LogicalServer? = null) {
-        // Reliable server selection: Fallback to any server with min load if status == 1 is absent.
-        val physicalServer = bestPhysical(server)
-        val entryPhysicalServer = entryServer?.let(::bestPhysical)
-
-        if (physicalServer != null && (entryServer == null || entryPhysicalServer != null)) {
+        if (physicalServer != null) {
             connectedServerState.setConnectedServer(server)
             val tunnelState = amneziaVpnManager.tunnelState.value
             val isConnecting = amneziaVpnManager.isConnecting.value
@@ -220,17 +185,9 @@ class CountriesViewModel @Inject constructor(
                 return
             }
             if (tunnelState == VpnTunnelState.UP || isConnecting) {
-                amneziaVpnManager.reconnect(
-                    server.id, physicalServer, session,
-                    logicalServer = server,
-                    multiHopEntryServer = entryPhysicalServer
-                )
+                amneziaVpnManager.reconnect(server.id, physicalServer, session)
             } else {
-                amneziaVpnManager.connect(
-                    server.id, physicalServer, session,
-                    logicalServer = server,
-                    multiHopEntryServer = entryPhysicalServer
-                )
+                amneziaVpnManager.connect(server.id, physicalServer, session)
             }
         } else {
             _error.value = context.getString(R.string.label_server_unavailable)
@@ -247,7 +204,7 @@ class CountriesViewModel @Inject constructor(
                     .minByOrNull { it.averageLoad } 
                     ?: serversInCountry.minByOrNull { it.averageLoad }
                 
-                bestServer?.let { selectForCurrentMode(it) }
+                bestServer?.let { connectToServer(it) }
             }
         }
     }
@@ -273,7 +230,7 @@ class CountriesViewModel @Inject constructor(
                     .minByOrNull { it.averageLoad }
                     ?: serversInCity.minByOrNull { it.averageLoad }
                     
-                bestServer?.let { selectForCurrentMode(it) }
+                bestServer?.let { connectToServer(it) }
             }
         }
     }
@@ -293,68 +250,8 @@ class CountriesViewModel @Inject constructor(
     }
 
     fun selectServer(server: LogicalServer) {
-        viewModelScope.launch { selectForCurrentMode(server) }
-    }
-
-    private suspend fun selectForCurrentMode(server: LogicalServer) {
-        if (_connectionMode.value != CountryConnectionMode.MULTI_HOP) {
+        viewModelScope.launch {
             connectToServer(server)
-            return
-        }
-        val entry = _multiHopEntry.value
-        if (entry == null) {
-            _multiHopEntry.value = server
-            _navState.value = NavigationState.Countries
-        } else if (entry.id != server.id) {
-            connectToServer(server, entry)
-        } else {
-            _error.value = context.getString(R.string.multi_hop_same_server_error)
-        }
-    }
-
-    fun createMultiHopProfile(entry: MultiHopTarget, exit: MultiHopTarget) {
-        viewModelScope.launch {
-            val current = (uiState.value as? CountriesUiState.Success)?.multiHopProfiles.orEmpty()
-            settingsManager.setMultiHopProfilesJson(Json.encodeToString(current + MultiHopProfile(UUID.randomUUID().toString(), entry, exit)))
-        }
-    }
-
-    fun deleteMultiHopProfile(id: String) {
-        viewModelScope.launch {
-            val current = (uiState.value as? CountriesUiState.Success)?.multiHopProfiles.orEmpty()
-            settingsManager.setMultiHopProfilesJson(Json.encodeToString(current.filterNot { it.id == id }))
-        }
-    }
-
-    fun connectMultiHopProfile(profile: MultiHopProfile) {
-        viewModelScope.launch {
-            settingsManager.setTorModeEnabled(false)
-            _connectionMode.value = CountryConnectionMode.MULTI_HOP
-            val servers = vpnRepository.getCachedServers()
-            val entry = resolveMultiHopTarget(profile.entry, servers)
-            val exit = resolveMultiHopTarget(profile.exit, servers)
-            if (entry == null || exit == null || entry.id == exit.id) {
-                _error.value = context.getString(R.string.multi_hop_same_server_error)
-                return@launch
-            }
-            connectToServer(exit, entry)
-        }
-    }
-
-    fun setConnectionMode(mode: CountryConnectionMode) {
-        viewModelScope.launch {
-            when (mode) {
-                CountryConnectionMode.TOR -> {
-                    _multiHopEntry.value = null
-                    settingsManager.setTorModeEnabled(true)
-                }
-                CountryConnectionMode.MULTI_HOP -> settingsManager.setTorModeEnabled(false)
-                CountryConnectionMode.STANDARD -> {
-                    _multiHopEntry.value = null
-                    settingsManager.setTorModeEnabled(false)
-                }
-            }
-            _connectionMode.value = mode
         }
     }
 }

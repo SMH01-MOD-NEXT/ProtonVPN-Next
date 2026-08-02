@@ -696,15 +696,16 @@
     <string name="ai_processing">处理中…</string>
     <string name="ai_success">完成！</string>
     <string name="ai_error_generic">发生 AI 错误</string>
-    <string name="connection_mode_standard">标准</string>
-    <string name="connection_mode_multi_hop">Multi Hop</string>
-    <string name="connection_mode_tor">Tor</string>
-    <string name="multi_hop_select_entry">选择第一个（入口）服务器</string>
-    <string name="multi_hop_select_exit">入口：%1$s。现在选择第二个（出口）服务器</string>
-    <string name="multi_hop_same_server_error">入口和出口服务器必须不同</string>
-    <string name="multi_hop_add_profile">添加 Multi Hop 配置</string>
-    <string name="multi_hop_create_profile">创建 Multi Hop 配置</string>
-    <string name="multi_hop_entry">入口位置</string>
-    <string name="multi_hop_exit">出口位置</string>
-    <string name="multi_hop_profile_desc">选择国家或城市时会自动使用最快的可用服务器</string>
+    <string name="ip_rotation_title">IP 轮换</string>
+    <string name="ip_rotation_description">按计划自动重新连接到其他 VPN 服务器，以获取新的公网 IP 地址。</string>
+    <string name="ip_rotation_section_status">状态</string>
+    <string name="ip_rotation_enable">启用 IP 轮换</string>
+    <string name="ip_rotation_enable_desc">连接期间自动更换当前 VPN 服务器。</string>
+    <string name="ip_rotation_interval">轮换间隔</string>
+    <string name="ip_rotation_minutes">每 %1$d 分钟</string>
+    <string name="ip_rotation_location">位置</string>
+    <string name="ip_rotation_keep_country">保持当前国家/地区</string>
+    <string name="ip_rotation_keep_country_desc">选择当前国家/地区的其他服务器，使虚拟位置保持不变。</string>
+    <string name="ip_rotation_note">轮换时 VPN 会短暂重新连接，当前连接可能会中断。</string>
+    <string name="ip_rotation_settings_subtitle">自动更换 VPN 服务器和公网 IP。</string>
 </resources>
