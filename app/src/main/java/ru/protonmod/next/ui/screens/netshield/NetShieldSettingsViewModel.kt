@@ -27,14 +27,24 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.netshield.LocalNetShield
+import ru.protonmod.next.netshield.NetShieldCategory
 import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.netshield.NetShieldListState
+import ru.protonmod.next.netshield.NetShieldSourceConfig
+import ru.protonmod.next.netshield.NetShieldSources
 import javax.inject.Inject
 
 data class NetShieldSettingsUiState(
     val level: NetShieldLevel = NetShieldLevel.DISABLED,
     val lists: NetShieldListState = NetShieldListState(),
-)
+    val sources: NetShieldSourceConfig = NetShieldSourceConfig(),
+) {
+    /** Effective download URL per category, used to describe the active provider in the UI. */
+    fun sourceUrl(category: NetShieldCategory): String = NetShieldSources.resolve(category, sources)
+
+    fun isDefaultSource(category: NetShieldCategory): Boolean =
+        category !in sources.presetIds && category !in sources.customUrls
+}
 
 @HiltViewModel
 class NetShieldSettingsViewModel @Inject constructor(
@@ -42,15 +52,16 @@ class NetShieldSettingsViewModel @Inject constructor(
     private val localNetShield: LocalNetShield,
 ) : ViewModel() {
     init {
-        if (localNetShield.needsListUpdate) {
-            viewModelScope.launch { localNetShield.updateLists() }
+        viewModelScope.launch {
+            if (localNetShield.needsListUpdate()) localNetShield.updateLists()
         }
     }
 
     val uiState: StateFlow<NetShieldSettingsUiState> = combine(
         settingsManager.netShieldLevel,
         localNetShield.listState,
-    ) { level, lists -> NetShieldSettingsUiState(level, lists) }
+        localNetShield.sourceConfig,
+    ) { level, lists, sources -> NetShieldSettingsUiState(level, lists, sources) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), NetShieldSettingsUiState())
 
     fun setLevel(level: NetShieldLevel) {
@@ -64,5 +75,53 @@ class NetShieldSettingsViewModel @Inject constructor(
 
     fun updateLists() {
         viewModelScope.launch { localNetShield.updateLists() }
+    }
+
+    /** Adds pasted or file-provided rules to the user's own blocklist. */
+    fun importCustomFilters(content: String, replace: Boolean = false) {
+        viewModelScope.launch { localNetShield.importCustomFilters(content, replace) }
+    }
+
+    fun importCustomFiltersFromUrl(url: String, replace: Boolean = false) {
+        viewModelScope.launch { localNetShield.importCustomFiltersFromUrl(url, replace) }
+    }
+
+    fun clearCustomFilters() {
+        viewModelScope.launch { localNetShield.clearCustomFilters() }
+    }
+
+    fun setCategoryPreset(category: NetShieldCategory, presetId: String) {
+        viewModelScope.launch {
+            localNetShield.setCategoryPreset(category, presetId)
+            localNetShield.updateLists()
+        }
+    }
+
+    fun setCategoryUrl(category: NetShieldCategory, url: String) {
+        viewModelScope.launch {
+            localNetShield.setCategoryUrl(category, url)
+            localNetShield.updateLists()
+        }
+    }
+
+    fun resetCategorySource(category: NetShieldCategory) {
+        viewModelScope.launch {
+            localNetShield.resetCategorySource(category)
+            localNetShield.updateLists()
+        }
+    }
+
+    fun applyPresetToAll(presetId: String) {
+        viewModelScope.launch {
+            localNetShield.applyPresetToAll(presetId)
+            localNetShield.updateLists()
+        }
+    }
+
+    fun resetAllSources() {
+        viewModelScope.launch {
+            localNetShield.resetAllSources()
+            localNetShield.updateLists()
+        }
     }
 }

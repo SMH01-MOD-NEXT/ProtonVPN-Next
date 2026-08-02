@@ -152,6 +152,8 @@ class SettingsManager @Inject constructor(
         private val NETSHIELD_ADS_BLOCKED = longPreferencesKey("netshield_ads_blocked")
         private val NETSHIELD_TRACKERS_BLOCKED = longPreferencesKey("netshield_trackers_blocked")
         private val NETSHIELD_SAVED_BYTES = longPreferencesKey("netshield_saved_bytes")
+        private val NETSHIELD_CUSTOM_DOMAINS = stringPreferencesKey("netshield_custom_domains")
+        private val NETSHIELD_SOURCES = stringPreferencesKey("netshield_sources")
         private val CRASH_REPORTS_ENABLED = booleanPreferencesKey("crash_reports_enabled")
         private val SENTRY_PERFORMANCE_ENABLED = booleanPreferencesKey("sentry_performance_enabled")
         private val SENTRY_NON_FATAL_ENABLED = booleanPreferencesKey("sentry_non_fatal_enabled")
@@ -406,6 +408,12 @@ class SettingsManager @Inject constructor(
             .getOrDefault(NetShieldLevel.DISABLED)
     }
 
+    /** Newline-separated user blocklist entries (hosts/adblock syntax is accepted). */
+    val netShieldCustomDomains: Flow<String> = dataStore.data.map { it[NETSHIELD_CUSTOM_DOMAINS] ?: "" }
+
+    /** JSON description of the per-category list providers (see NetShieldSources). */
+    val netShieldSources: Flow<String> = dataStore.data.map { it[NETSHIELD_SOURCES] ?: "" }
+
     val netShieldStats: Flow<NetShieldStats> = dataStore.data.map { preferences ->
         NetShieldStats(
             malwareBlocked = preferences[NETSHIELD_MALWARE_BLOCKED] ?: 0L,
@@ -497,6 +505,14 @@ class SettingsManager @Inject constructor(
 
     suspend fun setNetShieldLevel(level: NetShieldLevel) {
         editConnectionSetting(NETSHIELD_LEVEL, NetShieldLevel.DISABLED.name, level.name)
+    }
+
+    suspend fun setNetShieldCustomDomains(value: String) {
+        dataStore.edit { it[NETSHIELD_CUSTOM_DOMAINS] = value }
+    }
+
+    suspend fun setNetShieldSources(json: String) {
+        dataStore.edit { it[NETSHIELD_SOURCES] = json }
     }
 
     suspend fun resetNetShieldStats() {
@@ -1014,7 +1030,8 @@ class SettingsManager @Inject constructor(
                     API_BYPASS_STRATEGY.name, BYEDPI_FLAGS.name, BYEDPI_SNI.name,
                     API_PROXY_HOST.name, API_PROXY_TYPE.name, API_PROXY_USERNAME.name,
                     API_PROXY_PASSWORD.name, SPOOF_COUNTRY_CODE.name, SELECTED_PROFILE_ID.name,
-                    CUSTOM_PROFILES.name, NETSHIELD_LEVEL.name, QUICK_CONNECT_STRATEGY.name,
+                    CUSTOM_PROFILES.name, NETSHIELD_LEVEL.name, NETSHIELD_CUSTOM_DOMAINS.name,
+                    NETSHIELD_SOURCES.name, QUICK_CONNECT_STRATEGY.name,
                     QUICK_CONNECT_TARGET_ID.name, SETUP_STEP.name, AI_PROVIDER.name,
                     AI_MODEL.name, AI_API_KEY.name, AI_CUSTOM_PROVIDERS.name, AWG_H1.name,
                     AWG_H2.name, AWG_H3.name, AWG_H4.name, AWG_I1.name, AWG_I2.name,
@@ -1079,6 +1096,8 @@ class SettingsManager @Inject constructor(
             SELECTED_PROFILE_ID.name -> SELECTED_PROFILE_ID
             CUSTOM_PROFILES.name -> CUSTOM_PROFILES
             NETSHIELD_LEVEL.name -> NETSHIELD_LEVEL
+            NETSHIELD_CUSTOM_DOMAINS.name -> NETSHIELD_CUSTOM_DOMAINS
+            NETSHIELD_SOURCES.name -> NETSHIELD_SOURCES
             ANALYTICS_ENABLED.name -> ANALYTICS_ENABLED
             CRASH_REPORTS_ENABLED.name -> CRASH_REPORTS_ENABLED
             SENTRY_PERFORMANCE_ENABLED.name -> SENTRY_PERFORMANCE_ENABLED

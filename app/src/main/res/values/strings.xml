@@ -878,4 +878,28 @@
     <string name="ai_provider_error_url">Enter an absolute http(s) API URL</string>
     <string name="ai_provider_save">Save</string>
     <string name="ai_provider_cancel">Cancel</string>
+    <!-- NetShield custom filters and sources -->
+    <string name="netshield_custom_filters_title">My filters</string>
+    <string name="netshield_custom_filters_desc">Add your own rules. Hosts files, adblock syntax and plain domain lists are all accepted.</string>
+    <string name="netshield_custom_filters_count">Rules in your list: %1$d</string>
+    <string name="netshield_custom_filters_hint">One domain or rule per line</string>
+    <string name="netshield_custom_filters_add">Add</string>
+    <string name="netshield_custom_filters_import_file">Import file</string>
+    <string name="netshield_custom_filters_import_url">Import by URL</string>
+    <string name="netshield_custom_filters_clear">Clear</string>
+    <string name="netshield_custom_filters_imported">Imported rules: %1$d</string>
+    <string name="netshield_sources_title">Filter sources</string>
+    <string name="netshield_sources_desc">Replace the default provider of any category with a preset or your own list URL.</string>
+    <string name="netshield_source_default">Default</string>
+    <string name="netshield_source_custom_url">Your list URL</string>
+    <string name="netshield_source_url_hint">https://example.com/hosts.txt</string>
+    <string name="netshield_source_apply_all">Apply to all categories</string>
+    <string name="netshield_source_reset">Reset to default</string>
+    <string name="netshield_source_reset_all">Reset all</string>
+    <string name="netshield_category_malware">Malware</string>
+    <string name="netshield_category_ads">Ads</string>
+    <string name="netshield_category_trackers">Trackers</string>
+    <string name="netshield_category_adult">Adult content</string>
+    <string name="netshield_save">Save</string>
+    <string name="netshield_cancel">Cancel</string>
 </resources>

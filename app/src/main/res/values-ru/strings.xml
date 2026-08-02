@@ -769,4 +769,28 @@
     <string name="ai_provider_error_url">Введите полный http(s)-адрес API</string>
     <string name="ai_provider_save">Сохранить</string>
     <string name="ai_provider_cancel">Отмена</string>
+    <!-- Свои фильтры и источники NetShield -->
+    <string name="netshield_custom_filters_title">Мои фильтры</string>
+    <string name="netshield_custom_filters_desc">Добавьте свои правила. Поддерживаются hosts-файлы, синтаксис adblock и простой список доменов.</string>
+    <string name="netshield_custom_filters_count">Правил в вашем списке: %1$d</string>
+    <string name="netshield_custom_filters_hint">По одному домену или правилу в строке</string>
+    <string name="netshield_custom_filters_add">Добавить</string>
+    <string name="netshield_custom_filters_import_file">Импорт файла</string>
+    <string name="netshield_custom_filters_import_url">Импорт по URL</string>
+    <string name="netshield_custom_filters_clear">Очистить</string>
+    <string name="netshield_custom_filters_imported">Импортировано правил: %1$d</string>
+    <string name="netshield_sources_title">Источники фильтров</string>
+    <string name="netshield_sources_desc">Замените источник любой категории пресетом или своим URL списка.</string>
+    <string name="netshield_source_default">По умолчанию</string>
+    <string name="netshield_source_custom_url">Свой URL списка</string>
+    <string name="netshield_source_url_hint">https://example.com/hosts.txt</string>
+    <string name="netshield_source_apply_all">Применить ко всем категориям</string>
+    <string name="netshield_source_reset">Сбросить к дефолтному</string>
+    <string name="netshield_source_reset_all">Сбросить всё</string>
+    <string name="netshield_category_malware">Вредоносное ПО</string>
+    <string name="netshield_category_ads">Реклама</string>
+    <string name="netshield_category_trackers">Трекеры</string>
+    <string name="netshield_category_adult">Контент 18+</string>
+    <string name="netshield_save">Сохранить</string>
+    <string name="netshield_cancel">Отмена</string>
 </resources>

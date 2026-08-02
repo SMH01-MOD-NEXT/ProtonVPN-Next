@@ -17,6 +17,8 @@
 
 package ru.protonmod.next.ui.screens.netshield
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
@@ -60,6 +62,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -91,6 +98,20 @@ fun NetShieldSettingsScreen(
     val colors = ProtonNextTheme.colors
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val tablet = isTablet()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    // hosts/adblock lists are plain text, but pickers report many MIME types for .txt files.
+    val filterFilePicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val content = withContext(Dispatchers.IO) {
+                runCatching {
+                    context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                }.getOrNull()
+            }
+            if (!content.isNullOrBlank()) viewModel.importCustomFilters(content)
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -302,6 +323,29 @@ fun NetShieldSettingsScreen(
                             }
                         }
                     }
+                }
+
+                item(contentType = "CustomFilters") {
+                    NetShieldCustomFiltersSection(
+                        state = state,
+                        onImportText = viewModel::importCustomFilters,
+                        onImportUrl = viewModel::importCustomFiltersFromUrl,
+                        onPickFile = { filterFilePicker.launch(arrayOf("text/*", "application/octet-stream")) },
+                        onClear = viewModel::clearCustomFilters,
+                        modifier = contentModifier,
+                    )
+                }
+
+                item(contentType = "FilterSources") {
+                    NetShieldSourcesSection(
+                        state = state,
+                        onPresetSelected = viewModel::setCategoryPreset,
+                        onCustomUrl = viewModel::setCategoryUrl,
+                        onResetCategory = viewModel::resetCategorySource,
+                        onApplyToAll = viewModel::applyPresetToAll,
+                        onResetAll = viewModel::resetAllSources,
+                        modifier = contentModifier,
+                    )
                 }
 
                 item(contentType = "StatisticsNote") {

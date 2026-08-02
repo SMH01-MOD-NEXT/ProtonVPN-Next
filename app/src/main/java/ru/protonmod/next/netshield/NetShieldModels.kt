@@ -26,7 +26,8 @@ enum class NetShieldLevel {
     val enabled: Boolean get() = this != DISABLED
 }
 
-enum class NetShieldCategory { MALWARE, ADS, TRACKERS, ADULT }
+/** CUSTOM holds the user's own blocklist; it is never downloaded and is always active. */
+enum class NetShieldCategory { MALWARE, ADS, TRACKERS, ADULT, CUSTOM }
 
 data class NetShieldStats(
     val malwareBlocked: Long = 0,
@@ -45,5 +46,8 @@ data class NetShieldListState(
     val isUpdating: Boolean = false,
     val lastUpdatedAt: Long = 0,
     val domainCount: Int = 0,
+    val customDomainCount: Int = 0,
+    val isImporting: Boolean = false,
+    val importedCount: Int? = null,
     val error: String? = null,
 )
