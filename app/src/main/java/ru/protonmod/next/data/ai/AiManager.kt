@@ -20,13 +20,14 @@ class AiManager @Inject constructor(
     private val aiClient: AiClient,
     private val actionExecutor: AiActionExecutor,
     private val settingsManager: SettingsManager,
+    private val providerRepository: AiProviderRepository,
 ) {
     suspend fun processQuery(query: String, currentProposal: AiProposal? = null): AiResult {
         if (!settingsManager.aiEnabled.first()) return AiResult.Error("AI Mode is disabled")
         val apiKey = settingsManager.aiApiKey.first()
         if (apiKey.isBlank()) return AiResult.NoApiKey
 
-        val provider = AiProvider.fromId(settingsManager.aiProvider.first())
+        val provider = providerRepository.selected()
         val model = settingsManager.aiModel.first()
         val useBypass = settingsManager.aiBypassBlocks.first()
         val userPrompt = if (currentProposal == null) query else """

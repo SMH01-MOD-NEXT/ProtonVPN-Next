@@ -17,40 +17,57 @@
 
 package ru.protonmod.next.data.ai
 
+/** Providers shipped with the app. User-defined providers live in [AiCustomProviders]. */
 enum class AiProvider(
-    val id: String, 
-    val displayName: String, 
+    val id: String,
+    val displayName: String,
     val baseUrl: String,
+    val format: AiApiFormat,
     val models: List<String>
 ) {
     OPENAI(
-        "openai", 
-        "OpenAI", 
+        "openai",
+        "OpenAI",
         "https://api.openai.com/v1/chat/completions",
+        AiApiFormat.OPENAI,
         listOf("gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "o1-preview")
     ),
     GEMINI(
-        "gemini", 
-        "Google Gemini", 
-        "https://generativelanguage.googleapis.com/v1beta/models/",
+        "gemini",
+        "Google Gemini",
+        "https://generativelanguage.googleapis.com/v1beta",
+        AiApiFormat.GEMINI,
         listOf("gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro")
     ),
     ANTHROPIC(
-        "anthropic", 
-        "Anthropic Claude", 
+        "anthropic",
+        "Anthropic Claude",
         "https://api.anthropic.com/v1/messages",
+        AiApiFormat.ANTHROPIC,
         listOf("claude-opus-5", "claude-fable-5", "claude-sonnet-5")
     ),
     DEEPSEEK(
-        "deepseek", 
-        "DeepSeek", 
+        "deepseek",
+        "DeepSeek",
         "https://api.deepseek.com/chat/completions",
+        AiApiFormat.OPENAI,
         listOf("deepseek-v4-pro", "deepseek-v4-flash")
     );
 
     fun getDefaultModel(): String = models.first()
 
+    fun toConfig(): AiProviderConfig = AiProviderConfig(
+        id = id,
+        displayName = displayName,
+        baseUrl = baseUrl,
+        format = format,
+        models = models,
+        isCustom = false,
+    )
+
     companion object {
         fun fromId(id: String): AiProvider = entries.find { it.id == id } ?: OPENAI
+
+        val builtInConfigs: List<AiProviderConfig> get() = entries.map(AiProvider::toConfig)
     }
 }

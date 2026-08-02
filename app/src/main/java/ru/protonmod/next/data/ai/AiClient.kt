@@ -124,7 +124,7 @@ class AiClient @Inject constructor(
     }
 
     suspend fun query(
-        provider: AiProvider,
+        provider: AiProviderConfig,
         model: String,
         apiKey: String,
         systemPrompt: String,
@@ -132,20 +132,55 @@ class AiClient @Inject constructor(
         useBypass: Boolean = true
     ): String? {
         if (apiKey.isBlank()) return null
-        
-        val actualModel = if (model.isBlank()) provider.getDefaultModel() else model
+
+        val actualModel = model.ifBlank { provider.getDefaultModel() }
+        if (actualModel.isBlank()) {
+            ProtonLogger.e("AiClient", "No model configured for provider ${provider.id}")
+            return null
+        }
         val client = getClient(useBypass)
 
-        return when (provider) {
-            AiProvider.OPENAI, AiProvider.DEEPSEEK -> queryOpenAiCompatible(client, provider, actualModel, apiKey, systemPrompt, userQuery)
-            AiProvider.GEMINI -> queryGemini(client, actualModel, apiKey, systemPrompt, userQuery)
-            AiProvider.ANTHROPIC -> queryAnthropic(client, actualModel, apiKey, systemPrompt, userQuery)
+        return when (provider.format) {
+            AiApiFormat.OPENAI -> queryOpenAiCompatible(client, provider, actualModel, apiKey, systemPrompt, userQuery)
+            AiApiFormat.GEMINI -> queryGemini(client, provider, actualModel, apiKey, systemPrompt, userQuery)
+            AiApiFormat.ANTHROPIC -> queryAnthropic(client, provider, actualModel, apiKey, systemPrompt, userQuery)
         }
+    }
+
+    /**
+     * Lists the models a provider exposes, mirroring what IDEs do, so users do not have to type
+     * model names by hand.
+     *
+     * @return the discovered model ids, or null when the catalogue could not be fetched.
+     */
+    suspend fun listModels(
+        provider: AiProviderConfig,
+        apiKey: String,
+        useBypass: Boolean = true
+    ): List<String>? {
+        if (apiKey.isBlank()) return null
+        val request = Request.Builder()
+            .url(AiEndpoints.models(provider, apiKey))
+            .apply {
+                when (provider.format) {
+                    AiApiFormat.OPENAI -> addHeader("Authorization", "Bearer $apiKey")
+                    AiApiFormat.ANTHROPIC -> {
+                        addHeader("x-api-key", apiKey)
+                        addHeader("anthropic-version", ANTHROPIC_VERSION)
+                    }
+                    AiApiFormat.GEMINI -> Unit // The key travels as a query parameter.
+                }
+            }
+            .get()
+            .build()
+
+        val body = executeRequest(client = getClient(useBypass), request = request) { it } ?: return null
+        return AiModelListParser.parse(provider.format, body).takeIf(List<String>::isNotEmpty)
     }
 
     private suspend fun queryOpenAiCompatible(
         client: OkHttpClient,
-        provider: AiProvider,
+        provider: AiProviderConfig,
         model: String,
         apiKey: String,
         systemPrompt: String,
@@ -167,7 +202,7 @@ class AiClient @Inject constructor(
         }
 
         val request = Request.Builder()
-            .url(provider.baseUrl)
+            .url(AiEndpoints.chat(provider, model, apiKey))
             .addHeader("Authorization", "Bearer $apiKey")
             .post(json.toString().toRequestBody("application/json".toMediaType()))
             .build()
@@ -180,6 +215,7 @@ class AiClient @Inject constructor(
 
     private suspend fun queryGemini(
         client: OkHttpClient,
+        provider: AiProviderConfig,
         model: String,
         apiKey: String,
         systemPrompt: String,
@@ -200,9 +236,8 @@ class AiClient @Inject constructor(
             })
         }
 
-        val url = "${AiProvider.GEMINI.baseUrl}$model:generateContent?key=$apiKey"
         val request = Request.Builder()
-            .url(url)
+            .url(AiEndpoints.chat(provider, model, apiKey))
             .post(json.toString().toRequestBody("application/json".toMediaType()))
             .build()
 
@@ -214,6 +249,7 @@ class AiClient @Inject constructor(
 
     private suspend fun queryAnthropic(
         client: OkHttpClient,
+        provider: AiProviderConfig,
         model: String,
         apiKey: String,
         systemPrompt: String,
@@ -232,9 +268,9 @@ class AiClient @Inject constructor(
         }
 
         val request = Request.Builder()
-            .url(AiProvider.ANTHROPIC.baseUrl)
+            .url(AiEndpoints.chat(provider, model, apiKey))
             .addHeader("x-api-key", apiKey)
-            .addHeader("anthropic-version", "2023-06-01")
+            .addHeader("anthropic-version", ANTHROPIC_VERSION)
             .post(json.toString().toRequestBody("application/json".toMediaType()))
             .build()
 
@@ -271,4 +307,8 @@ class AiClient @Inject constructor(
                 }
             })
         }
+
+    private companion object {
+        const val ANTHROPIC_VERSION = "2023-06-01"
+    }
 }

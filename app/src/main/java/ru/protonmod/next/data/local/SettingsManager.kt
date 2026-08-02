@@ -181,6 +181,7 @@ class SettingsManager @Inject constructor(
         private val AI_MODEL = stringPreferencesKey("ai_model")
         private val AI_API_KEY = stringPreferencesKey("ai_api_key")
         private val AI_BYPASS_BLOCKS = booleanPreferencesKey("ai_bypass_blocks")
+        private val AI_CUSTOM_PROVIDERS = stringPreferencesKey("ai_custom_providers")
 
         private val AWG_JC = intPreferencesKey("awg_jc")
         private val AWG_JMIN = intPreferencesKey("awg_jmin")
@@ -349,6 +350,7 @@ class SettingsManager @Inject constructor(
     val aiModel: Flow<String> = dataStore.data.map { it[AI_MODEL] ?: "" }
     val aiApiKey: Flow<String> = dataStore.data.map { it[AI_API_KEY] ?: "" }
     val aiBypassBlocks: Flow<Boolean> = dataStore.data.map { it[AI_BYPASS_BLOCKS] ?: true }
+    val aiCustomProviders: Flow<String> = dataStore.data.map { it[AI_CUSTOM_PROVIDERS] ?: "" }
 
     // Privacy-first defaults: only crash reports and handled errors are enabled.
     // All optional telemetry requires an explicit user opt-in.
@@ -732,6 +734,11 @@ class SettingsManager @Inject constructor(
         dataStore.edit { it[AI_BYPASS_BLOCKS] = enabled }
     }
 
+    /** Stores the user-defined AI providers as a JSON array (see AiCustomProviders). */
+    suspend fun setAiCustomProviders(json: String) {
+        dataStore.edit { it[AI_CUSTOM_PROVIDERS] = json }
+    }
+
     suspend fun setSelectedProfileId(id: String) {
         dataStore.edit { it[SELECTED_PROFILE_ID] = id }
     }
@@ -1009,7 +1016,7 @@ class SettingsManager @Inject constructor(
                     API_PROXY_PASSWORD.name, SPOOF_COUNTRY_CODE.name, SELECTED_PROFILE_ID.name,
                     CUSTOM_PROFILES.name, NETSHIELD_LEVEL.name, QUICK_CONNECT_STRATEGY.name,
                     QUICK_CONNECT_TARGET_ID.name, SETUP_STEP.name, AI_PROVIDER.name,
-                    AI_MODEL.name, AI_API_KEY.name, AWG_H1.name,
+                    AI_MODEL.name, AI_API_KEY.name, AI_CUSTOM_PROVIDERS.name, AWG_H1.name,
                     AWG_H2.name, AWG_H3.name, AWG_H4.name, AWG_I1.name, AWG_I2.name,
                     AWG_I3.name, AWG_I4.name, AWG_I5.name, AWG_HEADER_PROTECTION_KEY.name,
                     AWG_CONTENT_PADDING_ADDITION.name, AWG_REKEY_AFTER_TIME.name,
@@ -1092,6 +1099,7 @@ class SettingsManager @Inject constructor(
             AI_MODEL.name -> AI_MODEL
             AI_API_KEY.name -> AI_API_KEY
             AI_BYPASS_BLOCKS.name -> AI_BYPASS_BLOCKS
+            AI_CUSTOM_PROVIDERS.name -> AI_CUSTOM_PROVIDERS
             AWG_JC.name -> AWG_JC
             AWG_JMIN.name -> AWG_JMIN
             AWG_JMAX.name -> AWG_JMAX

@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
-import ru.protonmod.next.data.ai.AiProvider
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.screens.settings.SettingsCategory
@@ -135,12 +134,14 @@ fun AiSettingsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     AiProviderSection(
-                        selectedProvider = uiState.selectedProvider,
+                        state = uiState,
                         onProviderSelect = viewModel::setProvider,
-                        selectedModel = uiState.selectedModel,
                         onModelSelect = viewModel::setModel,
-                        apiKey = uiState.apiKey,
                         onApiKeyChange = viewModel::setApiKey,
+                        onRefreshModels = viewModel::refreshModels,
+                        onSaveCustomProvider = viewModel::saveCustomProvider,
+                        onDeleteCustomProvider = viewModel::deleteCustomProvider,
+                        onClearFormError = viewModel::clearFormError,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
@@ -212,132 +213,5 @@ fun AiSettingsScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun AiProviderSection(
-    selectedProvider: AiProvider,
-    onProviderSelect: (AiProvider) -> Unit,
-    selectedModel: String,
-    onModelSelect: (String) -> Unit,
-    apiKey: String,
-    onApiKeyChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var showProviderDialog by remember { mutableStateOf(false) }
-    var showModelDialog by remember { mutableStateOf(false) }
-    val colors = ProtonNextTheme.colors
-
-    SettingsCategory(modifier = modifier, title = stringResource(R.string.ai_provider)) {
-        SettingRowWithIcon(
-            icon = Icons.Rounded.Dns,
-            title = stringResource(R.string.ai_provider),
-            subtitle = selectedProvider.displayName,
-            onClick = { showProviderDialog = true }
-        )
-        
-        SettingRowWithIcon(
-            icon = Icons.Rounded.SettingsSuggest,
-            title = stringResource(R.string.ai_model),
-            subtitle = selectedModel,
-            onClick = { showModelDialog = true }
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = apiKey,
-            onValueChange = onApiKeyChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            label = { Text(stringResource(R.string.ai_api_key)) },
-            placeholder = { Text(stringResource(R.string.ai_hint_api_key)) },
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = colors.brandNorm,
-                unfocusedBorderColor = colors.separatorNorm,
-                focusedLabelColor = colors.brandNorm,
-                cursorColor = colors.brandNorm,
-                unfocusedLabelColor = colors.textWeak,
-                focusedTextColor = colors.textNorm,
-                unfocusedTextColor = colors.textNorm
-            ),
-            shape = RoundedCornerShape(12.dp)
-        )
-        
-        Text(
-            text = stringResource(R.string.ai_byok_desc),
-            style = MaterialTheme.typography.bodySmall,
-            color = colors.textWeak,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-        )
-    }
-
-    if (showProviderDialog) {
-        AlertDialog(
-            onDismissRequest = { showProviderDialog = false },
-            title = { Text(stringResource(R.string.ai_provider), color = colors.textNorm) },
-            text = {
-                Column {
-                    AiProvider.entries.forEach { provider ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onProviderSelect(provider)
-                                    showProviderDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selectedProvider == provider,
-                                onClick = null,
-                                colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(provider.displayName, color = colors.textNorm)
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-            containerColor = colors.backgroundSecondary
-        )
-    }
-
-    if (showModelDialog) {
-        AlertDialog(
-            onDismissRequest = { showModelDialog = false },
-            title = { Text("Select Model", color = colors.textNorm) },
-            text = {
-                Column {
-                    selectedProvider.models.forEach { model ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onModelSelect(model)
-                                    showModelDialog = false
-                                }
-                                .padding(vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
-                                selected = selectedModel == model,
-                                onClick = null,
-                                colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Text(model, color = colors.textNorm)
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-            containerColor = colors.backgroundSecondary
-        )
     }
 }
