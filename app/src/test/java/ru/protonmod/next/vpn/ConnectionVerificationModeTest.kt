@@ -24,6 +24,8 @@ class ConnectionVerificationModeTest {
         assertTrue(isAwgHandshakeSuccess("endpoint/awg: received handshake response from peer"))
         assertTrue(isAwgHandshakeSuccess("AWG handshake response received"))
         assertFalse(isAwgHandshakeSuccess("outbound: TLS handshake timeout"))
+        assertTrue(isAwgHandshakeAttempt("peer(x) - Sending handshake initiation"))
+        assertFalse(isAwgHandshakeAttempt("peer(x) - Sending handshake response"))
     }
 
     @Test

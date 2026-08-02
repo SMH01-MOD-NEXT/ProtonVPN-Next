@@ -256,6 +256,10 @@ class AmneziaVpnManager @Inject constructor(
                                         _vpnState.value == VpnState.CONNECTING -> {
                                         handleTunnelStateChange(VpnTunnelState.UP)
                                     }
+                                    _vpnState.value == VpnState.CONNECTED -> {
+                                        updateVpnState(VpnState.VERIFYING)
+                                        ProtonLogger.d(TAG, "Established AWG tunnel started a new handshake")
+                                    }
                                     else -> ProtonLogger.v(TAG, "Ignoring duplicate tunnel UP state")
                                 }
                                 VpnTunnelState.DOWN -> {
@@ -305,6 +309,7 @@ class AmneziaVpnManager @Inject constructor(
                 settingsManager.analyticsEnabled.map { Unit },
                 settingsManager.connectionVerificationMode.map { Unit },
                 settingsManager.connectionVerificationRequired.map { Unit },
+                settingsManager.handshakeReconnectTimeoutSeconds.map { Unit },
                 settingsManager.connectionFailureDetection.map { Unit },
                 settingsManager.connectionAutoReconnect.map { Unit },
             ).collectLatest {
@@ -605,6 +610,7 @@ class AmneziaVpnManager @Inject constructor(
             analyticsEnabled = settingsManager.analyticsEnabled.first(),
             verificationMode = settingsManager.connectionVerificationMode.first(),
             verificationRequired = settingsManager.connectionVerificationRequired.first(),
+            handshakeTimeoutSeconds = settingsManager.handshakeReconnectTimeoutSeconds.first(),
             failureDetectionEnabled = settingsManager.connectionFailureDetection.first(),
             autoReconnectEnabled = settingsManager.connectionAutoReconnect.first(),
         )
@@ -920,6 +926,7 @@ class AmneziaVpnManager @Inject constructor(
                 killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
                 verificationMode = settingsManager.connectionVerificationMode.first(),
                 verificationRequired = settingsManager.connectionVerificationRequired.first(),
+                handshakeTimeoutSeconds = settingsManager.handshakeReconnectTimeoutSeconds.first(),
                 failureDetectionEnabled = settingsManager.connectionFailureDetection.first(),
                 autoReconnectEnabled = settingsManager.connectionAutoReconnect.first(),
                 splitTunnelingEnabled = splitTunnelingEnabled,

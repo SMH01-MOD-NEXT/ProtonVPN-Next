@@ -74,7 +74,7 @@ class AiManager @Inject constructor(
             ip_rotation_enabled, ip_rotation_interval (5|15|30|60), ip_rotation_keep_country,
             obfuscation_enabled, obfuscation_advanced, proxy_chain_enabled, proxy_chain_config,
             api_bypass_enabled, api_bypass_strategy, spoof_country_enabled, spoof_country_null,
-            spoof_country_code, traffic_stats, connection_verification_mode,
+            spoof_country_code, traffic_stats, connection_verification_mode, handshake_timeout (3..30 seconds),
             connection_verification_required, connection_preflight_required,
             connection_failure_detection, connection_auto_reconnect.
 

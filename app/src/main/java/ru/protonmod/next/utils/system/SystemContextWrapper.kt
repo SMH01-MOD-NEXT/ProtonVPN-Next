@@ -39,6 +39,7 @@ class SystemContextWrapper @Inject constructor(
         killSwitchEnabled: Boolean,
         verificationMode: ConnectionVerificationMode,
         verificationRequired: Boolean,
+        handshakeTimeoutSeconds: Int,
         failureDetectionEnabled: Boolean,
         autoReconnectEnabled: Boolean,
         splitTunnelingEnabled: Boolean,
@@ -55,6 +56,7 @@ class SystemContextWrapper @Inject constructor(
             putExtra(ProtonVpnService.EXTRA_KILL_SWITCH_ENABLED, killSwitchEnabled)
             putExtra(ProtonVpnService.EXTRA_VERIFICATION_MODE, verificationMode.name)
             putExtra(ProtonVpnService.EXTRA_VERIFICATION_REQUIRED, verificationRequired)
+            putExtra(ProtonVpnService.EXTRA_HANDSHAKE_TIMEOUT_SECONDS, handshakeTimeoutSeconds)
             putExtra(ProtonVpnService.EXTRA_FAILURE_DETECTION_ENABLED, failureDetectionEnabled)
             putExtra(ProtonVpnService.EXTRA_AUTO_RECONNECT_ENABLED, autoReconnectEnabled)
             putExtra(ProtonVpnService.EXTRA_SPLIT_TUNNELING_ENABLED, splitTunnelingEnabled)
@@ -82,6 +84,7 @@ class SystemContextWrapper @Inject constructor(
         analyticsEnabled: Boolean,
         verificationMode: ConnectionVerificationMode,
         verificationRequired: Boolean,
+        handshakeTimeoutSeconds: Int,
         failureDetectionEnabled: Boolean,
         autoReconnectEnabled: Boolean,
     ) {
@@ -93,6 +96,7 @@ class SystemContextWrapper @Inject constructor(
             putExtra(ProtonVpnService.EXTRA_ANALYTICS_ENABLED, analyticsEnabled)
             putExtra(ProtonVpnService.EXTRA_VERIFICATION_MODE, verificationMode.name)
             putExtra(ProtonVpnService.EXTRA_VERIFICATION_REQUIRED, verificationRequired)
+            putExtra(ProtonVpnService.EXTRA_HANDSHAKE_TIMEOUT_SECONDS, handshakeTimeoutSeconds)
             putExtra(ProtonVpnService.EXTRA_FAILURE_DETECTION_ENABLED, failureDetectionEnabled)
             putExtra(ProtonVpnService.EXTRA_AUTO_RECONNECT_ENABLED, autoReconnectEnabled)
         }

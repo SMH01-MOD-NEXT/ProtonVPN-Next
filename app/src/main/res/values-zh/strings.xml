@@ -651,7 +651,7 @@
     <string name="verification_mode_disabled">残疾人</string>
     <string name="verification_mode_disabled_desc">不要运行主动隧道探测或自动故障检测</string>
     <string name="verification_mode_relaxed">仅验证握手</string>
-    <string name="verification_mode_relaxed_desc">仅在收到 AmneziaWG 握手后显示“已连接”。如果 5 秒内未收到握手，则重新连接到同一服务器。</string>
+    <string name="verification_mode_relaxed_desc">Show Connected only after an AmneziaWG handshake. A new outgoing handshake opens the same timed verification window; DNS probes are not used.</string>
     <string name="verification_mode_balanced">均衡</string>
     <string name="verification_mode_balanced_desc">建议在响应能力和误报之间取得平衡</string>
     <string name="verification_mode_aggressive">挑衅的</string>
@@ -733,4 +733,9 @@
     <string name="ai_profile_protocol">Protocol</string>
     <string name="ai_profile_obfuscation">Obfuscation</string>
     <string name="ai_profile_connect_go">Connect &amp; Go</string>
+
+    <string name="verification_handshake_timeout_section">Handshake timeout</string>
+    <string name="verification_handshake_timeout_title">Reconnect timeout</string>
+    <string name="verification_handshake_timeout_desc">Wait this long for the handshake response before reconnecting to the same server.</string>
+    <string name="verification_handshake_timeout_value">%1$d s</string>
 </resources>

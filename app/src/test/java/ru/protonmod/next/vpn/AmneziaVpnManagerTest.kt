@@ -155,6 +155,7 @@ class AmneziaVpnManagerTest {
             whenever(settingsManager.analyticsEnabled).thenReturn(flowOf(true))
             whenever(settingsManager.connectionVerificationMode).thenReturn(flowOf(ConnectionVerificationMode.BALANCED))
             whenever(settingsManager.connectionVerificationRequired).thenReturn(flowOf(false))
+            whenever(settingsManager.handshakeReconnectTimeoutSeconds).thenReturn(flowOf(SettingsManager.DEFAULT_HANDSHAKE_RECONNECT_TIMEOUT_SECONDS))
             whenever(settingsManager.connectionPreflightRequired).thenReturn(flowOf(false))
             whenever(settingsManager.connectionFailureDetection).thenReturn(flowOf(true))
             whenever(settingsManager.connectionAutoReconnect).thenReturn(flowOf(true))
@@ -287,6 +288,7 @@ class AmneziaVpnManagerTest {
             killSwitchEnabled = any(),
             verificationMode = eq(ConnectionVerificationMode.BALANCED),
             verificationRequired = eq(false),
+            handshakeTimeoutSeconds = eq(SettingsManager.DEFAULT_HANDSHAKE_RECONNECT_TIMEOUT_SECONDS),
             failureDetectionEnabled = eq(true),
             autoReconnectEnabled = eq(true),
             splitTunnelingEnabled = eq(false),

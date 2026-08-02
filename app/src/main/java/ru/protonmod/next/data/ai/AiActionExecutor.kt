@@ -128,6 +128,7 @@ class AiActionExecutor @Inject constructor(
             "connection_verification_mode" -> success {
                 settingsManager.setConnectionVerificationMode(ConnectionVerificationMode.valueOf(value.asText().uppercase()))
             }
+            "handshake_timeout" -> success { settingsManager.setHandshakeReconnectTimeoutSeconds(value.asInt()) }
             "connection_verification_required" -> success { settingsManager.setConnectionVerificationRequired(value.asBoolean()) }
             "connection_preflight_required" -> success { settingsManager.setConnectionPreflightRequired(value.asBoolean()) }
             "connection_failure_detection" -> success { settingsManager.setConnectionFailureDetection(value.asBoolean()) }

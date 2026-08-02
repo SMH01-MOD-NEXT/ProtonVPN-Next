@@ -654,7 +654,7 @@
     <string name="verification_mode_disabled">از کار افتاده است</string>
     <string name="verification_mode_disabled_desc">پروب های تونل فعال یا تشخیص خودکار خرابی را اجرا نکنید</string>
     <string name="verification_mode_relaxed">فقط هندشیک را بررسی کن</string>
-    <string name="verification_mode_relaxed_desc">وضعیت «متصل» فقط پس از هندشیک AmneziaWG نمایش داده شود. اگر تا ۵ ثانیه هندشیک انجام نشد، به همان سرور دوباره متصل شود.</string>
+    <string name="verification_mode_relaxed_desc">Show Connected only after an AmneziaWG handshake. A new outgoing handshake opens the same timed verification window; DNS probes are not used.</string>
     <string name="verification_mode_balanced">متعادل</string>
     <string name="verification_mode_balanced_desc">تعادل توصیه شده بین پاسخگویی و مثبت کاذب</string>
     <string name="verification_mode_aggressive">تهاجمی</string>
@@ -736,4 +736,9 @@
     <string name="ai_profile_protocol">Protocol</string>
     <string name="ai_profile_obfuscation">Obfuscation</string>
     <string name="ai_profile_connect_go">Connect &amp; Go</string>
+
+    <string name="verification_handshake_timeout_section">Handshake timeout</string>
+    <string name="verification_handshake_timeout_title">Reconnect timeout</string>
+    <string name="verification_handshake_timeout_desc">Wait this long for the handshake response before reconnecting to the same server.</string>
+    <string name="verification_handshake_timeout_value">%1$d s</string>
 </resources>

@@ -45,6 +45,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ConnectionVerificationMode
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -130,13 +131,20 @@ fun ConnectionVerificationSettingsScreen(
                     }
                 }
                 item(contentType = "BehaviorSection") {
-                    AnimatedVisibility(
-                        visible = state.mode != ConnectionVerificationMode.DISABLED,
-                        enter = fadeIn() + expandVertically(),
-                        exit = fadeOut() + shrinkVertically(),
-                    ) {
-                        SettingsSection(stringResource(R.string.verification_behavior_title), content) {
-                            if (!state.mode.handshakeOnly) {
+                    if (state.mode.handshakeOnly) {
+                        SettingsSection(stringResource(R.string.verification_handshake_timeout_section), content) {
+                            HandshakeTimeoutRow(
+                                seconds = state.handshakeTimeoutSeconds,
+                                onChange = viewModel::setHandshakeTimeoutSeconds,
+                            )
+                        }
+                    } else {
+                        AnimatedVisibility(
+                            visible = state.mode != ConnectionVerificationMode.DISABLED,
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically(),
+                        ) {
+                            SettingsSection(stringResource(R.string.verification_behavior_title), content) {
                                 VerificationToggle(
                                     R.string.verification_require_title,
                                     R.string.verification_require_desc,
@@ -144,27 +152,27 @@ fun ConnectionVerificationSettingsScreen(
                                     viewModel::setRequireVerification,
                                 )
                                 Divider()
+                                VerificationToggle(
+                                    R.string.verification_preflight_title,
+                                    R.string.verification_preflight_desc,
+                                    state.requirePreflight,
+                                    viewModel::setRequirePreflight,
+                                )
+                                Divider()
+                                VerificationToggle(
+                                    R.string.verification_failure_detection_title,
+                                    R.string.verification_failure_detection_desc,
+                                    state.detectFailures,
+                                    viewModel::setDetectFailures,
+                                )
+                                Divider()
+                                VerificationToggle(
+                                    R.string.verification_auto_reconnect_title,
+                                    R.string.verification_auto_reconnect_desc,
+                                    state.autoReconnect,
+                                    viewModel::setAutoReconnect,
+                                )
                             }
-                            VerificationToggle(
-                                R.string.verification_preflight_title,
-                                R.string.verification_preflight_desc,
-                                state.requirePreflight,
-                                viewModel::setRequirePreflight,
-                            )
-                            Divider()
-                            VerificationToggle(
-                                R.string.verification_failure_detection_title,
-                                R.string.verification_failure_detection_desc,
-                                state.detectFailures,
-                                viewModel::setDetectFailures,
-                            )
-                            Divider()
-                            VerificationToggle(
-                                R.string.verification_auto_reconnect_title,
-                                R.string.verification_auto_reconnect_desc,
-                                state.autoReconnect,
-                                viewModel::setAutoReconnect,
-                            )
                         }
                     }
                 }
@@ -230,6 +238,51 @@ private fun ModeRow(mode: ConnectionVerificationMode, selected: Boolean, onClick
             Text(stringResource(description), style = MaterialTheme.typography.bodySmall, color = colors.textWeak)
         }
         RadioButton(selected, onClick = null, colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm))
+    }
+}
+
+@Composable
+private fun HandshakeTimeoutRow(seconds: Int, onChange: (Int) -> Unit) {
+    val colors = ProtonNextTheme.colors
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    stringResource(R.string.verification_handshake_timeout_title),
+                    color = colors.textNorm,
+                    fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    stringResource(R.string.verification_handshake_timeout_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textWeak,
+                )
+            }
+            Surface(
+                color = colors.brandNorm.copy(alpha = 0.14f),
+                shape = RoundedCornerShape(10.dp),
+            ) {
+                Text(
+                    stringResource(R.string.verification_handshake_timeout_value, seconds),
+                    color = colors.brandNorm,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                )
+            }
+        }
+        Slider(
+            value = seconds.toFloat(),
+            onValueChange = { onChange(it.toInt()) },
+            valueRange = SettingsManager.MIN_HANDSHAKE_RECONNECT_TIMEOUT_SECONDS.toFloat()..
+                SettingsManager.MAX_HANDSHAKE_RECONNECT_TIMEOUT_SECONDS.toFloat(),
+            steps = SettingsManager.MAX_HANDSHAKE_RECONNECT_TIMEOUT_SECONDS -
+                SettingsManager.MIN_HANDSHAKE_RECONNECT_TIMEOUT_SECONDS - 1,
+            colors = SliderDefaults.colors(
+                thumbColor = colors.brandNorm,
+                activeTrackColor = colors.brandNorm,
+                inactiveTrackColor = colors.separatorNorm,
+            ),
+        )
     }
 }
 

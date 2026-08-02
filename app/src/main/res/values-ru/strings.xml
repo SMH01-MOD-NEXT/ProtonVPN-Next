@@ -660,7 +660,7 @@
     <string name="verification_mode_disabled">Отключено</string>
     <string name="verification_mode_disabled_desc">Не выполнять активные проверки туннеля и автоматическое обнаружение отвалов</string>
     <string name="verification_mode_relaxed">Проверять только рукопожатие</string>
-    <string name="verification_mode_relaxed_desc">Показывать статус «Подключено» только после рукопожатия AmneziaWG. Если рукопожатие не получено за 5 секунд, переподключиться к тому же серверу.</string>
+    <string name="verification_mode_relaxed_desc">Показывать статус «Подключено» только после рукопожатия AmneziaWG. Новая отправка рукопожатия запускает такой же таймер; DNS-проверки не используются.</string>
     <string name="verification_mode_balanced">Сбалансированный режим</string>
     <string name="verification_mode_balanced_desc">Рекомендуемый баланс между скоростью реакции и ложными срабатываниями</string>
     <string name="verification_mode_aggressive">Агрессивный режим</string>
@@ -742,4 +742,9 @@
     <string name="ai_profile_protocol">Протокол</string>
     <string name="ai_profile_obfuscation">Обфускация</string>
     <string name="ai_profile_connect_go">Connect &amp; Go</string>
+
+    <string name="verification_handshake_timeout_section">Тайм-аут рукопожатия</string>
+    <string name="verification_handshake_timeout_title">Переподключение через</string>
+    <string name="verification_handshake_timeout_desc">Сколько ждать ответ на рукопожатие перед переподключением к тому же серверу.</string>
+    <string name="verification_handshake_timeout_value">%1$d с</string>
 </resources>

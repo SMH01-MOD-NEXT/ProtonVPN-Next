@@ -767,7 +767,7 @@
     <string name="verification_mode_disabled">Disabled</string>
     <string name="verification_mode_disabled_desc">Do not run active tunnel probes or automatic failure detection</string>
     <string name="verification_mode_relaxed">Verify handshake only</string>
-    <string name="verification_mode_relaxed_desc">Show Connected only after an AmneziaWG handshake. Reconnect to the same server if no handshake arrives within 5 seconds.</string>
+    <string name="verification_mode_relaxed_desc">Show Connected only after an AmneziaWG handshake. A new outgoing handshake opens the same timed verification window; DNS probes are not used.</string>
     <string name="verification_mode_balanced">Balanced</string>
     <string name="verification_mode_balanced_desc">Recommended balance between responsiveness and false positives</string>
     <string name="verification_mode_aggressive">Aggressive</string>
@@ -851,4 +851,9 @@
     <string name="ai_profile_protocol">Protocol</string>
     <string name="ai_profile_obfuscation">Obfuscation</string>
     <string name="ai_profile_connect_go">Connect &amp; Go</string>
+
+    <string name="verification_handshake_timeout_section">Handshake timeout</string>
+    <string name="verification_handshake_timeout_title">Reconnect timeout</string>
+    <string name="verification_handshake_timeout_desc">Wait this long for the handshake response before reconnecting to the same server.</string>
+    <string name="verification_handshake_timeout_value">%1$d s</string>
 </resources>

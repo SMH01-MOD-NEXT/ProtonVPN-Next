@@ -63,6 +63,7 @@ import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.data.local.ConnectionVerificationMode
+import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.utils.ProtonLogger
 import java.util.Collections
 import java.util.IdentityHashMap
@@ -77,6 +78,9 @@ internal fun isAwgHandshakeSuccess(message: String): Boolean {
     return "received handshake response" in normalized ||
         "handshake response received" in normalized
 }
+
+internal fun isAwgHandshakeAttempt(message: String): Boolean =
+    "sending handshake initiation" in message.lowercase(Locale.ROOT)
 
 /**
  * Android VPN service backed by amnezia-box (sing-box + AWG/AWG2).
@@ -120,6 +124,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         const val EXTRA_VERIFIED = "verified"
         const val EXTRA_VERIFICATION_MODE = "verification_mode"
         const val EXTRA_VERIFICATION_REQUIRED = "verification_required"
+        const val EXTRA_HANDSHAKE_TIMEOUT_SECONDS = "handshake_timeout_seconds"
         const val EXTRA_FAILURE_DETECTION_ENABLED = "failure_detection_enabled"
         const val EXTRA_AUTO_RECONNECT_ENABLED = "auto_reconnect_enabled"
         const val STATE_CONNECTING = "CONNECTING"
@@ -162,6 +167,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     private var killSwitchEnabled = false
     private var verificationMode = ConnectionVerificationMode.BALANCED
     private var verificationRequired = false
+    private var handshakeTimeoutSeconds = SettingsManager.DEFAULT_HANDSHAKE_RECONNECT_TIMEOUT_SECONDS
     private var failureDetectionEnabled = true
     private var autoReconnectEnabled = true
     private var logicalServerId: String? = null
@@ -479,6 +485,9 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             ProtonLogger.isAnalyticsEnabled = intent.getBooleanExtra(EXTRA_ANALYTICS_ENABLED, true)
         }
         readHealthSettings(intent)
+        if (verificationMode.handshakeOnly && state == VpnTunnelState.UP && !verified) {
+            startHandshakeVerificationWatchdog(lifecycleGeneration.get())
+        }
         updateNotification(if (connecting) STATE_CONNECTING else state.name)
     }
 
@@ -489,6 +498,11 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             }.getOrDefault(ConnectionVerificationMode.BALANCED)
         }
         verificationRequired = intent.getBooleanExtra(EXTRA_VERIFICATION_REQUIRED, verificationRequired)
+        handshakeTimeoutSeconds = intent.getIntExtra(EXTRA_HANDSHAKE_TIMEOUT_SECONDS, handshakeTimeoutSeconds)
+            .coerceIn(
+                SettingsManager.MIN_HANDSHAKE_RECONNECT_TIMEOUT_SECONDS,
+                SettingsManager.MAX_HANDSHAKE_RECONNECT_TIMEOUT_SECONDS,
+            )
         failureDetectionEnabled = intent.getBooleanExtra(EXTRA_FAILURE_DETECTION_ENABLED, failureDetectionEnabled)
         autoReconnectEnabled = intent.getBooleanExtra(EXTRA_AUTO_RECONNECT_ENABLED, autoReconnectEnabled)
         if (!failureDetectionEnabled || verificationMode == ConnectionVerificationMode.DISABLED) {
@@ -644,12 +658,27 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     }
 
     private fun observeHandshake(message: String) {
-        if (!verificationMode.handshakeOnly || verified || !isAwgHandshakeSuccess(message)) return
-        handshakeObserved = true
-        scope.launch {
-            if (verificationMode.handshakeOnly && state == VpnTunnelState.UP && !verified) {
-                ProtonLogger.i(TAG, "AmneziaWG handshake confirmed")
-                markVerified()
+        if (!verificationMode.handshakeOnly) return
+        when {
+            isAwgHandshakeSuccess(message) -> {
+                handshakeObserved = true
+                scope.launch {
+                    if (verificationMode.handshakeOnly && state == VpnTunnelState.UP && !verified) {
+                        ProtonLogger.i(TAG, "AmneziaWG handshake confirmed")
+                        markVerified()
+                    }
+                }
+            }
+            isAwgHandshakeAttempt(message) && state == VpnTunnelState.UP && verified -> {
+                scope.launch {
+                    if (!verificationMode.handshakeOnly || state != VpnTunnelState.UP || !verified) return@launch
+                    ProtonLogger.w(TAG, "AmneziaWG started a new handshake; opening verification window")
+                    handshakeObserved = false
+                    verified = false
+                    sendState(VpnTunnelState.UP)
+                    updateNotification(VpnTunnelState.UP.name)
+                    startHandshakeVerificationWatchdog(lifecycleGeneration.get())
+                }
             }
         }
     }
@@ -657,11 +686,11 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     private fun startHandshakeVerificationWatchdog(generation: Long) {
         handshakeVerificationJob?.cancel()
         handshakeVerificationJob = scope.launch {
-            delay(ConnectionVerificationMode.RELAXED.verificationTimeoutMs)
+            delay(handshakeTimeoutSeconds.toLong().seconds)
             if (lifecycleGeneration.get() != generation || verified || manualDisconnect ||
                 !verificationMode.handshakeOnly || state != VpnTunnelState.UP
             ) return@launch
-            ProtonLogger.w(TAG, "No AmneziaWG handshake in 5 seconds; reconnecting to the same server")
+            ProtonLogger.w(TAG, "No AmneziaWG handshake in $handshakeTimeoutSeconds seconds; reconnecting to the same server")
             restartTunnelAfterHandshakeTimeout()
         }
     }
@@ -673,7 +702,9 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     }
 
     private fun observeTransportHealth(message: String) {
-        if (!failureDetectionEnabled || verificationMode == ConnectionVerificationMode.DISABLED) return
+        if (verificationMode.handshakeOnly || !failureDetectionEnabled ||
+            verificationMode == ConnectionVerificationMode.DISABLED
+        ) return
         val normalized = message.lowercase(Locale.ROOT)
         when {
             isSuccessfulTransportActivity(normalized) -> scope.launch { resetTransportFailures() }
