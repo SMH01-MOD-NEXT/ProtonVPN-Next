@@ -41,6 +41,8 @@ class SystemContextWrapper @Inject constructor(
         verificationRequired: Boolean,
         failureDetectionEnabled: Boolean,
         autoReconnectEnabled: Boolean,
+        splitTunnelingEnabled: Boolean,
+        splitTunnelingMode: String,
         excludedApps: Set<String>,
         excludedIps: Set<String>
     ) {
@@ -55,6 +57,8 @@ class SystemContextWrapper @Inject constructor(
             putExtra(ProtonVpnService.EXTRA_VERIFICATION_REQUIRED, verificationRequired)
             putExtra(ProtonVpnService.EXTRA_FAILURE_DETECTION_ENABLED, failureDetectionEnabled)
             putExtra(ProtonVpnService.EXTRA_AUTO_RECONNECT_ENABLED, autoReconnectEnabled)
+            putExtra(ProtonVpnService.EXTRA_SPLIT_TUNNELING_ENABLED, splitTunnelingEnabled)
+            putExtra(ProtonVpnService.EXTRA_SPLIT_TUNNELING_MODE, splitTunnelingMode)
             putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_APPS, ArrayList(excludedApps))
             putStringArrayListExtra(ProtonVpnService.EXTRA_EXCLUDED_IPS, ArrayList(excludedIps))
         }

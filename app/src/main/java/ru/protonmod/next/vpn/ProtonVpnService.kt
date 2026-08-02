@@ -98,6 +98,8 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         const val EXTRA_CONFIG = "config_string"
         const val EXTRA_EXCLUDED_APPS = "excluded_apps"
         const val EXTRA_EXCLUDED_IPS = "excluded_ips"
+        const val EXTRA_SPLIT_TUNNELING_ENABLED = "split_tunneling_enabled"
+        const val EXTRA_SPLIT_TUNNELING_MODE = "split_tunneling_mode"
         const val EXTRA_STATE = "state"
         const val EXTRA_SPEED = "speed"
         const val EXTRA_TRAFFIC_RX = "traffic_rx"
@@ -252,6 +254,11 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         notificationsEnabled = intent.getBooleanExtra(EXTRA_NOTIFICATIONS_ENABLED, true)
         killSwitchEnabled = intent.getBooleanExtra(EXTRA_KILL_SWITCH_ENABLED, false)
         readHealthSettings(intent)
+        platform.configureSplitTunneling(
+            enabled = intent.getBooleanExtra(EXTRA_SPLIT_TUNNELING_ENABLED, false),
+            mode = intent.getStringExtra(EXTRA_SPLIT_TUNNELING_MODE) ?: "exclude",
+            selectedApps = intent.getStringArrayListExtra(EXTRA_EXCLUDED_APPS).orEmpty().toSet()
+        )
         lastConfig = config
         logFullConfigToLogcat(config)
         manualDisconnect = false

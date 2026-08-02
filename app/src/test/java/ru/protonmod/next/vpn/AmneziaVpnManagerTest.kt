@@ -286,13 +286,15 @@ class AmneziaVpnManagerTest {
             verificationRequired = eq(false),
             failureDetectionEnabled = eq(true),
             autoReconnectEnabled = eq(true),
+            splitTunnelingEnabled = eq(false),
+            splitTunnelingMode = eq("exclude"),
             excludedApps = any(),
             excludedIps = any()
         )
     }
 
     @Test
-    fun `include mode adds VPN package to allowed applications`() = runTest(testDispatcher) {
+    fun `include mode keeps only the user app selection in generated config`() = runTest(testDispatcher) {
         val server = PhysicalServer(
             id = "server_1",
             domain = "node.protonvpn.com",
@@ -320,7 +322,7 @@ class AmneziaVpnManagerTest {
             any(), any(), any(), any(), any(),
             eq(true),
             any(),
-            eq(setOf("org.telegram.messenger", "ru.protonmod.next")),
+            eq(setOf("org.telegram.messenger")),
             any(), any(), any(), any(), any(), isNull(), any(), any(), any(), any(), any(), anyOrNull()
         )
     }

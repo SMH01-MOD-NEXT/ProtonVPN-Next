@@ -151,9 +151,6 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             "route_address" to strings(routeAddresses)
         ).apply {
             if (routeExcludes.isNotEmpty()) put("route_exclude_address", strings(routeExcludes))
-            if (selectedApps.isNotEmpty()) {
-                put(if (isIncludeMode) "include_package" else "exclude_package", strings(selectedApps.sorted()))
-            }
         }
 
         val awg = linkedMapOf<String, kotlinx.serialization.json.JsonElement>(

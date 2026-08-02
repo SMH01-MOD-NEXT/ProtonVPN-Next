@@ -49,13 +49,42 @@ import java.net.NetworkInterface
 import io.nekohasekai.libbox.NetworkInterface as BoxNetworkInterface
 
 /** Android platform bridge required by libbox. */
-internal class AwgBoxPlatform(
+internal data class SplitTunnelingAppPolicy(
+    val allowedApps: Set<String> = emptySet(),
+    val disallowedApps: Set<String> = emptySet()
+)
+
+internal fun splitTunnelingAppPolicy(
+    enabled: Boolean,
+    mode: String,
+    selectedApps: Set<String>,
+    vpnPackageName: String
+): SplitTunnelingAppPolicy = when {
+    !enabled -> SplitTunnelingAppPolicy()
+    mode == "include" -> SplitTunnelingAppPolicy(
+        allowedApps = selectedApps + vpnPackageName
+    )
+    else -> SplitTunnelingAppPolicy(
+        disallowedApps = selectedApps
+    )
+}
+
+class AwgBoxPlatform(
     private val service: VpnService,
     private val vpnNetworkMonitor: VpnNetworkMonitor,
     private val onTunOpened: (ParcelFileDescriptor) -> Unit
 ) : PlatformInterface {
     private val connectivity = service.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
+    @Volatile private var splitTunnelingEnabled = false
+    @Volatile private var splitTunnelingMode = "exclude"
+    @Volatile private var splitTunnelingApps: Set<String> = emptySet()
+
+    fun configureSplitTunneling(enabled: Boolean, mode: String, selectedApps: Set<String>) {
+        splitTunnelingEnabled = enabled
+        splitTunnelingMode = mode
+        splitTunnelingApps = selectedApps.toSet()
+    }
 
     override fun usePlatformAutoDetectInterfaceControl() = true
     override fun autoDetectInterfaceControl(fd: Int) { service.protect(fd) }
@@ -91,10 +120,19 @@ internal class AwgBoxPlatform(
             options.inet6RouteRange.forEachRemaining { builder.addRoute(it.address(), it.prefix()) }
         }
 
-        options.includePackage.forEachRemaining { packageName ->
+        // App split tunneling is applied from the explicit connection policy. Relying on
+        // TunOptions package iterators made a previous Include filter leak into Exclude mode
+        // during engine reloads, effectively bypassing the VPN for every application.
+        val appPolicy = splitTunnelingAppPolicy(
+            enabled = splitTunnelingEnabled,
+            mode = splitTunnelingMode,
+            selectedApps = splitTunnelingApps,
+            vpnPackageName = service.packageName
+        )
+        appPolicy.allowedApps.sorted().forEach { packageName ->
             try { builder.addAllowedApplication(packageName) } catch (_: PackageManager.NameNotFoundException) { }
         }
-        options.excludePackage.forEachRemaining { packageName ->
+        appPolicy.disallowedApps.sorted().forEach { packageName ->
             try { builder.addDisallowedApplication(packageName) } catch (_: PackageManager.NameNotFoundException) { }
         }
 

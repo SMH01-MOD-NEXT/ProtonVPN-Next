@@ -786,7 +786,7 @@ class AmneziaVpnManager @Inject constructor(
             
             val splitTunnelingEnabled = settingsManager.splitTunnelingEnabled.first()
             val stMode = settingsManager.splitTunnelingMode.first()
-            val isIncludeMode = stMode == "include"
+            val isIncludeMode = splitTunnelingEnabled && stMode == "include"
             val allowLan = settingsManager.allowLanEnabled.first()
 
             val selectedApps = if (splitTunnelingEnabled) settingsManager.excludedApps.first() else emptySet()
@@ -889,15 +889,10 @@ class AmneziaVpnManager @Inject constructor(
                 targetIp = targetIp,
                 isIncludeMode = isIncludeMode,
                 allowLan = allowLan,
-                // When app-based Include filtering is active, the VPN process must share the
-                // allowed UID set because libbox opens DNS and routed outbound sockets from it.
-                // With IP/domain-only rules the package filter must stay empty so every app can
-                // reach those selected destinations.
-                selectedApps = if (isIncludeMode && selectedApps.isNotEmpty()) {
-                    selectedApps + context.packageName
-                } else {
-                    selectedApps
-                },
+                // Android app ownership is applied directly by AwgBoxPlatform. Keep the
+                // selection free of implementation packages so Exclude and Include cannot leak
+                // package filters into one another during an engine reload.
+                selectedApps = selectedApps,
                 selectedIps = selectedIps,
                 selectedDomains = selectedDomains,
                 port = selectedPort,
@@ -926,6 +921,8 @@ class AmneziaVpnManager @Inject constructor(
                 verificationRequired = settingsManager.connectionVerificationRequired.first(),
                 failureDetectionEnabled = settingsManager.connectionFailureDetection.first(),
                 autoReconnectEnabled = settingsManager.connectionAutoReconnect.first(),
+                splitTunnelingEnabled = splitTunnelingEnabled,
+                splitTunnelingMode = stMode,
                 excludedApps = selectedApps,
                 excludedIps = selectedIps
             )

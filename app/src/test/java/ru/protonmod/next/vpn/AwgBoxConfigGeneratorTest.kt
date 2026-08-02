@@ -114,7 +114,7 @@ class AwgBoxConfigGeneratorTest {
         val routes = tun.getValue("route_address").jsonArray.map { it.jsonPrimitive.content }
 
         assertEquals(listOf("0.0.0.0/0"), routes)
-        assertTrue("include_package" in tun)
+        assertFalse("include_package" in tun)
         assertFalse("exclude_package" in tun)
         assertEquals("proton-awg", route.getValue("final").jsonPrimitive.content)
         assertEquals(1, Regex(Regex.escape(privateKey)).findAll(config).count())
