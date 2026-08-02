@@ -705,4 +705,18 @@
     <string name="ai_processing">Обработка…</string>
     <string name="ai_success">Готово!</string>
     <string name="ai_error_generic">Произошла ошибка AI</string>
+    <string name="ip_rotation_title">Ротация IP</string>
+    <string name="ip_rotation_description">Автоматически переподключайтесь к другому VPN-серверу по расписанию, чтобы получать новый публичный IP-адрес.</string>
+    <string name="ip_rotation_section_status">Состояние</string>
+    <string name="ip_rotation_enable">Включить ротацию IP</string>
+    <string name="ip_rotation_enable_desc">Автоматически менять активный VPN-сервер во время подключения.</string>
+    <string name="ip_rotation_interval">Интервал ротации</string>
+    <string name="ip_rotation_minutes">Каждые %1$d мин.</string>
+    <string name="ip_rotation_location">Местоположение</string>
+    <string name="ip_rotation_keep_country">Сохранять текущую страну</string>
+    <string name="ip_rotation_keep_country_desc">Выбирать другой сервер в текущей стране, чтобы виртуальное местоположение не менялось.</string>
+    <string name="ip_rotation_note">Во время ротации VPN кратковременно переподключается. Активные соединения могут прерваться.</string>
+    <string name="ip_rotation_settings_subtitle">Автоматическая смена VPN-сервера и публичного IP.</string>
+    <string name="connection_mode_standard">Обычный</string>
+    <string name="connection_mode_tor">Tor</string>
 </resources>
