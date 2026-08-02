@@ -659,8 +659,8 @@
     <string name="verification_mode_title">Агрессивность проверки</string>
     <string name="verification_mode_disabled">Отключено</string>
     <string name="verification_mode_disabled_desc">Не выполнять активные проверки туннеля и автоматическое обнаружение отвалов</string>
-    <string name="verification_mode_relaxed">Щадящий режим</string>
-    <string name="verification_mode_relaxed_desc">Меньше проверок и больше терпимости к нестабильным сетям</string>
+    <string name="verification_mode_relaxed">Проверять только рукопожатие</string>
+    <string name="verification_mode_relaxed_desc">Показывать статус «Подключено» только после рукопожатия AmneziaWG. Если рукопожатие не получено за 5 секунд, переподключиться к тому же серверу.</string>
     <string name="verification_mode_balanced">Сбалансированный режим</string>
     <string name="verification_mode_balanced_desc">Рекомендуемый баланс между скоростью реакции и ложными срабатываниями</string>
     <string name="verification_mode_aggressive">Агрессивный режим</string>

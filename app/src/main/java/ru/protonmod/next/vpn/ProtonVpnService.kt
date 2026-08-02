@@ -72,6 +72,12 @@ import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
+internal fun isAwgHandshakeSuccess(message: String): Boolean {
+    val normalized = message.lowercase(Locale.ROOT)
+    return "received handshake response" in normalized ||
+        "handshake response received" in normalized
+}
+
 /**
  * Android VPN service backed by amnezia-box (sing-box + AWG/AWG2).
  *
@@ -138,6 +144,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     private var tunDescriptor: ParcelFileDescriptor? = null
     private var statsJob: Job? = null
     private var reconnectJob: Job? = null
+    private var handshakeVerificationJob: Job? = null
     private var engineJob: Job? = null
     private var shutdownJob: Job? = null
     private val lifecycleGeneration = AtomicLong(0)
@@ -159,6 +166,8 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     private var autoReconnectEnabled = true
     private var logicalServerId: String? = null
     private var lastConfig: String? = null
+    private var lastConnectIntent: Intent? = null
+    @Volatile private var handshakeObserved = false
     private var lastRx = 0L
     private var lastTx = 0L
     private var lastSpeed: String? = null
@@ -236,9 +245,12 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     }
 
     private fun markVerified() {
-        if (verified) return
+        if (verified || state != VpnTunnelState.UP) return
         verified = true
         connecting = false
+        handshakeVerificationJob?.cancel()
+        handshakeVerificationJob = null
+        sendState(VpnTunnelState.UP)
         updateNotification(VpnTunnelState.UP.name)
     }
 
@@ -260,10 +272,18 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             selectedApps = intent.getStringArrayListExtra(EXTRA_EXCLUDED_APPS).orEmpty().toSet()
         )
         lastConfig = config
+        lastConnectIntent = Intent(intent).apply {
+            setClass(this@ProtonVpnService, ProtonVpnService::class.java)
+            action = ACTION_CONNECT
+        }
         logFullConfigToLogcat(config)
         manualDisconnect = false
         val generation = lifecycleGeneration.incrementAndGet()
-        verified = verificationMode == ConnectionVerificationMode.DISABLED || !verificationRequired
+        handshakeVerificationJob?.cancel()
+        handshakeVerificationJob = null
+        handshakeObserved = false
+        verified = verificationMode == ConnectionVerificationMode.DISABLED ||
+            (!verificationMode.handshakeOnly && !verificationRequired)
         connecting = true
         updateNotification(STATE_CONNECTING, ensureForeground = true)
         sendState(null)
@@ -302,6 +322,10 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                             sendState(VpnTunnelState.UP)
                             updateNotification(VpnTunnelState.UP.name)
                             startTrafficUpdates()
+                            if (verificationMode.handshakeOnly) {
+                                if (handshakeObserved) markVerified()
+                                else startHandshakeVerificationWatchdog(generation)
+                            }
                         }
                     } finally {
                         if (!adopted) closeCommandServer(server)
@@ -395,6 +419,8 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         manualDisconnect = manual
         val generation = lifecycleGeneration.incrementAndGet()
         reconnectJob?.cancel()
+        handshakeVerificationJob?.cancel()
+        handshakeVerificationJob = null
         engineJob?.cancel()
         connecting = false
         verified = false
@@ -613,7 +639,37 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             ProtonLogger.d("awgbox", logMessage)
         }
         localNetShield.recordEngineLog(logMessage)
+        observeHandshake(logMessage)
         observeTransportHealth(logMessage)
+    }
+
+    private fun observeHandshake(message: String) {
+        if (!verificationMode.handshakeOnly || verified || !isAwgHandshakeSuccess(message)) return
+        handshakeObserved = true
+        scope.launch {
+            if (verificationMode.handshakeOnly && state == VpnTunnelState.UP && !verified) {
+                ProtonLogger.i(TAG, "AmneziaWG handshake confirmed")
+                markVerified()
+            }
+        }
+    }
+
+    private fun startHandshakeVerificationWatchdog(generation: Long) {
+        handshakeVerificationJob?.cancel()
+        handshakeVerificationJob = scope.launch {
+            delay(ConnectionVerificationMode.RELAXED.verificationTimeoutMs)
+            if (lifecycleGeneration.get() != generation || verified || manualDisconnect ||
+                !verificationMode.handshakeOnly || state != VpnTunnelState.UP
+            ) return@launch
+            ProtonLogger.w(TAG, "No AmneziaWG handshake in 5 seconds; reconnecting to the same server")
+            restartTunnelAfterHandshakeTimeout()
+        }
+    }
+
+    private fun restartTunnelAfterHandshakeTimeout() {
+        val retry = lastConnectIntent?.let(::Intent) ?: return
+        retry.putExtra(EXTRA_IS_RECONNECTING, true)
+        startTunnel(retry)
     }
 
     private fun observeTransportHealth(message: String) {
@@ -703,6 +759,8 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         runCatching { unregisterReceiver(settingsReceiver) }
         lifecycleGeneration.incrementAndGet()
         reconnectJob?.cancel()
+        handshakeVerificationJob?.cancel()
+        handshakeVerificationJob = null
         engineJob?.cancel()
         shutdownJob?.cancel()
         // Never race CloseService against blocking StartOrReloadService; process teardown will

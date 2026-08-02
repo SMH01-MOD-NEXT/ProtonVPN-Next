@@ -659,8 +659,8 @@
     <string name="verification_mode_title">Перевірка агресивності</string>
     <string name="verification_mode_disabled">Вимкнено</string>
     <string name="verification_mode_disabled_desc">Не запускайте активні тунельні зонди або автоматичне виявлення збоїв</string>
-    <string name="verification_mode_relaxed">Розслаблений</string>
-    <string name="verification_mode_relaxed_desc">Менше зондів і більше терпимості до нестабільних мереж</string>
+    <string name="verification_mode_relaxed">Перевіряти лише рукостискання</string>
+    <string name="verification_mode_relaxed_desc">Показувати статус «Підключено» лише після рукостискання AmneziaWG. Якщо його немає протягом 5 секунд, перепідключитися до того самого сервера.</string>
     <string name="verification_mode_balanced">Збалансований</string>
     <string name="verification_mode_balanced_desc">Рекомендований баланс між швидкістю реагування та помилковими спрацюваннями</string>
     <string name="verification_mode_aggressive">Агресивний</string>

@@ -26,7 +26,10 @@ enum class ConnectionVerificationMode(
     val reconnectCooldownMs: Long,
 ) {
     DISABLED(0, 0, Int.MAX_VALUE, Long.MAX_VALUE, Long.MAX_VALUE),
-    RELAXED(12_000, 750, 4, 30_000, 45_000),
+    RELAXED(5_000, 0, 4, 30_000, 45_000),
     BALANCED(8_000, 200, 2, 15_000, 15_000),
-    AGGRESSIVE(5_000, 100, 1, 8_000, 5_000),
+    AGGRESSIVE(5_000, 100, 1, 8_000, 5_000);
+
+    val handshakeOnly: Boolean
+        get() = this == RELAXED
 }

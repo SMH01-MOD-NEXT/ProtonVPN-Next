@@ -659,8 +659,8 @@
     <string name="verification_mode_title">Праверка агрэсіўнасці</string>
     <string name="verification_mode_disabled">Інваліды</string>
     <string name="verification_mode_disabled_desc">Не запускайце актыўныя тунэльныя зонды або аўтаматычнае выяўленне збояў</string>
-    <string name="verification_mode_relaxed">Расслабіліся</string>
-    <string name="verification_mode_relaxed_desc">Менш зондаў і больш талерантнасці да нестабільных сетак</string>
+    <string name="verification_mode_relaxed">Правяраць толькі рукапацісканне</string>
+    <string name="verification_mode_relaxed_desc">Паказваць статус «Падключана» толькі пасля рукапаціскання AmneziaWG. Калі яго няма цягам 5 секунд, перападключыцца да таго ж сервера.</string>
     <string name="verification_mode_balanced">Ураўнаважаны</string>
     <string name="verification_mode_balanced_desc">Рэкамендаваны баланс паміж спагадлівасцю і ілжывымі спрацоўваннямі</string>
     <string name="verification_mode_aggressive">Агрэсіўны</string>

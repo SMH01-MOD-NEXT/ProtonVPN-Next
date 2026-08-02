@@ -136,13 +136,15 @@ fun ConnectionVerificationSettingsScreen(
                         exit = fadeOut() + shrinkVertically(),
                     ) {
                         SettingsSection(stringResource(R.string.verification_behavior_title), content) {
-                            VerificationToggle(
-                                R.string.verification_require_title,
-                                R.string.verification_require_desc,
-                                state.requireVerification,
-                                viewModel::setRequireVerification,
-                            )
-                            Divider()
+                            if (!state.mode.handshakeOnly) {
+                                VerificationToggle(
+                                    R.string.verification_require_title,
+                                    R.string.verification_require_desc,
+                                    state.requireVerification,
+                                    viewModel::setRequireVerification,
+                                )
+                                Divider()
+                            }
                             VerificationToggle(
                                 R.string.verification_preflight_title,
                                 R.string.verification_preflight_desc,

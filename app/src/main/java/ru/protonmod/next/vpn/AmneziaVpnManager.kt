@@ -380,6 +380,12 @@ class AmneziaVpnManager @Inject constructor(
                 systemContextWrapper.setVpnVerified()
                 return@launch
             }
+            if (mode.handshakeOnly) {
+                verificationCycle = null
+                updateVpnState(VpnState.VERIFYING)
+                ProtonLogger.d(TAG, "Waiting for AmneziaWG handshake confirmation from VPN service")
+                return@launch
+            }
 
             val cycle = verificationCycle ?: vpnNetworkMonitor.beginVerificationCycle().also {
                 verificationCycle = it

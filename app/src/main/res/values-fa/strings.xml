@@ -653,8 +653,8 @@
     <string name="verification_mode_title">پرخاشگری تأیید</string>
     <string name="verification_mode_disabled">از کار افتاده است</string>
     <string name="verification_mode_disabled_desc">پروب های تونل فعال یا تشخیص خودکار خرابی را اجرا نکنید</string>
-    <string name="verification_mode_relaxed">آرام</string>
-    <string name="verification_mode_relaxed_desc">پروب های کمتر و تحمل بیشتر برای شبکه های ناپایدار</string>
+    <string name="verification_mode_relaxed">فقط هندشیک را بررسی کن</string>
+    <string name="verification_mode_relaxed_desc">وضعیت «متصل» فقط پس از هندشیک AmneziaWG نمایش داده شود. اگر تا ۵ ثانیه هندشیک انجام نشد، به همان سرور دوباره متصل شود.</string>
     <string name="verification_mode_balanced">متعادل</string>
     <string name="verification_mode_balanced_desc">تعادل توصیه شده بین پاسخگویی و مثبت کاذب</string>
     <string name="verification_mode_aggressive">تهاجمی</string>

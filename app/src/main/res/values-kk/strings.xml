@@ -653,8 +653,8 @@
     <string name="verification_mode_title">Тексеру агрессивтілігі</string>
     <string name="verification_mode_disabled">Өшірілген</string>
     <string name="verification_mode_disabled_desc">Белсенді туннель зондтарын немесе ақаулықты автоматты түрде анықтауды іске қоспаңыз</string>
-    <string name="verification_mode_relaxed">Босаңсып қалды</string>
-    <string name="verification_mode_relaxed_desc">Аз зондтар және тұрақсыз желілерге көбірек төзімділік</string>
+    <string name="verification_mode_relaxed">Тек қол алысуды тексеру</string>
+    <string name="verification_mode_relaxed_desc">«Қосылды» күйін тек AmneziaWG қол алысуынан кейін көрсету. 5 секунд ішінде қол алысу болмаса, сол серверге қайта қосылу.</string>
     <string name="verification_mode_balanced">Теңдестірілген</string>
     <string name="verification_mode_balanced_desc">Жауаптылық пен жалған позитивтер арасындағы ұсынылатын теңгерім</string>
     <string name="verification_mode_aggressive">Агрессивті</string>

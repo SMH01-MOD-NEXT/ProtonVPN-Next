@@ -766,8 +766,8 @@
     <string name="verification_mode_title">Verification aggressiveness</string>
     <string name="verification_mode_disabled">Disabled</string>
     <string name="verification_mode_disabled_desc">Do not run active tunnel probes or automatic failure detection</string>
-    <string name="verification_mode_relaxed">Relaxed</string>
-    <string name="verification_mode_relaxed_desc">Fewer probes and more tolerance for unstable networks</string>
+    <string name="verification_mode_relaxed">Verify handshake only</string>
+    <string name="verification_mode_relaxed_desc">Show Connected only after an AmneziaWG handshake. Reconnect to the same server if no handshake arrives within 5 seconds.</string>
     <string name="verification_mode_balanced">Balanced</string>
     <string name="verification_mode_balanced_desc">Recommended balance between responsiveness and false positives</string>
     <string name="verification_mode_aggressive">Aggressive</string>
