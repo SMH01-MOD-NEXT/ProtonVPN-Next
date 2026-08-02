@@ -225,11 +225,12 @@ fun SettingsContent(
                             isTablet = true,
                             state = state,
                             onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                            onNavigateToProtocol = onNavigateToProtocol
+                            onNavigateToNetShield = onNavigateToNetShield
                         )
 
                         ConnectionSettingsSection(
                             state = state,
+                            onNavigateToProtocol = onNavigateToProtocol,
                             onAutoConnectChange = onAutoConnectChange,
                             onReconnectHintChange = onReconnectHintChange,
                             onNavigateToApiBypass = onNavigateToApiBypass,
@@ -253,7 +254,6 @@ fun SettingsContent(
                             onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                             onNavigateToKillSwitch = onNavigateToKillSwitch,
                             onNavigateToErrorReporting = onNavigateToErrorReporting,
-                            onNavigateToNetShield = onNavigateToNetShield,
                             onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                             onAllowLanChange = onAllowLanChange,
                             onNotificationsChange = onNotificationsChange
@@ -293,13 +293,14 @@ fun SettingsContent(
                     modifier = contentModifier,
                     isTablet = false,
                     onNavigateToSplitTunnelingMain = onNavigateToSplitTunnelingMain,
-                    onNavigateToProtocol = onNavigateToProtocol
+                    onNavigateToNetShield = onNavigateToNetShield
                 )
             }
 
             item(contentType = "ConnectionSettings") {
                 ConnectionSettingsSection(
                     state = state,
+                    onNavigateToProtocol = onNavigateToProtocol,
                     onAutoConnectChange = onAutoConnectChange,
                     onReconnectHintChange = onReconnectHintChange,
                     modifier = contentModifier,
@@ -328,7 +329,6 @@ fun SettingsContent(
                     onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                     onNavigateToKillSwitch = onNavigateToKillSwitch,
                     onNavigateToErrorReporting = onNavigateToErrorReporting,
-                    onNavigateToNetShield = onNavigateToNetShield,
                     onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                     onAllowLanChange = onAllowLanChange
                 )
@@ -484,9 +484,17 @@ private fun ConnectionSettingsSection(
     onNavigateToApiBypass: (() -> Unit)? = null,
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     onNavigateToCertSettings: (() -> Unit)? = null,
-    onNavigateToIpRotation: (() -> Unit)? = null
+    onNavigateToIpRotation: (() -> Unit)? = null,
+    onNavigateToProtocol: (() -> Unit)? = null
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_connection)) {
+        SettingRowWithIcon(
+            icon = ProtonIcons.Servers,
+            title = stringResource(R.string.settings_protocol),
+            subtitle = "AmneziaWG",
+            onClick = { onNavigateToProtocol?.invoke() }
+        )
+
         SettingToggleRow(
             icon = ProtonIcons.ArrowsRotate,
             title = stringResource(R.string.settings_auto_connect),
@@ -591,22 +599,12 @@ private fun PrivacySettingsSection(
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
-    onNavigateToNetShield: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_privacy)) {
         val currentDnsSubtitle = state.customDns.ifBlank {
             stringResource(R.string.settings_custom_dns_default)
         }
-
-        SettingRowWithIcon(
-            iconRes = if (state.netShieldEnabled) R.drawable.feature_netshield_on
-                else R.drawable.feature_netshield_off,
-            iconTint = false,
-            title = stringResource(R.string.netshield_title),
-            subtitle = stringResource(R.string.netshield_settings_subtitle),
-            onClick = onNavigateToNetShield
-        )
 
         SettingRowWithIcon(
             icon = ProtonIcons.ShieldFilled,
@@ -756,7 +754,7 @@ private fun FeatureCategory(
     modifier: Modifier = Modifier,
     isTablet: Boolean = false,
     onNavigateToSplitTunnelingMain: (() -> Unit)? = null,
-    onNavigateToProtocol: (() -> Unit)? = null
+    onNavigateToNetShield: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier
@@ -781,14 +779,16 @@ private fun FeatureCategory(
 
         if (isTablet) Spacer(modifier = Modifier.width(16.dp))
 
-        // Protocol Tile
+        // NetShield Tile
         FeatureTile(
             modifier = tileModifier,
-            title = stringResource(id = R.string.settings_protocol),
-            subtitle = "AmneziaWG",
-            icon = ProtonIcons.Servers,
-            isActive = true,
-            onClick = { onNavigateToProtocol?.invoke() }
+            title = stringResource(id = R.string.netshield_title),
+            subtitle = if (state.netShieldEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
+            iconRes = if (state.netShieldEnabled) R.drawable.feature_netshield_on
+                else R.drawable.feature_netshield_off,
+            iconTint = false,
+            isActive = state.netShieldEnabled,
+            onClick = { onNavigateToNetShield?.invoke() }
         )
     }
 }
