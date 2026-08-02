@@ -357,9 +357,14 @@ class AwgBoxConfigGeneratorTest {
         val exitPeer = exit.getValue("peers").jsonArray.single().jsonObject
 
         assertEquals("192.0.2.10", entryPeer.getValue("address").jsonPrimitive.content)
+        assertEquals(443, entryPeer.getValue("port").jsonPrimitive.content.toInt())
         assertEquals("ENTRY_PUBLIC_KEY", entryPeer.getValue("public_key").jsonPrimitive.content)
         assertEquals("198.51.100.20", exitPeer.getValue("address").jsonPrimitive.content)
+        assertEquals(51820, exitPeer.getValue("port").jsonPrimitive.content.toInt())
         assertEquals("EXIT_PUBLIC_KEY", exitPeer.getValue("public_key").jsonPrimitive.content)
+        assertTrue("entry hop keeps AWG obfuscation", "jc" in entry)
+        assertFalse("exit hop must not contain AWG obfuscation", "jc" in exit)
+        assertFalse("exit hop must not contain AWG init packets", "i1" in exit)
         assertEquals("proton-awg-entry", exit.getValue("detour").jsonPrimitive.content)
         assertEquals("proton-awg", root.getValue("route").jsonObject.getValue("final").jsonPrimitive.content)
     }

@@ -62,6 +62,8 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
     private val ipSubnetCalculator: IpSubnetCalculator
 ) : AwgBoxConfigGenerator {
     private companion object {
+        const val MULTI_HOP_EXIT_WIREGUARD_PORT = 51820
+
         val IPV4_LITERAL = Regex("^(?:\\d{1,3}\\.){3}\\d{1,3}$")
         const val TOR_FALLBACK_DNS = "1.1.1.1"
         const val TOR_VIRTUAL_ADDR_RANGE = "198.18.0.0/15"
@@ -107,6 +109,10 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
         }
 
         val localPrefix = ipSubnetCalculator.normalizeIp(localIp)
+        // Only the outer entry hop uses AWG obfuscation and the selected AWG port.
+        // The inner exit hop is plain WireGuard-over-AWG; a non-obfuscated handshake sent
+        // to an AWG-obfuscated port is ignored by the exit server.
+        val exitPort = if (multiHopEntry != null) MULTI_HOP_EXIT_WIREGUARD_PORT else port
         val proxyChain = proxyChainConfig?.takeIf(String::isNotBlank)
             ?.let(ProxyLinkParser::parseChain)
             .orEmpty()
@@ -162,7 +168,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             "mtu" to JsonPrimitive(1408),
             "peers" to JsonArray(listOf(JsonObject(mapOf(
                 "address" to JsonPrimitive(targetIp),
-                "port" to JsonPrimitive(port),
+                "port" to JsonPrimitive(exitPort),
                 "public_key" to JsonPrimitive(serverPublicKey),
                 "allowed_ips" to strings(listOf("0.0.0.0/0")),
                 "persistent_keepalive_interval" to JsonPrimitive(25)
@@ -201,7 +207,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
 
         val peers = JsonArray(listOf(JsonObject(mapOf(
             "address" to JsonPrimitive(targetIp),
-            "port" to JsonPrimitive(port),
+            "port" to JsonPrimitive(exitPort),
             "public_key" to JsonPrimitive(serverPublicKey),
             "allowed_ips" to strings(listOf("0.0.0.0/0")),
             "persistent_keepalive_interval" to awgValue(obfuscationParams.persistentKeepalive.takeIf { it.isNotBlank() } ?: "25")!!
