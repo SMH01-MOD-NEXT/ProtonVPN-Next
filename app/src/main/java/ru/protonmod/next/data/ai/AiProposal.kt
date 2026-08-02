@@ -20,6 +20,20 @@ import kotlinx.serialization.json.contentOrNull
 import org.json.JSONArray
 import org.json.JSONObject
 
+data class AiProfilePreview(
+    val name: String,
+    val protocol: String,
+    val country: String?,
+    val city: String?,
+    val serverId: String?,
+    val serverName: String?,
+    val port: Int,
+    val obfuscationEnabled: Boolean,
+    val obfuscationProfileId: String?,
+    val obfuscationProfileName: String?,
+    val connectAndGoUrl: String?,
+)
+
 data class AiProposedAction(
     val id: String,
     val type: String,
@@ -27,6 +41,7 @@ data class AiProposedAction(
     val description: String,
     val payload: String,
     val destructive: Boolean,
+    val profilePreview: AiProfilePreview? = null,
 )
 
 data class AiProposal(
@@ -67,6 +82,7 @@ internal object AiProposalParser {
                 description = actionDescription(type, item),
                 payload = item.toString(),
                 destructive = type in setOf("delete_profile", "disconnect", "reset_settings"),
+                profilePreview = if (type == "create_profile" || type == "update_profile") item.profilePreview() else null,
             )
         }
 
@@ -109,6 +125,21 @@ internal object AiProposalParser {
             .firstOrNull(String::isNotBlank)?.let { "Connect to $it" } ?: "Connect to the best server"
         else -> actionTitle(type)
     }
+
+
+    private fun JsonObject.profilePreview(): AiProfilePreview = AiProfilePreview(
+        name = text("name").ifBlank { text("profileName").ifBlank { "VPN profile" } },
+        protocol = text("protocol").ifBlank { "AmneziaWG" },
+        country = text("country").takeIf(String::isNotBlank),
+        city = text("city").takeIf(String::isNotBlank),
+        serverId = text("serverId").takeIf(String::isNotBlank),
+        serverName = text("serverName").takeIf(String::isNotBlank),
+        port = (get("port") as? JsonPrimitive)?.contentOrNull?.toIntOrNull() ?: 0,
+        obfuscationEnabled = boolean("obfuscationEnabled"),
+        obfuscationProfileId = text("obfuscationProfileId").takeIf(String::isNotBlank),
+        obfuscationProfileName = text("obfuscationProfileName").takeIf(String::isNotBlank),
+        connectAndGoUrl = text("connectAndGoUrl").takeIf(String::isNotBlank),
+    )
 
     private fun JsonObject.profileReference(): String =
         text("profileName").takeIf(String::isNotBlank)

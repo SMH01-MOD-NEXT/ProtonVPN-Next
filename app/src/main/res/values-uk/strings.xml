@@ -726,4 +726,20 @@
     <string name="ai_refine_action">Update proposal</string>
     <string name="ai_proposal_cancel">Not now</string>
     <string name="ai_proposal_apply">Apply changes</string>
+
+    <string name="ai_proposal_preview_label">PROFILE PREVIEW</string>
+    <string name="ai_refine_bottom_hint">Use the AI field below to change this proposal</string>
+    <string name="ai_profile_fastest">Fastest available</string>
+    <string name="ai_profile_any_city">Any city</string>
+    <string name="ai_profile_any_country">Any country</string>
+    <string name="ai_profile_standard_obfuscation">Standard profile</string>
+    <string name="ai_profile_new_badge">New</string>
+    <string name="ai_profile_edit_badge">Update</string>
+    <string name="ai_profile_country">Country</string>
+    <string name="ai_profile_city">City</string>
+    <string name="ai_profile_server">Server</string>
+    <string name="ai_profile_port">Port</string>
+    <string name="ai_profile_protocol">Protocol</string>
+    <string name="ai_profile_obfuscation">Obfuscation</string>
+    <string name="ai_profile_connect_go">Connect &amp; Go</string>
 </resources>

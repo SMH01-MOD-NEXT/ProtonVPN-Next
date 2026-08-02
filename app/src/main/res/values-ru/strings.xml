@@ -726,4 +726,20 @@
     <string name="ai_refine_action">Обновить вариант</string>
     <string name="ai_proposal_cancel">Не сейчас</string>
     <string name="ai_proposal_apply">Применить изменения</string>
+
+    <string name="ai_proposal_preview_label">ПРЕДПРОСМОТР ПРОФИЛЯ</string>
+    <string name="ai_refine_bottom_hint">Чтобы изменить вариант, напишите запрос в поле AI ниже</string>
+    <string name="ai_profile_fastest">Самый быстрый</string>
+    <string name="ai_profile_any_city">Любой город</string>
+    <string name="ai_profile_any_country">Любая страна</string>
+    <string name="ai_profile_standard_obfuscation">Стандартный профиль</string>
+    <string name="ai_profile_new_badge">Новый</string>
+    <string name="ai_profile_edit_badge">Изменение</string>
+    <string name="ai_profile_country">Страна</string>
+    <string name="ai_profile_city">Город</string>
+    <string name="ai_profile_server">Сервер</string>
+    <string name="ai_profile_port">Порт</string>
+    <string name="ai_profile_protocol">Протокол</string>
+    <string name="ai_profile_obfuscation">Обфускация</string>
+    <string name="ai_profile_connect_go">Connect &amp; Go</string>
 </resources>

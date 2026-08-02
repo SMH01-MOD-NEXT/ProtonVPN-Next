@@ -297,7 +297,6 @@ fun ProtonNextAppNavHost(
             isProcessing = isAiProcessing,
             onApply = aiViewModel::applyProposal,
             onDismiss = aiViewModel::dismissProposal,
-            onRefine = aiViewModel::refineProposal,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 112.dp)

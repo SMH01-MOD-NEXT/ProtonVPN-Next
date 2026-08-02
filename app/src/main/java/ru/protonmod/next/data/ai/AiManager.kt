@@ -81,8 +81,8 @@ class AiManager @Inject constructor(
             Rules:
             1. Only manage this app and VPN connections. Refuse unrelated requests by returning a proposal with no unsupported action is NOT allowed; instead use {"action":"set_setting","key":"unsupported","value":"reason"} only when the request is app-related but unavailable.
             2. Use profile IDs from context when editing/deleting. If only a unique profile name exists, profileName is acceptable.
-            3. Preserve unspecified profile fields when updating.
-            4. Use country ISO codes when possible. Port 0 means automatic.
+            3. For create_profile and update_profile, always return a complete preview: name, protocol, country, city, serverId, serverName, port, obfuscationEnabled, obfuscationProfileId, obfuscationProfileName, and connectAndGoUrl. Use null for deliberately automatic/disabled values. Never omit these fields.
+            4. Use country ISO codes when possible. Port 0 means automatic. If serverId/serverName are null, the profile uses the fastest matching server.
             5. For a request to refresh load or countries, use refresh_servers.
             6. Keep titles and summaries in the user's language.
 

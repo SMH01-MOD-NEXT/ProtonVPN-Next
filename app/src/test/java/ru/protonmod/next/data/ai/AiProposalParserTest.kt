@@ -25,6 +25,9 @@ class AiProposalParserTest {
         assertEquals(1, proposal.actions.size)
         assertEquals("create_profile", proposal.actions.single().type)
         assertFalse(proposal.actions.single().destructive)
+        assertEquals("Fast NL", proposal.actions.single().profilePreview?.name)
+        assertEquals("NL", proposal.actions.single().profilePreview?.country)
+        assertEquals(443, proposal.actions.single().profilePreview?.port)
     }
 
     @Test

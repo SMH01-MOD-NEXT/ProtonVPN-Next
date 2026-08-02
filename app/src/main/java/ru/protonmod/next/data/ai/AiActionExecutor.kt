@@ -269,7 +269,9 @@ class AiActionExecutor @Inject constructor(
         obfuscationProfileId = item.nullableString("obfuscationProfileId", existing?.obfuscationProfileId),
         autoOpenUrl = item.nullableString("connectAndGoUrl", existing?.autoOpenUrl),
         targetServerId = item.nullableString("serverId", existing?.targetServerId),
-        targetCountry = item.optString("country").takeIf(String::isNotBlank)?.let(::countryCode) ?: existing?.targetCountry,
+        targetCountry = if (item.has("country")) {
+            if (item.isNull("country")) null else item.optString("country").takeIf(String::isNotBlank)?.let(::countryCode)
+        } else existing?.targetCountry,
         targetCity = item.nullableString("city", existing?.targetCity),
         createdAt = createdAt,
     )
@@ -309,8 +311,11 @@ class AiActionExecutor @Inject constructor(
     private fun JSONObject.stringOrExisting(key: String, existing: String?): String =
         if (has(key)) optString(key) else existing.orEmpty()
 
-    private fun JSONObject.nullableString(key: String, existing: String?): String? =
-        if (has(key)) optString(key).trim().takeIf(String::isNotEmpty) else existing
+    private fun JSONObject.nullableString(key: String, existing: String?): String? = when {
+        !has(key) -> existing
+        isNull(key) -> null
+        else -> optString(key).trim().takeIf(String::isNotEmpty)
+    }
 
     private fun Any?.asBoolean(): Boolean = when (this) {
         is Boolean -> this

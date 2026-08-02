@@ -52,11 +52,8 @@ class AiOverlayViewModel @Inject constructor(
         _proposal.value = null
     }
 
-    fun submitQuery(query: String) = requestProposal(query, null)
-
-    fun refineProposal(query: String) {
-        val current = _proposal.value ?: return
-        requestProposal(query, current)
+    fun submitQuery(query: String) {
+        requestProposal(query, _proposal.value)
     }
 
     fun dismissProposal() {
