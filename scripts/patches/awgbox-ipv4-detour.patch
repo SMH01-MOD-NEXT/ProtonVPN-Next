@@ -1,8 +1,41 @@
 diff --git a/transport/awg/bind.go b/transport/awg/bind.go
-index 19b3ac1..6c8ad18 100644
+index 19b3ac1..e3e9310 100644
 --- a/transport/awg/bind.go
 +++ b/transport/awg/bind.go
-@@ -68,6 +68,13 @@ func (b *bind_adapter) receive(c net.PacketConn) conn.ReceiveFunc {
+@@ -17,17 +17,25 @@ import (
+ var _ conn.Bind = (*bind_adapter)(nil)
+ 
+ type bind_adapter struct {
+-	conn4  net.PacketConn
+-	conn6  net.PacketConn
+-	dialer N.Dialer
+-	ctx    context.Context
+-	mutex  sync.Mutex
++	conn4      net.PacketConn
++	conn6      net.PacketConn
++	dialer     N.Dialer
++	ctx        context.Context
++	mutex      sync.Mutex
++	enableIPv4 bool
++	enableIPv6 bool
+ }
+ 
+ func newBind(ctx context.Context, dial N.Dialer) conn.Bind {
++	return newBindForFamilies(ctx, dial, true, true)
++}
++
++func newBindForFamilies(ctx context.Context, dial N.Dialer, enableIPv4 bool, enableIPv6 bool) conn.Bind {
+ 	return &bind_adapter{
+-		ctx:    ctx,
+-		dialer: dial,
++		ctx:        ctx,
++		dialer:     dial,
++		enableIPv4: enableIPv4,
++		enableIPv6: enableIPv6,
+ 	}
+ }
+ 
+@@ -68,6 +76,13 @@ func (b *bind_adapter) receive(c net.PacketConn) conn.ReceiveFunc {
  	}
  }
  
@@ -16,49 +49,95 @@ index 19b3ac1..6c8ad18 100644
  func (b *bind_adapter) Open(port uint16) (fns []conn.ReceiveFunc, actualPort uint16, err error) {
  	b.mutex.Lock()
  	defer b.mutex.Unlock()
-@@ -85,7 +92,10 @@ func (b *bind_adapter) Open(port uint16) (fns []conn.ReceiveFunc, actualPort uin
+@@ -76,20 +91,29 @@ func (b *bind_adapter) Open(port uint16) (fns []conn.ReceiveFunc, actualPort uin
+ 		return nil, 0, conn.ErrBindAlreadyOpen
  	}
  
- 	conn6, err := b.connect(netip.IPv6Unspecified(), port)
+-	conn4, err := b.connect(netip.IPv4Unspecified(), port)
 -	if err != nil && !errors.Is(err, syscall.EAFNOSUPPORT) {
-+	if err != nil && !isAddressFamilyUnavailable(err) {
-+		if conn4 != nil {
-+			_ = conn4.Close()
+-		return nil, 0, E.Cause(err, "create ipv4 connection")
+-	}
+-	if conn4 != nil {
+-		fns = append(fns, b.receive(conn4))
++	var conn4 net.PacketConn
++	if b.enableIPv4 {
++		conn4, err = b.connect(netip.IPv4Unspecified(), port)
++		if err != nil && !errors.Is(err, syscall.EAFNOSUPPORT) {
++			return nil, 0, E.Cause(err, "create ipv4 connection")
 +		}
- 		return nil, 0, E.Cause(err, "create ipv6 connection")
++		if conn4 != nil {
++			fns = append(fns, b.receive(conn4))
++		}
  	}
- 	if conn6 != nil {
-diff --git a/transport/awg/bind_test.go b/transport/awg/bind_test.go
-new file mode 100644
-index 0000000..cf770a1
---- /dev/null
-+++ b/transport/awg/bind_test.go
-@@ -0,0 +1,25 @@
-+package awg
-+
-+import (
-+    "errors"
-+    "fmt"
-+    "syscall"
-+    "testing"
-+)
-+
-+func TestAddressFamilyUnavailable(t *testing.T) {
-+    for _, err := range []error{
-+        syscall.EAFNOSUPPORT,
-+        syscall.EADDRNOTAVAIL,
-+        syscall.ENETUNREACH,
-+        syscall.EHOSTUNREACH,
-+        fmt.Errorf("wrapped: %w", syscall.ENETUNREACH),
-+    } {
-+        if !isAddressFamilyUnavailable(err) {
-+            t.Errorf("expected %v to be treated as unavailable address family", err)
-+        }
-+    }
-+    if isAddressFamilyUnavailable(errors.New("permission denied")) {
-+        t.Fatal("unrelated errors must remain fatal")
-+    }
+ 
+-	conn6, err := b.connect(netip.IPv6Unspecified(), port)
+-	if err != nil && !errors.Is(err, syscall.EAFNOSUPPORT) {
+-		return nil, 0, E.Cause(err, "create ipv6 connection")
+-	}
+-	if conn6 != nil {
+-		fns = append(fns, b.receive(conn6))
++	var conn6 net.PacketConn
++	if b.enableIPv6 {
++		conn6, err = b.connect(netip.IPv6Unspecified(), port)
++		if err != nil && !isAddressFamilyUnavailable(err) {
++			if conn4 != nil {
++				_ = conn4.Close()
++			}
++			return nil, 0, E.Cause(err, "create ipv6 connection")
++		}
++		if conn6 != nil {
++			fns = append(fns, b.receive(conn6))
++		}
+ 	}
+ 
+ 	b.conn4 = conn4
+diff --git a/transport/awg/device.go b/transport/awg/device.go
+index e044eb9..282cf40 100644
+--- a/transport/awg/device.go
++++ b/transport/awg/device.go
+@@ -76,10 +76,11 @@ func NewDevice(ctx context.Context, logger logger.ContextLogger, dial network.Di
+ 		},
+ 	}
+ 
++	bindIPv4, bindIPv6 := bindFamiliesFromIPC(ipcConfig)
+ 	return &Device{
+ 		tun:          tun,
+ 		returnDevice: newReturnDevice(tun),
+-		bind:         newBind(ctx, dial),
++		bind:         newBindForFamilies(ctx, dial, bindIPv4, bindIPv6),
+ 		logger:       awgLogger,
+ 		ipcConfig:    ipcConfig,
+ 		address:      opts.Address,
+@@ -87,6 +88,29 @@ func NewDevice(ctx context.Context, logger logger.ContextLogger, dial network.Di
+ 	}, nil
+ }
+ 
++func bindFamiliesFromIPC(ipcConfig string) (enableIPv4 bool, enableIPv6 bool) {
++	foundEndpoint := false
++	for _, line := range strings.Split(ipcConfig, "\n") {
++		if !strings.HasPrefix(line, "endpoint=") {
++			continue
++		}
++		endpoint, err := netip.ParseAddrPort(strings.TrimPrefix(line, "endpoint="))
++		if err != nil {
++			continue
++		}
++		foundEndpoint = true
++		if endpoint.Addr().Unmap().Is4() {
++			enableIPv4 = true
++		} else {
++			enableIPv6 = true
++		}
++	}
++	if !foundEndpoint {
++		return true, true
++	}
++	return enableIPv4, enableIPv6
 +}
++
+ func (d *Device) Start(stage adapter.StartStage) error {
+ 	if stage != adapter.StartStateStart {
+ 		return nil
 diff --git a/transport/awg/tun_network_stack.go b/transport/awg/tun_network_stack.go
 index e55d7c1..41f54bd 100644
 --- a/transport/awg/tun_network_stack.go
@@ -103,3 +182,57 @@ index e55d7c1..41f54bd 100644
  		}
  		networkProtocol = header.IPv6ProtocolNumber
  		bind.Addr = tun.AddressFromAddr(t.inet6Address)
+diff --git a/transport/awg/bind_test.go b/transport/awg/bind_test.go
+new file mode 100644
+index 0000000..211e7c6
+--- /dev/null
++++ b/transport/awg/bind_test.go
+@@ -0,0 +1,48 @@
++package awg
++
++import (
++	"errors"
++	"fmt"
++	"syscall"
++	"testing"
++)
++
++func TestAddressFamilyUnavailable(t *testing.T) {
++	for _, err := range []error{
++		syscall.EAFNOSUPPORT,
++		syscall.EADDRNOTAVAIL,
++		syscall.ENETUNREACH,
++		syscall.EHOSTUNREACH,
++		fmt.Errorf("wrapped: %w", syscall.ENETUNREACH),
++	} {
++		if !isAddressFamilyUnavailable(err) {
++			t.Errorf("expected %v to be treated as unavailable address family", err)
++		}
++	}
++	if isAddressFamilyUnavailable(errors.New("permission denied")) {
++		t.Fatal("unrelated errors must remain fatal")
++	}
++}
++
++func TestBindFamiliesFromIPC(t *testing.T) {
++	tests := []struct {
++		name     string
++		ipc      string
++		wantIPv4 bool
++		wantIPv6 bool
++	}{
++		{name: "IPv4 only", ipc: "endpoint=192.0.2.1:443", wantIPv4: true},
++		{name: "IPv6 only", ipc: "endpoint=[2001:db8::1]:443", wantIPv6: true},
++		{name: "dual stack", ipc: "endpoint=192.0.2.1:443\nendpoint=[2001:db8::1]:443", wantIPv4: true, wantIPv6: true},
++		{name: "server mode", ipc: "listen_port=51820", wantIPv4: true, wantIPv6: true},
++		{name: "malformed endpoint", ipc: "endpoint=not-an-address", wantIPv4: true, wantIPv6: true},
++	}
++	for _, test := range tests {
++		t.Run(test.name, func(t *testing.T) {
++			gotIPv4, gotIPv6 := bindFamiliesFromIPC(test.ipc)
++			if gotIPv4 != test.wantIPv4 || gotIPv6 != test.wantIPv6 {
++				t.Fatalf("got IPv4=%v IPv6=%v, want IPv4=%v IPv6=%v", gotIPv4, gotIPv6, test.wantIPv4, test.wantIPv6)
++			}
++		})
++	}
++}
