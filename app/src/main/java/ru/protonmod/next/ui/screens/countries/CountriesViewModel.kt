@@ -45,6 +45,8 @@ import javax.inject.Inject
 data class CountryDisplayItem(val code: String, val averageLoad: Int)
 data class CityDisplayItem(val name: String, val localizedName: String, val averageLoad: Int)
 
+enum class CountryConnectionMode { STANDARD, TOR }
+
 sealed class BottomSheetContent {
     data class Cities(
         val countryCode: String,
@@ -65,7 +67,8 @@ sealed class CountriesUiState {
         val countries: List<CountryDisplayItem>,
         val bottomSheetContent: BottomSheetContent? = null,
         val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
-        val isBottomSheetOpen: Boolean = false
+        val isBottomSheetOpen: Boolean = false,
+        val connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD
     ) : CountriesUiState()
     data class Error(val message: String) : CountriesUiState()
 }
@@ -109,9 +112,11 @@ class CountriesViewModel @Inject constructor(
     val uiState: StateFlow<CountriesUiState> = combine(
         combine(_countries, vpnRepository.getServersFlow(), _navState) { c, s, n -> Triple(c, s, n) },
         vpnRepository.isUpdating,
-        settingsManager.serverLoadDisplayMode,
-        _error
-    ) { (countries, servers, nav), isUpdating, loadMode, error ->
+        combine(settingsManager.serverLoadDisplayMode, settingsManager.torModeEnabled, _error) { loadMode, torEnabled, error ->
+            Triple(loadMode, torEnabled, error)
+        }
+    ) { (countries, servers, nav), isUpdating, modeState ->
+        val (loadMode, torEnabled, error) = modeState
         if (isUpdating && servers.isEmpty()) {
             return@combine CountriesUiState.Loading
         }
@@ -140,7 +145,13 @@ class CountriesViewModel @Inject constructor(
             }
         }
 
-        CountriesUiState.Success(countries, bottomSheetContent, loadMode, nav != NavigationState.Countries)
+        CountriesUiState.Success(
+            countries = countries,
+            bottomSheetContent = bottomSheetContent,
+            loadDisplayMode = loadMode,
+            isBottomSheetOpen = nav != NavigationState.Countries,
+            connectionMode = if (torEnabled) CountryConnectionMode.TOR else CountryConnectionMode.STANDARD,
+        )
     }
         .distinctUntilChanged()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), CountriesUiState.Loading)
@@ -252,6 +263,12 @@ class CountriesViewModel @Inject constructor(
     fun selectServer(server: LogicalServer) {
         viewModelScope.launch {
             connectToServer(server)
+        }
+    }
+
+    fun setConnectionMode(mode: CountryConnectionMode) {
+        viewModelScope.launch {
+            settingsManager.setTorModeEnabled(mode == CountryConnectionMode.TOR)
         }
     }
 }

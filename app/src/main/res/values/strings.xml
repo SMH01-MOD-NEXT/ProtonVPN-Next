@@ -826,4 +826,6 @@
     <string name="ip_rotation_keep_country_desc">Choose another server in the current country so your virtual location does not change.</string>
     <string name="ip_rotation_note">The VPN briefly reconnects during rotation. Active connections may be interrupted.</string>
     <string name="ip_rotation_settings_subtitle">Change the VPN server and public IP automatically.</string>
+    <string name="connection_mode_standard">Standard</string>
+    <string name="connection_mode_tor">Tor</string>
 </resources>

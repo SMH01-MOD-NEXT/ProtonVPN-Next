@@ -717,4 +717,6 @@
     <string name="ip_rotation_keep_country_desc">Вибирати інший сервер у поточній країні, щоб віртуальне розташування не змінювалося.</string>
     <string name="ip_rotation_note">Під час ротації VPN короткочасно перепідключається. Активні з’єднання можуть перерватися.</string>
     <string name="ip_rotation_settings_subtitle">Автоматична зміна VPN-сервера та публічної IP-адреси.</string>
+    <string name="connection_mode_standard">Звичайний</string>
+    <string name="connection_mode_tor">Tor</string>
 </resources>

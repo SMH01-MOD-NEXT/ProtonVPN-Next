@@ -718,4 +718,6 @@
     <string name="ip_rotation_keep_country_desc">Выбіраць іншы сервер у бягучай краіне, каб віртуальнае месцазнаходжанне не змянялася.</string>
     <string name="ip_rotation_note">Падчас ратацыі VPN кароткачасова перападключаецца. Актыўныя злучэнні могуць перарвацца.</string>
     <string name="ip_rotation_settings_subtitle">Аўтаматычная змена VPN-сервера і публічнага IP.</string>
+    <string name="connection_mode_standard">Звычайны</string>
+    <string name="connection_mode_tor">Tor</string>
 </resources>

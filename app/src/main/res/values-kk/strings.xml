@@ -711,4 +711,6 @@
     <string name="ip_rotation_keep_country_desc">Виртуалды орналасу өзгермеуі үшін ағымдағы елдегі басқа серверді таңдау.</string>
     <string name="ip_rotation_note">Ротация кезінде VPN қысқа уақытқа қайта қосылады. Белсенді қосылымдар үзілуі мүмкін.</string>
     <string name="ip_rotation_settings_subtitle">VPN сервері мен жалпыға ортақ IP мекенжайын автоматты түрде өзгерту.</string>
+    <string name="connection_mode_standard">Қалыпты</string>
+    <string name="connection_mode_tor">Tor</string>
 </resources>

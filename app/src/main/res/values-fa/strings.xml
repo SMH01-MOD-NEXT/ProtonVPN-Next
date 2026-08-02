@@ -711,4 +711,6 @@
     <string name="ip_rotation_keep_country_desc">سرور دیگری را در کشور فعلی انتخاب کنید تا موقعیت مجازی تغییر نکند.</string>
     <string name="ip_rotation_note">هنگام چرخش، VPN برای مدت کوتاهی دوباره متصل می‌شود و ممکن است اتصال‌های فعال قطع شوند.</string>
     <string name="ip_rotation_settings_subtitle">تغییر خودکار سرور VPN و IP عمومی.</string>
+    <string name="connection_mode_standard">استاندارد</string>
+    <string name="connection_mode_tor">Tor</string>
 </resources>

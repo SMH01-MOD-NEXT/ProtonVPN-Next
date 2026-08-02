@@ -708,4 +708,6 @@
     <string name="ip_rotation_keep_country_desc">选择当前国家/地区的其他服务器，使虚拟位置保持不变。</string>
     <string name="ip_rotation_note">轮换时 VPN 会短暂重新连接，当前连接可能会中断。</string>
     <string name="ip_rotation_settings_subtitle">自动更换 VPN 服务器和公网 IP。</string>
+    <string name="connection_mode_standard">标准</string>
+    <string name="connection_mode_tor">Tor</string>
 </resources>

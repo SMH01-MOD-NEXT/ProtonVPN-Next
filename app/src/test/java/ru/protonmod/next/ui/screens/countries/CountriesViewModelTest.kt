@@ -102,6 +102,7 @@ class CountriesViewModelTest {
         whenever(amneziaVpnManager.tunnelState).thenReturn(MutableStateFlow(ru.protonmod.next.vpn.VpnTunnelState.DOWN))
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
         whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
+        whenever(settingsManager.torModeEnabled).thenReturn(flowOf(false))
 
         viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager)
     }
