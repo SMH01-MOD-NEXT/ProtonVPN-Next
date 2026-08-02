@@ -686,7 +686,6 @@
     <string name="reconnect_required_dont_show_again">Больш не паказваць</string>
     <string name="settings_reconnect_hint">Нагадванне пра перападключэнне</string>
     <string name="settings_reconnect_hint_desc">Папярэджваць, што змененыя налады падключэння прымяняюцца толькі пасля перападключэння</string>
-
     <!-- AI Mode -->
     <string name="settings_ai">AI</string>
     <string name="settings_ai_desc">Эксперыментальны AI асістэнт для кіравання праграмай</string>
@@ -706,4 +705,18 @@
     <string name="ai_processing">Апрацоўка…</string>
     <string name="ai_success">Гатова!</string>
     <string name="ai_error_generic">Адбылася памылка AI</string>
+    <string name="ip_rotation_title">Ратацыя IP</string>
+    <string name="ip_rotation_description">Аўтаматычна перападключайцеся да іншага VPN-сервера па раскладзе, каб атрымліваць новы публічны IP-адрас.</string>
+    <string name="ip_rotation_section_status">Стан</string>
+    <string name="ip_rotation_enable">Уключыць ратацыю IP</string>
+    <string name="ip_rotation_enable_desc">Аўтаматычна змяняць актыўны VPN-сервер падчас падключэння.</string>
+    <string name="ip_rotation_interval">Інтэрвал ратацыі</string>
+    <string name="ip_rotation_minutes">Кожныя %1$d хв.</string>
+    <string name="ip_rotation_location">Месцазнаходжанне</string>
+    <string name="ip_rotation_keep_country">Захоўваць бягучую краіну</string>
+    <string name="ip_rotation_keep_country_desc">Выбіраць іншы сервер у бягучай краіне, каб віртуальнае месцазнаходжанне не змянялася.</string>
+    <string name="ip_rotation_note">Падчас ратацыі VPN кароткачасова перападключаецца. Актыўныя злучэнні могуць перарвацца.</string>
+    <string name="ip_rotation_settings_subtitle">Аўтаматычная змена VPN-сервера і публічнага IP.</string>
+    <string name="connection_mode_standard">Звычайны</string>
+    <string name="connection_mode_tor">Tor</string>
 </resources>
