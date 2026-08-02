@@ -62,9 +62,6 @@ def generate_changelog(history):
     for placeholder in ['[TAG_NAME]', '[VERSION]', '[VERSION_NAME]', '[TAG]']:
         full_prompt = full_prompt.replace(placeholder, TAG_NAME)
 
-    # Add length constraint to the prompt
-    full_prompt += "\n\nIMPORTANT: The generated release notes must be concise and strictly no more than 1000 characters in total."
-
     # Append history
     full_prompt += f"\n\nInput commit history:\n{history}"
 
