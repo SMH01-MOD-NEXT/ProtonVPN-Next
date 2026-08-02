@@ -172,6 +172,11 @@ class AmneziaVpnManager @Inject constructor(
     private val _tunnelState = MutableStateFlow(VpnTunnelState.DOWN)
     val tunnelState: StateFlow<VpnTunnelState> = _tunnelState
 
+    // Proton's official client exposes serverIpv4 from Local Agent status immediately.
+    // AWGBox does not embed Local Agent, so keep the equivalent selected physical server ExitIP.
+    private val _exitIp = MutableStateFlow<String?>(null)
+    val exitIp: StateFlow<String?> = _exitIp.asStateFlow()
+
     private val _rawTunnelState = MutableStateFlow(VpnTunnelState.DOWN)
 
     /** Parameters of the last connection attempt, replayed by [reconnectCurrent]. */
@@ -360,9 +365,10 @@ class AmneziaVpnManager @Inject constructor(
                     updateVpnState(VpnState.DISCONNECTED)
                     currentServerId = null
                     connectedServerState.setConnectedServer(null)
+                    _exitIp.value = null
                     _speed.value = null
-        _trafficRx.value = null
-        _trafficTx.value = null
+                    _trafficRx.value = null
+                    _trafficTx.value = null
                 } else {
                     updateVpnState(VpnState.CONNECTING)
                 }
@@ -691,6 +697,7 @@ class AmneziaVpnManager @Inject constructor(
                 obfuscationParams = obfuscationParams
             )
 
+            _exitIp.value = server.exitIp?.trim()?.takeIf(String::isNotEmpty)
             val serverLogInfo = "${server.id} (Domain: ${server.domain}, LogicalID: $logicalServerId)"
             ProtonLogger.i(TAG, "Initiating connection to server: $serverLogInfo")
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Start ($serverLogInfo)", "INFO", "vpn.connect")
@@ -953,6 +960,7 @@ class AmneziaVpnManager @Inject constructor(
             _tunnelState.value = VpnTunnelState.DOWN
             updateVpnState(VpnState.DISCONNECTED)
             connectedServerState.setConnectedServer(null)
+            _exitIp.value = null
             currentServerId = null
             Result.failure(e)
         } catch (e: Exception) {
@@ -965,6 +973,7 @@ class AmneziaVpnManager @Inject constructor(
             _isConnecting.value = false
             _tunnelState.value = VpnTunnelState.DOWN
             connectedServerState.setConnectedServer(null)
+            _exitIp.value = null
             currentServerId = null
             Result.failure(e)
         }
@@ -1102,6 +1111,7 @@ class AmneziaVpnManager @Inject constructor(
         verificationJob?.cancel()
         pauseJob?.cancel()
         _isConnecting.value = false
+        _exitIp.value = null
         isPaused = false
         applicationScope.launch { settingsManager.setPauseEndTime(0) }
 

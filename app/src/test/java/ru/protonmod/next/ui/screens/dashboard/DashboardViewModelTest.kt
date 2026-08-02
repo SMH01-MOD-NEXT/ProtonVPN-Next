@@ -29,6 +29,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.*
 import ru.protonmod.next.vpn.VpnTunnelState
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -127,6 +129,7 @@ class DashboardViewModelTest {
     private val trafficRxFlow = MutableStateFlow<String?>(null)
     private val trafficTxFlow = MutableStateFlow<String?>(null)
     private val tunnelStateFlow = MutableStateFlow(VpnTunnelState.DOWN)
+    private val exitIpFlow = MutableStateFlow<String?>(null)
     
     // Additional flows from SettingsManager
     private val quickConnectStrategyFlow = MutableStateFlow("fastest")
@@ -157,6 +160,7 @@ class DashboardViewModelTest {
         runBlocking {
             whenever(vpnRepository.getCachedServers()).thenReturn(listOf(testServer) )
             whenever(vpnRepository.getServers(any(), any(), any(), any())).thenReturn(Result.success(listOf(testServer)))
+            whenever(vpnRepository.getUserLocation(any(), any())).thenReturn(Result.failure(Exception("offline")))
         }
         whenever(vpnRepository.isUpdating).thenReturn(isUpdatingFlow)
         
@@ -168,6 +172,7 @@ class DashboardViewModelTest {
         whenever(amneziaVpnManager.trafficTx).thenReturn(trafficTxFlow)
         whenever(amneziaVpnManager.connectionWarning).thenReturn(MutableStateFlow(null))
         whenever(amneziaVpnManager.tunnelState).thenReturn(tunnelStateFlow)
+        whenever(amneziaVpnManager.exitIp).thenReturn(exitIpFlow)
         
         whenever(connectedServerState.connectedServer).thenReturn(connectedServerFlow)
         whenever(recentConnectionDao.getRecentConnections()).thenReturn(MutableStateFlow(emptyList()))
@@ -248,5 +253,18 @@ class DashboardViewModelTest {
 
         verify(connectedServerState).setConnectedServer(null)
         verify(amneziaVpnManager).disconnect()
+    }
+
+    @Test
+    fun `parses Proton location response`() {
+        assertEquals(
+            IpLocationData("185.159.157.20", "CH"),
+            parseProtonLocation("""{"IP":"185.159.157.20","Country":"CH","ISP":"ProtonVPN"}"""),
+        )
+    }
+
+    @Test
+    fun `rejects Proton location without IP`() {
+        assertNull(parseProtonLocation("""{"Country":"CH"}"""))
     }
 }
