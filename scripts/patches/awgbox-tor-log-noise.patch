@@ -1,0 +1,12 @@
+--- a/protocol/tor/outbound.go
++++ b/protocol/tor/outbound.go
+@@ -147,9 +147,7 @@
+ }
+ 
+ var torLogEvents = []control.EventCode{
+-	control.EventCodeLogDebug,
+ 	control.EventCodeLogErr,
+-	control.EventCodeLogInfo,
+ 	control.EventCodeLogNotice,
+ 	control.EventCodeLogWarn,
+ }
