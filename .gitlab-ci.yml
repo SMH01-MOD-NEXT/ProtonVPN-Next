@@ -14,6 +14,10 @@ variables:
   GRADLE_USER_HOME: "${CI_PROJECT_DIR}/.gradle"
   SECURE_LOG_LEVEL: "debug" # Helps debugging failures
   DS_SKIP_DEPENDENCY_CHECKING: "true" # Skips Gradle execution, just parses files
+  # Full history + tags, like Woodpecker's `depth: 0`. The OTA versionCode is derived from
+  # `git rev-list --count HEAD`, so a shallow clone publishes a lower version than the previous build.
+  GIT_DEPTH: "0"
+  GIT_FETCH_EXTRA_FLAGS: "--tags --force"
 
 # Pre-flight check for secrets and external services
 verify-secrets:
@@ -52,6 +56,38 @@ verify-secrets:
       else
         echo "❌ Telegram Bot Token invalid: $TG_RESP"
         exit 1
+      fi
+    - |
+      echo "Verifying website push token..."
+      # CI_JOB_TOKEN can clone but is always rejected on push, which silently froze the
+      # website branch and let the mirror drift one commit ahead forever.
+      PUSH_TOKEN="${GITLAB_TOKEN:-${WEBSITE_PUSH_TOKEN:-$CI_PUSH_TOKEN}}"
+      if [ -z "$PUSH_TOKEN" ]; then
+        echo "❌ No GITLAB_TOKEN/WEBSITE_PUSH_TOKEN set. OTA metadata cannot be pushed to the website branch."
+        exit 1
+      fi
+      WEBSITE_RESP=$(curl -s -o /dev/null -w "%{http_code}" \
+        -H "PRIVATE-TOKEN: $PUSH_TOKEN" \
+        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/branches/website")
+      if [ "$WEBSITE_RESP" = "200" ]; then
+        echo "✅ Website branch reachable with the push token"
+      else
+        echo "❌ Push token cannot read the website branch (HTTP $WEBSITE_RESP). It needs 'write_repository' scope and push rights on that branch."
+        exit 1
+      fi
+    - |
+      echo "Verifying GitHub mirror token..."
+      if [ -n "$GITHUB_TOKEN" ]; then
+        GH_RESP=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $GITHUB_TOKEN" \
+          "https://api.github.com/repos/SMH01-MIRRORS/ProtonVPN-Next-MIRROR")
+        if [ "$GH_RESP" = "200" ]; then
+          echo "✅ GitHub mirror token verified"
+        else
+          echo "❌ GitHub mirror token invalid (HTTP $GH_RESP)"
+          exit 1
+        fi
+      else
+        echo "⚠️ GITHUB_TOKEN not set, mirror will be skipped..."
       fi
     - |
       echo "Verifying Sentry Auth Token..."
@@ -293,8 +329,14 @@ publish-external:
     - job: build-apks
     - job: generate-changelog
       optional: true
+  variables:
+    GIT_DEPTH: "0"
   script:
     - apt-get update && apt-get install -y git
+    - git config --global --add safe.directory "$CI_PROJECT_DIR"
+    # publish_ota.py needs the full history for the versionCode and the tags for the versionName
+    - git fetch --unshallow || true
+    - git fetch --tags --force
     - pip install boto3 telethon
     - python scripts/publish_ota.py
     - python scripts/upload_telegram.py

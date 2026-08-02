@@ -18,17 +18,70 @@ EVENT = os.environ.get('CI_PIPELINE_SOURCE', 'push')
 TAG = os.environ.get('CI_COMMIT_TAG')
 COMMIT_SHA = os.environ.get('CI_COMMIT_SHA', 'unknown')[:8]
 REPO_URL = os.environ.get('CI_REPOSITORY_URL')
-# Use provided token or fall back to automatic CI_JOB_TOKEN
-GITLAB_TOKEN = os.environ.get('GITLAB_TOKEN') or os.environ.get('CI_JOB_TOKEN')
+# A write-enabled token is required: CI_JOB_TOKEN can read the repository but is
+# rejected by GitLab on `git push`, which silently froze the website branch.
+PUSH_TOKEN = (
+    os.environ.get('GITLAB_TOKEN')
+    or os.environ.get('WEBSITE_PUSH_TOKEN')
+    or os.environ.get('CI_PUSH_TOKEN')
+)
+GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 
 # Project branches
 WEBSITE_BRANCH = "website"
+MIRROR_REPO = os.environ.get('MIRROR_REPO', 'SMH01-MIRRORS/ProtonVPN-Next-MIRROR')
+CHANNELS = ("stable", "nightly")
+VERSION_CODE_BASE = 605159512
 
-def get_git_output(command):
+
+def fail(message):
+    print(f"❌ {message}")
+    sys.exit(1)
+
+
+def run(command, cwd=None, check=True, capture=False):
+    """Runs a shell command; by default a failure aborts the job instead of being ignored."""
+    result = subprocess.run(
+        command, shell=True, cwd=cwd, text=True,
+        capture_output=capture,
+    )
+    if capture and result.stdout:
+        print(result.stdout.strip())
+    if check and result.returncode != 0:
+        details = (result.stderr or "").strip()
+        fail(f"Command failed ({result.returncode}): {command}\n{mask_secrets(details)}")
+    return result
+
+
+def mask_secrets(text):
+    for secret in (PUSH_TOKEN, GITHUB_TOKEN):
+        if secret:
+            text = text.replace(secret, "***")
+    return text
+
+
+def get_git_output(command, cwd=None):
     try:
-        return subprocess.check_output(command, shell=True).decode().strip()
-    except:
+        return subprocess.check_output(
+            command, shell=True, cwd=cwd, stderr=subprocess.DEVNULL
+        ).decode().strip()
+    except subprocess.CalledProcessError:
         return ""
+
+
+def ensure_full_history():
+    """CI clones are shallow by default; the version code is derived from the commit count."""
+    if get_git_output("git rev-parse --is-shallow-repository") == "true":
+        print("Repository is shallow, fetching full history...")
+        run("git fetch --unshallow --tags", check=False)
+    run("git fetch --tags --force", check=False)
+
+    if get_git_output("git rev-parse --is-shallow-repository") == "true":
+        fail(
+            "Repository is still shallow. Set GIT_DEPTH: 0 for this job, otherwise the "
+            "published versionCode goes backwards and clients never see the update."
+        )
+
 
 def upload_to_r2(file_path, target_dir):
     print(f"Uploading {file_path} to R2 folder {target_dir}...")
@@ -47,6 +100,7 @@ def upload_to_r2(file_path, target_dir):
 
     return f"{R2_PUBLIC_URL}/{key}"
 
+
 def clear_r2_dir(target_dir):
     print(f"Cleaning R2 directory: {target_dir}")
     s3 = boto3.resource('s3',
@@ -59,10 +113,127 @@ def clear_r2_dir(target_dir):
     bucket = s3.Bucket(R2_BUCKET)
     bucket.objects.filter(Prefix=f"{target_dir}/").delete()
 
+
+def authenticated_repo_url():
+    if not REPO_URL or "://" not in REPO_URL:
+        fail("CI_REPOSITORY_URL is missing, cannot update the website branch.")
+    if not PUSH_TOKEN:
+        fail(
+            "No write-enabled token found. Set GITLAB_TOKEN (project access token with "
+            "'write_repository') in the CI/CD variables: CI_JOB_TOKEN cannot push."
+        )
+
+    proto, rest = REPO_URL.split("://", 1)
+    host_path = rest.split("@", 1)[1] if "@" in rest else rest
+    return f"{proto}://oauth2:{PUSH_TOKEN}@{host_path}"
+
+
+def mirror_repo_url():
+    if GITHUB_TOKEN:
+        return f"https://git:{GITHUB_TOKEN}@github.com/{MIRROR_REPO}.git"
+    return "https://github.com/" + MIRROR_REPO + ".git"
+
+
+def load_json(path):
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, 'r') as handle:
+            return json.load(handle)
+    except (ValueError, OSError):
+        return {}
+
+
+def newest_entries(*sources):
+    """Merges OTA metadata, keeping the highest versionCode per channel and build type.
+
+    The mirror can hold builds that never reached GitLab (and vice versa); rebuilding the
+    file from a single side is what wiped the stable channel on GitHub.
+    """
+    merged = {}
+    for source in sources:
+        for channel, builds in (source or {}).items():
+            if channel not in CHANNELS or not isinstance(builds, dict):
+                continue
+            for build_type, entry in builds.items():
+                if not isinstance(entry, dict) or "url" not in entry:
+                    continue
+                current = merged.setdefault(channel, {}).get(build_type)
+                if current is None or int(entry.get("versionCode", 0)) >= int(current.get("versionCode", 0)):
+                    merged[channel][build_type] = entry
+    return merged
+
+
+def read_mirror_metadata(repo_dir, json_relative_path):
+    """Reads update.json from the GitHub mirror so its metadata is never dropped."""
+    fetch = run(f"git fetch mirror {WEBSITE_BRANCH}", cwd=repo_dir, check=False, capture=True)
+    if fetch.returncode != 0:
+        print("⚠️ Could not fetch the GitHub mirror, continuing with GitLab metadata only.")
+        return {}
+
+    content = get_git_output(f"git show FETCH_HEAD:{json_relative_path}", cwd=repo_dir)
+    if not content:
+        return {}
+    try:
+        return json.loads(content)
+    except ValueError:
+        return {}
+
+
+def push_website(repo_dir, channel):
+    status = get_git_output("git status --porcelain", cwd=repo_dir)
+    if not status:
+        print("No metadata changes to publish.")
+        return False
+
+    run("git config user.email 'ci@protonmod.next'", cwd=repo_dir)
+    run("git config user.name 'CI Bot'", cwd=repo_dir)
+    run("git add public/update.json", cwd=repo_dir)
+    run(f"git commit -m 'chore: update ota metadata for {channel} channel'", cwd=repo_dir)
+
+    for attempt in range(3):
+        push = run(f"git push origin HEAD:{WEBSITE_BRANCH}", cwd=repo_dir, check=False, capture=True)
+        if push.returncode == 0:
+            print("✅ Pushed OTA metadata to GitLab.")
+            return True
+        print(mask_secrets((push.stderr or "").strip()))
+        if attempt < 2:
+            print("Push rejected, rebasing on the latest website branch and retrying...")
+            run(f"git pull --rebase origin {WEBSITE_BRANCH}", cwd=repo_dir, check=False)
+
+    fail(
+        "Could not push OTA metadata to GitLab. Verify that GITLAB_TOKEN is a project "
+        "access token with 'write_repository' and that the website branch is not protected "
+        "against it."
+    )
+
+
+def push_mirror(repo_dir):
+    if not GITHUB_TOKEN:
+        print("⚠️ GITHUB_TOKEN not set, skipping the GitHub mirror push.")
+        return
+
+    # Only runs after GitLab accepted the commit, so GitLab stays the source of truth.
+    result = run(f"git push mirror HEAD:{WEBSITE_BRANCH}", cwd=repo_dir, check=False, capture=True)
+    if result.returncode == 0:
+        print("✅ Pushed OTA metadata to the GitHub mirror.")
+        return
+
+    print(mask_secrets((result.stderr or "").strip()))
+    print("Mirror rejected the fast-forward push, forcing GitLab state onto the mirror...")
+    forced = run(
+        f"git push mirror HEAD:{WEBSITE_BRANCH} --force", cwd=repo_dir, check=False, capture=True
+    )
+    if forced.returncode == 0:
+        print("✅ Mirror synchronised with GitLab.")
+    else:
+        print(mask_secrets((forced.stderr or "").strip()))
+        fail("Failed to push to the GitHub mirror. Check GITHUB_TOKEN 'Contents: Read and Write'.")
+
+
 def main():
     if not all([R2_ACCESS_KEY, R2_SECRET_KEY, R2_ENDPOINT, R2_BUCKET]):
-        print("Error: Missing R2 configuration secrets!")
-        return
+        fail("Missing R2 configuration secrets!")
 
     is_tag = TAG is not None
     channel = "stable" if is_tag else "nightly"
@@ -71,116 +242,71 @@ def main():
     # Only publish official builds to OTA
     flavor = "stableStandard" if is_tag else "nightlyStandard"
 
-    # 1. Clear target R2 directory
-    clear_r2_dir(target_dir)
+    ensure_full_history()
+
+    # 1. Collect the APKs before touching R2, so a bad build never empties the bucket.
+    staged = []
+    for build_type in build_types:
+        apk_pattern = f"app/build/outputs/apk/{flavor}/{build_type}/*.apk"
+        apk_files = glob.glob(apk_pattern)
+        if not apk_files:
+            fail(f"No APK found for {flavor}/{build_type} at {apk_pattern}")
+        staged.append((build_type, apk_files[0]))
 
     # 2. Prepare metadata
     commit_count = int(get_git_output("git rev-list --count HEAD") or "0")
-    version_code = 605159512 + commit_count
+    if commit_count == 0:
+        fail("Could not determine the commit count, refusing to publish a broken versionCode.")
+    version_code = VERSION_CODE_BASE + commit_count
     version_name_base = TAG if is_tag else get_git_output("git describe --tags --always")
     changelog = get_git_output("git log -1 --pretty=%B")
+    print(f"Publishing {channel}: versionCode={version_code}, versionName={version_name_base}")
 
-    apk_info = []
-    for bt in build_types:
-        apk_pattern = f"app/build/outputs/apk/{flavor}/{bt}/*.apk"
-        apk_files = glob.glob(apk_pattern)
-        if not apk_files:
-            print(f"Warning: No APK found for {flavor}/{bt} at {apk_pattern}")
-            continue
-
-        apk_path = apk_files[0]
-        version_name = version_name_base + ("-nightly" if not is_tag else "")
-
-        # Upload to R2
-        public_apk_url = upload_to_r2(apk_path, target_dir)
-        apk_info.append((bt, public_apk_url, version_name))
-
-    if not apk_info:
-        print("No APKs to publish. Exiting.")
-        return
-
-    # 3. Update website JSON
+    # 3. Update the website JSON, starting from the newest metadata of both remotes.
     print("Updating update.json on website branch...")
-    if os.path.exists("website_repo"):
-        subprocess.run("rm -rf website_repo", shell=True)
+    run("rm -rf website_repo", check=False)
+    run(f"git clone --branch {WEBSITE_BRANCH} {authenticated_repo_url()} website_repo")
+    run(f"git remote add mirror {mirror_repo_url()}", cwd="website_repo", check=False)
 
-    if GITLAB_TOKEN and REPO_URL and "://" in REPO_URL:
-        proto, rest = REPO_URL.split("://", 1)
-        # Handle cases where REPO_URL already has a token/user
-        if "@" in rest:
-            _, host_path = rest.split("@", 1)
-        else:
-            host_path = rest
-
-        # Use gitlab-ci-token as username for CI_JOB_TOKEN compatibility
-        user = "gitlab-ci-token" if not os.environ.get('GITLAB_TOKEN') else "oauth2"
-        auth_repo_url = f"{proto}://{user}:{GITLAB_TOKEN}@{host_path}"
-    else:
-        auth_repo_url = REPO_URL
-
-    if not auth_repo_url:
-        print("Error: Could not determine repository URL for website update.")
-        return
-
-    clone_res = subprocess.run(f"git clone --branch {WEBSITE_BRANCH} {auth_repo_url} website_repo", shell=True)
-    if clone_res.returncode != 0:
-        print(f"Error: Failed to clone {WEBSITE_BRANCH} branch. Ensure it exists.")
-        return
-
-    json_path = "website_repo/public/update.json"
+    json_relative_path = "public/update.json"
+    json_path = os.path.join("website_repo", json_relative_path)
     os.makedirs(os.path.dirname(json_path), exist_ok=True)
 
-    data = {}
-    if os.path.exists(json_path):
-        with open(json_path, 'r') as f:
-            try:
-                data = json.load(f)
-            except:
-                data = {}
+    data = newest_entries(load_json(json_path), read_mirror_metadata("website_repo", json_relative_path))
 
-    # Clean root from any non-channel keys (like ghost 'debug' blocks)
-    data = {k: v for k, v in data.items() if k in ["stable", "nightly"]}
+    published = data.get(channel, {})
+    for build_type, _ in staged:
+        previous = published.get(build_type, {})
+        if int(previous.get("versionCode", 0)) > version_code:
+            fail(
+                f"Refusing to publish {channel}/{build_type}: versionCode {version_code} is lower "
+                f"than the published {previous.get('versionCode')}. This means the CI history is "
+                "incomplete."
+            )
 
-    # Reset current channel data to prevent stale build types
-    data[channel] = {}
-
-    for bt, apk_url, vn in apk_info:
-        data[channel][bt] = {
+    # 4. Upload the APKs
+    clear_r2_dir(target_dir)
+    version_name = version_name_base + ("" if is_tag else "-nightly")
+    channel_data = {}
+    for build_type, apk_path in staged:
+        channel_data[build_type] = {
             "versionCode": int(version_code),
-            "versionName": vn,
-            "url": apk_url,
+            "versionName": version_name,
+            "url": upload_to_r2(apk_path, target_dir),
             "changelog": changelog,
-            "force": False
+            "force": False,
         }
 
-    with open(json_path, 'w') as f:
-        json.dump(data, f, indent=2)
+    # Replace only the current channel; the other channel keeps its published build.
+    data[channel] = channel_data
 
-    subprocess.run("git config --global user.email 'ci@protonmod.next'", shell=True)
-    subprocess.run("git config --global user.name 'CI Bot'", shell=True)
-    subprocess.run(f"cd website_repo && git add . && git commit -m 'chore: update ota metadata for {channel} channel' && git push origin {WEBSITE_BRANCH}", shell=True)
+    with open(json_path, 'w') as handle:
+        json.dump(data, handle, indent=2)
+        handle.write("\n")
 
-    github_token = os.environ.get('GITHUB_TOKEN')
-    if github_token:
-        print("Pushing to GitHub mirror...")
-        # Use 'git' as username for PAT, it's more stable
-        mirror_url = f"https://git:{github_token}@github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR.git"
+    if push_website("website_repo", channel):
+        push_mirror("website_repo")
 
-        # Add mirror remote
-        subprocess.run(f"cd website_repo && git remote add mirror {mirror_url}", shell=True)
-
-        # Try to push, but don't fail the whole script if it fails
-        result = subprocess.run(f"cd website_repo && git push mirror {WEBSITE_BRANCH} --force",
-                                shell=True, capture_output=True, text=True)
-
-        if result.returncode == 0:
-            print("Successfully pushed to GitHub mirror.")
-        else:
-            print("Failed to push to GitHub mirror.")
-            # Mask token in error output
-            clean_error = result.stderr.replace(github_token, "***")
-            print(f"Error: {clean_error}")
-            print("Check if the GITHUB_TOKEN has 'Contents: Read and Write' permissions.")
 
 if __name__ == '__main__':
     main()
