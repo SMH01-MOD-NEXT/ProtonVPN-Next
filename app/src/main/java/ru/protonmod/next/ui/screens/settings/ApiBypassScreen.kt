@@ -34,11 +34,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CloudSync
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Public
-import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -63,6 +58,7 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -140,7 +136,7 @@ fun ApiBypassScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.CloudSync,
+                            imageVector = ProtonIcons.Cloud,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = colors.brandNorm
@@ -191,7 +187,7 @@ fun ApiBypassScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.Info,
+                                imageVector = ProtonIcons.InfoCircle,
                                 contentDescription = null,
                                 tint = colors.notificationWarning,
                                 modifier = Modifier.size(24.dp)
@@ -223,7 +219,7 @@ fun ApiBypassScreen(
                                 isEffectivelyEnabled -> stringResource(R.string.st_enabled_subtitle)
                                 else -> stringResource(R.string.st_disabled_subtitle)
                             },
-                            icon = Icons.Rounded.Security,
+                            icon = ProtonIcons.Shield,
                             checked = isEffectivelyEnabled,
                             enabled = !isAnyVpnActive,
                             onCheckedChange = { viewModel.setApiBypassEnabled(it) }
@@ -253,7 +249,7 @@ fun ApiBypassScreen(
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_netlify),
                                     description = stringResource(R.string.api_bypass_strategy_netlify_desc),
-                                    icon = Icons.Rounded.Public,
+                                    icon = ProtonIcons.Globe,
                                     isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_NETLIFY,
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_NETLIFY) }
                                 )
@@ -267,7 +263,7 @@ fun ApiBypassScreen(
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_cloudflare),
                                     description = stringResource(R.string.api_bypass_strategy_cloudflare_desc),
-                                    icon = Icons.Rounded.Public,
+                                    icon = ProtonIcons.Globe,
                                     isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE,
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_CLOUDFLARE) }
                                 )
@@ -281,7 +277,7 @@ fun ApiBypassScreen(
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_deno),
                                     description = stringResource(R.string.api_bypass_strategy_deno_desc),
-                                    icon = Icons.Rounded.Public,
+                                    icon = ProtonIcons.Globe,
                                     isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_DENO,
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_DENO) }
                                 )
@@ -295,7 +291,7 @@ fun ApiBypassScreen(
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_mirrors),
                                     description = stringResource(R.string.api_bypass_strategy_mirrors_desc),
-                                    icon = Icons.Rounded.Public,
+                                    icon = ProtonIcons.Globe,
                                     isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_PROTON_MIRRORS,
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_PROTON_MIRRORS) }
                                 )
@@ -309,7 +305,7 @@ fun ApiBypassScreen(
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_custom),
                                     description = stringResource(R.string.api_bypass_strategy_custom_desc),
-                                    icon = Icons.Rounded.Security,
+                                    icon = ProtonIcons.Shield,
                                     isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_CUSTOM_PROXY,
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_CUSTOM_PROXY) }
                                 )
@@ -323,7 +319,7 @@ fun ApiBypassScreen(
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_byedpi),
                                     description = stringResource(R.string.api_bypass_strategy_byedpi_desc),
-                                    icon = Icons.Rounded.Security,
+                                    icon = ProtonIcons.Shield,
                                     isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_BYEDPI,
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_BYEDPI) }
                                 )

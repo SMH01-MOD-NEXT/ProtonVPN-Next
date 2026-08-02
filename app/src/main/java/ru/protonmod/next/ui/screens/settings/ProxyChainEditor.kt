@@ -23,11 +23,6 @@ import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.DragHandle
-import androidx.compose.material.icons.rounded.VpnLock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,10 +35,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import kotlin.math.abs
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.vpn.ProxyLinkParser
-import kotlin.math.abs
 
 private const val MAX_PROXY_HOPS = 4
 
@@ -135,7 +131,7 @@ fun ProxyChainEditor(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp)
         ) {
-            Icon(Icons.Rounded.Add, contentDescription = null)
+            Icon(ProtonIcons.Plus, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 if (links.size < MAX_PROXY_HOPS) stringResource(R.string.proxy_chain_add)
@@ -260,13 +256,13 @@ private fun ProxyTreeNode(
                 }
                 IconButton(onClick = onDelete) {
                     Icon(
-                        Icons.Rounded.DeleteOutline,
+                        ProtonIcons.Trash,
                         contentDescription = stringResource(R.string.proxy_chain_delete),
                         tint = colors.notificationError
                     )
                 }
                 Icon(
-                    Icons.Rounded.DragHandle,
+                    ProtonIcons.LinesHorizontal,
                     contentDescription = stringResource(R.string.proxy_chain_drag),
                     tint = colors.textWeak,
                     modifier = Modifier
@@ -312,7 +308,7 @@ private fun ProtonDestinationNode(hasProxies: Boolean) {
                 modifier = Modifier.size(28.dp).clip(CircleShape).background(colors.brandNorm),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Rounded.VpnLock, contentDescription = null, tint = colors.onInteraction, modifier = Modifier.size(16.dp))
+                Icon(ProtonIcons.CirclesLock, contentDescription = null, tint = colors.onInteraction, modifier = Modifier.size(16.dp))
             }
         }
         Column(modifier = Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 14.dp)) {

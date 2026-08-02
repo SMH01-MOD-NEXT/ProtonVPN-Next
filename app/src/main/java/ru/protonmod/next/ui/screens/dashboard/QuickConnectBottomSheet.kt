@@ -23,10 +23,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,6 +39,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.local.VpnProfileEntity
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.ServerCard
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 
@@ -105,7 +102,7 @@ fun QuickConnectBottomSheet(
             StrategyItem(
                 title = stringResource(R.string.qc_strategy_recent),
                 description = stringResource(R.string.qc_strategy_recent_desc),
-                icon = Icons.Rounded.History,
+                icon = ProtonIcons.ClockRotateLeft,
                 isSelected = currentStrategy == "recent",
                 onClick = {
                     onStrategySelect("recent", null)
@@ -125,7 +122,7 @@ fun QuickConnectBottomSheet(
                     StrategyItem(
                         title = profile.name,
                         description = stringResource(R.string.qc_strategy_profile_desc),
-                        icon = Icons.Rounded.Star,
+                        icon = ProtonIcons.Star,
                         isSelected = (currentStrategy == "profile" && currentTargetId == profile.id),
                         onClick = {
                             onStrategySelect("profile", profile.id)
@@ -230,7 +227,7 @@ private fun StrategyItem(
 
             if (isSelected) {
                 Icon(
-                    imageVector = Icons.Rounded.Check,
+                    imageVector = ProtonIcons.Checkmark,
                     contentDescription = null,
                     tint = colors.brandNorm,
                     modifier = Modifier.size(24.dp),

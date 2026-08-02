@@ -24,7 +24,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -43,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -116,7 +116,7 @@ fun ErrorReportingScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.BugReport,
+                            imageVector = ProtonIcons.Bug,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = colors.brandNorm
@@ -163,7 +163,7 @@ fun ErrorReportingScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.settings_crash_reports),
                             subtitle = stringResource(R.string.settings_crash_reports_desc),
-                            icon = Icons.Rounded.BugReport,
+                            icon = ProtonIcons.Bug,
                             checked = uiState.isCrashReportsEnabled,
                             onCheckedChange = { viewModel.setCrashReportsEnabled(it) }
                         )
@@ -176,7 +176,7 @@ fun ErrorReportingScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.settings_sentry_non_fatal),
                             subtitle = stringResource(R.string.settings_sentry_non_fatal_desc),
-                            icon = Icons.Rounded.ReportProblem,
+                            icon = ProtonIcons.ExclamationTriangleFilled,
                             checked = uiState.isSentryNonFatalEnabled,
                             onCheckedChange = { viewModel.setSentryNonFatalEnabled(it) }
                         )
@@ -189,7 +189,7 @@ fun ErrorReportingScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.settings_sentry_anr),
                             subtitle = stringResource(R.string.settings_sentry_anr_desc),
-                            icon = Icons.Rounded.HourglassBottom,
+                            icon = ProtonIcons.Hourglass,
                             checked = uiState.isSentryAnrEnabled,
                             onCheckedChange = { viewModel.setSentryAnrEnabled(it) }
                         )
@@ -202,7 +202,7 @@ fun ErrorReportingScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.settings_sentry_metrics),
                             subtitle = stringResource(R.string.settings_sentry_metrics_desc),
-                            icon = Icons.Rounded.QueryStats,
+                            icon = ProtonIcons.ChartLine,
                             checked = uiState.isSentryMetricsEnabled,
                             onCheckedChange = { viewModel.setSentryMetricsEnabled(it) }
                         )
@@ -215,7 +215,7 @@ fun ErrorReportingScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.settings_sentry_logs),
                             subtitle = stringResource(R.string.settings_sentry_logs_desc),
-                            icon = Icons.Rounded.Insights,
+                            icon = ProtonIcons.ChartLine,
                             checked = uiState.isSentryLogsEnabled,
                             onCheckedChange = { viewModel.setSentryLogsEnabled(it) }
                         )
@@ -228,7 +228,7 @@ fun ErrorReportingScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.settings_sentry_performance),
                             subtitle = stringResource(R.string.settings_sentry_performance_desc),
-                            icon = Icons.Rounded.Speed,
+                            icon = ProtonIcons.Bolt,
                             checked = uiState.isSentryPerformanceEnabled,
                             onCheckedChange = { viewModel.setSentryPerformanceEnabled(it) }
                         )
@@ -241,7 +241,7 @@ fun ErrorReportingScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.settings_analytics),
                             subtitle = stringResource(R.string.settings_analytics_desc),
-                            icon = Icons.Rounded.Insights,
+                            icon = ProtonIcons.ChartLine,
                             checked = uiState.isAnalyticsEnabled,
                             onCheckedChange = { viewModel.setAnalyticsEnabled(it) }
                         )
@@ -254,7 +254,7 @@ fun ErrorReportingScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.settings_sentry_session_replay),
                             subtitle = stringResource(R.string.settings_sentry_session_replay_desc),
-                            icon = Icons.Rounded.Replay,
+                            icon = ProtonIcons.ArrowRotateRight,
                             checked = uiState.isSentrySessionReplayEnabled,
                             onCheckedChange = { viewModel.setSentrySessionReplayEnabled(it) }
                         )

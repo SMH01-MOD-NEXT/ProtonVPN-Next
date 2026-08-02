@@ -23,9 +23,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -48,6 +45,7 @@ import kotlinx.collections.immutable.toImmutableList
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -270,7 +268,7 @@ internal fun RecentConnectionsCard(
                     modifier = Modifier.size(28.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MoreHoriz,
+                        imageVector = ProtonIcons.ThreeDotsHorizontal,
                         contentDescription = stringResource(R.string.title_recent_connections),
                         tint = colors.iconWeak,
                         modifier = Modifier.size(18.dp)
@@ -433,7 +431,7 @@ private fun RecentServerRow(
             )
         }
         Icon(
-            imageVector = Icons.Default.ChevronRight,
+            imageVector = ProtonIcons.ChevronRight,
             contentDescription = null,
             tint = colors.iconWeak,
             modifier = Modifier.size(16.dp)

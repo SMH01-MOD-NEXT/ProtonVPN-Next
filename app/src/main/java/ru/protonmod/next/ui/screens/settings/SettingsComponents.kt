@@ -17,13 +17,12 @@
 
 package ru.protonmod.next.ui.screens.settings
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,12 +36,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
-import android.content.Intent
-import androidx.core.net.toUri
 
 @Composable
 fun SettingsCategory(
@@ -151,7 +150,7 @@ fun SettingRowWithIcon(
             trailingContent()
         } else if (onClick != null) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                imageVector = ProtonIcons.ChevronRight,
                 contentDescription = null,
                 tint = colors.iconWeak.copy(alpha = 0.5f),
                 modifier = Modifier.size(20.dp)

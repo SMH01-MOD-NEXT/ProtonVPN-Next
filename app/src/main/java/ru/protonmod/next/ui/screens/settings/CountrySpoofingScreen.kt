@@ -31,8 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Flag
-import androidx.compose.material.icons.rounded.Language
-import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -49,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -114,7 +113,7 @@ fun CountrySpoofingScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Public,
+                            imageVector = ProtonIcons.Globe,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = colors.brandNorm
@@ -154,7 +153,7 @@ fun CountrySpoofingScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.settings_country_spoofing_title),
                             subtitle = if (uiState.spoofCountryEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
-                            icon = Icons.Rounded.Language,
+                            icon = ProtonIcons.Language,
                             checked = uiState.spoofCountryEnabled,
                             onCheckedChange = { viewModel.setSpoofCountryEnabled(it) }
                         )

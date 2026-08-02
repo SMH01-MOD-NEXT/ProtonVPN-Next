@@ -35,24 +35,19 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.LocationCity
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -69,6 +64,7 @@ import ru.protonmod.next.ui.components.LoadIndicator
 import ru.protonmod.next.ui.components.LoadProgressBar
 import ru.protonmod.next.ui.components.MainHeader
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -408,7 +404,7 @@ fun CountryCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.Public,
+                                imageVector = ProtonIcons.Globe,
                                 contentDescription = stringResource(R.string.desc_country),
                                 tint = colors.iconNorm,
                                 modifier = Modifier.size(20.dp)
@@ -462,7 +458,7 @@ fun CountryCard(
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
+                        imageVector = ProtonIcons.ThreeDotsVertical,
                         contentDescription = stringResource(R.string.desc_more_options),
                         tint = colors.iconWeak
                     )
@@ -517,7 +513,7 @@ fun CityCard(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.LocationCity,
+                            imageVector = ProtonIcons.Buildings,
                             contentDescription = null,
                             tint = colors.iconNorm,
                             modifier = Modifier.size(20.dp)
@@ -554,7 +550,7 @@ fun CityCard(
                     modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
+                        imageVector = ProtonIcons.ThreeDotsVertical,
                         contentDescription = stringResource(R.string.desc_more_options),
                         tint = colors.iconWeak
                     )

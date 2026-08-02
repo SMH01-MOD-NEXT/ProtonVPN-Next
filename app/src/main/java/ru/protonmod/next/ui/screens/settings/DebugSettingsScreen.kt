@@ -24,8 +24,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Input
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -45,6 +43,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -126,7 +125,7 @@ fun DebugSettingsScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.BugReport,
+                                    imageVector = ProtonIcons.Bug,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
                                     tint = Color.Red
@@ -192,7 +191,7 @@ fun DebugSettingsScreen(
                                         shape = RoundedCornerShape(12.dp),
                                         enabled = !uiState.isLoading
                                     ) {
-                                        Icon(Icons.Rounded.Refresh, contentDescription = null)
+                                        Icon(ProtonIcons.ArrowsRotate, contentDescription = null)
                                         Spacer(Modifier.width(8.dp))
                                         Text(stringResource(R.string.debug_btn_refresh_cert))
                                     }
@@ -204,7 +203,7 @@ fun DebugSettingsScreen(
                                         shape = RoundedCornerShape(12.dp),
                                         enabled = !uiState.isLoading
                                     ) {
-                                        Icon(Icons.Rounded.Refresh, contentDescription = null)
+                                        Icon(ProtonIcons.ArrowsRotate, contentDescription = null)
                                         Spacer(Modifier.width(8.dp))
                                         Text(stringResource(R.string.debug_btn_refresh_session))
                                     }
@@ -216,7 +215,7 @@ fun DebugSettingsScreen(
                                         shape = RoundedCornerShape(12.dp),
                                         enabled = !uiState.isLoading
                                     ) {
-                                        Icon(Icons.Rounded.BugReport, contentDescription = null)
+                                        Icon(ProtonIcons.Bug, contentDescription = null)
                                         Spacer(Modifier.width(8.dp))
                                         Text(stringResource(R.string.debug_btn_simulate_expired_cert))
                                     }
@@ -235,27 +234,27 @@ fun DebugSettingsScreen(
                             DebugSection(title = stringResource(R.string.debug_exports_header)) {
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                     DebugActionRow(
-                                        icon = Icons.Rounded.History,
+                                        icon = ProtonIcons.ClockRotateLeft,
                                         title = stringResource(R.string.debug_btn_export_logs),
                                         onClick = { viewModel.exportLogs() }
                                     )
                                     DebugActionRow(
-                                        icon = Icons.Rounded.FileDownload,
+                                        icon = ProtonIcons.ArrowDownLine,
                                         title = stringResource(R.string.debug_btn_export_config),
                                         onClick = { showServerSelect = true }
                                     )
                                     DebugActionRow(
-                                        icon = Icons.Rounded.ContentCopy,
+                                        icon = ProtonIcons.Squares,
                                         title = stringResource(R.string.debug_btn_export_session),
                                         onClick = { showExportConfirm = true }
                                     )
                                     DebugActionRow(
-                                        icon = Icons.AutoMirrored.Rounded.Input,
+                                        icon = ProtonIcons.ArrowInToRectangle,
                                         title = stringResource(R.string.debug_btn_import_session),
                                         onClick = { showImportDialog = true }
                                     )
                                     DebugActionRow(
-                                        icon = Icons.Rounded.Public,
+                                        icon = ProtonIcons.Globe,
                                         title = stringResource(R.string.debug_btn_fetch_domains),
                                         onClick = { viewModel.fetchAvailableDomains() }
                                     )
@@ -288,47 +287,47 @@ fun DebugSettingsScreen(
                                 ) {
                                     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                         DebugActionRow(
-                                            icon = Icons.Rounded.BugReport,
+                                            icon = ProtonIcons.Bug,
                                             title = stringResource(R.string.debug_btn_fake_crash),
                                             onClick = { viewModel.triggerJavaCrash() }
                                         )
                                         DebugActionRow(
-                                            icon = Icons.Rounded.BugReport,
+                                            icon = ProtonIcons.Bug,
                                             title = stringResource(R.string.debug_btn_crash_java),
                                             onClick = { viewModel.triggerJavaCrash() }
                                         )
                                         DebugActionRow(
-                                            icon = Icons.Rounded.BugReport,
+                                            icon = ProtonIcons.Bug,
                                             title = stringResource(R.string.debug_btn_crash_native),
                                             onClick = { viewModel.triggerNativeCrash() }
                                         )
                                         DebugActionRow(
-                                            icon = Icons.Rounded.BugReport,
+                                            icon = ProtonIcons.Bug,
                                             title = stringResource(R.string.debug_btn_arithmetic_error),
                                             onClick = { viewModel.triggerArithmeticException() }
                                         )
                                         DebugActionRow(
-                                            icon = Icons.Rounded.BugReport,
+                                            icon = ProtonIcons.Bug,
                                             title = stringResource(R.string.debug_btn_null_pointer),
                                             onClick = { viewModel.triggerNullPointer() }
                                         )
                                         DebugActionRow(
-                                            icon = Icons.Rounded.BugReport,
+                                            icon = ProtonIcons.Bug,
                                             title = stringResource(R.string.debug_btn_background_crash),
                                             onClick = { viewModel.triggerBackgroundCrash() }
                                         )
                                         DebugActionRow(
-                                            icon = Icons.Rounded.History,
+                                            icon = ProtonIcons.ClockRotateLeft,
                                             title = stringResource(R.string.debug_btn_anr),
                                             onClick = { viewModel.triggerAnr() }
                                         )
                                         DebugActionRow(
-                                            icon = Icons.Rounded.CleaningServices,
+                                            icon = ProtonIcons.Broom,
                                             title = stringResource(R.string.debug_btn_oom),
                                             onClick = { viewModel.triggerOom() }
                                         )
                                         DebugActionRow(
-                                            icon = Icons.Rounded.Info,
+                                            icon = ProtonIcons.InfoCircle,
                                             title = stringResource(R.string.debug_btn_capture_exception),
                                             onClick = { viewModel.captureNonFatal() }
                                         )
@@ -351,7 +350,7 @@ fun DebugSettingsScreen(
                                     colors = ButtonDefaults.buttonColors(containerColor = colors.notificationError),
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
-                                    Icon(Icons.Rounded.CleaningServices, contentDescription = null)
+                                    Icon(ProtonIcons.Broom, contentDescription = null)
                                     Spacer(Modifier.width(8.dp))
                                     Text(stringResource(R.string.debug_btn_nuke))
                                 }

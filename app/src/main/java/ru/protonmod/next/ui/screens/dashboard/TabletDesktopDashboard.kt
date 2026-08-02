@@ -41,18 +41,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ShowChart
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.rounded.AccessTime
-import androidx.compose.material.icons.rounded.BarChart
-import androidx.compose.material.icons.rounded.ChevronLeft
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Public
-import androidx.compose.material.icons.rounded.Speed
-import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -90,6 +78,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.FlagIcon
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -286,9 +275,9 @@ private fun DesktopConnectionCard(
                 } else {
                     Icon(
                         imageVector = when (state.quickConnectStrategy) {
-                            "profile" -> Icons.Rounded.Star
-                            "recent" -> Icons.Rounded.History
-                            else -> if (state.isConnected) Icons.Rounded.Public else Icons.Rounded.Speed
+                            "profile" -> ProtonIcons.Star
+                            "recent" -> ProtonIcons.ClockRotateLeft
+                            else -> if (state.isConnected) ProtonIcons.Globe else ProtonIcons.Bolt
                         },
                         contentDescription = null,
                         tint = if (state.isConnected) colors.notificationSuccess else colors.brandNorm,
@@ -314,7 +303,7 @@ private fun DesktopConnectionCard(
                 )
             }
             Icon(
-                imageVector = Icons.Rounded.ChevronRight,
+                imageVector = ProtonIcons.ChevronRight,
                 contentDescription = stringResource(R.string.desc_change_server),
                 tint = Color.White.copy(alpha = 0.30f),
                 modifier = Modifier.size(18.dp)
@@ -515,7 +504,7 @@ private fun DesktopStatsCard(
     var slide by rememberSaveable { mutableIntStateOf(0) }
     Column(modifier = modifier.liquidGlass(shape = RoundedCornerShape(24.dp)).padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-            val icon = when (slide) { 0 -> Icons.AutoMirrored.Rounded.ShowChart; 1 -> Icons.Rounded.BarChart; else -> Icons.Rounded.AccessTime }
+            val icon = when (slide) { 0 -> ProtonIcons.ChartLine; 1 -> ProtonIcons.ChartLine; else -> ProtonIcons.Clock }
             val title = when (slide) { 0 -> R.string.stats_title_traffic; 1 -> R.string.stats_title_analytics; else -> R.string.stats_title_usage }
             Icon(icon, null, tint = colors.brandNorm, modifier = Modifier.size(16.dp))
             Text(
@@ -526,12 +515,12 @@ private fun DesktopStatsCard(
                 color = Color.White.copy(alpha = 0.80f),
                 modifier = Modifier.padding(start = 8.dp).weight(1f)
             )
-            DesktopStatIconButton({ slide = (slide + 2) % 3 }) { Icon(Icons.Rounded.ChevronLeft, stringResource(R.string.stats_prev_desc), tint = Color.White, modifier = Modifier.size(18.dp)) }
+            DesktopStatIconButton({ slide = (slide + 2) % 3 }) { Icon(ProtonIcons.ChevronLeft, stringResource(R.string.stats_prev_desc), tint = Color.White, modifier = Modifier.size(18.dp)) }
             Spacer(Modifier.width(6.dp))
-            DesktopStatIconButton({ slide = (slide + 1) % 3 }) { Icon(Icons.Rounded.ChevronRight, stringResource(R.string.stats_next_desc), tint = Color.White, modifier = Modifier.size(18.dp)) }
+            DesktopStatIconButton({ slide = (slide + 1) % 3 }) { Icon(ProtonIcons.ChevronRight, stringResource(R.string.stats_next_desc), tint = Color.White, modifier = Modifier.size(18.dp)) }
             Spacer(Modifier.width(8.dp))
             DesktopStatIconButton(onToggle) {
-                Icon(if (stats.enabled) Icons.Default.Visibility else Icons.Default.VisibilityOff, stringResource(R.string.stats_toggle_desc), tint = if (stats.enabled) colors.brandNorm else colors.textWeak, modifier = Modifier.size(16.dp))
+                Icon(if (stats.enabled) ProtonIcons.Eye else ProtonIcons.EyeSlash, stringResource(R.string.stats_toggle_desc), tint = if (stats.enabled) colors.brandNorm else colors.textWeak, modifier = Modifier.size(16.dp))
             }
         }
         Box(modifier = Modifier.fillMaxWidth().weight(1f).padding(top = 10.dp)) {
@@ -654,7 +643,7 @@ private fun DesktopUsageRow(label: String, seconds: Long) {
             .border(1.dp, Color.White.copy(alpha = 0.03f), RoundedCornerShape(12.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Rounded.AccessTime, null, tint = ProtonNextTheme.colors.brandNorm.copy(alpha = 0.60f), modifier = Modifier.size(14.dp))
+        Icon(ProtonIcons.Clock, null, tint = ProtonNextTheme.colors.brandNorm.copy(alpha = 0.60f), modifier = Modifier.size(14.dp))
         Text(label, fontSize = 13.sp, color = ProtonNextTheme.colors.textWeak, modifier = Modifier.padding(start = 10.dp).weight(1f))
         Text(formatStatDuration(seconds), fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color.White)
     }

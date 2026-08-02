@@ -11,9 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Security
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +27,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 
@@ -89,7 +87,7 @@ fun CertSettingsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Security,
+                            imageVector = ProtonIcons.Shield,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = colors.brandNorm
@@ -133,7 +131,7 @@ fun CertSettingsScreen(
                             } else {
                                 stringResource(R.string.settings_extended_cert_disabled)
                             },
-                            icon = Icons.Rounded.Security,
+                            icon = ProtonIcons.Shield,
                             checked = uiState.isExtendedCertEnabled,
                             onCheckedChange = { viewModel.setExtendedCertEnabled(it) }
                         )
@@ -162,7 +160,7 @@ fun CertSettingsScreen(
                         )
 
                         SettingRowWithIcon(
-                            icon = Icons.Rounded.Refresh,
+                            icon = ProtonIcons.ArrowsRotate,
                             title = stringResource(R.string.debug_btn_refresh_cert),
                             subtitle = if (uiState.isLoading) stringResource(R.string.settings_cert_loading) else stringResource(R.string.settings_cert_refresh_desc),
                             onClick = { viewModel.forceRefreshCertificate() }

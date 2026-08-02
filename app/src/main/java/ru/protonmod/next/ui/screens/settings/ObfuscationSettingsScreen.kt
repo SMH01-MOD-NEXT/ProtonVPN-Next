@@ -26,7 +26,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -45,6 +44,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -130,7 +130,7 @@ fun ObfuscationSettingsScreen(
                                 if (protectionMode == ProtectionMode.AWG) {
                                     IconButton(onClick = { viewModel.resetToStandard() }) {
                                         Icon(
-                                            imageVector = Icons.Rounded.Refresh,
+                                            imageVector = ProtonIcons.ArrowsRotate,
                                             contentDescription = stringResource(R.string.settings_reset_obfuscation),
                                             tint = colors.brandNorm
                                         )
@@ -150,7 +150,7 @@ fun ObfuscationSettingsScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.VisibilityOff,
+                                    imageVector = ProtonIcons.EyeSlash,
                                     contentDescription = null,
                                     modifier = Modifier.size(56.dp),
                                     tint = colors.brandNorm
@@ -422,7 +422,7 @@ fun ObfuscationSettingsScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
                                     ) {
-                                        Icon(Icons.Rounded.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                                        Icon(ProtonIcons.ArrowsRotate, contentDescription = null, modifier = Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(stringResource(R.string.obfuscation_regenerate_i1))
                                     }
@@ -435,7 +435,7 @@ fun ObfuscationSettingsScreen(
                                         shape = RoundedCornerShape(12.dp),
                                         border = BorderStroke(1.dp, colors.brandNorm.copy(alpha = 0.5f))
                                     ) {
-                                        Icon(Icons.Rounded.Public, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
+                                        Icon(ProtonIcons.Globe, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(stringResource(R.string.obfuscation_btn_generate_from_domain), color = colors.brandNorm)
                                     }
@@ -693,7 +693,7 @@ fun ObfuscationSettingsScreen(
                                                 .padding(8.dp),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Icon(Icons.Rounded.Warning, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
+                                            Icon(ProtonIcons.ExclamationTriangleFilled, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(stringResource(R.string.obfuscation_hp_warning), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onErrorContainer)
                                         }
@@ -715,7 +715,7 @@ fun ObfuscationSettingsScreen(
                                                 .size(48.dp)
                                                 .background(colors.backgroundNorm, RoundedCornerShape(12.dp))
                                         ) {
-                                            Icon(Icons.Rounded.AutoFixHigh, contentDescription = stringResource(R.string.obfuscation_hp_generate), tint = colors.brandNorm)
+                                            Icon(ProtonIcons.MagicProtonWand, contentDescription = stringResource(R.string.obfuscation_hp_generate), tint = colors.brandNorm)
                                         }
                                     }
                                     Text(stringResource(R.string.obfuscation_hp_key_desc), style = MaterialTheme.typography.labelSmall, color = colors.textWeak)
@@ -842,7 +842,7 @@ fun ObfuscationSettingsScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = colors.backgroundSecondary)
                                 ) {
-                                    Icon(Icons.Rounded.Save, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.textNorm)
+                                    Icon(ProtonIcons.ArrowDownToSquare, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.textNorm)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(stringResource(R.string.btn_save), color = colors.textNorm)
                                 }
@@ -854,7 +854,7 @@ fun ObfuscationSettingsScreen(
                                 onClick = { showSaveDialog = true },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
+                                Icon(ProtonIcons.Plus, contentDescription = null, modifier = Modifier.size(18.dp), tint = colors.brandNorm)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(stringResource(R.string.obfuscation_save_config), color = colors.brandNorm)
                             }
@@ -1018,7 +1018,7 @@ fun InfoCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Rounded.Info,
+                imageVector = ProtonIcons.InfoCircle,
                 contentDescription = null,
                 tint = colors.brandNorm,
                 modifier = Modifier.size(24.dp)

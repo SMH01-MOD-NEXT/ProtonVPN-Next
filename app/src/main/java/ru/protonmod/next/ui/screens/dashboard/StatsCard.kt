@@ -30,14 +30,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ShowChart
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.rounded.AccessTime
-import androidx.compose.material.icons.rounded.BarChart
-import androidx.compose.material.icons.rounded.ChevronLeft
-import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -46,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,8 +55,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.collections.immutable.ImmutableList
-import androidx.compose.runtime.remember
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 
@@ -90,9 +83,9 @@ fun StatsCard(
         // Header: slide icon + title, chevrons, eye toggle.
         Row(verticalAlignment = Alignment.CenterVertically) {
             val (icon, title) = when (slide) {
-                0 -> Icons.AutoMirrored.Rounded.ShowChart to stringResource(R.string.stats_title_traffic)
-                1 -> Icons.Rounded.BarChart to stringResource(R.string.stats_title_analytics)
-                else -> Icons.Rounded.AccessTime to stringResource(R.string.stats_title_usage)
+                0 -> ProtonIcons.ChartLine to stringResource(R.string.stats_title_traffic)
+                1 -> ProtonIcons.ChartLine to stringResource(R.string.stats_title_analytics)
+                else -> ProtonIcons.Clock to stringResource(R.string.stats_title_usage)
             }
             Icon(
                 imageVector = icon,
@@ -114,21 +107,21 @@ fun StatsCard(
             )
             IconButton(onClick = { slide = (slide + 2) % 3 }, modifier = Modifier.size(28.dp)) {
                 Icon(
-                    Icons.Rounded.ChevronLeft,
+                    ProtonIcons.ChevronLeft,
                     contentDescription = stringResource(R.string.stats_prev_desc),
                     tint = ProtonNextTheme.colors.iconWeak
                 )
             }
             IconButton(onClick = { slide = (slide + 1) % 3 }, modifier = Modifier.size(28.dp)) {
                 Icon(
-                    Icons.Rounded.ChevronRight,
+                    ProtonIcons.ChevronRight,
                     contentDescription = stringResource(R.string.stats_next_desc),
                     tint = ProtonNextTheme.colors.iconWeak
                 )
             }
             IconButton(onClick = onToggle, modifier = Modifier.size(28.dp)) {
                 Icon(
-                    imageVector = if (stats.enabled) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                    imageVector = if (stats.enabled) ProtonIcons.Eye else ProtonIcons.EyeSlash,
                     contentDescription = stringResource(R.string.stats_toggle_desc),
                     tint = ProtonNextTheme.colors.iconWeak,
                     modifier = Modifier.size(16.dp)
@@ -160,7 +153,7 @@ private fun StatsDisabledOverlay(onEnable: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            Icons.Default.VisibilityOff,
+            ProtonIcons.EyeSlash,
             contentDescription = null,
             tint = ProtonNextTheme.colors.iconWeak,
             modifier = Modifier.size(28.dp)
@@ -395,7 +388,7 @@ private fun UsageRow(label: String, seconds: Long) {
             modifier = Modifier.weight(1f)
         )
         Icon(
-            imageVector = Icons.Rounded.AccessTime,
+            imageVector = ProtonIcons.Clock,
             contentDescription = null,
             tint = ProtonNextTheme.colors.iconWeak,
             modifier = Modifier.size(13.dp)

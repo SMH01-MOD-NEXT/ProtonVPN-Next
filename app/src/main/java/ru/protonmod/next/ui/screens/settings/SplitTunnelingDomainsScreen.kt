@@ -28,10 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.rounded.Language
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,6 +46,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -136,7 +133,7 @@ fun SplitTunnelingDomainsScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Language,
+                                    imageVector = ProtonIcons.Language,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
                                     tint = colors.brandNorm
@@ -247,7 +244,7 @@ fun SplitTunnelingDomainsScreen(
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Add,
+                                            imageVector = ProtonIcons.Plus,
                                             contentDescription = stringResource(R.string.st_add_domain_desc),
                                             tint = if (inputValue.isNotBlank()) colors.textInverted
                                             else colors.iconWeak
@@ -337,7 +334,7 @@ fun DomainListItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Language,
+                    imageVector = ProtonIcons.Language,
                     contentDescription = null,
                     tint = colors.brandNorm,
                     modifier = Modifier.size(20.dp)
@@ -355,7 +352,7 @@ fun DomainListItem(
 
             // Remove Icon
             Icon(
-                imageVector = Icons.Default.Close,
+                imageVector = ProtonIcons.Cross,
                 contentDescription = stringResource(R.string.st_remove_domain_desc),
                 tint = colors.iconWeak,
                 modifier = Modifier.size(24.dp)

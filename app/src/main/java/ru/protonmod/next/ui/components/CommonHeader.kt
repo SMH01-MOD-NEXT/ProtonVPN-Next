@@ -18,8 +18,6 @@
 package ru.protonmod.next.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -28,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @Composable
@@ -46,7 +45,7 @@ fun NavigationHeader(
     ) {
         IconButton(onClick = onBack) {
             Icon(
-                Icons.AutoMirrored.Filled.ArrowBack,
+                ProtonIcons.ArrowLeft,
                 contentDescription = stringResource(R.string.desc_back_button),
                 tint = colors.textNorm
             )

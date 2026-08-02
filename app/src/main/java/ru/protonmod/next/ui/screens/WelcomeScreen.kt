@@ -31,11 +31,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.ShowChart
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -68,6 +63,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SetupStep
 import ru.protonmod.next.ui.components.*
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.screens.settings.LoadModePreviewCard
 import ru.protonmod.next.ui.screens.settings.ThemePreviewCard
 import ru.protonmod.next.ui.theme.AppTheme
@@ -220,7 +216,7 @@ fun WelcomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Security,
+                        imageVector = ProtonIcons.Shield,
                         contentDescription = null,
                         modifier = Modifier.size(20.dp)
                     )
@@ -524,7 +520,7 @@ private fun StepLoginEmail(
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Rounded.Person, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+            Icon(ProtonIcons.User, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
         }
         
         Spacer(modifier = Modifier.height(32.dp))
@@ -549,7 +545,7 @@ private fun StepLoginEmail(
             label = { Text(stringResource(R.string.hint_username)) },
             modifier = Modifier.fillMaxWidth(),
             shape = CircleShape,
-            leadingIcon = { Icon(Icons.Rounded.Mail, null) },
+            leadingIcon = { Icon(ProtonIcons.Envelope, null) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { if (email.isNotBlank()) onNext(email) })
         )
@@ -584,7 +580,7 @@ private fun StepLoginPassword(
                 modifier = Modifier.size(48.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Rounded.Person, null, tint = colors.brandNorm)
+                Icon(ProtonIcons.User, null, tint = colors.brandNorm)
             }
             Spacer(modifier = Modifier.width(16.dp))
             Text(text = email, style = MaterialTheme.typography.titleMedium, color = colors.textNorm)
@@ -598,11 +594,11 @@ private fun StepLoginPassword(
             label = { Text(stringResource(R.string.hint_password)) },
             modifier = Modifier.fillMaxWidth(),
             shape = CircleShape,
-            leadingIcon = { Icon(Icons.Rounded.Lock, null) },
+            leadingIcon = { Icon(ProtonIcons.Lock, null) },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, null)
+                    Icon(if (passwordVisible) ProtonIcons.Eye else ProtonIcons.EyeSlash, null)
                 }
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
@@ -698,7 +694,7 @@ private fun StepConfigPort(onNext: (Int) -> Unit, onBack: () -> Unit) {
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Rounded.Lan, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+            Icon(ProtonIcons.Servers, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
         }
         
         Spacer(modifier = Modifier.height(32.dp))
@@ -747,7 +743,7 @@ private fun StepConfigPort(onNext: (Int) -> Unit, onBack: () -> Unit) {
                             )
                         }
                         if (isSelected) {
-                            Icon(Icons.Rounded.CheckCircle, null, tint = colors.brandNorm)
+                            Icon(ProtonIcons.CheckmarkCircle, null, tint = colors.brandNorm)
                         } else {
                             RadioButton(selected = false, onClick = null)
                         }
@@ -776,7 +772,7 @@ private fun StepConfigObfuscation(onNext: (Boolean) -> Unit, onBack: () -> Unit)
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Rounded.Security, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+            Icon(ProtonIcons.Shield, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
         }
         
         Spacer(modifier = Modifier.height(32.dp))
@@ -854,7 +850,7 @@ private fun StepConfigServerLoad(onNext: (ServerLoadDisplayMode) -> Unit, onBack
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.AutoMirrored.Rounded.ShowChart, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+            Icon(ProtonIcons.ChartLine, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
         }
         
         Spacer(modifier = Modifier.height(32.dp))
@@ -901,7 +897,7 @@ private fun StepConfigTheme(onNext: (AppTheme) -> Unit, onBack: () -> Unit) {
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Rounded.Palette, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+            Icon(ProtonIcons.Palette, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
         }
         
         Spacer(modifier = Modifier.height(32.dp))
@@ -954,7 +950,7 @@ private fun StepConfigTelemetry(
             modifier = Modifier.size(64.dp).clip(CircleShape).background(colors.brandNorm.copy(alpha = 0.1f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Rounded.PrivacyTip, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
+            Icon(ProtonIcons.ShieldHalfFilled, null, modifier = Modifier.size(32.dp), tint = colors.brandNorm)
         }
         Spacer(modifier = Modifier.height(24.dp))
         Text(
@@ -1100,7 +1096,7 @@ private fun StepComplete(onFinish: () -> Unit) {
         verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(64.dp))
-        Icon(Icons.Rounded.CheckCircle, null, modifier = Modifier.size(80.dp), tint = colors.brandNorm)
+        Icon(ProtonIcons.CheckmarkCircle, null, modifier = Modifier.size(80.dp), tint = colors.brandNorm)
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = stringResource(R.string.setup_complete_title),
@@ -1126,10 +1122,10 @@ private fun StepComplete(onFinish: () -> Unit) {
         )
         
         Spacer(modifier = Modifier.height(48.dp))
-        ShowcaseCard(stringResource(R.string.setup_showcase_speed_title), stringResource(R.string.setup_showcase_speed_desc), Icons.Rounded.Speed)
-        ShowcaseCard(stringResource(R.string.setup_showcase_privacy_title), stringResource(R.string.setup_showcase_privacy_desc), Icons.Rounded.Fingerprint)
-        ShowcaseCard(stringResource(R.string.setup_showcase_security_title), stringResource(R.string.setup_showcase_security_desc), Icons.Rounded.Security)
-        ShowcaseCard(stringResource(R.string.setup_showcase_bypass_title), stringResource(R.string.setup_showcase_bypass_desc), Icons.Rounded.Public)
+        ShowcaseCard(stringResource(R.string.setup_showcase_speed_title), stringResource(R.string.setup_showcase_speed_desc), ProtonIcons.Bolt)
+        ShowcaseCard(stringResource(R.string.setup_showcase_privacy_title), stringResource(R.string.setup_showcase_privacy_desc), ProtonIcons.Fingerprint)
+        ShowcaseCard(stringResource(R.string.setup_showcase_security_title), stringResource(R.string.setup_showcase_security_desc), ProtonIcons.Shield)
+        ShowcaseCard(stringResource(R.string.setup_showcase_bypass_title), stringResource(R.string.setup_showcase_bypass_desc), ProtonIcons.Globe)
         
         Spacer(modifier = Modifier.height(32.dp))
         Button(

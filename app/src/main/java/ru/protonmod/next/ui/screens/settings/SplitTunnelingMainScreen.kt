@@ -29,11 +29,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.AltRoute
-import androidx.compose.material.icons.rounded.Apps
-import androidx.compose.material.icons.rounded.Dns
-import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,6 +46,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 
@@ -120,7 +116,7 @@ fun SplitTunnelingMainScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.AltRoute,
+                            imageVector = ProtonIcons.ArrowsSwitch,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = colors.brandNorm
@@ -168,7 +164,7 @@ fun SplitTunnelingMainScreen(
                             } else {
                                 stringResource(R.string.st_disabled_subtitle)
                             },
-                            icon = Icons.AutoMirrored.Rounded.AltRoute,
+                            icon = ProtonIcons.ArrowsSwitch,
                             checked = uiState.splitTunnelingEnabled,
                             onCheckedChange = { viewModel.setSplitTunneling(it) }
                         )
@@ -215,7 +211,7 @@ fun SplitTunnelingMainScreen(
                                 val isExcludeMode = uiState.splitTunnelingMode == "exclude"
 
                                 SettingRowWithIcon(
-                                    icon = Icons.Rounded.Apps,
+                                    icon = ProtonIcons.Grid3,
                                     title = stringResource(
                                         if (isExcludeMode) R.string.settings_excluded_apps 
                                         else R.string.settings_included_apps
@@ -234,7 +230,7 @@ fun SplitTunnelingMainScreen(
                                 )
 
                                 SettingRowWithIcon(
-                                    icon = Icons.Rounded.Dns,
+                                    icon = ProtonIcons.Servers,
                                     title = stringResource(
                                         if (isExcludeMode) R.string.settings_excluded_ips
                                         else R.string.settings_included_ips
@@ -253,7 +249,7 @@ fun SplitTunnelingMainScreen(
                                 )
 
                                 SettingRowWithIcon(
-                                    icon = Icons.Rounded.Public,
+                                    icon = ProtonIcons.Globe,
                                     title = stringResource(
                                         if (isExcludeMode) R.string.settings_excluded_domains
                                         else R.string.settings_included_domains

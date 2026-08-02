@@ -29,10 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -54,6 +50,7 @@ import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.utils.isTablet
 
@@ -135,7 +132,7 @@ fun LoginScreen(
                                 Spacer(modifier = Modifier.height(12.dp))
 
                                 Icon(
-                                    imageVector = Icons.Default.Shield,
+                                    imageVector = ProtonIcons.Shield,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
                                     tint = colors.brandNorm
@@ -241,7 +238,7 @@ fun LoginScreen(
 
                                 // Logo representation
                                 Icon(
-                                    imageVector = Icons.Default.Shield,
+                                    imageVector = ProtonIcons.Shield,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
                                     tint = colors.brandNorm
@@ -303,7 +300,7 @@ fun LoginScreen(
                                         ),
                                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                                         trailingIcon = {
-                                            val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                                            val image = if (passwordVisible) ProtonIcons.Eye else ProtonIcons.EyeSlash
                                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                                 Icon(imageVector = image, contentDescription = stringResource(R.string.desc_toggle_password), tint = colors.iconWeak)
                                             }

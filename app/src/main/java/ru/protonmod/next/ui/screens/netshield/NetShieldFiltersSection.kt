@@ -30,11 +30,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.FileOpen
-import androidx.compose.material.icons.rounded.Link
-import androidx.compose.material.icons.rounded.PlaylistAdd
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +53,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.netshield.NetShieldCategory
 import ru.protonmod.next.netshield.NetShieldSourcePreset
 import ru.protonmod.next.netshield.NetShieldSources
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 
@@ -104,12 +100,12 @@ fun NetShieldCustomFiltersSection(
                 },
                 enabled = rules.isNotBlank() && !state.lists.isImporting,
             ) {
-                Icon(Icons.Rounded.PlaylistAdd, contentDescription = null, tint = colors.brandNorm)
+                Icon(ProtonIcons.ListBullets, contentDescription = null, tint = colors.brandNorm)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.netshield_custom_filters_add), color = colors.brandNorm)
             }
             TextButton(onClick = onPickFile, enabled = !state.lists.isImporting) {
-                Icon(Icons.Rounded.FileOpen, contentDescription = null, tint = colors.brandNorm)
+                Icon(ProtonIcons.FileArrowIn, contentDescription = null, tint = colors.brandNorm)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.netshield_custom_filters_import_file), color = colors.brandNorm)
             }
@@ -132,12 +128,12 @@ fun NetShieldCustomFiltersSection(
                 },
                 enabled = url.isNotBlank() && !state.lists.isImporting,
             ) {
-                Icon(Icons.Rounded.Link, contentDescription = null, tint = colors.brandNorm)
+                Icon(ProtonIcons.Link, contentDescription = null, tint = colors.brandNorm)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.netshield_custom_filters_import_url), color = colors.brandNorm)
             }
             TextButton(onClick = onClear, enabled = state.lists.customDomainCount > 0) {
-                Icon(Icons.Rounded.Delete, contentDescription = null, tint = colors.notificationError)
+                Icon(ProtonIcons.Trash, contentDescription = null, tint = colors.notificationError)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.netshield_custom_filters_clear), color = colors.notificationError)
             }

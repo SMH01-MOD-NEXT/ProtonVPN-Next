@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -40,6 +39,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.ai.AiProfilePreview
 import ru.protonmod.next.data.ai.AiProposal
 import ru.protonmod.next.data.ai.AiProposedAction
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.screens.profiles.FeatureBadge
 import ru.protonmod.next.ui.screens.profiles.getProfileAccent
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -89,7 +89,7 @@ private fun ProposalContent(
                 Modifier.size(42.dp).background(colors.brandNorm.copy(alpha = 0.14f), CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Rounded.AutoAwesome, null, tint = colors.brandNorm, modifier = Modifier.size(22.dp))
+                Icon(ProtonIcons.MagicProtonWand, null, tint = colors.brandNorm, modifier = Modifier.size(22.dp))
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
@@ -108,7 +108,7 @@ private fun ProposalContent(
                 )
             }
             IconButton(onClick = onDismiss, enabled = !isProcessing) {
-                Icon(Icons.Rounded.Close, stringResource(R.string.ai_proposal_close), tint = colors.iconWeak)
+                Icon(ProtonIcons.Cross, stringResource(R.string.ai_proposal_close), tint = colors.iconWeak)
             }
         }
 
@@ -164,7 +164,7 @@ private fun ProposalContent(
                 if (isProcessing) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = colors.textInverted)
                 } else {
-                    Icon(Icons.Rounded.Check, null, modifier = Modifier.size(18.dp))
+                    Icon(ProtonIcons.Checkmark, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.ai_proposal_apply))
                 }
@@ -336,10 +336,10 @@ private fun GenericProposalAction(action: AiProposedAction) {
         ) {
             Icon(
                 imageVector = when (action.type) {
-                    "delete_profile" -> Icons.Rounded.Delete
-                    "refresh_servers" -> Icons.Rounded.Sync
-                    "set_obfuscation", "set_awg_params" -> Icons.Rounded.Security
-                    else -> Icons.Rounded.Tune
+                    "delete_profile" -> ProtonIcons.Trash
+                    "refresh_servers" -> ProtonIcons.ArrowsRotate
+                    "set_obfuscation", "set_awg_params" -> ProtonIcons.Shield
+                    else -> ProtonIcons.Sliders
                 },
                 contentDescription = null,
                 tint = accent,

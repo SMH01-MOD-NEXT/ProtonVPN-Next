@@ -30,8 +30,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -57,6 +55,7 @@ import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.delay
 import ru.protonmod.next.R
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -212,7 +211,7 @@ private fun AiInputRow(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Rounded.AutoAwesome,
+                imageVector = ProtonIcons.MagicProtonWand,
                 contentDescription = null,
                 tint = colors.brandNorm,
                 modifier = Modifier.size(22.dp)
@@ -269,7 +268,7 @@ private fun AiInputRow(
                 CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = colors.brandNorm)
             } else {
                 Icon(
-                    imageVector = if (query.isNotBlank()) Icons.AutoMirrored.Rounded.Send else Icons.Rounded.Close,
+                    imageVector = if (query.isNotBlank()) ProtonIcons.PaperPlane else ProtonIcons.Cross,
                     contentDescription = null,
                     modifier = Modifier.size(19.dp)
                 )
@@ -359,7 +358,7 @@ private fun NavigationItem(
         label = "iconColor"
     )
 
-    val iconVector = getMaterialIconForTarget(target)
+    val iconVector = getProtonIconForTarget(target)
 
     Box(
         contentAlignment = Alignment.Center,
@@ -408,11 +407,12 @@ private fun NavigationItem(
     }
 }
 
-private fun getMaterialIconForTarget(target: MainTarget): ImageVector {
+@Composable
+private fun getProtonIconForTarget(target: MainTarget): ImageVector {
     return when (target) {
-        MainTarget.Home -> Icons.Rounded.Home
-        MainTarget.Profiles -> Icons.Rounded.Terminal
-        MainTarget.Countries -> Icons.Rounded.Public
-        MainTarget.Settings -> Icons.Rounded.Settings
+        MainTarget.Home -> ProtonIcons.House
+        MainTarget.Profiles -> ProtonIcons.WindowTerminal
+        MainTarget.Countries -> ProtonIcons.Globe
+        MainTarget.Settings -> ProtonIcons.CogWheel
     }
 }

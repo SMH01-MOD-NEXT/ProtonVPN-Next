@@ -31,10 +31,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.BugReport
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -52,6 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -116,7 +113,7 @@ fun ByeDpiTestScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.BugReport,
+                            imageVector = ProtonIcons.Bug,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = colors.brandNorm
@@ -329,7 +326,7 @@ fun TestingProgressCard(
                     colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Icon(Icons.Rounded.PlayArrow, contentDescription = null)
+                    Icon(ProtonIcons.Play, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.btn_start_test))
                 }
@@ -361,7 +358,7 @@ fun ResultItem(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = if (result.successCount == result.totalSites) Icons.Rounded.CheckCircle else Icons.Rounded.BugReport,
+                        imageVector = if (result.successCount == result.totalSites) ProtonIcons.CheckmarkCircle else ProtonIcons.Bug,
                         contentDescription = null,
                         tint = if (result.successCount == result.totalSites) colors.notificationSuccess else colors.textWeak,
                         modifier = Modifier.size(20.dp)
@@ -380,7 +377,7 @@ fun ResultItem(
                         onClick = onCopy,
                         modifier = Modifier.size(32.dp).clip(CircleShape).background(colors.backgroundNorm.copy(alpha = 0.5f))
                     ) {
-                        Icon(Icons.Rounded.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp), tint = colors.textNorm)
+                        Icon(ProtonIcons.Squares, contentDescription = null, modifier = Modifier.size(16.dp), tint = colors.textNorm)
                     }
                     Button(
                         onClick = onApply,

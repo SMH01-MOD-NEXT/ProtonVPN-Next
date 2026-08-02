@@ -21,35 +21,32 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import ru.protonmod.next.ui.theme.liquidGlass
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material.icons.rounded.*
-import androidx.compose.material.icons.automirrored.rounded.AltRoute
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.BackupCategory
-import ru.protonmod.next.ui.theme.ProtonNextTheme
-import ru.protonmod.next.ui.theme.ProtonColors
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
+import ru.protonmod.next.ui.theme.ProtonColors
+import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.theme.liquidGlass
 
 @Composable
 fun BackupScreen(
@@ -158,12 +155,12 @@ private fun BackupScreenContent(
                             containerColor = colors.backgroundSecondary.copy(alpha = 0.85f),
                             contentColor = colors.brandNorm,
                         ) {
-                            Icon(Icons.Default.Download, contentDescription = null)
+                            Icon(ProtonIcons.ArrowDownLine, contentDescription = null)
                         }
 
                         ExtendedFloatingActionButton(
                             text = { Text(stringResource(R.string.backup_export)) },
-                            icon = { Icon(Icons.Default.Upload, contentDescription = null) },
+                            icon = { Icon(ProtonIcons.ArrowUpLine, contentDescription = null) },
                             onClick = onExport,
                             containerColor = colors.brandNorm,
                             contentColor = colors.textInverted
@@ -219,7 +216,7 @@ private fun BackupScreenContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.Backup,
+                                imageVector = ProtonIcons.Storage,
                                 contentDescription = null,
                                 modifier = Modifier.size(64.dp),
                                 tint = colors.brandNorm
@@ -301,18 +298,18 @@ private fun BackupScreenContent(
 @Composable
 private fun getCategoryIcon(category: BackupCategory): ImageVector {
     return when (category) {
-        BackupCategory.GENERAL_SETTINGS -> Icons.Rounded.Settings
-        BackupCategory.OBFUSCATION -> Icons.Rounded.Security
-        BackupCategory.API_BYPASS -> Icons.Rounded.CloudSync
-        BackupCategory.PROFILES -> Icons.Rounded.Description
-        BackupCategory.RECENT_CONNECTIONS -> Icons.Rounded.History
-        BackupCategory.QUICK_CONNECT -> Icons.Rounded.FlashOn
-        BackupCategory.SPLIT_TUNNELING -> Icons.AutoMirrored.Rounded.AltRoute
-        BackupCategory.VPN_PORT -> Icons.Rounded.Numbers
-        BackupCategory.DNS -> Icons.Rounded.Dns
-        BackupCategory.SPOOF_COUNTRY -> Icons.Rounded.Public
-        BackupCategory.OTA_UPDATES -> Icons.Rounded.SystemUpdate
-        BackupCategory.SENTRY_ANALYTICS -> Icons.Rounded.Analytics
+        BackupCategory.GENERAL_SETTINGS -> ProtonIcons.CogWheel
+        BackupCategory.OBFUSCATION -> ProtonIcons.Shield
+        BackupCategory.API_BYPASS -> ProtonIcons.Cloud
+        BackupCategory.PROFILES -> ProtonIcons.FileLines
+        BackupCategory.RECENT_CONNECTIONS -> ProtonIcons.ClockRotateLeft
+        BackupCategory.QUICK_CONNECT -> ProtonIcons.Bolt
+        BackupCategory.SPLIT_TUNNELING -> ProtonIcons.ArrowsSwitch
+        BackupCategory.VPN_PORT -> ProtonIcons.ListNumbers
+        BackupCategory.DNS -> ProtonIcons.Servers
+        BackupCategory.SPOOF_COUNTRY -> ProtonIcons.Globe
+        BackupCategory.OTA_UPDATES -> ProtonIcons.ArrowDownCircle
+        BackupCategory.SENTRY_ANALYTICS -> ProtonIcons.ChartLine
     }
 }
 

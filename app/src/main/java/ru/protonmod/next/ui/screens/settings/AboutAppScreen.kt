@@ -18,15 +18,13 @@
 package ru.protonmod.next.ui.screens.settings
 
 import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.rounded.Policy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,20 +32,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
-import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -258,7 +256,7 @@ fun AboutAppScreen(
                         ) {
                             Column {
                                 SettingRowWithIcon(
-                                    icon = Icons.AutoMirrored.Rounded.MenuBook,
+                                    icon = ProtonIcons.FileLines,
                                     title = stringResource(R.string.settings_licenses),
                                     subtitle = stringResource(R.string.settings_licenses_desc),
                                     onClick = onNavigateToLicenses
@@ -269,7 +267,7 @@ fun AboutAppScreen(
                                     color = colors.separatorNorm
                                 )
                                 SettingRowWithIcon(
-                                    icon = Icons.Rounded.Policy,
+                                    icon = ProtonIcons.ShieldHalfFilled,
                                     title = stringResource(R.string.settings_privacy_policy),
                                     subtitle = stringResource(R.string.settings_disclaimer),
                                     onClick = onNavigateToPrivacyPolicy

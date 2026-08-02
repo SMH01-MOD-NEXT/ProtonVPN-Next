@@ -30,8 +30,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,6 +41,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import java.io.ByteArrayInputStream
+import java.net.InetAddress
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.Dns
@@ -56,13 +57,11 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.ExpressiveLinearProgressIndicator
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
+import ru.protonmod.next.ui.utils.isTablet
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.ProtonLogger
-import ru.protonmod.next.ui.utils.isTablet
-import java.io.ByteArrayInputStream
-import java.net.InetAddress
-import java.util.concurrent.TimeUnit
 
 @SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -145,7 +144,7 @@ fun CaptchaScreen(
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
                             Icon(
-                                imageVector = Icons.Default.Close,
+                                imageVector = ProtonIcons.Cross,
                                 contentDescription = stringResource(id = R.string.desc_close),
                                 tint = colors.textNorm
                             )

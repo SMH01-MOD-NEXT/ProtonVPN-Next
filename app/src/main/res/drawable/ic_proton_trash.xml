@@ -1,0 +1,28 @@
+<!--
+  ~ Copyright (c) 2022 Proton Technologies AG
+  ~ This file is part of Proton AG and ProtonCore.
+  ~
+  ~ ProtonCore is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
+  ~
+  ~ ProtonCore is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License
+  ~ along with ProtonCore.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M9.8652,2C9.5811,2 9.3214,2.1605 9.1944,2.4146L7.9788,4.8457H3.4614C3.0472,4.8457 2.7114,5.1815 2.7114,5.5957C2.7114,6.0099 3.0472,6.3457 3.4614,6.3457H4.8794L5.4966,19.9251C5.5494,21.0857 6.5057,21.9995 7.6675,21.9995H16.3324C17.4942,21.9995 18.4504,21.0857 18.5032,19.9251L19.1204,6.3457H20.5383C20.9526,6.3457 21.2883,6.0099 21.2883,5.5957C21.2883,5.1815 20.9526,4.8457 20.5383,4.8457H16.0208L14.8053,2.4146C14.6782,2.1605 14.4185,2 14.1344,2H9.8652ZM14.3438,4.8457L13.6709,3.5H10.3287L9.6559,4.8457H14.3438ZM6.3809,6.3457H17.6189L17.0047,19.857C16.9884,20.2165 16.6922,20.4995 16.3324,20.4995H7.6675C7.3076,20.4995 7.0114,20.2165 6.9951,19.857L6.3809,6.3457ZM10.6152,9.1543C10.6152,8.7401 10.2794,8.4043 9.8652,8.4043C9.451,8.4043 9.1152,8.7401 9.1152,9.1543L9.1152,17.6928C9.1152,18.107 9.451,18.4428 9.8652,18.4428C10.2794,18.4428 10.6152,18.107 10.6152,17.6928L10.6152,9.1543ZM14.8845,9.1543C14.8845,8.7401 14.5487,8.4043 14.1345,8.4043C13.7203,8.4043 13.3845,8.7401 13.3845,9.1543L13.3845,17.6928C13.3845,18.107 13.7203,18.4428 14.1345,18.4428C14.5487,18.4428 14.8845,18.107 14.8845,17.6928L14.8845,9.1543Z" />
+</vector>

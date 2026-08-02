@@ -46,10 +46,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CloudDownload
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -63,14 +59,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -78,15 +71,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.text.DateFormat
+import java.util.Date
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import ru.protonmod.next.R
 import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
-import java.text.DateFormat
-import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -251,7 +248,7 @@ fun NetShieldSettingsScreen(
                                         contentAlignment = Alignment.Center,
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Rounded.CloudDownload,
+                                            imageVector = ProtonIcons.Cloud,
                                             contentDescription = null,
                                             tint = colors.brandNorm,
                                         )
@@ -315,7 +312,7 @@ fun NetShieldSettingsScreen(
                                         Spacer(Modifier.width(10.dp))
                                         Text(stringResource(R.string.netshield_lists_updating))
                                     } else {
-                                        Icon(Icons.Rounded.Refresh, contentDescription = null)
+                                        Icon(ProtonIcons.ArrowsRotate, contentDescription = null)
                                         Spacer(Modifier.width(10.dp))
                                         Text(stringResource(R.string.netshield_update_lists))
                                     }
@@ -359,7 +356,7 @@ fun NetShieldSettingsScreen(
                         verticalAlignment = Alignment.Top,
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.Info,
+                            imageVector = ProtonIcons.InfoCircle,
                             contentDescription = null,
                             modifier = Modifier.size(22.dp),
                             tint = colors.brandNorm,

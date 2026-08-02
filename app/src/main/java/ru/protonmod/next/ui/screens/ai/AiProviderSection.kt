@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import ru.protonmod.next.R
 import ru.protonmod.next.data.ai.AiApiFormat
 import ru.protonmod.next.data.ai.AiProviderConfig
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.screens.settings.SettingRowWithIcon
 import ru.protonmod.next.ui.screens.settings.SettingsCategory
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -58,14 +58,14 @@ fun AiProviderSection(
 
     SettingsCategory(modifier = modifier, title = stringResource(R.string.ai_provider)) {
         SettingRowWithIcon(
-            icon = Icons.Rounded.Dns,
+            icon = ProtonIcons.Servers,
             title = stringResource(R.string.ai_provider),
             subtitle = state.selectedProvider.displayName,
             onClick = { showProviderDialog = true }
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.SettingsSuggest,
+            icon = ProtonIcons.CogWheel,
             title = stringResource(R.string.ai_model),
             subtitle = state.selectedModel.ifBlank { stringResource(R.string.ai_model_not_selected) },
             onClick = { showModelDialog = true }
@@ -134,14 +134,14 @@ fun AiProviderSection(
                                     showProviderForm = true
                                 }) {
                                     Icon(
-                                        Icons.Rounded.Edit,
+                                        ProtonIcons.Pen,
                                         contentDescription = stringResource(R.string.ai_provider_edit),
                                         tint = colors.textWeak
                                     )
                                 }
                                 IconButton(onClick = { onDeleteCustomProvider(provider.id) }) {
                                     Icon(
-                                        Icons.Rounded.Delete,
+                                        ProtonIcons.Trash,
                                         contentDescription = stringResource(R.string.ai_provider_delete),
                                         tint = colors.textWeak
                                     )
@@ -154,7 +154,7 @@ fun AiProviderSection(
                         showProviderDialog = false
                         showProviderForm = true
                     }) {
-                        Icon(Icons.Rounded.Add, contentDescription = null, tint = colors.brandNorm)
+                        Icon(ProtonIcons.Plus, contentDescription = null, tint = colors.brandNorm)
                         Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.ai_provider_add), color = colors.brandNorm)
                     }
@@ -358,7 +358,7 @@ private fun AiModelDialog(
                 }
 
                 TextButton(onClick = onRefreshModels, enabled = state.modelsStatus != AiModelsStatus.LOADING) {
-                    Icon(Icons.Rounded.Refresh, contentDescription = null, tint = colors.brandNorm)
+                    Icon(ProtonIcons.ArrowsRotate, contentDescription = null, tint = colors.brandNorm)
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.ai_model_refresh), color = colors.brandNorm)
                 }

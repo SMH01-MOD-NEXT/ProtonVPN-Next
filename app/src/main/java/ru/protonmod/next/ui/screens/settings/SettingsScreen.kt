@@ -20,22 +20,14 @@ package ru.protonmod.next.ui.screens.settings
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import androidx.compose.foundation.BorderStroke
-import ru.protonmod.next.ui.utils.isTablet
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.AltRoute
-import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.*
-import androidx.compose.material.icons.rounded.ChevronRight
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
-import dagger.hilt.android.EntryPointAccessors
-import ru.protonmod.next.di.AppEntryPoint
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +35,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,15 +44,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import dagger.hilt.android.EntryPointAccessors
 import ru.protonmod.next.BuildConfig
 import ru.protonmod.next.R
+import ru.protonmod.next.data.local.ServerLoadDisplayMode
+import ru.protonmod.next.di.AppEntryPoint
 import ru.protonmod.next.ui.components.MainHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.AppTheme
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
-import androidx.compose.ui.platform.LocalLocale
-import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.ui.widget.VpnWidgetProvider
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -392,7 +387,7 @@ private fun UpdateSettingsSection(
         }
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.SystemUpdate,
+            icon = ProtonIcons.ArrowDownCircle,
             title = stringResource(R.string.ota_check_frequency),
             subtitle = currentFrequencyName,
             onClick = { showFrequencyDialog = true }
@@ -405,7 +400,7 @@ private fun UpdateSettingsSection(
         }
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.Refresh,
+            icon = ProtonIcons.ArrowsRotate,
             title = stringResource(R.string.ota_btn_check),
             subtitle = updateStatus,
             onClick = onCheckNow,
@@ -465,7 +460,7 @@ private fun WidgetSettingsSection(modifier: Modifier = Modifier) {
     if (isSupported) {
         SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_widget)) {
             SettingRowWithIcon(
-                icon = Icons.Rounded.Widgets,
+                icon = ProtonIcons.Grid2,
                 title = stringResource(R.string.settings_widget_add_to_home),
                 subtitle = stringResource(R.string.settings_widget_add_to_home_desc),
                 onClick = {
@@ -490,7 +485,7 @@ private fun ConnectionSettingsSection(
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_connection)) {
         SettingToggleRow(
-            icon = Icons.Rounded.Autorenew,
+            icon = ProtonIcons.ArrowsRotate,
             title = stringResource(R.string.settings_auto_connect),
             subtitle = stringResource(R.string.settings_auto_connect_desc),
             checked = state.autoConnectEnabled,
@@ -498,7 +493,7 @@ private fun ConnectionSettingsSection(
         )
 
         SettingToggleRow(
-            icon = Icons.Rounded.NotificationImportant,
+            icon = ProtonIcons.Bell,
             title = stringResource(R.string.settings_reconnect_hint),
             subtitle = stringResource(R.string.settings_reconnect_hint_desc),
             checked = state.reconnectHintEnabled,
@@ -506,28 +501,28 @@ private fun ConnectionSettingsSection(
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.Autorenew,
+            icon = ProtonIcons.ArrowsRotate,
             title = stringResource(R.string.ip_rotation_title),
             subtitle = stringResource(R.string.ip_rotation_settings_subtitle),
             onClick = onNavigateToIpRotation
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.CloudSync,
+            icon = ProtonIcons.Cloud,
             title = stringResource(R.string.settings_api_bypass),
             subtitle = if (state.apiBypassEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
             onClick = { onNavigateToApiBypass?.invoke() }
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.Numbers,
+            icon = ProtonIcons.ListNumbers,
             title = stringResource(R.string.settings_port),
             subtitle = if (state.vpnPort == 0) stringResource(R.string.settings_port_auto) else state.vpnPort.toString(),
             onClick = { onNavigateToPortSelection?.invoke(state.vpnPort) }
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.Security,
+            icon = ProtonIcons.Shield,
             title = stringResource(R.string.settings_cert_management),
             subtitle = stringResource(R.string.settings_cert_management_desc),
             onClick = { onNavigateToCertSettings?.invoke() }
@@ -563,7 +558,7 @@ private fun CustomizationSettingsSection(
         SettingRowWithIcon(
             title = stringResource(R.string.settings_app_theme),
             subtitle = currentThemeName,
-            icon = Icons.Rounded.Palette,
+            icon = ProtonIcons.Palette,
             onClick = { onNavigateToThemeSelection?.invoke() }
         )
 
@@ -577,7 +572,7 @@ private fun CustomizationSettingsSection(
         SettingRowWithIcon(
             title = stringResource(R.string.settings_load_display_mode),
             subtitle = currentLoadModeName,
-            icon = Icons.Rounded.BarChart,
+            icon = ProtonIcons.ChartLine,
             onClick = { onNavigateToLoadDisplayMode?.invoke() }
         )
     }
@@ -609,28 +604,28 @@ private fun PrivacySettingsSection(
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.HealthAndSafety,
+            icon = ProtonIcons.ShieldFilled,
             title = stringResource(R.string.verification_title),
             subtitle = stringResource(R.string.verification_settings_subtitle),
             onClick = onNavigateToConnectionVerification
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.Dns,
+            icon = ProtonIcons.Servers,
             title = stringResource(R.string.settings_custom_dns),
             subtitle = currentDnsSubtitle,
             onClick = onNavigateToCustomDns
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.Public,
+            icon = ProtonIcons.Globe,
             title = stringResource(R.string.settings_country_spoofing_title),
             subtitle = if (state.spoofCountryEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
             onClick = onNavigateToCountrySpoofing
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.GppMaybe,
+            icon = ProtonIcons.ShieldHalfFilled,
             title = stringResource(R.string.settings_kill_switch),
             subtitle = stringResource(R.string.settings_kill_switch_desc),
             onClick = onNavigateToKillSwitch
@@ -638,7 +633,7 @@ private fun PrivacySettingsSection(
 
         if (BuildConfig.SENTRY_ENABLED) {
             SettingRowWithIcon(
-                icon = Icons.Rounded.BugReport,
+                icon = ProtonIcons.Bug,
                 title = stringResource(R.string.settings_error_reporting),
                 subtitle = stringResource(R.string.settings_error_reporting_desc),
                 onClick = onNavigateToErrorReporting
@@ -646,7 +641,7 @@ private fun PrivacySettingsSection(
         }
 
         SettingToggleRow(
-            icon = Icons.Rounded.Notifications,
+            icon = ProtonIcons.Bell,
             title = stringResource(R.string.settings_notifications),
             subtitle = stringResource(R.string.settings_notifications_desc),
             checked = state.notificationsEnabled,
@@ -654,7 +649,7 @@ private fun PrivacySettingsSection(
         )
 
         SettingToggleRow(
-            icon = Icons.Rounded.Lan,
+            icon = ProtonIcons.Servers,
             title = stringResource(R.string.settings_allow_lan),
             subtitle = stringResource(R.string.settings_allow_lan_desc),
             checked = state.allowLanEnabled,
@@ -671,7 +666,7 @@ private fun AiSettingsSection(
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_ai)) {
         SettingRowWithIcon(
-            icon = Icons.Rounded.AutoAwesome,
+            icon = ProtonIcons.MagicProtonWand,
             title = stringResource(R.string.ai_settings_title),
             subtitle = if (state.aiEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
             onClick = { onNavigateToAiSettings?.invoke() }
@@ -691,14 +686,14 @@ private fun AboutSettingsSection(
 
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_about)) {
         SettingRowWithIcon(
-            icon = Icons.Rounded.Info,
+            icon = ProtonIcons.InfoCircle,
             title = stringResource(R.string.settings_about),
             subtitle = stringResource(R.string.settings_version, BuildConfig.VERSION_NAME),
             onClick = onNavigateToAbout
         )
 
         SettingRowWithIcon(
-            icon = Icons.Rounded.Backup,
+            icon = ProtonIcons.Storage,
             title = stringResource(R.string.backup_title),
             subtitle = stringResource(R.string.backup_export_desc),
             onClick = onNavigateToBackup
@@ -706,7 +701,7 @@ private fun AboutSettingsSection(
 
         if (BuildConfig.DEBUG) {
             SettingRowWithIcon(
-                icon = Icons.Rounded.BugReport,
+                icon = ProtonIcons.Bug,
                 title = stringResource(R.string.settings_debug),
                 subtitle = stringResource(R.string.debug_title),
                 onClick = onNavigateToDebug
@@ -714,7 +709,7 @@ private fun AboutSettingsSection(
         }
 
         SettingRowWithIcon(
-            icon = Icons.AutoMirrored.Rounded.Logout,
+            icon = ProtonIcons.MenuSignOut,
             title = stringResource(R.string.btn_logout),
             subtitle = stringResource(R.string.desc_toggle_connection),
             onClick = { showLogoutDialog = true },
@@ -772,7 +767,7 @@ private fun FeatureCategory(
             modifier = tileModifier,
             title = stringResource(id = R.string.settings_split_tunneling),
             subtitle = if (state.splitTunnelingEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
-            icon = Icons.AutoMirrored.Rounded.AltRoute,
+            icon = ProtonIcons.ArrowsSwitch,
             isActive = state.splitTunnelingEnabled,
             onClick = { onNavigateToSplitTunnelingMain?.invoke() }
         )
@@ -784,7 +779,7 @@ private fun FeatureCategory(
             modifier = tileModifier,
             title = stringResource(id = R.string.settings_protocol),
             subtitle = "AmneziaWG",
-            icon = Icons.Rounded.Security,
+            icon = ProtonIcons.Shield,
             isActive = true,
             onClick = { onNavigateToProtocol?.invoke() }
         )
@@ -815,7 +810,7 @@ fun TamperSettingsBanner(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Rounded.Warning,
+                imageVector = ProtonIcons.ExclamationTriangleFilled,
                 contentDescription = null,
                 tint = colors.notificationError,
                 modifier = Modifier.size(20.dp)
@@ -829,7 +824,7 @@ fun TamperSettingsBanner(
                 modifier = Modifier.weight(1f)
             )
             Icon(
-                imageVector = Icons.Rounded.ChevronRight,
+                imageVector = ProtonIcons.ChevronRight,
                 contentDescription = null,
                 tint = colors.notificationError,
                 modifier = Modifier.size(16.dp)

@@ -24,7 +24,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,10 +38,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.NavigationHeader
-import ru.protonmod.next.ui.theme.ProtonNextTheme
-import ru.protonmod.next.ui.screens.settings.SettingsCategory
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.screens.settings.SettingRowWithIcon
 import ru.protonmod.next.ui.screens.settings.SettingToggleRow
+import ru.protonmod.next.ui.screens.settings.SettingsCategory
+import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,7 +108,7 @@ fun AiSettingsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.AutoAwesome,
+                            imageVector = ProtonIcons.MagicProtonWand,
                             contentDescription = null,
                             tint = colors.brandNorm,
                             modifier = Modifier.size(64.dp)
@@ -122,7 +122,7 @@ fun AiSettingsScreen(
                     title = stringResource(R.string.ai_mode_title)
                 ) {
                     SettingToggleRow(
-                        icon = Icons.Rounded.AutoAwesome,
+                        icon = ProtonIcons.MagicProtonWand,
                         title = stringResource(R.string.ai_mode_title),
                         subtitle = stringResource(R.string.ai_mode_desc),
                         checked = uiState.isAiEnabled,
@@ -152,14 +152,14 @@ fun AiSettingsScreen(
                         title = stringResource(R.string.settings_api_bypass)
                     ) {
                         SettingToggleRow(
-                            icon = Icons.Rounded.PublicOff,
+                            icon = ProtonIcons.CircleSlash,
                             title = stringResource(R.string.ai_bypass_blocks),
                             subtitle = stringResource(R.string.ai_bypass_blocks_desc),
                             checked = uiState.aiBypassBlocks,
                             onCheckedChange = viewModel::setAiBypassBlocks
                         )
                         SettingRowWithIcon(
-                            icon = Icons.Rounded.Route,
+                            icon = ProtonIcons.ArrowsSwitch,
                             title = stringResource(R.string.api_bypass_strategy_custom),
                             subtitle = stringResource(R.string.api_bypass_strategy_custom_desc),
                             onClick = onNavigateToApiBypass
@@ -182,7 +182,7 @@ fun AiSettingsScreen(
                         ) {
                             Row(verticalAlignment = Alignment.Top) {
                                 Icon(
-                                    Icons.Rounded.VpnKey,
+                                    ProtonIcons.Key,
                                     contentDescription = null,
                                     tint = colors.brandNorm,
                                     modifier = Modifier.size(20.dp)
@@ -196,7 +196,7 @@ fun AiSettingsScreen(
                             }
                             Row(verticalAlignment = Alignment.Top) {
                                 Icon(
-                                    Icons.Rounded.TouchApp,
+                                    ProtonIcons.SwipeLeft,
                                     contentDescription = null,
                                     tint = colors.brandNorm,
                                     modifier = Modifier.size(20.dp)

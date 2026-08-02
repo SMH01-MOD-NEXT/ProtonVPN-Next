@@ -28,8 +28,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.HealthAndSafety
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,6 +45,7 @@ import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ConnectionVerificationMode
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -94,7 +93,7 @@ fun ConnectionVerificationSettingsScreen(
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(
-                                Icons.Rounded.HealthAndSafety,
+                                ProtonIcons.ShieldFilled,
                                 contentDescription = null,
                                 tint = colors.brandNorm,
                                 modifier = Modifier.size(58.dp),

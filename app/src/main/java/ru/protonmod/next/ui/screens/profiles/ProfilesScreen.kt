@@ -19,7 +19,6 @@ package ru.protonmod.next.ui.screens.profiles
 
 import android.app.Activity
 import android.net.VpnService
-import ru.protonmod.next.utils.ProtonLogger
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -32,10 +31,6 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.rounded.VpnKey
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -55,11 +50,13 @@ import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.MainHeader
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.nav.MainTarget
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.ui.utils.isTablet
+import ru.protonmod.next.utils.ProtonLogger
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,7 +118,7 @@ fun ProfilesScreen(
                         .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(bottom = 130.dp)
                 ) {
-                    Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.desc_create_profile))
+                    Icon(ProtonIcons.Plus, contentDescription = stringResource(R.string.desc_create_profile))
                 }
             }
         },
@@ -256,7 +253,7 @@ private fun ProfilesHeader(
                     .statusBarsPadding()
                     .padding(end = 16.dp)
             ) {
-                Icon(Icons.Rounded.Add, contentDescription = null, modifier = Modifier.size(20.dp))
+                Icon(ProtonIcons.Plus, contentDescription = null, modifier = Modifier.size(20.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(R.string.desc_create_profile))
             }
@@ -387,7 +384,7 @@ fun ProfileCardItem(
             // Edit Profile Button
             IconButton(onClick = onEdit, modifier = Modifier.size(48.dp)) {
                 Icon(
-                    imageVector = Icons.Rounded.Edit,
+                    imageVector = ProtonIcons.Pen,
                     contentDescription = stringResource(R.string.desc_edit_profile),
                     tint = colors.iconWeak,
                     modifier = Modifier.size(24.dp)
@@ -427,7 +424,7 @@ fun EmptyProfilesState(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = Icons.Rounded.VpnKey,
+            imageVector = ProtonIcons.Key,
             contentDescription = null,
             tint = colors.iconWeak.copy(alpha = 0.5f),
             modifier = Modifier.size(64.dp)

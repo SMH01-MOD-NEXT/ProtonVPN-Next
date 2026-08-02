@@ -30,11 +30,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.LocationCity
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -56,6 +51,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
+import java.util.Locale
+import java.util.UUID
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
@@ -66,18 +63,17 @@ import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LoadIndicator
 import ru.protonmod.next.ui.components.LoadProgressBar
-import ru.protonmod.next.ui.components.SmoothOutlinedTextField
-import ru.protonmod.next.ui.components.SmoothTextField
-import ru.protonmod.next.ui.screens.countries.CityDisplayItem
-import ru.protonmod.next.ui.screens.countries.CountryDisplayItem
 import ru.protonmod.next.ui.components.MainHeader
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.components.SmoothOutlinedTextField
+import ru.protonmod.next.ui.components.SmoothTextField
+import ru.protonmod.next.ui.icons.ProtonIcons
+import ru.protonmod.next.ui.screens.countries.CityDisplayItem
+import ru.protonmod.next.ui.screens.countries.CountryDisplayItem
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.ui.utils.isTablet
-import java.util.Locale
-import java.util.UUID
 
 // Helper function to dynamically localize city names based on string resources
 
@@ -291,14 +287,14 @@ fun EditProfileScreen(
                         SettingRowWithIcon(
                             title = stringResource(R.string.label_protocol),
                             subtitle = selectedProtocol,
-                            icon = Icons.Rounded.Security,
+                            icon = ProtonIcons.Shield,
                             onClick = { onNavigateToProtocolSelection(selectedProtocol) }
                         )
 
                         SettingRowWithIcon(
                             title = stringResource(R.string.label_port),
                             subtitle = (if (selectedPort == 0) stringResource(R.string.settings_port_auto) else selectedPort.toString()),
-                            icon = Icons.Rounded.Power,
+                            icon = ProtonIcons.PowerOff,
                             onClick = { onNavigateToPortSelection(selectedPort) }
                         )
                     }
@@ -309,7 +305,7 @@ fun EditProfileScreen(
                         SettingToggleRow(
                             title = stringResource(R.string.label_obfuscation),
                             subtitle = stringResource(R.string.obfuscation_desc),
-                            icon = Icons.Rounded.VisibilityOff,
+                            icon = ProtonIcons.EyeSlash,
                             checked = obfuscationEnabled,
                             onCheckedChange = { obfuscationEnabled = it }
                         )
@@ -321,7 +317,7 @@ fun EditProfileScreen(
                             SettingRowWithIcon(
                                 title = stringResource(R.string.label_obfuscation_config),
                                 subtitle = selectedConfig.name,
-                                icon = Icons.Rounded.Settings,
+                                icon = ProtonIcons.CogWheel,
                                 onClick = { showObfuscationConfigDialog = true },
                                 modifier = Modifier.padding(start = 16.dp)
                             )
@@ -334,7 +330,7 @@ fun EditProfileScreen(
                         SettingRowWithIcon(
                             title = stringResource(R.string.label_connect_go_website),
                             subtitle = autoOpenUrl.ifEmpty { stringResource(R.string.label_not_configured) },
-                            icon = Icons.Rounded.OpenInBrowser,
+                            icon = ProtonIcons.ArrowOutSquare,
                             onClick = { onNavigateToUrlSelection(autoOpenUrl) }
                         )
                     }
@@ -359,7 +355,7 @@ fun EditProfileScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.1f)),
                             shape = RoundedCornerShape(16.dp)
                         ) {
-                            Icon(Icons.Rounded.Delete, contentDescription = null, tint = Color.Red)
+                            Icon(ProtonIcons.Trash, contentDescription = null, tint = Color.Red)
                             Spacer(Modifier.width(8.dp))
                             Text(stringResource(R.string.btn_delete), color = Color.Red, fontWeight = FontWeight.Bold)
                         }
@@ -530,7 +526,7 @@ fun LocationSelectionDialog(
                             if (step > 0) {
                                 IconButton(onClick = { step-- }, enabled = !isTransitioning) {
                                     Icon(
-                                        imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                        imageVector = ProtonIcons.ArrowLeft,
                                         contentDescription = stringResource(R.string.desc_back),
                                         tint = colors.textNorm
                                     )
@@ -556,7 +552,7 @@ fun LocationSelectionDialog(
                             )
 
                             IconButton(onClick = onDismiss) {
-                                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.desc_close), tint = colors.iconWeak)
+                                Icon(ProtonIcons.Cross, contentDescription = stringResource(R.string.desc_close), tint = colors.iconWeak)
                             }
                         }
 
@@ -619,7 +615,7 @@ fun LocationSelectionDialog(
                                                                 .background(colors.backgroundNorm),
                                                             contentAlignment = Alignment.Center
                                                         ) {
-                                                            Icon(imageVector = Icons.Rounded.Public, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
+                                                            Icon(imageVector = ProtonIcons.Globe, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
                                                         }
                                                     }
                                                 },
@@ -651,7 +647,7 @@ fun LocationSelectionDialog(
                                                             .background(colors.backgroundNorm),
                                                         contentAlignment = Alignment.Center
                                                     ) {
-                                                        Icon(imageVector = Icons.Default.LocationCity, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
+                                                        Icon(imageVector = ProtonIcons.Buildings, contentDescription = null, tint = colors.iconNorm, modifier = Modifier.size(20.dp))
                                                     }
                                                 },
                                                 load = cityItem.averageLoad,
@@ -684,7 +680,7 @@ fun LocationSelectionDialog(
                                                         contentAlignment = Alignment.Center
                                                     ) {
                                                         Icon(
-                                                            imageVector = Icons.Rounded.Public,
+                                                            imageVector = ProtonIcons.Globe,
                                                             contentDescription = null,
                                                             tint = colors.iconNorm,
                                                             modifier = Modifier.size(20.dp)
@@ -823,7 +819,7 @@ fun SettingRowWithIcon(
             trailingContent()
         } else if (onClick != null) {
             Icon(
-                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                imageVector = ProtonIcons.ChevronRight,
                 contentDescription = null,
                 tint = colors.iconWeak,
                 modifier = Modifier.size(20.dp)
@@ -948,10 +944,10 @@ fun ObfuscationConfigSelectionDialog(
                                     }
                                     if (!config.isReadOnly) {
                                         IconButton(onClick = { editingProfile = config }) {
-                                            Icon(Icons.Rounded.Edit, contentDescription = stringResource(R.string.btn_edit), tint = colors.iconNorm)
+                                            Icon(ProtonIcons.Pen, contentDescription = stringResource(R.string.btn_edit), tint = colors.iconNorm)
                                         }
                                         IconButton(onClick = { onDelete(config.id) }) {
-                                            Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.btn_delete), tint = colors.iconWeak)
+                                            Icon(ProtonIcons.Trash, contentDescription = stringResource(R.string.btn_delete), tint = colors.iconWeak)
                                         }
                                     }
                                 }
@@ -966,7 +962,7 @@ fun ObfuscationConfigSelectionDialog(
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 8.dp)
                         ) {
-                            Icon(Icons.Rounded.Add, contentDescription = null, tint = colors.brandNorm)
+                            Icon(ProtonIcons.Plus, contentDescription = null, tint = colors.brandNorm)
                             Spacer(Modifier.width(8.dp))
                             Text(stringResource(R.string.btn_create_new_config), color = colors.brandNorm)
                         }

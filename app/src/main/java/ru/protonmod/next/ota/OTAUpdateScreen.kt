@@ -23,8 +23,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -38,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import ru.protonmod.next.R
 import ru.protonmod.next.data.model.ota.UpdateInfo
 import ru.protonmod.next.ui.components.ExpressiveLinearProgressIndicator
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
 @Composable
@@ -86,7 +85,7 @@ fun OTAUpdateScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Rounded.SystemUpdate,
+                            imageVector = ProtonIcons.ArrowDownCircle,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
                             tint = colors.brandNorm
@@ -153,7 +152,7 @@ fun OTAUpdateScreen(
                 onDismissRequest = onDismiss,
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Rounded.SystemUpdate, null, tint = colors.brandNorm)
+                        Icon(ProtonIcons.ArrowDownCircle, null, tint = colors.brandNorm)
                         Spacer(Modifier.width(12.dp))
                         Text(stringResource(R.string.ota_title))
                     }

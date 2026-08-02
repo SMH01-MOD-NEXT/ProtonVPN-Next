@@ -25,13 +25,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.rounded.Android
-import androidx.compose.material.icons.rounded.Apps
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,6 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
@@ -107,7 +101,7 @@ fun SplitTunnelingAppsScreen(
                         Box {
                             IconButton(onClick = { showMenu = true }) {
                                 Icon(
-                                    Icons.Default.MoreVert,
+                                    ProtonIcons.ThreeDotsVertical,
                                     contentDescription = stringResource(R.string.desc_more_options),
                                     tint = colors.textNorm
                                 )
@@ -166,7 +160,7 @@ fun SplitTunnelingAppsScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.Apps,
+                                    imageVector = ProtonIcons.Grid3,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
                                     tint = colors.brandNorm
@@ -222,7 +216,7 @@ fun SplitTunnelingAppsScreen(
                                 },
                                 leadingIcon = {
                                     Icon(
-                                        Icons.Default.Search,
+                                        ProtonIcons.Magnifier,
                                         contentDescription = null,
                                         tint = colors.iconWeak
                                     )
@@ -369,7 +363,7 @@ fun AppListItem(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = if (isAdded) Icons.Default.Close else Icons.Default.Add,
+                    imageVector = if (isAdded) ProtonIcons.Cross else ProtonIcons.Plus,
                     contentDescription = null,
                     tint = if (isAdded) colors.iconWeak else colors.brandNorm,
                     modifier = Modifier.size(20.dp)
@@ -416,7 +410,7 @@ fun AppIconWrapper(
         } else {
             // Fallback icon
             Icon(
-                imageVector = Icons.Rounded.Android,
+                imageVector = ProtonIcons.BrandAndroid,
                 contentDescription = null,
                 tint = colors.iconWeak,
                 modifier = Modifier.size(32.dp)

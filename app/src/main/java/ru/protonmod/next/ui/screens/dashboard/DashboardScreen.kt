@@ -20,8 +20,6 @@ package ru.protonmod.next.ui.screens.dashboard
 import android.app.Activity
 import android.net.VpnService
 import android.text.BidiFormatter
-import ru.protonmod.next.utils.system.SystemUtils
-import ru.protonmod.next.utils.ProtonLogger
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
@@ -34,17 +32,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.rounded.CloudDownload
-import androidx.compose.material.icons.rounded.CloudUpload
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.Public
-import androidx.compose.material.icons.rounded.Speed
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -81,11 +68,14 @@ import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.ServerCard
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
+import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonColors
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.ui.utils.isTablet
+import ru.protonmod.next.utils.ProtonLogger
+import ru.protonmod.next.utils.system.SystemUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
 
 // --- Extensions for UI Effects matching Original Proton ---
@@ -640,19 +630,19 @@ fun CertificateBanner(
         is AmneziaVpnManager.CertificateState.ExpiringSoon -> Quadruple(
             colors.notificationWarning.copy(alpha = 0.1f),
             colors.notificationWarning,
-            Icons.Rounded.Warning,
+            ProtonIcons.ExclamationTriangleFilled,
             stringResource(R.string.cert_msg_expiring_soon, state.hoursRemaining)
         )
         is AmneziaVpnManager.CertificateState.Expired -> Quadruple(
             colors.notificationError.copy(alpha = 0.1f),
             colors.notificationError,
-            Icons.Default.ErrorOutline,
+            ProtonIcons.ExclamationCircle,
             stringResource(R.string.cert_msg_expired)
         )
         is AmneziaVpnManager.CertificateState.Refreshing -> Quadruple(
             colors.backgroundSecondary,
             colors.textNorm,
-            Icons.Default.Refresh,
+            ProtonIcons.ArrowsRotate,
             stringResource(R.string.cert_msg_refreshing)
         )
         is AmneziaVpnManager.CertificateState.RefreshFailed -> {
@@ -664,14 +654,14 @@ fun CertificateBanner(
             Quadruple(
                 colors.notificationError.copy(alpha = 0.1f),
                 colors.notificationError,
-                Icons.Default.ErrorOutline,
+                ProtonIcons.ExclamationCircle,
                 msg
             )
         }
         is AmneziaVpnManager.CertificateState.Error -> Quadruple(
             colors.notificationError.copy(alpha = 0.1f),
             colors.notificationError,
-            Icons.Default.ErrorOutline,
+            ProtonIcons.ExclamationCircle,
             state.message
         )
     }
@@ -886,7 +876,7 @@ fun ConnectionStatusCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Rounded.Public,
+                                imageVector = ProtonIcons.Globe,
                                 contentDescription = stringResource(R.string.desc_country),
                                 tint = colors.iconNorm,
                                 modifier = Modifier.size(24.dp)
@@ -911,8 +901,8 @@ fun ConnectionStatusCard(
                         )
                     } else {
                         val iconVector = when (quickConnectStrategy) {
-                            "profile" -> Icons.Rounded.Star
-                            else -> Icons.Rounded.Speed
+                            "profile" -> ProtonIcons.Star
+                            else -> ProtonIcons.Bolt
                         }
                         Box(
                             modifier = Modifier
@@ -983,7 +973,7 @@ fun ConnectionStatusCard(
                 }
 
                 Icon(
-                    imageVector = Icons.Default.ChevronRight,
+                    imageVector = ProtonIcons.ChevronRight,
                     contentDescription = stringResource(R.string.desc_change_server),
                     tint = colors.iconWeak.copy(alpha = 0.5f)
                 )
@@ -1069,7 +1059,7 @@ fun ConnectionWarningBanner(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Rounded.Warning,
+                imageVector = ProtonIcons.ExclamationTriangleFilled,
                 contentDescription = null,
                 tint = colors.notificationWarning,
                 modifier = Modifier.size(24.dp)
@@ -1109,7 +1099,7 @@ fun BatteryOptimizationBanner(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Rounded.Warning,
+                imageVector = ProtonIcons.ExclamationTriangleFilled,
                 contentDescription = null,
                 tint = colors.notificationWarning,
                 modifier = Modifier.size(24.dp)
@@ -1172,7 +1162,7 @@ fun PauseBanner(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Speed, // Using Speed icon for Pause indicator
+                    imageVector = ProtonIcons.Bolt, // Using Speed icon for Pause indicator
                     contentDescription = null,
                     tint = colors.brandNorm,
                     modifier = Modifier.size(24.dp)
@@ -1232,7 +1222,7 @@ fun PauseDialog(
                         shape = RoundedCornerShape(12.dp),
                         border = BorderStroke(1.dp, colors.shade20)
                     ) {
-                        Icon(Icons.Rounded.History, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Icon(ProtonIcons.ClockRotateLeft, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(stringResource(R.string.pause_custom), color = colors.textNorm)
                     }
