@@ -187,77 +187,86 @@ private fun AiInputRow(
     onClose: () -> Unit
 ) {
     val colors = ProtonNextTheme.colors
-    
+    val displayMessage = when (statusMessage) {
+        "ai_success" -> stringResource(R.string.ai_success)
+        "ai_error_no_key" -> stringResource(R.string.ai_error_no_key)
+        else -> statusMessage
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(70.dp)
-            .padding(horizontal = 16.dp),
+            .heightIn(min = 82.dp)
+            .padding(start = 14.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = Icons.Rounded.AutoAwesome,
-            contentDescription = null,
-            tint = colors.brandNorm,
-            modifier = Modifier.size(24.dp)
-        )
-        
-        Spacer(Modifier.width(12.dp))
-        
-        Box(modifier = Modifier.weight(1f)) {
-            if (query.isEmpty() && statusMessage == null) {
-                Text(
-                    text = stringResource(R.string.ai_input_hint),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.textWeak,
-                    maxLines = 1
-                )
-            }
-            
-            if (statusMessage != null && query.isEmpty()) {
-                val displayMsg = when (statusMessage) {
-                    "ai_success" -> stringResource(R.string.ai_success)
-                    "ai_error_no_key" -> stringResource(R.string.ai_error_no_key)
-                    else -> statusMessage
-                }
-                Text(
-                    text = displayMsg,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (statusMessage == "ai_success") colors.notificationSuccess else colors.notificationError,
-                    maxLines = 1
-                )
-            }
-
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier.fillMaxWidth(),
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.textNorm),
-                cursorBrush = Brush.verticalGradient(listOf(colors.brandNorm, colors.brandNorm)),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { if (query.isNotBlank()) onSubmit(query) })
+        Box(
+            modifier = Modifier
+                .size(42.dp)
+                .background(colors.brandNorm.copy(alpha = 0.14f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.AutoAwesome,
+                contentDescription = null,
+                tint = colors.brandNorm,
+                modifier = Modifier.size(22.dp)
             )
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.ai_assistant_label),
+                style = MaterialTheme.typography.labelSmall,
+                color = colors.brandNorm
+            )
+            Spacer(Modifier.height(2.dp))
+            Box(modifier = Modifier.fillMaxWidth()) {
+                if (query.isEmpty()) {
+                    Text(
+                        text = displayMessage ?: stringResource(R.string.ai_input_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = when (statusMessage) {
+                            "ai_success" -> colors.notificationSuccess
+                            null -> colors.textWeak
+                            else -> colors.notificationError
+                        },
+                        maxLines = 1
+                    )
+                }
+                BasicTextField(
+                    value = query,
+                    onValueChange = onQueryChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(color = colors.textNorm),
+                    cursorBrush = Brush.verticalGradient(listOf(colors.brandNorm, colors.brandNorm)),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                    keyboardActions = KeyboardActions(onSend = { if (query.isNotBlank()) onSubmit(query) })
+                )
+            }
         }
 
         Spacer(Modifier.width(8.dp))
 
-        if (isProcessing) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
-                strokeWidth = 2.dp,
-                color = colors.brandNorm
+        FilledIconButton(
+            onClick = { if (query.isNotBlank()) onSubmit(query) else onClose() },
+            enabled = !isProcessing,
+            modifier = Modifier.size(42.dp),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = if (query.isNotBlank()) colors.brandNorm else colors.backgroundSecondary,
+                contentColor = if (query.isNotBlank()) colors.textInverted else colors.iconWeak
             )
-        } else {
-            IconButton(
-                onClick = { if (query.isNotBlank()) onSubmit(query) else onClose() },
-                modifier = Modifier.size(32.dp)
-            ) {
+        ) {
+            if (isProcessing) {
+                CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = colors.brandNorm)
+            } else {
                 Icon(
                     imageVector = if (query.isNotBlank()) Icons.AutoMirrored.Rounded.Send else Icons.Rounded.Close,
                     contentDescription = null,
-                    tint = if (query.isNotBlank()) colors.brandNorm else colors.iconWeak,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(19.dp)
                 )
             }
         }

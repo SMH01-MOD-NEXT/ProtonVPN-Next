@@ -30,16 +30,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -56,6 +53,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.ota.OTAUpdateScreen
+import ru.protonmod.next.ui.components.AiProposalPanel
 import ru.protonmod.next.ui.components.LiquidGlassBottomBar
 import ru.protonmod.next.ui.components.ReconnectRequiredDialog
 import ru.protonmod.next.ui.nav.MainTarget
@@ -193,6 +191,7 @@ fun ProtonNextAppNavHost(
     val aiModeActive by aiViewModel.isVisible.collectAsStateWithLifecycle()
     val isAiProcessing by aiViewModel.isProcessing.collectAsStateWithLifecycle()
     val aiStatusMessage by aiViewModel.statusMessage.collectAsStateWithLifecycle()
+    val aiProposal by aiViewModel.proposal.collectAsStateWithLifecycle()
 
     if (startDestination.isEmpty()) return
 
@@ -292,6 +291,18 @@ fun ProtonNextAppNavHost(
 
             appNavGraph(navController = navController)
         }
+
+        AiProposalPanel(
+            proposal = aiProposal,
+            isProcessing = isAiProcessing,
+            onApply = aiViewModel::applyProposal,
+            onDismiss = aiViewModel::dismissProposal,
+            onRefine = aiViewModel::refineProposal,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 112.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars),
+        )
 
         AnimatedVisibility(
             visible = currentTarget != null,

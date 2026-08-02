@@ -719,4 +719,11 @@
     <string name="ip_rotation_settings_subtitle">Автоматическая смена VPN-сервера и публичного IP.</string>
     <string name="connection_mode_standard">Обычный</string>
     <string name="connection_mode_tor">Tor</string>
+
+    <string name="ai_assistant_label">AI-ассистент</string>
+    <string name="ai_proposal_close">Закрыть предложение</string>
+    <string name="ai_refine_hint">Попросите ИИ изменить этот вариант…</string>
+    <string name="ai_refine_action">Обновить вариант</string>
+    <string name="ai_proposal_cancel">Не сейчас</string>
+    <string name="ai_proposal_apply">Применить изменения</string>
 </resources>

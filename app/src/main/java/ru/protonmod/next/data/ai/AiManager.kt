@@ -5,98 +5,101 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
 package ru.protonmod.next.data.ai
 
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.first
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.utils.ProtonLogger
-import javax.inject.Inject
-import javax.inject.Singleton
 
 @Singleton
 class AiManager @Inject constructor(
     private val aiClient: AiClient,
     private val actionExecutor: AiActionExecutor,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
 ) {
-    suspend fun processQuery(query: String): AiResult {
-        val enabled = settingsManager.aiEnabled.first()
-        if (!enabled) return AiResult.Error("AI Mode is disabled")
-
-        val providerId = settingsManager.aiProvider.first()
-        val provider = AiProvider.fromId(providerId)
-        val model = settingsManager.aiModel.first()
+    suspend fun processQuery(query: String, currentProposal: AiProposal? = null): AiResult {
+        if (!settingsManager.aiEnabled.first()) return AiResult.Error("AI Mode is disabled")
         val apiKey = settingsManager.aiApiKey.first()
-        val useBypass = settingsManager.aiBypassBlocks.first()
-
         if (apiKey.isBlank()) return AiResult.NoApiKey
 
+        val provider = AiProvider.fromId(settingsManager.aiProvider.first())
+        val model = settingsManager.aiModel.first()
+        val useBypass = settingsManager.aiBypassBlocks.first()
+        val userPrompt = if (currentProposal == null) query else """
+            Current proposal: ${currentProposal.asRefinementContext()}
+            User requested this change to the proposal: $query
+            Return a complete replacement proposal, not a partial patch.
+        """.trimIndent()
         val systemPrompt = buildSystemPrompt()
-        
-        ProtonLogger.d("AiManager", "Querying AI ($providerId, $model, bypass=$useBypass) with query: $query")
-        val response = aiClient.query(provider, model, apiKey, systemPrompt, query, useBypass)
-        
-        if (response == null) return AiResult.Error("Failed to get response from AI")
 
-        ProtonLogger.d("AiManager", "AI Response: $response")
-        return actionExecutor.executeActions(response)
+        ProtonLogger.d(TAG, "Requesting AI proposal ($provider, $model, refinement=${currentProposal != null})")
+        val response = aiClient.query(provider, model, apiKey, systemPrompt, userPrompt, useBypass)
+            ?: return AiResult.Error("Failed to get response from AI")
+        return actionExecutor.parseProposal(response)
     }
 
-    private fun buildSystemPrompt(): String {
-        val apps = actionExecutor.getInstalledAppsContext()
+    suspend fun applyProposal(proposal: AiProposal): AiResult = actionExecutor.executeProposal(proposal)
+
+    private suspend fun buildSystemPrompt(): String {
+        val appContext = actionExecutor.getAssistantContext()
+        val installedApps = actionExecutor.getInstalledAppsContext()
         return """
-            You are a helpful assistant for the Proton VPN-Next Android app. 
-            Your task is to help users configure the app settings and manage connections.
-            
-            Strictly follow these rules:
-            1. ONLY perform app configuration and VPN management tasks.
-            2. If the user asks for something unrelated (e.g. coding, general questions, Flappy Bird), politely refuse.
-            3. Return your response ONLY as a JSON object or an array of JSON objects. No conversational text.
-            4. Available actions:
-               - {"action": "set_vpn_port", "value": Int} (0 for Auto)
-               - {"action": "set_split_tunneling", "enabled": Boolean, "mode": "exclude" | "include"}
-               - {"action": "add_split_tunneling_app", "packageName": String}
-               - {"action": "remove_split_tunneling_app", "packageName": String}
-               - {"action": "set_kill_switch", "enabled": Boolean}
-               - {"action": "set_dns", "value": String}
-               - {"action": "set_theme", "value": "SYSTEM" | "LIGHT" | "DARK" | "AMOLED"}
-               - {"action": "set_netshield", "value": "DISABLED" | "MALWARE" | "EXTENDED" | "ADULT"}
-               - {"action": "connect", "serverName": String?, "city": String?, "country": String?}
-               - {"action": "refresh_certificate"}
-               - {"action": "refresh_session"}
-               - {"action": "set_certificate_type", "type": "temporary" | "extended"}
-               - {"action": "create_profile", "name": String?, "serverId": String?, "city": String?, "country": String?, "port": Int?, "obfuscationEnabled": Boolean?, "connectAndGoUrl": String?}
-            
-            Instructions for actions:
-            - "connect": Specify ONE of serverName (e.g. "NL-FREE#111"), city ("Amsterdam"), or country ("Netherlands").
-            - "create_profile": If name is not provided, generate a creative name based on the settings (e.g. "Fast Amsterdam").
-            
-            Installed apps (Name and Package):
-            $apps
-            
-            Common Countries: Netherlands (NL), USA (US), Japan (JP), Germany (DE), Switzerland (CH).
-            
-            Example response for "Connect to Amsterdam":
-            {"action": "connect", "city": "Amsterdam"}
-            
-            Example response for "Create profile with name Work, server in USA, port 443":
-            {"action": "create_profile", "name": "Work", "country": "USA", "port": 443}
+            You are the in-app configuration assistant for Proton VPN-Next on Android.
+            Convert the user's request into a REVIEWABLE proposal. Never claim an action was already executed.
+            Return JSON only in this exact top-level shape:
+            {"title":"Short title","summary":"One concise sentence","actions":[{...}]}
+
+            Supported actions:
+            - {"action":"create_profile","name":String,"serverId":String?,"city":String?,"country":String?,"port":Int?,"obfuscationEnabled":Boolean?,"obfuscationProfileId":String?,"connectAndGoUrl":String?}
+            - {"action":"update_profile","profileId":String?,"profileName":String?, plus any create_profile fields to change}
+            - {"action":"delete_profile","profileId":String?,"profileName":String?}
+            - {"action":"set_setting","key":String,"value":Any}
+            - {"action":"set_obfuscation","enabled":Boolean,"advanced":Boolean?,"profileId":String?,"params":Object?}
+            - {"action":"set_awg_params", any AmneziaWG fields: jc,jmin,jmax,s1,s2,s3,s4,h1-h4,i1-i5,headerProtectionKey,contentPaddingAddition,rekeyAfterTime,rekeyTimeout,rejectAfterTime,keepaliveTimeout,maxHandshakeAttempts,persistentKeepalive,junkLevel}
+            - {"action":"refresh_servers"} (refreshes both country/server list and loads)
+            - {"action":"connect","serverName":String?,"city":String?,"country":String?}
+            - {"action":"disconnect"}
+            - {"action":"set_split_tunneling","enabled":Boolean,"mode":"exclude"|"include"}
+            - {"action":"add_split_tunneling_app","packageName":String}
+            - {"action":"remove_split_tunneling_app","packageName":String}
+            - {"action":"refresh_certificate"}, {"action":"refresh_session"}, {"action":"set_certificate_type","type":"temporary"|"extended"}
+
+            set_setting keys:
+            auto_connect, notifications, kill_switch, allow_lan, reconnect_hint, vpn_port, custom_dns,
+            split_tunneling_enabled, split_tunneling_mode, server_load_display, theme, netshield, tor_mode,
+            ip_rotation_enabled, ip_rotation_interval (5|15|30|60), ip_rotation_keep_country,
+            obfuscation_enabled, obfuscation_advanced, proxy_chain_enabled, proxy_chain_config,
+            api_bypass_enabled, api_bypass_strategy, spoof_country_enabled, spoof_country_null,
+            spoof_country_code, traffic_stats, connection_verification_mode,
+            connection_verification_required, connection_preflight_required,
+            connection_failure_detection, connection_auto_reconnect.
+
+            Rules:
+            1. Only manage this app and VPN connections. Refuse unrelated requests by returning a proposal with no unsupported action is NOT allowed; instead use {"action":"set_setting","key":"unsupported","value":"reason"} only when the request is app-related but unavailable.
+            2. Use profile IDs from context when editing/deleting. If only a unique profile name exists, profileName is acceptable.
+            3. Preserve unspecified profile fields when updating.
+            4. Use country ISO codes when possible. Port 0 means automatic.
+            5. For a request to refresh load or countries, use refresh_servers.
+            6. Keep titles and summaries in the user's language.
+
+            Current app context:
+            $appContext
+
+            Installed apps:
+            $installedApps
         """.trimIndent()
     }
+
+    private companion object { const val TAG = "AiManager" }
 }
 
 sealed class AiResult {
-    object Success : AiResult()
-    object NoApiKey : AiResult()
+    data object Success : AiResult()
+    data object NoApiKey : AiResult()
+    data class ProposalReady(val proposal: AiProposal) : AiResult()
     data class Error(val message: String) : AiResult()
 }
