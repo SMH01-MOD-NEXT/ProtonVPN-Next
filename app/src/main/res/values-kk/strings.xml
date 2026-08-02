@@ -699,4 +699,18 @@
     <string name="ai_processing">Өңделуде…</string>
     <string name="ai_success">Дайын!</string>
     <string name="ai_error_generic">AI қатесі орын алды</string>
+    <string name="ip_rotation_title">IP ротациясы</string>
+    <string name="ip_rotation_description">Жаңа жалпыға ортақ IP мекенжайын алу үшін кесте бойынша басқа VPN серверіне автоматты түрде қайта қосылыңыз.</string>
+    <string name="ip_rotation_section_status">Күйі</string>
+    <string name="ip_rotation_enable">IP ротациясын қосу</string>
+    <string name="ip_rotation_enable_desc">Қосылым кезінде белсенді VPN серверін автоматты түрде өзгерту.</string>
+    <string name="ip_rotation_interval">Ротация аралығы</string>
+    <string name="ip_rotation_minutes">Әр %1$d минут сайын</string>
+    <string name="ip_rotation_location">Орналасу</string>
+    <string name="ip_rotation_keep_country">Ағымдағы елді сақтау</string>
+    <string name="ip_rotation_keep_country_desc">Виртуалды орналасу өзгермеуі үшін ағымдағы елдегі басқа серверді таңдау.</string>
+    <string name="ip_rotation_note">Ротация кезінде VPN қысқа уақытқа қайта қосылады. Белсенді қосылымдар үзілуі мүмкін.</string>
+    <string name="ip_rotation_settings_subtitle">VPN сервері мен жалпыға ортақ IP мекенжайын автоматты түрде өзгерту.</string>
+    <string name="connection_mode_standard">Қалыпты</string>
+    <string name="connection_mode_tor">Tor</string>
 </resources>
