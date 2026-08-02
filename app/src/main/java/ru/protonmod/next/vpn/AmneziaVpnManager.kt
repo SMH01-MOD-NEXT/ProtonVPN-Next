@@ -85,6 +85,7 @@ class AmneziaVpnManager @Inject constructor(
     private val nextVpnManager: NextVpnManager,
     private val authRepositoryProvider: Provider<AuthRepository>,
     private val vpnNetworkMonitor: VpnNetworkMonitor,
+    private val trafficStatsRecorder: TrafficStatsRecorder,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) {
@@ -292,8 +293,17 @@ class AmneziaVpnManager @Inject constructor(
                         }
 
                         _speed.value = intent.getStringExtra(ProtonVpnService.EXTRA_SPEED)
-                _trafficRx.value = intent.getStringExtra(ProtonVpnService.EXTRA_TRAFFIC_RX)
-                _trafficTx.value = intent.getStringExtra(ProtonVpnService.EXTRA_TRAFFIC_TX)
+                        _trafficRx.value = intent.getStringExtra(ProtonVpnService.EXTRA_TRAFFIC_RX)
+                        _trafficTx.value = intent.getStringExtra(ProtonVpnService.EXTRA_TRAFFIC_TX)
+                        val deltaRx = intent.getLongExtra(ProtonVpnService.EXTRA_TRAFFIC_DELTA_RX, 0L)
+                        val deltaTx = intent.getLongExtra(ProtonVpnService.EXTRA_TRAFFIC_DELTA_TX, 0L)
+                        val deltaSeconds = intent.getLongExtra(ProtonVpnService.EXTRA_TRAFFIC_DELTA_SECONDS, 0L)
+                        if (deltaRx > 0L || deltaTx > 0L || deltaSeconds > 0L) {
+                            applicationScope.launch(dispatcherProvider.io()) {
+                                runCatching { trafficStatsRecorder.record(deltaRx, deltaTx, deltaSeconds) }
+                                    .onFailure { ProtonLogger.w(TAG, "Traffic stats recording deferred: ${it.message}") }
+                            }
+                        }
                     }
                 }
             }
@@ -369,6 +379,9 @@ class AmneziaVpnManager @Inject constructor(
                     _speed.value = null
                     _trafficRx.value = null
                     _trafficTx.value = null
+                    applicationScope.launch(dispatcherProvider.io()) {
+                        trafficStatsRecorder.flush()
+                    }
                 } else {
                     updateVpnState(VpnState.CONNECTING)
                 }

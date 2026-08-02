@@ -94,6 +94,9 @@ class AmneziaVpnManagerTest {
     @Mock
     private lateinit var vpnNetworkMonitor: VpnNetworkMonitor
 
+    @Mock
+    private lateinit var trafficStatsRecorder: TrafficStatsRecorder
+
     private val testDispatcher = UnconfinedTestDispatcher()
     private val testScope = TestScope(testDispatcher)
     
@@ -202,6 +205,7 @@ class AmneziaVpnManagerTest {
                 nextVpnManager,
                 { authRepository },
                 vpnNetworkMonitor,
+                trafficStatsRecorder,
                 testDispatcherProvider,
                 testScope
             )

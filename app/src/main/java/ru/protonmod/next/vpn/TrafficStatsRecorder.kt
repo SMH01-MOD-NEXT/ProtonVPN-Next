@@ -22,6 +22,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.local.TrafficStatsDao
+import ru.protonmod.next.utils.ProtonLogger
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -79,13 +80,24 @@ class TrafficStatsRecorder @Inject constructor(
 
     private suspend fun flushLocked() {
         val day = pendingDay
-        if (day != null && (pendingRx > 0L || pendingTx > 0L || pendingSeconds > 0L)) {
-            trafficStatsDao.addDelta(day, pendingRx, pendingTx, pendingSeconds)
+        if (day == null || (pendingRx <= 0L && pendingTx <= 0L && pendingSeconds <= 0L)) {
+            pendingDay = null
+            lastFlushAtMs = System.currentTimeMillis()
+            return
         }
-        pendingRx = 0L
-        pendingTx = 0L
-        pendingSeconds = 0L
-        pendingDay = null
+
+        runCatching {
+            trafficStatsDao.addDelta(day, pendingRx, pendingTx, pendingSeconds)
+        }.onSuccess {
+            pendingRx = 0L
+            pendingTx = 0L
+            pendingSeconds = 0L
+            pendingDay = null
+        }.onFailure { error ->
+            // Statistics are optional. Retain deltas for the next flush, but never let a transient
+            // SQLITE_BUSY or storage error terminate the VPN/UI process.
+            ProtonLogger.w("TrafficStatsRecorder", "Deferred traffic stats flush: ${error.message}")
+        }
         lastFlushAtMs = System.currentTimeMillis()
     }
 

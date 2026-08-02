@@ -243,11 +243,9 @@ object DatabaseModule {
     }
 
     /**
-     * The tunnel runs in the `:vpn` process and writes traffic statistics while the UI process
-     * writes sessions, servers and profiles. Android's connection pool only serialises writers
-     * inside a single process, so a cross-process write collision surfaces immediately as
-     * SQLITE_BUSY instead of waiting (ANDROID-228). WAL keeps readers unblocked; this handler makes
-     * a writer wait for the other process to commit rather than throwing straight away.
+     * Room writes are owned by the main process; WAL keeps readers unblocked and this timeout is a
+     * final safeguard for OS/database maintenance contention. The dedicated `:vpn` process must not
+     * open or write this database because a lock failure there would terminate the tunnel process.
      */
     private const val BUSY_TIMEOUT_MS = 5_000
 

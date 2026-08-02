@@ -91,7 +91,6 @@ internal fun isAwgHandshakeAttempt(message: String): Boolean =
 @AndroidEntryPoint
 class ProtonVpnService : VpnService(), CommandServerHandler {
     @Inject lateinit var connectedServerState: ConnectedServerState
-    @Inject lateinit var trafficStatsRecorder: TrafficStatsRecorder
     @Inject lateinit var localNetShield: LocalNetShield
     @Inject lateinit var vpnNetworkMonitor: VpnNetworkMonitor
 
@@ -114,6 +113,9 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         const val EXTRA_SPEED = "speed"
         const val EXTRA_TRAFFIC_RX = "traffic_rx"
         const val EXTRA_TRAFFIC_TX = "traffic_tx"
+        const val EXTRA_TRAFFIC_DELTA_RX = "traffic_delta_rx"
+        const val EXTRA_TRAFFIC_DELTA_TX = "traffic_delta_tx"
+        const val EXTRA_TRAFFIC_DELTA_SECONDS = "traffic_delta_seconds"
         const val EXTRA_NOTIFICATIONS_ENABLED = "notifications_enabled"
         const val EXTRA_KILL_SWITCH_ENABLED = "kill_switch_enabled"
         const val EXTRA_NON_FATAL_ENABLED = "non_fatal_enabled"
@@ -534,12 +536,14 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                 val deltaTx = tx - lastTx
                 lastRx = rx
                 lastTx = tx
-                trafficStatsRecorder.record(deltaRx, deltaTx, 1)
                 lastSpeed = getString(R.string.vpn_speed_format, formatBytes(deltaTx, true), formatBytes(deltaRx, true))
                 sendBroadcast(Intent(ACTION_STATS_UPDATED).apply {
                     putExtra(EXTRA_SPEED, lastSpeed)
                     putExtra(EXTRA_TRAFFIC_RX, formatBytes(rx, false))
                     putExtra(EXTRA_TRAFFIC_TX, formatBytes(tx, false))
+                    putExtra(EXTRA_TRAFFIC_DELTA_RX, deltaRx)
+                    putExtra(EXTRA_TRAFFIC_DELTA_TX, deltaTx)
+                    putExtra(EXTRA_TRAFFIC_DELTA_SECONDS, 1L)
                     putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
                     setPackage(packageName)
                 })
@@ -551,7 +555,6 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     private fun stopTrafficUpdates() {
         statsJob?.cancel()
         statsJob = null
-        scope.launch(Dispatchers.IO) { trafficStatsRecorder.flush() }
     }
 
     private fun formatBytes(bytes: Long, speed: Boolean): String {

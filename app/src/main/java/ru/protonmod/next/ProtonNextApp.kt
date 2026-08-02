@@ -22,6 +22,7 @@ import android.webkit.WebView
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
+import dagger.Lazy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.debounce
@@ -50,16 +51,16 @@ class ProtonNextApp : Application(), Configuration.Provider {
     lateinit var workerFactory: HiltWorkerFactory
 
     @Inject
-    lateinit var vpnRepository: VpnRepository
+    lateinit var vpnRepository: Lazy<VpnRepository>
 
     @Inject
-    lateinit var otaUpdateManager: OTAUpdateManager
+    lateinit var otaUpdateManager: Lazy<OTAUpdateManager>
 
     @Inject
-    lateinit var networkMonitor: NetworkMonitor
+    lateinit var networkMonitor: Lazy<NetworkMonitor>
 
     @Inject
-    lateinit var vpnAutomationManager: VpnAutomationManager
+    lateinit var vpnAutomationManager: Lazy<VpnAutomationManager>
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -124,8 +125,10 @@ class ProtonNextApp : Application(), Configuration.Provider {
         }
 
         if (isMainProcess) {
-            // Start background server load updates
-            vpnRepository.startAutoUpdate()
+            // Instantiate main-process-only graphs here. Keeping them Lazy prevents the
+            // dedicated :vpn process from opening Room during Application injection.
+            vpnAutomationManager.get()
+            vpnRepository.get().startAutoUpdate()
 
             // Schedule background session maintenance
             SessionRefreshWorker.schedule(this)
@@ -136,16 +139,16 @@ class ProtonNextApp : Application(), Configuration.Provider {
             // that would exhaust the heap with large API payloads (OOM in loads deserialization).
             @OptIn(kotlinx.coroutines.FlowPreview::class)
             MainScope().launch {
-                networkMonitor.networkChanged.debounce(2_000.milliseconds).collect { timestamp ->
+                networkMonitor.get().networkChanged.debounce(2_000.milliseconds).collect { timestamp ->
                     if (timestamp > 0) {
-                        vpnRepository.refreshServersOnNetworkChange()
+                        vpnRepository.get().refreshServersOnNetworkChange()
                     }
                 }
             }
 
             // Schedule OTA update checks
             MainScope().launch {
-                otaUpdateManager.scheduleUpdateCheck()
+                otaUpdateManager.get().scheduleUpdateCheck()
             }
         }
     }
@@ -154,7 +157,7 @@ class ProtonNextApp : Application(), Configuration.Provider {
         super.onTerminate()
         try {
             if (packageName == getProcessName()) {
-                vpnRepository.stopAutoUpdate()
+                vpnRepository.get().stopAutoUpdate()
             }
         } catch (e: Exception) {
             // ignore
