@@ -90,12 +90,17 @@ fun LiquidGlassBottomBar(
     targets.add(MainTarget.Profiles)
     targets.add(MainTarget.Settings)
 
-    // Gemini-style animation state
+    // Gemini-style intro glow shown briefly when AI mode opens.
     var showGeminiAnimation by remember { mutableStateOf(false) }
     LaunchedEffect(aiModeActive) {
         if (aiModeActive) {
             showGeminiAnimation = true
             delay(1200)
+            showGeminiAnimation = false
+        } else {
+            // Closing AI mode (e.g. tapping the close button right after a long press)
+            // cancels the coroutine above before its reset runs, so clear it here too;
+            // otherwise the border keeps shimmering indefinitely.
             showGeminiAnimation = false
         }
     }
@@ -278,41 +283,58 @@ private fun Modifier.geminiBorder(
     isEnabled: Boolean,
     strokeWidth: Dp = 2.5.dp
 ): Modifier = composed {
-    if (isEnabled) {
-        val infiniteTransition = rememberInfiniteTransition(label = "gemini")
-        val offset by infiniteTransition.animateFloat(
-            initialValue = 0f,
-            targetValue = 1000f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(1500, easing = LinearEasing),
-                repeatMode = RepeatMode.Restart
-            ),
-            label = "offset"
+    // Fade the glow in and out instead of snapping it on/off. The fade-out is a bit
+    // slower so the border eases away gently rather than blinking off.
+    val intensity by animateFloatAsState(
+        targetValue = if (isEnabled) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = if (isEnabled) 500 else 850,
+            easing = FastOutSlowInEasing
+        ),
+        label = "geminiIntensity"
+    )
+
+    // Nothing visible: skip the infinite animation entirely so it can't keep running.
+    if (intensity <= 0.001f) return@composed this
+
+    val infiniteTransition = rememberInfiniteTransition(label = "gemini")
+    // The sweep must loop seamlessly. With TileMode.Mirror the gradient pattern only
+    // repeats identically every full period, which is 2x the 600px gradient vector = 1200px.
+    // Wrapping the offset at anything other than a multiple of 1200 lands mid-pattern and
+    // the colors visibly jump on restart. LinearEasing keeps the speed constant across the seam.
+    val offset by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1200f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2600, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "offset"
+    )
+
+    drawWithContent {
+        drawContent()
+        val colors = listOf(
+            Color(0xFF4285F4),
+            Color(0xFF9B72F3),
+            Color(0xFF34A853),
+            Color(0xFFFBBC05),
+            Color(0xFFEA4335),
+            Color(0xFF4285F4)
         )
-        
-        drawWithContent {
-            drawContent()
-            val colors = listOf(
-                Color(0xFF4285F4),
-                Color(0xFF9B72F3),
-                Color(0xFF34A853),
-                Color(0xFFFBBC05),
-                Color(0xFFEA4335),
-                Color(0xFF4285F4)
-            )
-            
-            drawOutline(
-                outline = shape.createOutline(size, layoutDirection, this),
-                brush = Brush.linearGradient(
-                    colors = colors,
-                    start = Offset(offset, offset),
-                    end = Offset(offset + 600f, offset + 600f),
-                    tileMode = TileMode.Mirror
-                ),
-                style = Stroke(width = strokeWidth.toPx())
-            )
-        }
-    } else this
+
+        drawOutline(
+            outline = shape.createOutline(size, layoutDirection, this),
+            brush = Brush.linearGradient(
+                colors = colors,
+                start = Offset(offset, offset),
+                end = Offset(offset + 600f, offset + 600f),
+                tileMode = TileMode.Mirror
+            ),
+            style = Stroke(width = strokeWidth.toPx()),
+            alpha = intensity
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
