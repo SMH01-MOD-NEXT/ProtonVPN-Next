@@ -165,8 +165,8 @@ object ProtonIcons {
     val Magnifier: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_magnifier)
 
-    val MenuSignOut: ImageVector
-        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_menu_sign_out)
+    val ArrowOutFromRectangle: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_out_from_rectangle)
 
     val Palette: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_palette)

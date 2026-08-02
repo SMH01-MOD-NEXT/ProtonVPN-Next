@@ -709,7 +709,7 @@ private fun AboutSettingsSection(
         }
 
         SettingRowWithIcon(
-            icon = ProtonIcons.MenuSignOut,
+            icon = ProtonIcons.ArrowOutFromRectangle,
             title = stringResource(R.string.btn_logout),
             subtitle = stringResource(R.string.desc_toggle_connection),
             onClick = { showLogoutDialog = true },
