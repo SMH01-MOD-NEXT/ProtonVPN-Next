@@ -56,6 +56,9 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
 import ru.protonmod.next.ui.widget.VpnWidgetProvider
+import androidx.annotation.DrawableRes
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.Color
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -460,7 +463,7 @@ private fun WidgetSettingsSection(modifier: Modifier = Modifier) {
     if (isSupported) {
         SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_widget)) {
             SettingRowWithIcon(
-                icon = ProtonIcons.Grid2,
+                icon = ProtonIcons.Mobile,
                 title = stringResource(R.string.settings_widget_add_to_home),
                 subtitle = stringResource(R.string.settings_widget_add_to_home_desc),
                 onClick = {
@@ -558,7 +561,7 @@ private fun CustomizationSettingsSection(
         SettingRowWithIcon(
             title = stringResource(R.string.settings_app_theme),
             subtitle = currentThemeName,
-            icon = ProtonIcons.Palette,
+            icon = ProtonIcons.CircleHalfFilled,
             onClick = { onNavigateToThemeSelection?.invoke() }
         )
 
@@ -597,7 +600,9 @@ private fun PrivacySettingsSection(
         }
 
         SettingRowWithIcon(
-            icon = ImageVector.vectorResource(R.drawable.ic_proton_netshield),
+            iconRes = if (state.netShieldEnabled) R.drawable.feature_netshield_on
+                else R.drawable.feature_netshield_off,
+            iconTint = false,
             title = stringResource(R.string.netshield_title),
             subtitle = stringResource(R.string.netshield_settings_subtitle),
             onClick = onNavigateToNetShield
@@ -618,14 +623,14 @@ private fun PrivacySettingsSection(
         )
 
         SettingRowWithIcon(
-            icon = ProtonIcons.Globe,
+            icon = ProtonIcons.Earth,
             title = stringResource(R.string.settings_country_spoofing_title),
             subtitle = if (state.spoofCountryEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
             onClick = onNavigateToCountrySpoofing
         )
 
         SettingRowWithIcon(
-            icon = ProtonIcons.ShieldHalfFilled,
+            iconRes = R.drawable.ic_kill_switch,
             title = stringResource(R.string.settings_kill_switch),
             subtitle = stringResource(R.string.settings_kill_switch_desc),
             onClick = onNavigateToKillSwitch
@@ -701,7 +706,7 @@ private fun AboutSettingsSection(
 
         if (BuildConfig.DEBUG) {
             SettingRowWithIcon(
-                icon = ProtonIcons.Bug,
+                icon = ProtonIcons.Wrench,
                 title = stringResource(R.string.settings_debug),
                 subtitle = stringResource(R.string.debug_title),
                 onClick = onNavigateToDebug
@@ -767,7 +772,9 @@ private fun FeatureCategory(
             modifier = tileModifier,
             title = stringResource(id = R.string.settings_split_tunneling),
             subtitle = if (state.splitTunnelingEnabled) stringResource(R.string.settings_on) else stringResource(R.string.settings_off),
-            icon = ProtonIcons.ArrowsSwitch,
+            iconRes = if (state.splitTunnelingEnabled) R.drawable.feature_splittunneling_on
+                else R.drawable.feature_splittunneling_off,
+            iconTint = false,
             isActive = state.splitTunnelingEnabled,
             onClick = { onNavigateToSplitTunnelingMain?.invoke() }
         )
@@ -779,7 +786,7 @@ private fun FeatureCategory(
             modifier = tileModifier,
             title = stringResource(id = R.string.settings_protocol),
             subtitle = "AmneziaWG",
-            icon = ProtonIcons.Shield,
+            icon = ProtonIcons.Servers,
             isActive = true,
             onClick = { onNavigateToProtocol?.invoke() }
         )
@@ -837,10 +844,12 @@ fun TamperSettingsBanner(
 fun FeatureTile(
     title: String,
     subtitle: String,
-    icon: ImageVector,
     isActive: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    @DrawableRes iconRes: Int? = null,
+    iconTint: Boolean = true
 ) {
     val colors = ProtonNextTheme.colors
     Box(
@@ -871,12 +880,27 @@ fun FeatureTile(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = if (isActive) colors.brandNorm else colors.iconWeak,
-                        modifier = Modifier.size(24.dp)
-                    )
+                    if (iconRes != null) {
+                        // Feature assets ship pre-colored, so they are drawn untinted
+                        // just like in the official Proton VPN client.
+                        Icon(
+                            painter = painterResource(id = iconRes),
+                            contentDescription = null,
+                            tint = if (iconTint) {
+                                if (isActive) colors.brandNorm else colors.iconWeak
+                            } else {
+                                Color.Unspecified
+                            },
+                            modifier = Modifier.size(24.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = icon!!,
+                            contentDescription = null,
+                            tint = if (isActive) colors.brandNorm else colors.iconWeak,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))

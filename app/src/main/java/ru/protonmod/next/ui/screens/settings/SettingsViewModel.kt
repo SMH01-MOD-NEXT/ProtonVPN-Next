@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ru.protonmod.next.vpn.VpnTunnelState
+import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.ObfuscationProfile
@@ -59,6 +60,7 @@ import javax.inject.Inject
 
 data class SettingsUiState(
     val killSwitchEnabled: Boolean = false,
+    val netShieldEnabled: Boolean = false,
     val autoConnectEnabled: Boolean = false,
     val notificationsEnabled: Boolean = true,
     val allowLanEnabled: Boolean = false,
@@ -315,7 +317,8 @@ class SettingsViewModel @Inject constructor(
         settingsManager.proxyChainConfig,
         settingsManager.torModeEnabled,
         settingsManager.reconnectHintEnabled,
-        settingsManager.aiEnabled
+        settingsManager.aiEnabled,
+        settingsManager.netShieldLevel
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -394,7 +397,8 @@ class SettingsViewModel @Inject constructor(
             isProxyChainConfigValid = ProxyLinkParser.isValid(args[72] as String),
             torModeEnabled = args[73] as Boolean,
             reconnectHintEnabled = args[74] as Boolean,
-            aiEnabled = args[75] as Boolean
+            aiEnabled = args[75] as Boolean,
+            netShieldEnabled = (args[76] as NetShieldLevel) != NetShieldLevel.DISABLED,
         )
     }.stateIn(
         scope = viewModelScope,

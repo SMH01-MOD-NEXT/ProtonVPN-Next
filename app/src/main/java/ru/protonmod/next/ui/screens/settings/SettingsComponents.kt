@@ -18,6 +18,7 @@
 package ru.protonmod.next.ui.screens.settings
 
 import android.content.Intent
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -81,6 +82,8 @@ fun SettingRowWithIcon(
     title: String,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    @DrawableRes iconRes: Int? = null,
+    iconTint: Boolean = true,
     subtitle: String? = null,
     enabled: Boolean = true,
     titleColor: Color = ProtonNextTheme.colors.textNorm,
@@ -107,7 +110,7 @@ fun SettingRowWithIcon(
         modifier = baseModifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (icon != null) {
+        if (icon != null || iconRes != null) {
             Box(
                 modifier = Modifier
                     .padding(end = 16.dp)
@@ -116,12 +119,24 @@ fun SettingRowWithIcon(
                     .background(colors.brandNorm.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = if (titleColor != colors.textNorm) titleColor else colors.brandNorm,
-                    modifier = Modifier.size(20.dp)
-                )
+                val iconColor = if (titleColor != colors.textNorm) titleColor else colors.brandNorm
+                if (iconRes != null) {
+                    // Proton VPN ships some feature icons as pre-colored assets and
+                    // draws them untinted, the same way the official client does.
+                    Icon(
+                        painter = painterResource(id = iconRes),
+                        contentDescription = null,
+                        tint = if (iconTint) iconColor else Color.Unspecified,
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = icon!!,
+                        contentDescription = null,
+                        tint = iconColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         } else {
             Spacer(modifier = Modifier.width(8.dp))
@@ -167,6 +182,8 @@ fun SettingToggleRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     icon: ImageVector? = null,
+    @DrawableRes iconRes: Int? = null,
+    iconTint: Boolean = true,
     enabled: Boolean = true
 ) {
     val colors = ProtonNextTheme.colors
@@ -174,6 +191,8 @@ fun SettingToggleRow(
         title = title,
         subtitle = subtitle,
         icon = icon,
+        iconRes = iconRes,
+        iconTint = iconTint,
         enabled = enabled,
         onClick = { onCheckedChange(!checked) },
         modifier = modifier,

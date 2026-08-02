@@ -384,7 +384,7 @@ fun ProfileCardItem(
             // Edit Profile Button
             IconButton(onClick = onEdit, modifier = Modifier.size(48.dp)) {
                 Icon(
-                    imageVector = ProtonIcons.Pen,
+                    imageVector = ProtonIcons.Pencil,
                     contentDescription = stringResource(R.string.desc_edit_profile),
                     tint = colors.iconWeak,
                     modifier = Modifier.size(24.dp)

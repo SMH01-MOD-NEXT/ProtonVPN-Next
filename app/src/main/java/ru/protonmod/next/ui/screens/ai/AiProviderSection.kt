@@ -134,7 +134,7 @@ fun AiProviderSection(
                                     showProviderForm = true
                                 }) {
                                     Icon(
-                                        ProtonIcons.Pen,
+                                        ProtonIcons.Pencil,
                                         contentDescription = stringResource(R.string.ai_provider_edit),
                                         tint = colors.textWeak
                                     )

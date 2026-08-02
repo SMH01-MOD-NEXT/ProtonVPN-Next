@@ -944,7 +944,7 @@ fun ObfuscationConfigSelectionDialog(
                                     }
                                     if (!config.isReadOnly) {
                                         IconButton(onClick = { editingProfile = config }) {
-                                            Icon(ProtonIcons.Pen, contentDescription = stringResource(R.string.btn_edit), tint = colors.iconNorm)
+                                            Icon(ProtonIcons.Pencil, contentDescription = stringResource(R.string.btn_edit), tint = colors.iconNorm)
                                         }
                                         IconButton(onClick = { onDelete(config.id) }) {
                                             Icon(ProtonIcons.Trash, contentDescription = stringResource(R.string.btn_delete), tint = colors.iconWeak)

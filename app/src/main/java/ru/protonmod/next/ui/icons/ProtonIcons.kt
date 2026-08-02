@@ -10,6 +10,9 @@ import ru.protonmod.next.R
  *
  * Drop-in replacement for `Icons.Rounded.*` in composables:
  * `Icon(imageVector = ProtonIcons.Globe, contentDescription = null)`.
+ *
+ * Which icon belongs to which screen follows the official Proton VPN
+ * Android client, so the UI stays consistent with it.
  */
 object ProtonIcons {
     val ArrowDownCircle: ImageVector
@@ -27,11 +30,20 @@ object ProtonIcons {
     val ArrowLeft: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_left)
 
+    val ArrowOutFromRectangle: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_out_from_rectangle)
+
     val ArrowOutSquare: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_out_square)
 
+    val ArrowRightArrowLeft: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_right_arrow_left)
+
     val ArrowRotateRight: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_rotate_right)
+
+    val ArrowUpFromSquare: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_up_from_square)
 
     val ArrowUpLine: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_up_line)
@@ -39,8 +51,14 @@ object ProtonIcons {
     val ArrowsRotate: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrows_rotate)
 
+    val ArrowsSwapRight: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrows_swap_right)
+
     val ArrowsSwitch: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrows_switch)
+
+    val At: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_at)
 
     val Bell: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_bell)
@@ -48,8 +66,14 @@ object ProtonIcons {
     val Bolt: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_bolt)
 
+    val Bookmark: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_bookmark)
+
     val BrandAndroid: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_brand_android)
+
+    val BrandTor: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_brand_tor)
 
     val Broom: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_broom)
@@ -69,11 +93,20 @@ object ProtonIcons {
     val CheckmarkCircle: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_checkmark_circle)
 
+    val ChevronDownFilled: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_chevron_down_filled)
+
     val ChevronLeft: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_chevron_left)
 
     val ChevronRight: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_chevron_right)
+
+    val ChevronUp: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_chevron_up)
+
+    val CircleHalfFilled: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_circle_half_filled)
 
     val CircleSlash: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_circle_slash)
@@ -84,17 +117,26 @@ object ProtonIcons {
     val Clock: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_clock)
 
+    val ClockFilled: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_clock_filled)
+
     val ClockRotateLeft: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_clock_rotate_left)
 
     val Cloud: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_cloud)
 
+    val Code: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_code)
+
     val CogWheel: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_cog_wheel)
 
     val Cross: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_cross)
+
+    val Earth: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_earth)
 
     val Envelope: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_envelope)
@@ -117,8 +159,14 @@ object ProtonIcons {
     val FileLines: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_file_lines)
 
+    val Filter: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_filter)
+
     val Fingerprint: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_fingerprint)
+
+    val Folders: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_folders)
 
     val Globe: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_globe)
@@ -144,6 +192,9 @@ object ProtonIcons {
     val Language: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_language)
 
+    val LifeRing: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_life_ring)
+
     val LinesHorizontal: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_lines_horizontal)
 
@@ -159,14 +210,38 @@ object ProtonIcons {
     val Lock: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_lock)
 
+    val LockFilled: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_lock_filled)
+
+    val LockLayers: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_lock_layers)
+
+    val LockOpenFilled2: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_lock_open_filled_2)
+
+    val Locks: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_locks)
+
     val MagicProtonWand: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_magic_proton_wand)
 
     val Magnifier: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_magnifier)
 
-    val ArrowOutFromRectangle: ImageVector
-        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_out_from_rectangle)
+    val MapPin: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_map_pin)
+
+    val MinusCircleFilled: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_minus_circle_filled)
+
+    val Mobile: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_mobile)
+
+    val Netshield: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_netshield)
+
+    val Note: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_note)
 
     val Palette: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_palette)
@@ -177,14 +252,32 @@ object ProtonIcons {
     val Pen: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_pen)
 
+    val Pencil: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_pencil)
+
+    val PinFilled: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_pin_filled)
+
     val Play: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_play)
 
     val Plus: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_plus)
 
+    val PlusCircle: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_plus_circle)
+
+    val PlusCircleFilled: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_plus_circle_filled)
+
     val PowerOff: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_power_off)
+
+    val QrCode: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_qr_code)
+
+    val Rocket: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_rocket)
 
     val Servers: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_servers)
@@ -201,8 +294,14 @@ object ProtonIcons {
     val Sliders: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_sliders)
 
+    val SpeechBubble: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_speech_bubble)
+
     val Squares: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_squares)
+
+    val SquaresInSquare: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_squares_in_square)
 
     val Star: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_star)
@@ -213,6 +312,9 @@ object ProtonIcons {
     val SwipeLeft: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_swipe_left)
 
+    val Tag: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_tag)
+
     val ThreeDotsHorizontal: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_three_dots_horizontal)
 
@@ -222,9 +324,18 @@ object ProtonIcons {
     val Trash: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_trash)
 
+    val TrashCrossFilled: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_trash_cross_filled)
+
     val User: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_user)
 
+    val Users: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_users)
+
     val WindowTerminal: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_window_terminal)
+
+    val Wrench: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_wrench)
 }

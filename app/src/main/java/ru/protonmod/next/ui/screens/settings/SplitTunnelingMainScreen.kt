@@ -164,7 +164,9 @@ fun SplitTunnelingMainScreen(
                             } else {
                                 stringResource(R.string.st_disabled_subtitle)
                             },
-                            icon = ProtonIcons.ArrowsSwitch,
+                            iconRes = if (uiState.splitTunnelingEnabled) R.drawable.feature_splittunneling_on
+                                else R.drawable.feature_splittunneling_off,
+                            iconTint = false,
                             checked = uiState.splitTunnelingEnabled,
                             onCheckedChange = { viewModel.setSplitTunneling(it) }
                         )
@@ -211,7 +213,7 @@ fun SplitTunnelingMainScreen(
                                 val isExcludeMode = uiState.splitTunnelingMode == "exclude"
 
                                 SettingRowWithIcon(
-                                    icon = ProtonIcons.Grid3,
+                                    icon = ProtonIcons.Mobile,
                                     title = stringResource(
                                         if (isExcludeMode) R.string.settings_excluded_apps 
                                         else R.string.settings_included_apps
@@ -230,7 +232,7 @@ fun SplitTunnelingMainScreen(
                                 )
 
                                 SettingRowWithIcon(
-                                    icon = ProtonIcons.Servers,
+                                    icon = ProtonIcons.WindowTerminal,
                                     title = stringResource(
                                         if (isExcludeMode) R.string.settings_excluded_ips
                                         else R.string.settings_included_ips

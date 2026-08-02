@@ -100,7 +100,7 @@ fun ServerCard(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = ProtonIcons.Globe,
+                                    imageVector = ProtonIcons.Earth,
                                     contentDescription = stringResource(R.string.desc_country),
                                     tint = colors.iconNorm,
                                     modifier = Modifier.size(20.dp)
@@ -171,7 +171,7 @@ fun LoadIndicator(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            imageVector = ProtonIcons.Globe,
+            imageVector = ProtonIcons.Earth,
             contentDescription = null,
             tint = color,
             modifier = Modifier.size(16.dp)

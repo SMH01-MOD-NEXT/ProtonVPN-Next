@@ -876,7 +876,7 @@ fun ConnectionStatusCard(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = ProtonIcons.Globe,
+                                imageVector = ProtonIcons.Earth,
                                 contentDescription = stringResource(R.string.desc_country),
                                 tint = colors.iconNorm,
                                 modifier = Modifier.size(24.dp)
