@@ -2,7 +2,7 @@
 
 The config generator runs entirely in the browser, but `vpn-api.proton.me`
 sends no CORS headers and rejects preflight, so a page can never read its
-responses. These two proxies forward the request and add the missing headers.
+responses. This proxy forwards the request and adds the missing headers.
 
 Cloudflare is intentionally **not** used for Proton API traffic: Proton
 throttles it far more aggressively than the alternatives. The Cloudflare worker
@@ -26,43 +26,47 @@ extra headers upstream.
 These sources live on `protonvpn-next-dev`, the default branch, on purpose:
 Deno Deploy builds the default branch of a linked repository and offers no
 branch picker, so keeping the proxy on a feature branch would make it
-undeployable. The Android client uses the same two proxies, so this is also
-the branch that owns them.
+undeployable. The Android client uses the same proxy, so this is also the
+branch that owns it.
+
+## Allowed origins
+
+Origins are matched by pattern, not by a fixed list, because the site is
+served from several hosts (`home.protonnext.qzz.io` today) and because a
+missing entry fails in a way that looks like a broken proxy:
+
+- `https://` + any subdomain of `protonnext.qzz.io`
+- `https://<name>.workers.dev` and `https://<name>.pages.dev` previews
+- `http://localhost` and `http://127.0.0.1` on any port
+
+An origin outside the patterns gets no `Access-Control-Allow-Origin` at all.
+The proxy never answers with a substituted origin: doing so made browsers
+report that the header "does not match", which hides the real cause.
 
 Changing a proxy URL means updating every consumer:
 
 - `src/lib/api.js` (`API_ENDPOINTS`) on the `website` branch
 - `app/src/main/java/ru/protonmod/next/di/NetworkModule.kt`
-  (`PROTON_PROXY_NETLIFY_URL`, `PROTON_PROXY_DENO_URL`)
+  (`PROTON_PROXY_DENO_URL`; `PROTON_PROXY_NETLIFY_URL` still exists as an app
+  bypass strategy, but no Netlify deployment backs it any more)
 - `app/src/main/java/ru/protonmod/next/data/network/TokenAuthenticator.kt`
 - `app/src/main/java/ru/protonmod/next/data/network/DohFallbackInterceptor.kt`
 - `app/src/main/java/ru/protonmod/next/ui/screens/CaptchaScreen.kt`
 
-Host suffix checks (`*.deno.net`, `*.netlify.app`) keep working on their own.
+Host suffix checks (`*.deno.net`) keep working on their own.
 
-## Netlify
+## Netlify (retired)
 
-Current deployment: `https://shimmering-stroopwafel-51675e.netlify.app`
+The Netlify proxy was removed. Two reasons, either of which is fatal:
 
-With the CLI:
+- Netlify is not reachable from Russia, where most of the users are, so it
+  never served as a fallback for them.
+- The GitHub account the site `shimmering-stroopwafel-51675e` was linked to has
+  been banned, so the deployment cannot be updated from a repository at all.
 
-```sh
-cd proxy/netlify
-netlify deploy --prod
-```
-
-Without the CLI, connect the existing site to this repository in the Netlify
-UI (Site configuration → Build & deploy):
-
-- repository: the website repository, branch `website`
-- base directory: `proxy/netlify`
-- build command: leave empty
-- publish directory: `proxy/netlify/public`
-- functions directory: `proxy/netlify/netlify/functions`
-
-The base directory is what makes Netlify read `proxy/netlify/netlify.toml`;
-without it the proxy is never bundled and every request returns the old
-response.
+The site is stuck on a build that predates the CORS support and answers every
+browser request without `Access-Control-Allow-Origin`. Delete it rather than
+leaving a broken endpoint reachable.
 
 ## Deno Deploy
 
