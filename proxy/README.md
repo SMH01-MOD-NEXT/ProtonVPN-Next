@@ -66,13 +66,13 @@ response.
 
 ## Deno Deploy
 
-Current deployment: `https://quick-bluejay-8760.smh01-mirrors.deno.net`
+Current deployment: `https://protonvpn-next-mirror-yq0w6dbkxg4j.smh01-mirrors.deno.net`
 
 With the CLI:
 
 ```sh
 cd proxy/deno
-deployctl deploy --project=quick-bluejay-8760 main.ts
+deployctl deploy --project=protonvpn-next-mirror main.ts
 ```
 
 Without the CLI, link the project to the repository in the Deno Deploy

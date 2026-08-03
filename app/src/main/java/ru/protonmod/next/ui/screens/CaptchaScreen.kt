@@ -217,7 +217,7 @@ fun CaptchaScreen(
 
                 val proxyBaseUrl = when (apiBypassStrategy) {
                     SettingsManager.STRATEGY_CLOUDFLARE -> "https://api.protonnext.qzz.io"
-                    SettingsManager.STRATEGY_DENO -> "https://quick-bluejay-8760.smh01-mirrors.deno.net"
+                    SettingsManager.STRATEGY_DENO -> "https://protonvpn-next-mirror-yq0w6dbkxg4j.smh01-mirrors.deno.net"
                     else -> "https://shimmering-stroopwafel-51675e.netlify.app"
                 }
 
