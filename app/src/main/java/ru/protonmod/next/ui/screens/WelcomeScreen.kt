@@ -40,8 +40,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -433,8 +435,14 @@ private fun StepWelcome(
                         )
                     )
             )
+            // vpn_welcome_globe is a raster (.webp) asset. painterResource() picks the
+            // loader from the cached resource entry and can route it into the vector
+            // loader after a configuration change, which crashed onboarding with
+            // "Only VectorDrawables and rasterized asset types are supported" (ANDROID-232).
+            // imageResource() always uses the raster decoder, so the type can never mismatch.
+            val welcomeGlobe: ImageBitmap = ImageBitmap.imageResource(id = R.drawable.vpn_welcome_globe)
             Image(
-                painter = painterResource(id = R.drawable.vpn_welcome_globe),
+                bitmap = welcomeGlobe,
                 contentDescription = null,
                 modifier = Modifier.size(180.dp)
             )
