@@ -55,22 +55,26 @@ Changing a proxy URL means updating every consumer:
 
 Host suffix checks (`*.deno.net`) keep working on their own.
 
-## Netlify (retired)
+## Netlify (app only)
 
-The Netlify proxy was removed. Two reasons, either of which is fatal:
+Current deployment: `https://shimmering-stroopwafel-51675e.netlify.app`
 
-- Netlify is not reachable from Russia, where most of the users are, so it
-  never served as a fallback for them.
-- The GitHub account the site `shimmering-stroopwafel-51675e` was linked to has
-  been banned, so the deployment cannot be updated from a repository at all.
+Kept for the Android and CLI clients, where it is a working bypass route for
+users in Iran. It is deliberately **not** used by the website:
 
-The site is stuck on a build that predates the CORS support and answers every
-browser request without `Access-Control-Allow-Origin`. Delete it rather than
-leaving a broken endpoint reachable.
+- Netlify is not reachable from Russia, where most of the website's users are.
+- The GitHub account this site is linked to has been banned, so the deployment
+  can no longer be updated from a repository. It still serves a build that
+  predates the CORS support and answers browser requests without
+  `Access-Control-Allow-Origin`.
+
+Native clients do not enforce CORS, so the stale build keeps working for them.
+The source here stays in sync for the day the site can be redeployed; until
+then, treat the live deployment as frozen and do not point a browser at it.
 
 ## Deno Deploy
 
-Current deployment: `https://protonvpn-next-mirror-yq0w6dbkxg4j.smh01-mirrors.deno.net`
+Current deployment: `https://protonvpn-next-mirror.smh01-mirrors.deno.net`
 
 With the CLI:
 
