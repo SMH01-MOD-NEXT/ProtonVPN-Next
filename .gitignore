@@ -47,3 +47,7 @@ Thumbs.db
 
 # AWGBox is generated locally by scripts/build-awgbox-lib.sh.
 # The pinned source revision and build recipe remain in scripts/build-awgbox-lib.sh.
+
+# Android Studio occasionally drops build output next to the module instead of
+# under app/build/, which keeps getting picked up by "git add -A".
+app/*/*/output-metadata.json
