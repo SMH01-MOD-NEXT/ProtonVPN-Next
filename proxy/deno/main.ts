@@ -1,12 +1,19 @@
 /**
  * Deno Deploy proxy for the Proton API, with CORS enabled for the website.
  *
- * Mirrors `proxy/netlify/netlify/functions/proxy.js`. Two independent proxies
- * are deployed so the generator can fall back when one of them is blocked or
- * rate limited; `src/lib/api.js` tries them in order.
+ * This is the only proxy: the Netlify one was removed because it is blocked in
+ * Russia and its deployment can no longer be updated.
  *
  * Deploy: `deployctl deploy --project=<project> main.ts` from `proxy/deno`.
  */
+
+/**
+ * Bumped by hand whenever the CORS behaviour changes, and reported by
+ * `/__proxy/health`. Deno Deploy silently keeps serving an older build when a
+ * deployment does not run, and without a marker the only symptom is a CORS
+ * error that looks identical to a code bug.
+ */
+const PROXY_BUILD = "2026-08-03-origin-patterns"
 
 /**
  * Origins allowed to read proxied responses.
@@ -61,7 +68,9 @@ function corsHeaders(origin: string): Record<string, string> {
 	const headers: Record<string, string> = {
 		"access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
 		"access-control-allow-headers": FORWARDED_REQUEST_HEADERS.join(", "),
-		"access-control-max-age": "86400",
+		// Short on purpose: a browser caches a failed preflight too, and a whole
+		// day of poisoned cache outlives any fix deployed here.
+		"access-control-max-age": "600",
 		vary: "Origin",
 	}
 	// Echo the caller's origin, never a substitute. Answering an unknown origin
@@ -91,6 +100,15 @@ Deno.serve(async (request: Request): Promise<Response> => {
 	}
 
 	const incoming = new URL(request.url)
+
+	// Tells which build is actually live and whether this caller's origin would
+	// be accepted, without having to trigger a real CORS failure to find out.
+	if (incoming.pathname === "/__proxy/health") {
+		return new Response(
+			JSON.stringify({ build: PROXY_BUILD, origin, originAllowed: isAllowedOrigin(origin) }),
+			{ status: 200, headers: { ...cors, "content-type": "application/json" } },
+		)
+	}
 	const target = `${resolveUpstream(incoming.pathname)}${incoming.search}`
 
 	const headers = new Headers()
