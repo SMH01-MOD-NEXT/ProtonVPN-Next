@@ -292,7 +292,11 @@ class AiClient @Inject constructor(
                     response.use {
                         if (!it.isSuccessful) {
                             val errorBody = it.body.string()
-                            ProtonLogger.e("AiClient", "Unsuccessful response: ${it.code} ${it.message}\n$errorBody")
+                            // Rejections from a third-party AI provider (bad key, spent quota,
+                            // rate limit, insufficient balance) are the provider account's
+                            // problem, not a defect in this app, so they are logged as warnings
+                            // and never reported as errors (ANDROID-234).
+                            ProtonLogger.w("AiClient", "Unsuccessful response: ${it.code} ${it.message}\n$errorBody")
                             continuation.resume(null)
                             return
                         }

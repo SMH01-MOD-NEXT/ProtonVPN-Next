@@ -178,9 +178,18 @@ class ProfilesViewModel @Inject constructor(
                 return@launch
             }
 
-            val servers = vpnRepository.getCachedServers()
+            var servers = vpnRepository.getCachedServers()
             if (servers.isEmpty()) {
-                ProtonLogger.e(TAG, "Cannot connect: Server list is empty")
+                // The cache is empty right after a fresh install or after it was cleared, so
+                // refresh it once instead of failing the connection attempt (ANDROID-1ZV).
+                ProtonLogger.w(TAG, "Server cache is empty, refreshing before connecting")
+                runCatching {
+                    vpnRepository.getServers(session.accessToken, session.sessionId, session.userTier)
+                }.onFailure { ProtonLogger.w(TAG, "Server refresh failed: ${it.message}") }
+                servers = vpnRepository.getCachedServers()
+            }
+            if (servers.isEmpty()) {
+                ProtonLogger.w(TAG, "Cannot connect: Server list is empty")
                 return@launch
             }
 
