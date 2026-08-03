@@ -31,7 +31,18 @@ GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 WEBSITE_BRANCH = "website"
 MIRROR_REPO = os.environ.get('MIRROR_REPO', 'SMH01-MIRRORS/ProtonVPN-Next-MIRROR')
 CHANNELS = ("stable", "nightly")
+# Both product flavors are published. The in-app updater only understands the
+# legacy "release"/"debug" keys, so the standard flavor keeps them and privacy
+# gets its own keys, which older clients simply ignore.
+FLAVORS = ("standard", "privacy")
 VERSION_CODE_BASE = 605159512
+
+
+def metadata_key(flavor, build_type):
+    """The update.json key for a flavor/build type pair (see the website matrix)."""
+    if flavor == "standard":
+        return build_type
+    return f"{flavor}{build_type.capitalize()}"
 
 
 def fail(message):
@@ -189,6 +200,8 @@ def push_website(repo_dir, channel):
     run("git config user.email 'ci@protonmod.next'", cwd=repo_dir)
     run("git config user.name 'CI Bot'", cwd=repo_dir)
     run("git add public/update.json", cwd=repo_dir)
+    if os.path.exists(os.path.join(repo_dir, "dist", "update.json")):
+        run("git add dist/update.json", cwd=repo_dir)
     run(f"git commit -m 'chore: update ota metadata for {channel} channel'", cwd=repo_dir)
 
     for attempt in range(3):
@@ -239,19 +252,21 @@ def main():
     channel = "stable" if is_tag else "nightly"
     target_dir = "VPN-Next" if is_tag else "VPN-Next-TEST"
     build_types = ["release"] if is_tag else ["debug", "release"]
-    # Only publish official builds to OTA
-    flavor = "stableStandard" if is_tag else "nightlyStandard"
 
     ensure_full_history()
 
     # 1. Collect the APKs before touching R2, so a bad build never empties the bucket.
+    #    Every flavor/build type combination the pipeline produced is published, so the
+    #    website can offer the full matrix instead of a single standard build.
     staged = []
-    for build_type in build_types:
-        apk_pattern = f"app/build/outputs/apk/{flavor}/{build_type}/*.apk"
-        apk_files = glob.glob(apk_pattern)
-        if not apk_files:
-            fail(f"No APK found for {flavor}/{build_type} at {apk_pattern}")
-        staged.append((build_type, apk_files[0]))
+    for flavor in FLAVORS:
+        for build_type in build_types:
+            gradle_flavor = f"{channel}{flavor.capitalize()}"
+            apk_pattern = f"app/build/outputs/apk/{gradle_flavor}/{build_type}/*.apk"
+            apk_files = glob.glob(apk_pattern)
+            if not apk_files:
+                fail(f"No APK found for {gradle_flavor}/{build_type} at {apk_pattern}")
+            staged.append((metadata_key(flavor, build_type), apk_files[0]))
 
     # 2. Prepare metadata
     commit_count = int(get_git_output("git rev-list --count HEAD") or "0")
@@ -275,11 +290,11 @@ def main():
     data = newest_entries(load_json(json_path), read_mirror_metadata("website_repo", json_relative_path))
 
     published = data.get(channel, {})
-    for build_type, _ in staged:
-        previous = published.get(build_type, {})
+    for variant, _ in staged:
+        previous = published.get(variant, {})
         if int(previous.get("versionCode", 0)) > version_code:
             fail(
-                f"Refusing to publish {channel}/{build_type}: versionCode {version_code} is lower "
+                f"Refusing to publish {channel}/{variant}: versionCode {version_code} is lower "
                 f"than the published {previous.get('versionCode')}. This means the CI history is "
                 "incomplete."
             )
@@ -300,9 +315,16 @@ def main():
     # Replace only the current channel; the other channel keeps its published build.
     data[channel] = channel_data
 
-    with open(json_path, 'w') as handle:
-        json.dump(data, handle, indent=2)
-        handle.write("\n")
+    # The website is a Vite build served from dist/, and public/update.json is only
+    # copied into it at build time. Writing both keeps the deployed file in sync
+    # without rebuilding the site on every OTA publish.
+    for relative_path in (json_relative_path, "dist/update.json"):
+        target = os.path.join("website_repo", relative_path)
+        if relative_path != json_relative_path and not os.path.isdir(os.path.dirname(target)):
+            continue
+        with open(target, 'w') as handle:
+            json.dump(data, handle, indent=2)
+            handle.write("\n")
 
     if push_website("website_repo", channel):
         push_mirror("website_repo")
