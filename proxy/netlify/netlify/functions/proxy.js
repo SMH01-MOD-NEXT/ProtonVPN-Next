@@ -9,12 +9,24 @@
  * Deploy: `netlify deploy --prod` from `proxy/netlify`.
  */
 
-const ALLOWED_ORIGINS = [
-	"https://protonnext.qzz.io",
-	"https://www.protonnext.qzz.io",
-	"http://localhost:5173",
-	"http://127.0.0.1:5173",
+/**
+ * Origins allowed to read proxied responses.
+ *
+ * Patterns rather than a fixed list: the site is reachable through the apex
+ * domain, subdomains, Cloudflare preview deployments and local dev servers on
+ * arbitrary ports, and an origin missing from a hardcoded list fails in a way
+ * that looks exactly like a broken proxy.
+ */
+const ALLOWED_ORIGIN_PATTERNS = [
+	/^https:\/\/([a-z0-9-]+\.)*protonnext\.qzz\.io$/,
+	/^https:\/\/[a-z0-9-]+\.workers\.dev$/,
+	/^https:\/\/[a-z0-9-]+\.pages\.dev$/,
+	/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
 ]
+
+function isAllowedOrigin(origin) {
+	return ALLOWED_ORIGIN_PATTERNS.some((pattern) => pattern.test(origin))
+}
 
 const UPSTREAMS = [
 	{ prefix: "/verify-api", host: "https://verify-api.proton.me" },
@@ -48,14 +60,19 @@ const FORWARDED_REQUEST_HEADERS = [
 ]
 
 function corsHeaders(origin) {
-	const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
-	return {
-		"access-control-allow-origin": allowed,
+	const headers = {
 		"access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
 		"access-control-allow-headers": FORWARDED_REQUEST_HEADERS.join(", "),
 		"access-control-max-age": "86400",
 		vary: "Origin",
 	}
+	// Echo the caller's origin, never a substitute. Answering an unknown origin
+	// with an allowed one produced the confusing "does not match" browser error
+	// instead of a plain "origin not allowed".
+	if (isAllowedOrigin(origin)) {
+		headers["access-control-allow-origin"] = origin
+	}
+	return headers
 }
 
 function resolveUpstream(pathname) {
@@ -103,7 +120,11 @@ export default async function handler(request) {
 
 	const responseHeaders = new Headers(cors)
 	for (const [name, value] of upstreamResponse.headers) {
-		if (STRIPPED_RESPONSE_HEADERS.has(name.toLowerCase())) continue
+		const lower = name.toLowerCase()
+		if (STRIPPED_RESPONSE_HEADERS.has(lower)) continue
+		// Proton sets its own CORS headers on some endpoints; copying them would
+		// overwrite ours and reject the page.
+		if (lower.startsWith("access-control-")) continue
 		responseHeaders.set(name, value)
 	}
 
