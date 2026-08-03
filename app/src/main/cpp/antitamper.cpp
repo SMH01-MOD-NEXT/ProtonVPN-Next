@@ -784,10 +784,22 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     int currentVersionCode = env->GetIntField(packageInfo, versionCodeField);
     LOGD("Version code: %d, Expected: %d", currentVersionCode, getExpectedVersionCode());
 
+    bool isDebugBuild = false;
+#if defined(DEBUG_BUILD) || defined(ANTITAMPER_TEST_BUILD)
+    isDebugBuild = true;
+#endif
+
     if (currentVersionCode != getExpectedVersionCode()) {
-        LOGE("AntiTamper: Version code mismatch!");
-        reportSecurityEvent(env, XOR_STR("Version code mismatch. Found: ") + std::to_string(currentVersionCode) + XOR_STR(", Expected: ") + std::to_string(getExpectedVersionCode()));
-        allGood = false;
+        // Debug builds are incremental: the native metadata header can be older than the APK
+        // manifest when only Java/Kotlin sources were recompiled. Failing here would block
+        // Run/Debug from the IDE, so the mismatch is only logged for debuggable builds.
+        if (isDebugBuild) {
+            LOGD("AntiTamper: Version code mismatch ignored in debug build (found %d, expected %d)", currentVersionCode, getExpectedVersionCode());
+        } else {
+            LOGE("AntiTamper: Version code mismatch!");
+            reportSecurityEvent(env, XOR_STR("Version code mismatch. Found: ") + std::to_string(currentVersionCode) + XOR_STR(", Expected: ") + std::to_string(getExpectedVersionCode()));
+            allGood = false;
+        }
     }
 
     jfieldID versionNameField = env->GetFieldID(packageInfoClass, XOR_STR("versionName").c_str(), XOR_STR("Ljava/lang/String;").c_str());
@@ -800,9 +812,14 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
     LOGD("Version name: %s, Expected: %s", currentVersionName.c_str(), expectedVersion.c_str());
 
     if (currentVersionName != expectedVersion && currentVersionName != expectedVersion + XOR_STR("-nightly")) {
-        LOGE("AntiTamper: Version name mismatch!");
-        reportSecurityEvent(env, XOR_STR("Version name mismatch. Found: ") + currentVersionName + XOR_STR(", Expected: ") + expectedVersion);
-        allGood = false;
+        // Same reasoning as the version code check above: never block a debuggable build.
+        if (isDebugBuild) {
+            LOGD("AntiTamper: Version name mismatch ignored in debug build (found %s, expected %s)", currentVersionName.c_str(), expectedVersion.c_str());
+        } else {
+            LOGE("AntiTamper: Version name mismatch!");
+            reportSecurityEvent(env, XOR_STR("Version name mismatch. Found: ") + currentVersionName + XOR_STR(", Expected: ") + expectedVersion);
+            allGood = false;
+        }
     }
 
     // Check Signature

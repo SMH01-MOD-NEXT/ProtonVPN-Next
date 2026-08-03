@@ -17,39 +17,33 @@
 
 import java.io.File
 import java.util.Properties
-import java.util.concurrent.TimeUnit
 
-// Helper function to execute Git commands in the terminal
-fun getGitOutput(command: String, workingDir: File): String {
-    return try {
-        val process = ProcessBuilder(command.split(" "))
-            .directory(workingDir)
-            .redirectOutput(ProcessBuilder.Redirect.PIPE)
-            .redirectError(ProcessBuilder.Redirect.PIPE)
-            .start()
-        process.waitFor(10, TimeUnit.SECONDS)
-        process.inputStream.bufferedReader().readText().trim()
-    } catch (_: Exception) {
-        ""
-    }
-}
+// Git metadata is read through providers.exec instead of a raw ProcessBuilder so the
+// configuration cache treats the command output as a build input and re-runs it.
+// A ProcessBuilder call is invisible to the cache: its result is captured once and then frozen
+// inside the cache entry. Android Studio, the terminal and CI each keep their own entry, so
+// Studio kept reusing the version code from whenever its entry was created and drifted dozens
+// of commits behind `./gradlew` and CI builds.
+fun gitOutput(vararg command: String): String =
+    runCatching {
+        providers.exec {
+            workingDir = rootDir
+            commandLine(*command)
+            isIgnoreExitValue = true
+        }.standardOutput.asText.get().trim()
+    }.getOrDefault("")
 
-// Dynamically generate version name based on the latest Git tag
-fun getDynamicVersionName(workingDir: File): String {
-    val gitVersion = getGitOutput("git describe --tags --always", workingDir)
-    // Fallback to "12.0.0" if Git is not available (e.g., downloaded as a ZIP)
-    return gitVersion.ifEmpty { "12.0.0" }
-}
+// Version name follows the latest Git tag.
+// Falls back to "12.0.0" if Git is not available (e.g., downloaded as a ZIP).
+val dynamicVersionName: String = gitOutput("git", "describe", "--tags", "--always").ifEmpty { "12.0.0" }
 
-// Dynamically generate version code using total commit count to ensure it strictly increases.
-// Using total count instead of "since last tag" prevents resets when a new tag is created.
-fun getDynamicVersionCode(workingDir: File): Int {
-    // We use 'HEAD' to count all commits in the current branch's history.
-    // In CI, ensure a full clone (depth: 0) is performed for this to work.
-    val commitCount = getGitOutput("git rev-list --count HEAD", workingDir).toIntOrNull() ?: 0
-    // Base version code prevents the number from ever dropping below your current state
+// Version code = base + total commit count, so it grows by exactly one per commit.
+// Using the total count instead of "since last tag" prevents resets when a new tag is created.
+// In CI, ensure a full clone (fetch-depth: 0) is performed, otherwise the count is truncated.
+val dynamicVersionCode: Int = run {
     val baseVersionCode = 605159512
-    return baseVersionCode + commitCount
+    val commitCount = gitOutput("git", "rev-list", "--count", "HEAD").toIntOrNull() ?: 0
+    baseVersionCode + commitCount
 }
 
 plugins {
@@ -88,8 +82,8 @@ android {
         applicationId = "ru.protonmod.next"
         minSdk = 29
         targetSdk = 37
-        versionCode = getDynamicVersionCode(rootDir)
-        versionName = getDynamicVersionName(rootDir)
+        versionCode = dynamicVersionCode
+        versionName = dynamicVersionName
         buildConfigField("boolean", "SENTRY_ENABLED", "true")
 
         // Support 64-bit architectures only
@@ -109,8 +103,8 @@ android {
     }
 
     // Pre-calculate version info so it's consistent between Kotlin and C++
-    val finalVersionCode = getDynamicVersionCode(rootDir)
-    val finalVersionName = getDynamicVersionName(rootDir)
+    val finalVersionCode = dynamicVersionCode
+    val finalVersionName = dynamicVersionName
 
     defaultConfig {
         applicationId = "ru.protonmod.next"
@@ -330,7 +324,7 @@ tasks.register("generateSecurityMetadata") {
     
     val releaseMaxSize = 70 * 1024 * 1024L
     val debugMaxSize = 150 * 1024 * 1024L
-    val expectedVersionCode = getDynamicVersionCode(rootDir)
+    val expectedVersionCode = dynamicVersionCode
     
     inputs.property("releaseMaxSize", releaseMaxSize)
     inputs.property("debugMaxSize", debugMaxSize)
