@@ -43,10 +43,16 @@ import io.nekohasekai.libbox.ShellSession
 import io.nekohasekai.libbox.StringIterator
 import io.nekohasekai.libbox.TunOptions
 import io.nekohasekai.libbox.WIFIState
+import ru.protonmod.next.utils.ProtonLogger
 import java.net.Inet6Address
 import java.net.InetSocketAddress
 import java.net.NetworkInterface
 import io.nekohasekai.libbox.NetworkInterface as BoxNetworkInterface
+
+private const val TAG = "AwgBoxPlatform"
+
+/** Failure message used when the OS no longer grants this app the VPN consent. */
+internal const val VPN_PERMISSION_REVOKED = "VPN permission was revoked"
 
 /** Android platform bridge required by libbox. */
 internal data class SplitTunnelingAppPolicy(
@@ -97,7 +103,17 @@ class AwgBoxPlatform(
     override fun sendNotification(notification: Notification) = Unit
 
     override fun openTun(options: TunOptions): Int {
-        check(VpnService.prepare(service) == null) { "VPN permission was revoked" }
+        // VpnService.prepare() throws SecurityException ("<package> does not belong to uid ...")
+        // when the consent record belongs to another Android user/profile or was invalidated by
+        // a reinstall. Translate it into the ordinary "permission revoked" failure so the
+        // connection fails cleanly and the user is asked to grant VPN access again (ANDROID-21R).
+        val vpnConsentMissing = try {
+            VpnService.prepare(service) != null
+        } catch (error: SecurityException) {
+            ProtonLogger.w(TAG, "VPN consent no longer owned by this app: ${error.message}")
+            true
+        }
+        check(!vpnConsentMissing) { VPN_PERMISSION_REVOKED }
         val builder = service.Builder()
             .setSession(service.getString(ru.protonmod.next.R.string.vpn_session_name))
             .setMtu(options.mtu)

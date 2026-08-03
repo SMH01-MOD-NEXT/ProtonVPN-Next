@@ -139,6 +139,13 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         private const val LOGCAT_CHUNK_SIZE = 3_500
         private val libboxInitialized = AtomicBoolean(false)
 
+        /** Engine start failures that only mean the device currently has no usable network. */
+        private val TRANSIENT_NETWORK_ERROR_MARKERS = listOf(
+            "no available network interface",
+            "network is unreachable",
+            "no route to host"
+        )
+
         internal fun shouldShowNotification(stateName: String, enabled: Boolean): Boolean {
             return enabled && stateName != VpnTunnelState.DOWN.name
         }
@@ -241,13 +248,27 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     override fun onBind(intent: Intent): IBinder? = super.onBind(intent)
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Every startForegroundService() call must be answered with a foreground promotion within
+        // a few seconds, otherwise the OS kills us with ForegroundServiceDidNotStartInTimeException
+        // (ANDROID-21N). Commands other than CONNECT, and CONNECT itself when it bails out on a
+        // malformed intent, used to return without ever promoting the service.
+        if (!foregroundStarted) {
+            updateNotification(if (connecting) STATE_CONNECTING else state.name, ensureForeground = true)
+        }
+
         when (intent?.action) {
             ACTION_CONNECT -> startTunnel(intent)
             ACTION_DISCONNECT -> stopTunnel(manual = true)
             ACTION_UPDATE_SETTINGS -> applySettings(intent)
             ACTION_SET_VERIFIED -> markVerified()
             ACTION_QUERY_STATE -> sendState(if (connecting) null else state)
-            else -> return START_NOT_STICKY
+            else -> {
+                if (state == VpnTunnelState.DOWN && !connecting) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                }
+                return START_NOT_STICKY
+            }
         }
         return if (state == VpnTunnelState.DOWN && !connecting) START_NOT_STICKY else START_STICKY
     }
@@ -310,6 +331,18 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                     if (lifecycleGeneration.get() != generation) return@withLock
                     closeEngine()
 
+                    if (!hasUsableUnderlyingNetwork()) {
+                        // Without an underlying network the engine cannot bind an outbound
+                        // socket and fails with "no available network interface" (ANDROID-22A).
+                        // Abort before starting it and let the reconnect path wait for
+                        // connectivity instead of surfacing an engine crash.
+                        ProtonLogger.w(TAG, "Skipping tunnel start: no usable underlying network")
+                        withContext(Dispatchers.Main) {
+                            if (lifecycleGeneration.get() == generation) handleEngineFailure()
+                        }
+                        return@withLock
+                    }
+
                     val server = CommandServer(this@ProtonVpnService, platform).also { it.start() }
                     startingCommandServer = server
                     var adopted = false
@@ -344,7 +377,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                 // A newer connect or disconnect owns the lifecycle now.
             } catch (error: Exception) {
                 if (lifecycleGeneration.get() != generation) return@launch
-                if (hasUsableUnderlyingNetwork()) {
+                if (hasUsableUnderlyingNetwork() && !isMissingNetworkInterfaceError(error)) {
                     ProtonLogger.e(TAG, "Failed to start amnezia-box tunnel", error)
                 } else {
                     // The device lost connectivity between the preflight and the engine start, so
@@ -390,6 +423,22 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
                 capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
         }
+    }
+
+    /**
+     * True when the engine refused to start because the OS had no usable network interface to
+     * bind an outbound socket to. This is a transient connectivity condition (airplane mode,
+     * mobile data toggling, roaming handover), not a defect, so it must not be reported as an
+     * error. See ANDROID-22A / ANDROID-233.
+     */
+    private fun isMissingNetworkInterfaceError(error: Throwable): Boolean {
+        var cause: Throwable? = error
+        while (cause != null) {
+            val message = cause.message?.lowercase(Locale.ROOT)
+            if (message != null && TRANSIENT_NETWORK_ERROR_MARKERS.any { message.contains(it) }) return true
+            cause = cause.cause
+        }
+        return false
     }
 
     private fun handleEngineFailure() {
@@ -618,12 +667,22 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     }
 
     private fun startForegroundNotification(notification: Notification) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        // Some OEM builds reject the foreground notification (blocked channel, notification quota,
+        // POST_NOTIFICATIONS denied) and answer with CannotPostForegroundServiceNotificationException,
+        // which the system rethrows on the main thread and kills the process (ANDROID-21T).
+        // Recreating the channels and swallowing the failure keeps the tunnel alive; the worst
+        // case is a missing status notification.
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+            foregroundStarted = true
+        } catch (error: Exception) {
+            ProtonLogger.w(TAG, "Could not post the foreground notification: ${error.message}")
+            runCatching { createNotificationChannels() }
         }
-        foregroundStarted = true
     }
 
     private fun removeNotification() {
