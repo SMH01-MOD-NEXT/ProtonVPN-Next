@@ -67,7 +67,7 @@ object NetworkModule {
 
     private const val PROTON_PROXY_NETLIFY_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
     private const val PROTON_PROXY_CLOUDFLARE_URL = "https://api.protonnext.qzz.io/"
-    private const val PROTON_PROXY_DENO_URL = "https://protonvpn-next-mirror.smh01-mirrors.deno.net/"
+    private const val PROTON_PROXY_DENO_URL = "https://protonvpn-next-web--main.smh01-mirrors.deno.net/api/"
     private const val PROTON_DIRECT_URL = "https://vpn-api.proton.me/"
 
     @Provides
