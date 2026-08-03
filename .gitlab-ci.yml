@@ -60,26 +60,34 @@ verify-secrets:
     - |
       echo "Verifying website push token..."
       # CI_JOB_TOKEN can clone but is always rejected on push, which silently froze the
-      # website branch and let the mirror drift one commit ahead forever.
+      # website repository and let the mirror drift one commit ahead forever.
+      # The website now lives in its own project, so the token must be scoped to
+      # that project rather than to this one.
+      WEBSITE_REPO="${WEBSITE_REPO:-vpn-next-group/ProtonVPN-Next-WEB}"
+      WEBSITE_BRANCH="${WEBSITE_BRANCH:-main}"
       PUSH_TOKEN="${GITLAB_TOKEN:-${WEBSITE_PUSH_TOKEN:-$CI_PUSH_TOKEN}}"
       if [ -z "$PUSH_TOKEN" ]; then
-        echo "❌ No GITLAB_TOKEN/WEBSITE_PUSH_TOKEN set. OTA metadata cannot be pushed to the website branch."
+        echo "❌ No GITLAB_TOKEN/WEBSITE_PUSH_TOKEN set. OTA metadata cannot be pushed to $WEBSITE_REPO."
         exit 1
       fi
+      WEBSITE_REPO_ENCODED=$(echo "$WEBSITE_REPO" | sed 's|/|%2F|g')
       WEBSITE_RESP=$(curl -s -o /dev/null -w "%{http_code}" \
         -H "PRIVATE-TOKEN: $PUSH_TOKEN" \
-        "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/repository/branches/website")
+        "${CI_API_V4_URL}/projects/${WEBSITE_REPO_ENCODED}/repository/branches/${WEBSITE_BRANCH}")
       if [ "$WEBSITE_RESP" = "200" ]; then
-        echo "✅ Website branch reachable with the push token"
+        echo "✅ $WEBSITE_REPO ($WEBSITE_BRANCH) reachable with the push token"
       else
-        echo "❌ Push token cannot read the website branch (HTTP $WEBSITE_RESP). It needs 'write_repository' scope and push rights on that branch."
+        echo "❌ Push token cannot read $WEBSITE_REPO branch $WEBSITE_BRANCH (HTTP $WEBSITE_RESP). It needs 'write_repository' scope on that project."
         exit 1
       fi
     - |
       echo "Verifying GitHub mirror token..."
+      # The token pushes OTA metadata to the website mirror, so that is the
+      # repository whose access has to be verified here.
       if [ -n "$GITHUB_TOKEN" ]; then
+        MIRROR_REPO="${MIRROR_REPO:-SMH01-MIRRORS/ProtonVPN-Next-WEB}"
         GH_RESP=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $GITHUB_TOKEN" \
-          "https://api.github.com/repos/SMH01-MIRRORS/ProtonVPN-Next-MIRROR")
+          "https://api.github.com/repos/${MIRROR_REPO}")
         if [ "$GH_RESP" = "200" ]; then
           echo "✅ GitHub mirror token verified"
         else

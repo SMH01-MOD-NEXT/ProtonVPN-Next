@@ -17,9 +17,8 @@ R2_PUBLIC_URL = os.environ.get('R2_PUBLIC_URL', 'https://pub-xxxx.r2.dev')
 EVENT = os.environ.get('CI_PIPELINE_SOURCE', 'push')
 TAG = os.environ.get('CI_COMMIT_TAG')
 COMMIT_SHA = os.environ.get('CI_COMMIT_SHA', 'unknown')[:8]
-REPO_URL = os.environ.get('CI_REPOSITORY_URL')
 # A write-enabled token is required: CI_JOB_TOKEN can read the repository but is
-# rejected by GitLab on `git push`, which silently froze the website branch.
+# rejected by GitLab on `git push`, which silently froze the website repository.
 PUSH_TOKEN = (
     os.environ.get('GITLAB_TOKEN')
     or os.environ.get('WEBSITE_PUSH_TOKEN')
@@ -27,9 +26,13 @@ PUSH_TOKEN = (
 )
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 
-# Project branches
-WEBSITE_BRANCH = "website"
-MIRROR_REPO = os.environ.get('MIRROR_REPO', 'SMH01-MIRRORS/ProtonVPN-Next-MIRROR')
+# The website is a separate repository, deployed to Deno Deploy and Cloudflare.
+# It used to be the `website` branch of this repository, but Deno Deploy builds
+# every branch of a linked repository, so the site had to move out.
+WEBSITE_BRANCH = os.environ.get('WEBSITE_BRANCH', 'main')
+WEBSITE_REPO = os.environ.get('WEBSITE_REPO', 'vpn-next-group/ProtonVPN-Next-WEB')
+GITLAB_HOST = os.environ.get('CI_SERVER_HOST', 'gitlab.com')
+MIRROR_REPO = os.environ.get('MIRROR_REPO', 'SMH01-MIRRORS/ProtonVPN-Next-WEB')
 CHANNELS = ("stable", "nightly")
 # Both product flavors are published. The in-app updater only understands the
 # legacy "release"/"debug" keys, so the standard flavor keeps them and privacy
@@ -126,17 +129,21 @@ def clear_r2_dir(target_dir):
 
 
 def authenticated_repo_url():
-    if not REPO_URL or "://" not in REPO_URL:
-        fail("CI_REPOSITORY_URL is missing, cannot update the website branch.")
+    """The website repository on GitLab, not this one.
+
+    The token therefore has to be scoped to a different project than the
+    pipeline runs in; a project access token limited to this repository will
+    clone but fail on push.
+    """
     if not PUSH_TOKEN:
         fail(
-            "No write-enabled token found. Set GITLAB_TOKEN (project access token with "
-            "'write_repository') in the CI/CD variables: CI_JOB_TOKEN cannot push."
+            "No write-enabled token found. Set GITLAB_TOKEN (an access token with "
+            f"'write_repository' on {WEBSITE_REPO}) in the CI/CD variables: "
+            "CI_JOB_TOKEN cannot push, and a token scoped to this repository "
+            "cannot push to the website repository."
         )
 
-    proto, rest = REPO_URL.split("://", 1)
-    host_path = rest.split("@", 1)[1] if "@" in rest else rest
-    return f"{proto}://oauth2:{PUSH_TOKEN}@{host_path}"
+    return f"https://oauth2:{PUSH_TOKEN}@{GITLAB_HOST}/{WEBSITE_REPO}.git"
 
 
 def mirror_repo_url():
@@ -216,7 +223,8 @@ def push_website(repo_dir, channel):
 
     fail(
         "Could not push OTA metadata to GitLab. Verify that GITLAB_TOKEN is a project "
-        "access token with 'write_repository' and that the website branch is not protected "
+        "access token with 'write_repository' on the website repository and that its "
+        "default branch is not protected "
         "against it."
     )
 
@@ -278,7 +286,7 @@ def main():
     print(f"Publishing {channel}: versionCode={version_code}, versionName={version_name_base}")
 
     # 3. Update the website JSON, starting from the newest metadata of both remotes.
-    print("Updating update.json on website branch...")
+    print(f"Updating update.json in {WEBSITE_REPO} ({WEBSITE_BRANCH})...")
     run("rm -rf website_repo", check=False)
     run(f"git clone --branch {WEBSITE_BRANCH} {authenticated_repo_url()} website_repo")
     run(f"git remote add mirror {mirror_repo_url()}", cwd="website_repo", check=False)
