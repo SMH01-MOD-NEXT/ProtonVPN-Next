@@ -18,6 +18,7 @@
 package ru.protonmod.next.di
 
 import android.content.Context
+import android.os.Build
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
@@ -251,7 +252,15 @@ object DatabaseModule {
 
     private val BUSY_TIMEOUT_CALLBACK = object : RoomDatabase.Callback() {
         override fun onOpen(db: SupportSQLiteDatabase) {
-            db.query("PRAGMA busy_timeout = $BUSY_TIMEOUT_MS").use { it.moveToFirst() }
+            // busy_timeout is a per-connection setting and WAL mode makes the framework open a
+            // pool of connections, while onOpen only runs for the first one. Without registering
+            // the pragma for every pooled connection the extra readers/writers keep failing
+            // immediately with SQLITE_BUSY instead of waiting (ANDROID-228).
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                db.execPerConnectionSQL("PRAGMA busy_timeout = $BUSY_TIMEOUT_MS", null)
+            } else {
+                db.query("PRAGMA busy_timeout = $BUSY_TIMEOUT_MS").use { it.moveToFirst() }
+            }
         }
     }
 
