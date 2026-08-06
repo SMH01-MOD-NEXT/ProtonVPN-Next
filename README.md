@@ -30,7 +30,7 @@
 - 🔐 **Privacy:** `ru.protonmod.next.privacy` (No telemetry/Sentry, no OTA)
 
 **Official Sources:**
-- ✅ [GitHub Mirror](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
+- ✅ [GitHub Mirror](https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next)
 - ✅ [GitLab Repo](https://gitlab.com/SMH01/proton-vpn-next)
 - ✅ [Telegram Channel](https://t.me/ProtonVPN_MOD)
 
@@ -78,7 +78,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 - 🔐 **Privacy:** `ru.protonmod.next.privacy` (Без телеметрии/Sentry, без OTA)
 
 **Официальные источники:**
-- ✅ [Зеркало GitHub](https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR)
+- ✅ [Зеркало GitHub](https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next)
 - ✅ [Репозиторий GitLab](https://gitlab.com/SMH01/proton-vpn-next)
 - ✅ [Telegram-канал](https://t.me/ProtonVPN_MOD)
 

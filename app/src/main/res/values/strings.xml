@@ -334,7 +334,7 @@
     <string name="about_sentry">Powered by Sentry</string>
     <string name="url_sentry" translatable="false">https://sentry.io/</string>
 
-    <string name="url_github" translatable="false">https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR</string>
+    <string name="url_github" translatable="false">https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next</string>
     <string name="url_gitlab" translatable="false">https://gitlab.com/vpn-next-group/proton-vpn-next</string>
     <string name="url_telegram" translatable="false">https://t.me/ProtonVPN_MOD</string>
     <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>

@@ -32,7 +32,7 @@ GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
 WEBSITE_BRANCH = os.environ.get('WEBSITE_BRANCH', 'main')
 WEBSITE_REPO = os.environ.get('WEBSITE_REPO', 'vpn-next-group/ProtonVPN-Next-WEB')
 GITLAB_HOST = os.environ.get('CI_SERVER_HOST', 'gitlab.com')
-MIRROR_REPO = os.environ.get('MIRROR_REPO', 'SMH01-MIRRORS/ProtonVPN-Next-WEB')
+MIRROR_REPO = os.environ.get('MIRROR_REPO', 'SMH01-MOD-NEXT/ProtonVPN-Next-WEB')
 CHANNELS = ("stable", "nightly")
 # Both product flavors are published. The in-app updater only understands the
 # legacy "release"/"debug" keys, so the standard flavor keeps them and privacy

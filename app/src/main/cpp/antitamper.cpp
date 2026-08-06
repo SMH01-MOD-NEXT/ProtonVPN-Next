@@ -868,7 +868,7 @@ bool AntiTamper::check(JNIEnv* env, jobject context) {
 }
 
 std::string AntiTamper::getProtectedString(const std::string& locale, const std::string& key) {
-    if (key == XOR_STR("url_github")) return XOR_STR("https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR");
+    if (key == XOR_STR("url_github")) return XOR_STR("https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next");
     if (key == XOR_STR("url_gitlab")) return XOR_STR("https://gitlab.com/vpn-next-group/proton-vpn-next");
     if (key == XOR_STR("url_telegram")) return XOR_STR("https://t.me/ProtonVPN_MOD");
     if (key == XOR_STR("url_website")) return XOR_STR("https://home.protonnext.qzz.io/");
@@ -1091,7 +1091,7 @@ void AntiTamper::verifyCriticalIntegrity(JNIEnv* env) {
     };
 
     std::vector<StringVerify> criticalStrings = {
-        {XOR_STR("url_github"), XOR_STR("https://github.com/SMH01-MIRRORS/ProtonVPN-Next-MIRROR")},
+        {XOR_STR("url_github"), XOR_STR("https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next")},
         {XOR_STR("url_gitlab"), XOR_STR("https://gitlab.com/vpn-next-group/proton-vpn-next")},
         {XOR_STR("url_telegram"), XOR_STR("https://t.me/ProtonVPN_MOD")}
     };

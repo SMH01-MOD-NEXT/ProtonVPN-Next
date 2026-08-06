@@ -85,7 +85,7 @@ verify-secrets:
       # The token pushes OTA metadata to the website mirror, so that is the
       # repository whose access has to be verified here.
       if [ -n "$GITHUB_TOKEN" ]; then
-        MIRROR_REPO="${MIRROR_REPO:-SMH01-MIRRORS/ProtonVPN-Next-WEB}"
+        MIRROR_REPO="${MIRROR_REPO:-SMH01-MOD-NEXT/ProtonVPN-Next-WEB}"
         GH_RESP=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $GITHUB_TOKEN" \
           "https://api.github.com/repos/${MIRROR_REPO}")
         if [ "$GH_RESP" = "200" ]; then
