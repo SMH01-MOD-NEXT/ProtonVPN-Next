@@ -40,26 +40,40 @@ import okhttp3.Response
 import okhttp3.Route
 import okhttp3.dnsoverhttps.DnsOverHttps
 import retrofit2.Retrofit
-import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
-import ru.protonmod.next.data.network.*
+import ru.protonmod.next.data.network.ApiBypassSocketFactory
+import ru.protonmod.next.data.network.AuthLoggingInterceptor
+import ru.protonmod.next.data.network.DohFallbackInterceptor
+import ru.protonmod.next.data.network.DohFallbackStore
+import ru.protonmod.next.data.network.MirrorTrustManager
+import ru.protonmod.next.data.network.NetworkConstants
+import ru.protonmod.next.data.network.PinVerifier
+import ru.protonmod.next.data.network.ProtonAuthApi
+import ru.protonmod.next.data.network.ProtonVpnApi
+import ru.protonmod.next.data.network.SessionManager
+import ru.protonmod.next.data.network.TokenAuthenticator
 import ru.protonmod.next.data.network.ota.UpdateApi
-import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.VpnTunnelState
 import java.io.IOException
-import java.net.*
-import java.util.concurrent.TimeUnit
+import java.net.ConnectException
 import java.net.Inet4Address
+import java.net.InetAddress
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.net.ProxySelector
+import java.net.SocketAddress
+import java.net.SocketTimeoutException
+import java.net.URI
+import java.util.concurrent.TimeUnit
 import javax.inject.Provider
 import javax.inject.Singleton
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
-import javax.net.ssl.X509TrustManager
 
 @Module
 @InstallIn(SingletonComponent::class)
