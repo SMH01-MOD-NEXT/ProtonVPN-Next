@@ -144,6 +144,7 @@
     <string name="api_bypass_strategy_event_desc">Уақытша айналып өту. Оның мекенжайы бөлек жарияланады және кез келген уақытта өзгеруі мүмкін, сондықтан тұрақты жұмыс кепілдендірілмейді, ал платформа жиі ауысуы мүмкін.</string>
     <string name="api_bypass_event_warning">Бұл уақытша шешім: оның артындағы платформа жиі өзгереді және ол ескертусіз жұмысын тоқтатуы мүмкін.</string>
     <string name="api_bypass_event_current">Ағымдағы әдіс: %1$s</string>
+    <string name="api_bypass_event_choose">ҚОЛ ЖЕТІМДІ ӘДІСТЕР</string>
     <string name="api_bypass_event_none">Қазір жарияланған әдіс жоқ</string>
     <string name="api_bypass_event_last_check">Соңғы тексеру: %1$s</string>
     <string name="api_bypass_event_never_checked">Әлі тексерілмеген</string>

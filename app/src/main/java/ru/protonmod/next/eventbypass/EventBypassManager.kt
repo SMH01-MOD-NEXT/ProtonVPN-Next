@@ -86,6 +86,14 @@ class EventBypassManager @Inject constructor(
         )
     }
 
+    /**
+     * Switches to another bypass from the cached list. Works offline and while a
+     * VPN is up, because nothing is fetched: only the selection changes.
+     */
+    suspend fun selectEvent(id: String) {
+        eventBypassRepository.selectEvent(id)
+    }
+
     suspend fun refreshNow(): EventBypassResult = refreshMutex.withLock {
         _syncState.value = _syncState.value.copy(isRefreshing = true)
         try {

@@ -143,6 +143,11 @@ class SettingsManager @Inject constructor(
 
         // Cached copy of event-bypass.json. It is remote data, not a user preference,
         // so it is deliberately left out of backup/restore: the app refetches it.
+        // The whole published list, JSON-encoded, plus the entry the user picked.
+        private val EVENT_BYPASS_EVENTS = stringPreferencesKey("event_bypass_events")
+        private val EVENT_BYPASS_SELECTED_ID = stringPreferencesKey("event_bypass_selected_id")
+        // Name and URL of the selected entry, kept flat so the OkHttp interceptor
+        // can read the routing target without parsing JSON on every request.
         private val EVENT_BYPASS_NAME = stringPreferencesKey("event_bypass_name")
         private val EVENT_BYPASS_URL = stringPreferencesKey("event_bypass_url")
         private val EVENT_BYPASS_UPDATED_AT = stringPreferencesKey("event_bypass_updated_at")
@@ -331,6 +336,8 @@ class SettingsManager @Inject constructor(
     val apiProxyUsername: Flow<String> = dataStore.data.map { it[API_PROXY_USERNAME] ?: "" }
     val apiProxyPassword: Flow<String> = dataStore.data.map { it[API_PROXY_PASSWORD] ?: "" }
 
+    val eventBypassEvents: Flow<String> = dataStore.data.map { it[EVENT_BYPASS_EVENTS] ?: "" }
+    val eventBypassSelectedId: Flow<String> = dataStore.data.map { it[EVENT_BYPASS_SELECTED_ID] ?: "" }
     val eventBypassName: Flow<String> = dataStore.data.map { it[EVENT_BYPASS_NAME] ?: "" }
     val eventBypassUrl: Flow<String> = dataStore.data.map { it[EVENT_BYPASS_URL] ?: "" }
     val eventBypassUpdatedAt: Flow<String> = dataStore.data.map { it[EVENT_BYPASS_UPDATED_AT] ?: "" }
@@ -414,6 +421,8 @@ class SettingsManager @Inject constructor(
     /** Read by the OkHttp interceptor, which cannot suspend. */
     fun getEventBypassUrlSync(): String = prefs.getString("event_bypass_url", "") ?: ""
     fun getEventBypassNameSync(): String = prefs.getString("event_bypass_name", "") ?: ""
+    fun getEventBypassEventsSync(): String = prefs.getString("event_bypass_events", "") ?: ""
+    fun getEventBypassSelectedIdSync(): String = prefs.getString("event_bypass_selected_id", "") ?: ""
 
     fun isSpoofCountryEnabledSync(): Boolean = prefs.getBoolean("spoof_country_enabled", false)
     fun isSpoofCountryNullSync(): Boolean = prefs.getBoolean("spoof_country_null", false)
@@ -688,17 +697,36 @@ class SettingsManager @Inject constructor(
         dataStore.edit { it[API_PROXY_PASSWORD] = password }
     }
 
-    /** Stores the event bypass published by event-bypass.json. An empty [url] means none. */
-    suspend fun setEventBypass(name: String, url: String, updatedAt: String) {
+    /**
+     * Stores the list of bypasses published by event-bypass.json, JSON-encoded.
+     * An empty [eventsJson] means nothing is published right now.
+     */
+    suspend fun setEventBypassConfig(eventsJson: String, updatedAt: String) {
         prefs.edit {
-            putString("event_bypass_name", name)
-            putString("event_bypass_url", url)
+            putString("event_bypass_events", eventsJson)
             putString("event_bypass_updated_at", updatedAt)
         }
         dataStore.edit {
+            it[EVENT_BYPASS_EVENTS] = eventsJson
+            it[EVENT_BYPASS_UPDATED_AT] = updatedAt
+        }
+    }
+
+    /**
+     * Stores which published bypass is in use. The name and URL are flattened out
+     * of the list so the interceptor can read the routing target synchronously.
+     * An empty [url] means no usable bypass is selected.
+     */
+    suspend fun setEventBypassSelection(id: String, name: String, url: String) {
+        prefs.edit {
+            putString("event_bypass_selected_id", id)
+            putString("event_bypass_name", name)
+            putString("event_bypass_url", url)
+        }
+        dataStore.edit {
+            it[EVENT_BYPASS_SELECTED_ID] = id
             it[EVENT_BYPASS_NAME] = name
             it[EVENT_BYPASS_URL] = url
-            it[EVENT_BYPASS_UPDATED_AT] = updatedAt
         }
     }
 

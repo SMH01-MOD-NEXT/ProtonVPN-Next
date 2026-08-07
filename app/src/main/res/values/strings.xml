@@ -170,6 +170,7 @@
     <string name="api_bypass_strategy_event_desc">Temporary bypass. Its address is published separately and can change at any time, so stable operation is not guaranteed and the hosting platform may change often.</string>
     <string name="api_bypass_event_warning">This bypass is a stop-gap: the platform behind it changes frequently and it can stop working without notice.</string>
     <string name="api_bypass_event_current">Current bypass: %1$s</string>
+    <string name="api_bypass_event_choose">AVAILABLE BYPASSES</string>
     <string name="api_bypass_event_none">No bypass published right now</string>
     <string name="api_bypass_event_last_check">Last check: %1$s</string>
     <string name="api_bypass_event_never_checked">Not checked yet</string>

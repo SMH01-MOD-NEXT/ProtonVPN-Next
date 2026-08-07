@@ -144,6 +144,7 @@
     <string name="api_bypass_strategy_event_desc">Тимчасовий обхід. Його адреса публікується окремо й може змінитися будь-коли, тому стабільна робота не гарантується, а платформа може часто змінюватися.</string>
     <string name="api_bypass_event_warning">Це тимчасове рішення: платформа за цим обходом часто змінюється, і він може перестати працювати без попередження.</string>
     <string name="api_bypass_event_current">Поточний обхід: %1$s</string>
+    <string name="api_bypass_event_choose">ДОСТУПНІ ОБХОДИ</string>
     <string name="api_bypass_event_none">Зараз обхід не опубліковано</string>
     <string name="api_bypass_event_last_check">Остання перевірка: %1$s</string>
     <string name="api_bypass_event_never_checked">Ще не перевірялося</string>

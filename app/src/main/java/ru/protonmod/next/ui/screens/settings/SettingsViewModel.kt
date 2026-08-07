@@ -51,6 +51,8 @@ import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.byedpi.ByeDpiManager
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
+import ru.protonmod.next.data.model.eventbypass.EventBypassCache
+import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
 import ru.protonmod.next.data.repository.EventBypassResult
 import ru.protonmod.next.data.repository.UpdateRepository
 import ru.protonmod.next.data.repository.VpnRepository
@@ -161,7 +163,9 @@ data class SettingsUiState(
     val isSentryMetricsEnabled: Boolean = false,
     val isSentryLogsEnabled: Boolean = false,
 
-    // Event bypass (temporary strategy whose endpoint is fetched at runtime)
+    // Event bypass (temporary strategy whose endpoints are fetched at runtime)
+    val eventBypassOptions: List<EventBypassEntry> = emptyList(),
+    val eventBypassSelectedId: String = "",
     val eventBypassName: String = "",
     val eventBypassUrl: String = "",
     val eventBypassLastSync: Long = 0L,
@@ -335,7 +339,9 @@ class SettingsViewModel @Inject constructor(
         settingsManager.eventBypassName,
         settingsManager.eventBypassUrl,
         settingsManager.eventBypassLastSync,
-        eventBypassManager.syncState
+        eventBypassManager.syncState,
+        settingsManager.eventBypassEvents,
+        settingsManager.eventBypassSelectedId
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -421,6 +427,8 @@ class SettingsViewModel @Inject constructor(
             eventBypassLastSync = args[79] as Long,
             isEventBypassRefreshing = (args[80] as EventBypassSyncState).isRefreshing,
             eventBypassLastResult = (args[80] as EventBypassSyncState).lastResult,
+            eventBypassOptions = EventBypassCache.decode(args[81] as String),
+            eventBypassSelectedId = args[82] as String,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -479,6 +487,13 @@ class SettingsViewModel @Inject constructor(
             } finally {
                 _isCheckingForUpdates.value = false
             }
+        }
+    }
+
+    /** Switches to another published bypass. Cached, so it works offline. */
+    fun selectEventBypass(id: String) {
+        viewModelScope.launch {
+            eventBypassManager.selectEvent(id)
         }
     }
 

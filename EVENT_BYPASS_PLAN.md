@@ -23,16 +23,25 @@ release of the app.
 
 ```json
 {
-  "version": 1,
-  "updatedAt": "2026-08-07T11:30:00Z",
-  "event": { "id": "choreo", "name": "Choreo", "url": "", "enabled": false }
+  "version": 2,
+  "updatedAt": "2026-08-07T14:45:00Z",
+  "events": [
+    { "id": "choreo", "name": "Choreo", "url": "https://….choreoapps.dev/api/", "enabled": true }
+  ]
 }
 ```
 
+- `events` is a list: publish as many bypasses as you like. The app shows them
+  all and the user picks one; the choice is remembered across refreshes and only
+  moves when that entry disappears from the config.
+- `id` must be unique and stable — it is what the app stores as the choice.
 - `name` is shown in the app as the bypass name ("Event (Choreo)").
 - `url` is the proxy base URL, including any path prefix (e.g. `.../api/`).
-- `enabled: false` or an empty `url` means "nothing published right now"; the
-  app says so instead of routing traffic into a dead host.
+- `enabled: false` parks an entry without losing its address; the app skips it.
+- An empty list (or every entry disabled) means "nothing published right now";
+  the app says so instead of routing traffic into a dead host.
+- Version 1 published a single `event` object. The app still reads it, so old
+  copies of the file on a stale mirror keep working.
 - The file is served by every website deployment, so all mirrors expose it.
 
 ### Mirror order (app)
@@ -48,6 +57,14 @@ The app walks the mirrors in order and stops at the first valid answer:
 Git forges come first on purpose: they are the source of truth, they are hard to
 block without collateral damage, and they answer even when a hosting platform is
 mid-migration.
+
+### Choosing between bypasses
+
+The app caches the whole published list, so switching is instant and works
+offline: only the selected id, name and URL change. The name and URL of the
+selected entry are stored flat next to the list, because the OkHttp interceptor
+reads the routing target synchronously on every request and must not parse JSON
+there. When only one bypass is published the picker is hidden.
 
 ### Refresh rules
 

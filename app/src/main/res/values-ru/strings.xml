@@ -144,6 +144,7 @@
     <string name="api_bypass_strategy_event_desc">Временный обход. Его адрес публикуется отдельно и может измениться в любой момент, поэтому стабильная работа не гарантируется, а платформа может часто меняться.</string>
     <string name="api_bypass_event_warning">Это временное решение: платформа за этим обходом часто меняется, и он может перестать работать без предупреждения.</string>
     <string name="api_bypass_event_current">Текущий обход: %1$s</string>
+    <string name="api_bypass_event_choose">ДОСТУПНЫЕ ОБХОДЫ</string>
     <string name="api_bypass_event_none">Сейчас обход не опубликован</string>
     <string name="api_bypass_event_last_check">Последняя проверка: %1$s</string>
     <string name="api_bypass_event_never_checked">Ещё не проверялось</string>

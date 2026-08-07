@@ -144,6 +144,7 @@
     <string name="api_bypass_strategy_event_desc">دور زدن موقت. نشانی آن جداگانه منتشر می‌شود و هر لحظه ممکن است تغییر کند، بنابراین پایداری تضمین نمی‌شود و پلتفرم میزبان ممکن است مرتب عوض شود.</string>
     <string name="api_bypass_event_warning">این یک راه‌حل موقت است: پلتفرم پشت آن مرتب تغییر می‌کند و ممکن است بدون اطلاع از کار بیفتد.</string>
     <string name="api_bypass_event_current">دور زدن فعلی: %1$s</string>
+    <string name="api_bypass_event_choose">روش‌های دور زدن موجود</string>
     <string name="api_bypass_event_none">در حال حاضر هیچ دور زدنی منتشر نشده است</string>
     <string name="api_bypass_event_last_check">آخرین بررسی: %1$s</string>
     <string name="api_bypass_event_never_checked">هنوز بررسی نشده است</string>

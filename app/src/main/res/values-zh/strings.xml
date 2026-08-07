@@ -144,6 +144,7 @@
     <string name="api_bypass_strategy_event_desc">临时绕过方式。其地址单独发布，随时可能更改，因此无法保证稳定运行，托管平台也可能经常变动。</string>
     <string name="api_bypass_event_warning">这是权宜之计：其背后的平台经常更换，可能会在没有通知的情况下失效。</string>
     <string name="api_bypass_event_current">当前绕过：%1$s</string>
+    <string name="api_bypass_event_choose">可用的绕过方式</string>
     <string name="api_bypass_event_none">目前没有发布任何绕过方式</string>
     <string name="api_bypass_event_last_check">上次检查：%1$s</string>
     <string name="api_bypass_event_never_checked">尚未检查</string>

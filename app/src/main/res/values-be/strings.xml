@@ -144,6 +144,7 @@
     <string name="api_bypass_strategy_event_desc">Часовы абыход. Яго адрас публікуецца асобна і можа змяніцца ў любы момант, таму стабільная праца не гарантуецца, а платформа можа часта мяняцца.</string>
     <string name="api_bypass_event_warning">Гэта часовае рашэнне: платформа за гэтым абыходам часта мяняецца, і ён можа перастаць працаваць без папярэджання.</string>
     <string name="api_bypass_event_current">Бягучы абыход: %1$s</string>
+    <string name="api_bypass_event_choose">ДАСТУПНЫЯ АБЫХОДЫ</string>
     <string name="api_bypass_event_none">Зараз абыход не апублікаваны</string>
     <string name="api_bypass_event_last_check">Апошняя праверка: %1$s</string>
     <string name="api_bypass_event_never_checked">Яшчэ не правяралася</string>

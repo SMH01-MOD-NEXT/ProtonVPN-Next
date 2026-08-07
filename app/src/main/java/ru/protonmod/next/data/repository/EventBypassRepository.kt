@@ -25,7 +25,10 @@ import retrofit2.HttpException
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.eventbypass.EVENT_BYPASS_SUPPORTED_VERSION
+import ru.protonmod.next.data.model.eventbypass.EventBypassCache
+import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
 import ru.protonmod.next.data.model.eventbypass.EventBypassResponse
+import ru.protonmod.next.data.model.eventbypass.selectedOrFirst
 import ru.protonmod.next.data.network.eventbypass.EventBypassApi
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
@@ -39,7 +42,7 @@ private val json = Json { ignoreUnknownKeys = true }
 
 /** Outcome of a single refresh attempt, mapped to a user-facing string by the UI. */
 enum class EventBypassResult {
-    /** A mirror answered and published a usable endpoint. */
+    /** A mirror answered and published at least one usable endpoint. */
     UPDATED,
 
     /** A mirror answered, but no bypass is published right now. */
@@ -56,11 +59,15 @@ enum class EventBypassResult {
 }
 
 /**
- * Fetches the temporary ("event") bypass endpoint from `event-bypass.json`.
+ * Fetches the temporary ("event") bypasses from `event-bypass.json`.
  *
  * The mirrors are tried in order and the first valid answer wins. Git forges come
  * first on purpose: they hold the source of truth and stay reachable even while a
  * hosting platform is being migrated, which is exactly when this config changes.
+ *
+ * The config may publish several bypasses at once. All of them are cached so the
+ * user can switch between them offline; one of them is "selected" and its URL is
+ * what the OkHttp interceptor actually routes through.
  */
 @Singleton
 class EventBypassRepository @Inject constructor(
@@ -100,6 +107,10 @@ class EventBypassRepository @Inject constructor(
         isThirdPartyVpnActive() -> EventBypassResult.BLOCKED_VPN
         else -> null
     }
+
+    /** The bypasses cached by the last successful refresh. */
+    fun cachedEvents(): List<EventBypassEntry> =
+        EventBypassCache.decode(settingsManager.getEventBypassEventsSync())
 
     private suspend fun fetchConfig(url: String): EventBypassResponse {
         val response = eventBypassApi.getEventBypassConfig(url)
@@ -154,23 +165,41 @@ class EventBypassRepository @Inject constructor(
                 continue
             }
 
-            val event = config.event
-            val endpoint = event?.normalizedUrl().orEmpty()
-            settingsManager.setEventBypass(
-                name = event?.name.orEmpty(),
-                url = endpoint,
-                updatedAt = config.updatedAt
-            )
+            val usable = config.usableEvents()
+            settingsManager.setEventBypassConfig(EventBypassCache.encode(usable), config.updatedAt)
+
+            // Keep the user on the bypass they picked. It only moves when that entry
+            // disappears from the config, in which case the first published one wins.
+            val selected = usable.selectedOrFirst(settingsManager.getEventBypassSelectedIdSync())
+            applySelection(selected)
             settingsManager.setEventBypassLastSync(System.currentTimeMillis())
 
             ProtonLogger.i(
                 "EventBypassRepository",
-                "Event bypass config loaded from $url (name='${event?.name.orEmpty()}', usable=${endpoint.isNotEmpty()})"
+                "Event bypass config loaded from $url (${usable.size} available, selected='${selected?.name.orEmpty()}')"
             )
 
-            return if (endpoint.isEmpty()) EventBypassResult.NOT_CONFIGURED else EventBypassResult.UPDATED
+            return if (usable.isEmpty()) EventBypassResult.NOT_CONFIGURED else EventBypassResult.UPDATED
         }
 
         return EventBypassResult.UNREACHABLE
+    }
+
+    /**
+     * Switches to another already published bypass. No network access: the whole
+     * list is cached, so switching works offline and while a VPN is up.
+     */
+    suspend fun selectEvent(id: String): Boolean {
+        val entry = cachedEvents().firstOrNull { it.stableId() == id } ?: return false
+        applySelection(entry)
+        return true
+    }
+
+    private suspend fun applySelection(entry: EventBypassEntry?) {
+        settingsManager.setEventBypassSelection(
+            id = entry?.stableId().orEmpty(),
+            name = entry?.name.orEmpty(),
+            url = entry?.normalizedUrl().orEmpty()
+        )
     }
 }

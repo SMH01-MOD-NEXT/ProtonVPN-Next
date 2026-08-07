@@ -325,6 +325,41 @@ fun ApiBypassScreen(
 
                                         Spacer(modifier = Modifier.height(12.dp))
 
+                                        // The config can publish several bypasses at once; the
+                                        // user picks which one carries the API traffic.
+                                        if (uiState.eventBypassOptions.size > 1) {
+                                            Text(
+                                                text = stringResource(R.string.api_bypass_event_choose),
+                                                color = colors.textWeak,
+                                                style = MaterialTheme.typography.labelSmall
+                                            )
+
+                                            Spacer(modifier = Modifier.height(4.dp))
+
+                                            uiState.eventBypassOptions.forEach { option ->
+                                                val optionId = option.stableId()
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .clickable { viewModel.selectEventBypass(optionId) },
+                                                    verticalAlignment = Alignment.CenterVertically
+                                                ) {
+                                                    RadioButton(
+                                                        selected = optionId == uiState.eventBypassSelectedId,
+                                                        onClick = { viewModel.selectEventBypass(optionId) }
+                                                    )
+                                                    Text(
+                                                        text = option.name,
+                                                        color = colors.textNorm,
+                                                        style = MaterialTheme.typography.bodyMedium
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                        }
+
                                         Text(
                                             text = if (uiState.eventBypassUrl.isNotEmpty() && uiState.eventBypassName.isNotEmpty()) {
                                                 stringResource(R.string.api_bypass_event_current, uiState.eventBypassName)
