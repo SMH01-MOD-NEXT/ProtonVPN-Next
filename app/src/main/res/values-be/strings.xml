@@ -147,6 +147,10 @@
     <string name="api_bypass_event_choose">ДАСТУПНЫЯ АБЫХОДЫ</string>
     <string name="api_bypass_event_none">Зараз абыход не апублікаваны</string>
     <string name="api_bypass_event_last_check">Апошняя праверка: %1$s</string>
+    <string name="api_bypass_event_config_updated">Канфіг апублікаваны: %1$s</string>
+    <string name="api_bypass_event_expires">Працуе да %1$s</string>
+    <string name="api_bypass_event_expires_forever">Без тэрміну дзеяння</string>
+    <string name="api_bypass_event_expired">Скончыўся %1$s</string>
     <string name="api_bypass_event_never_checked">Яшчэ не правяралася</string>
     <string name="api_bypass_event_refresh">Абнавіць зараз</string>
     <string name="api_bypass_event_refreshing">Праверка люстэркаў…</string>

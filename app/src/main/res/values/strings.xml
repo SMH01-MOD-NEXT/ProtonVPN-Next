@@ -173,6 +173,10 @@
     <string name="api_bypass_event_choose">AVAILABLE BYPASSES</string>
     <string name="api_bypass_event_none">No bypass published right now</string>
     <string name="api_bypass_event_last_check">Last check: %1$s</string>
+    <string name="api_bypass_event_config_updated">Config published: %1$s</string>
+    <string name="api_bypass_event_expires">Works until %1$s</string>
+    <string name="api_bypass_event_expires_forever">No expiry date</string>
+    <string name="api_bypass_event_expired">Expired on %1$s</string>
     <string name="api_bypass_event_never_checked">Not checked yet</string>
     <string name="api_bypass_event_refresh">Update now</string>
     <string name="api_bypass_event_refreshing">Checking mirrors…</string>

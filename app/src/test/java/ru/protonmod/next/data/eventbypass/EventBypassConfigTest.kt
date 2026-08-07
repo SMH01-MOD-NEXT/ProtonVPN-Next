@@ -7,6 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import ru.protonmod.next.data.model.eventbypass.EventBypassCache
+import ru.protonmod.next.data.model.eventbypass.EventBypassDates
 import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
 import ru.protonmod.next.data.model.eventbypass.EventBypassResponse
 import ru.protonmod.next.data.model.eventbypass.selectedOrFirst
@@ -126,6 +127,57 @@ class EventBypassConfigTest {
         assertEquals("choreo", entries.selectedOrFirst("retired")?.id)
         assertEquals("choreo", entries.selectedOrFirst("")?.id)
         assertNull(emptyList<EventBypassEntry>().selectedOrFirst("choreo"))
+    }
+
+    @Test
+    fun `an expiry date is read as the end of that day`() {
+        val entry = EventBypassEntry(name = "Trial", url = "https://t.example/api/", enabled = true, expiresAt = "01-12-2026")
+        val expiry = entry.expiryMillis()
+
+        assertNotNull(expiry)
+        // Midday on the announced date is still inside the trial: the date names a
+        // whole day, not the moment it starts.
+        val noonThatDay = expiry!! - 12 * 60 * 60 * 1000
+        assertTrue(!entry.isExpired(noonThatDay))
+        assertTrue(entry.isExpired(expiry + 1))
+        assertTrue(!entry.neverExpires())
+    }
+
+    @Test
+    fun `forever unknown and malformed dates never count as expired`() {
+        val forever = EventBypassEntry(name = "Stable", url = "https://s.example/api/", enabled = true, expiresAt = "forever")
+        val unknown = EventBypassEntry(name = "Unknown", url = "https://u.example/api/", enabled = true)
+        // A swapped day and month would otherwise silently retire a live bypass.
+        val malformed = EventBypassEntry(name = "Typo", url = "https://x.example/api/", enabled = true, expiresAt = "2026-12-01")
+        val impossible = EventBypassEntry(name = "Impossible", url = "https://y.example/api/", enabled = true, expiresAt = "32-13-2026")
+
+        assertTrue(forever.neverExpires())
+        assertNull(forever.expiryMillis())
+        assertNull(unknown.expiryMillis())
+        assertNull(malformed.expiryMillis())
+        assertNull(impossible.expiryMillis())
+        listOf(forever, unknown, malformed, impossible).forEach { assertTrue(!it.isExpired()) }
+    }
+
+    @Test
+    fun `the published timestamp is parsed and kept in the cache`() {
+        val payload = """
+            {
+              "version": 2,
+              "updatedAt": "2026-08-07T15:20:00Z",
+              "events": [
+                { "id": "choreo", "name": "Choreo", "url": "https://choreo.example/api/", "enabled": true, "expiresAt": "01-12-2026" }
+              ]
+            }
+        """.trimIndent()
+
+        val parsed = json.decodeFromString(EventBypassResponse.serializer(), payload)
+
+        // 2026-08-07T15:20:00Z, parsed as UTC no matter what the device timezone is.
+        assertEquals(1_786_116_000_000L, EventBypassDates.parseIsoTimestamp(parsed.updatedAt))
+        assertEquals("01-12-2026", parsed.usableEvents().first().expiresAt)
+        assertNull(EventBypassDates.parseIsoTimestamp(""))
+        assertNull(EventBypassDates.parseIsoTimestamp("whenever"))
     }
 
     @Test

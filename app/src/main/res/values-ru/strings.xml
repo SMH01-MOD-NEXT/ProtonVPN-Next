@@ -147,6 +147,10 @@
     <string name="api_bypass_event_choose">ДОСТУПНЫЕ ОБХОДЫ</string>
     <string name="api_bypass_event_none">Сейчас обход не опубликован</string>
     <string name="api_bypass_event_last_check">Последняя проверка: %1$s</string>
+    <string name="api_bypass_event_config_updated">Конфиг опубликован: %1$s</string>
+    <string name="api_bypass_event_expires">Работает до %1$s</string>
+    <string name="api_bypass_event_expires_forever">Без срока истечения</string>
+    <string name="api_bypass_event_expired">Истёк %1$s</string>
     <string name="api_bypass_event_never_checked">Ещё не проверялось</string>
     <string name="api_bypass_event_refresh">Обновить сейчас</string>
     <string name="api_bypass_event_refreshing">Проверка зеркал…</string>

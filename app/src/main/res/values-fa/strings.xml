@@ -147,6 +147,10 @@
     <string name="api_bypass_event_choose">روش‌های دور زدن موجود</string>
     <string name="api_bypass_event_none">در حال حاضر هیچ دور زدنی منتشر نشده است</string>
     <string name="api_bypass_event_last_check">آخرین بررسی: %1$s</string>
+    <string name="api_bypass_event_config_updated">پیکربندی منتشر شد: %1$s</string>
+    <string name="api_bypass_event_expires">تا %1$s کار می‌کند</string>
+    <string name="api_bypass_event_expires_forever">بدون تاریخ انقضا</string>
+    <string name="api_bypass_event_expired">در %1$s منقضی شد</string>
     <string name="api_bypass_event_never_checked">هنوز بررسی نشده است</string>
     <string name="api_bypass_event_refresh">به‌روزرسانی اکنون</string>
     <string name="api_bypass_event_refreshing">در حال بررسی آینه‌ها…</string>

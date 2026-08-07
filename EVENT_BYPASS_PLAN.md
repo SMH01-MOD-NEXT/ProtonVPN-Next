@@ -35,6 +35,12 @@ release of the app.
   all and the user picks one; the choice is remembered across refreshes and only
   moves when that entry disappears from the config.
 - `id` must be unique and stable — it is what the app stores as the choice.
+- `expiresAt` is optional and written by hand: `dd-MM-yyyy` (for example
+  `01-12-2026`) when the platform runs on a trial, `forever` when it does not,
+  or empty when nobody knows yet. Empty and `forever` are different: the first
+  shows nothing, the second says there is no deadline.
+- `updatedAt` is shown in the app next to the local "last check" time, so the
+  user can tell a stale config apart from a stale device.
 - `name` is shown in the app as the bypass name ("Event (Choreo)").
 - `url` is the proxy base URL, including any path prefix (e.g. `.../api/`).
 - `enabled: false` parks an entry without losing its address; the app skips it.

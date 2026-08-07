@@ -169,6 +169,8 @@ data class SettingsUiState(
     val eventBypassName: String = "",
     val eventBypassUrl: String = "",
     val eventBypassLastSync: Long = 0L,
+    /** When the config itself was last edited, as published by the website. */
+    val eventBypassUpdatedAt: String = "",
     val isEventBypassRefreshing: Boolean = false,
     val eventBypassLastResult: EventBypassResult? = null,
 
@@ -341,7 +343,8 @@ class SettingsViewModel @Inject constructor(
         settingsManager.eventBypassLastSync,
         eventBypassManager.syncState,
         settingsManager.eventBypassEvents,
-        settingsManager.eventBypassSelectedId
+        settingsManager.eventBypassSelectedId,
+        settingsManager.eventBypassUpdatedAt
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -429,6 +432,7 @@ class SettingsViewModel @Inject constructor(
             eventBypassLastResult = (args[80] as EventBypassSyncState).lastResult,
             eventBypassOptions = EventBypassCache.decode(args[81] as String),
             eventBypassSelectedId = args[82] as String,
+            eventBypassUpdatedAt = args[83] as String,
         )
     }.stateIn(
         scope = viewModelScope,

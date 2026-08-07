@@ -147,6 +147,10 @@
     <string name="api_bypass_event_choose">可用的绕过方式</string>
     <string name="api_bypass_event_none">目前没有发布任何绕过方式</string>
     <string name="api_bypass_event_last_check">上次检查：%1$s</string>
+    <string name="api_bypass_event_config_updated">配置发布时间：%1$s</string>
+    <string name="api_bypass_event_expires">有效期至 %1$s</string>
+    <string name="api_bypass_event_expires_forever">无到期日期</string>
+    <string name="api_bypass_event_expired">已于 %1$s 到期</string>
     <string name="api_bypass_event_never_checked">尚未检查</string>
     <string name="api_bypass_event_refresh">立即更新</string>
     <string name="api_bypass_event_refreshing">正在检查镜像…</string>

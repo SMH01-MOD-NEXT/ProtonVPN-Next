@@ -55,6 +55,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.model.eventbypass.EventBypassDates
+import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
 import ru.protonmod.next.data.repository.EventBypassResult
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
@@ -349,11 +351,26 @@ fun ApiBypassScreen(
                                                         selected = optionId == uiState.eventBypassSelectedId,
                                                         onClick = { viewModel.selectEventBypass(optionId) }
                                                     )
-                                                    Text(
-                                                        text = option.name,
-                                                        color = colors.textNorm,
-                                                        style = MaterialTheme.typography.bodyMedium
-                                                    )
+                                                    Column {
+                                                        Text(
+                                                            text = option.name,
+                                                            color = colors.textNorm,
+                                                            style = MaterialTheme.typography.bodyMedium
+                                                        )
+                                                        // How long each bypass is expected to last is
+                                                        // what the choice is actually about.
+                                                        eventExpiryText(option)?.let { expiry ->
+                                                            Text(
+                                                                text = expiry,
+                                                                color = if (option.isExpired()) {
+                                                                    colors.notificationWarning
+                                                                } else {
+                                                                    colors.textWeak
+                                                                },
+                                                                style = MaterialTheme.typography.labelSmall
+                                                            )
+                                                        }
+                                                    }
                                                 }
                                             }
 
@@ -369,6 +386,38 @@ fun ApiBypassScreen(
                                             color = colors.textNorm,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
+
+                                        // Two separate questions: how long this platform is
+                                        // expected to live, and how fresh the config the app is
+                                        // holding actually is. "Last check" below answers neither.
+                                        val selectedEntry = uiState.eventBypassOptions
+                                            .firstOrNull { it.stableId() == uiState.eventBypassSelectedId }
+                                        val selectedExpiry = eventExpiryText(selectedEntry)
+
+                                        if (selectedExpiry != null) {
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = selectedExpiry,
+                                                color = if (selectedEntry?.isExpired() == true) {
+                                                    colors.notificationWarning
+                                                } else {
+                                                    colors.textWeak
+                                                },
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
+
+                                        if (uiState.eventBypassUpdatedAt.isNotEmpty()) {
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = stringResource(
+                                                    R.string.api_bypass_event_config_updated,
+                                                    formatEventTimestamp(uiState.eventBypassUpdatedAt)
+                                                ),
+                                                color = colors.textWeak,
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
 
                                         Spacer(modifier = Modifier.height(4.dp))
 
@@ -639,6 +688,39 @@ private fun ProxyTypeDropdown(
             }
         }
     }
+}
+
+/**
+ * Expiry line for one bypass: the announced date, "no expiry", or nothing at all
+ * when the config does not say. An expired entry is still offered and still
+ * routable — the date is typed by hand and compared against a clock the user
+ * controls — so this labels it instead of hiding it.
+ */
+@Composable
+private fun eventExpiryText(entry: EventBypassEntry?): String? {
+    if (entry == null) return null
+    if (entry.neverExpires()) return stringResource(R.string.api_bypass_event_expires_forever)
+    val expiry = entry.expiryMillis() ?: return null
+    val formatted = java.text.DateFormat
+        .getDateInstance(java.text.DateFormat.MEDIUM)
+        .format(java.util.Date(expiry))
+    return if (entry.isExpired()) {
+        stringResource(R.string.api_bypass_event_expired, formatted)
+    } else {
+        stringResource(R.string.api_bypass_event_expires, formatted)
+    }
+}
+
+/**
+ * Formats the `updatedAt` published by the website. A value that cannot be parsed
+ * is shown verbatim rather than dropped: the config is hand-edited, and that is
+ * exactly when seeing what is really published matters.
+ */
+private fun formatEventTimestamp(raw: String): String {
+    val millis = EventBypassDates.parseIsoTimestamp(raw) ?: return raw
+    return java.text.DateFormat
+        .getDateTimeInstance(java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT)
+        .format(java.util.Date(millis))
 }
 
 @Composable

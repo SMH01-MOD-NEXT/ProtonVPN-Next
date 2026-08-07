@@ -147,6 +147,10 @@
     <string name="api_bypass_event_choose">ДОСТУПНІ ОБХОДИ</string>
     <string name="api_bypass_event_none">Зараз обхід не опубліковано</string>
     <string name="api_bypass_event_last_check">Остання перевірка: %1$s</string>
+    <string name="api_bypass_event_config_updated">Конфіг опубліковано: %1$s</string>
+    <string name="api_bypass_event_expires">Працює до %1$s</string>
+    <string name="api_bypass_event_expires_forever">Без терміну дії</string>
+    <string name="api_bypass_event_expired">Минув %1$s</string>
     <string name="api_bypass_event_never_checked">Ще не перевірялося</string>
     <string name="api_bypass_event_refresh">Оновити зараз</string>
     <string name="api_bypass_event_refreshing">Перевірка дзеркал…</string>

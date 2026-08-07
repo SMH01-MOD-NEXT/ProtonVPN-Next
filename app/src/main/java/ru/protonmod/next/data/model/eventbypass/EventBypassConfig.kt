@@ -20,6 +20,10 @@ package ru.protonmod.next.data.model.eventbypass
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Shape of `event-bypass.json`, published by the website and mirrored on every
@@ -52,7 +56,13 @@ data class EventBypassEntry(
     val id: String = "",
     val name: String = "",
     val url: String = "",
-    val enabled: Boolean = false
+    val enabled: Boolean = false,
+    /**
+     * When the platform behind this bypass is expected to stop working, as
+     * `dd-MM-yyyy`, or "forever" when it does not run on a trial. Empty means
+     * nobody knows, which is different from "forever" and is shown as neither.
+     */
+    val expiresAt: String = ""
 ) {
     /**
      * Identifies the entry across refreshes so the user's choice survives them.
@@ -72,6 +82,91 @@ data class EventBypassEntry(
         val trimmed = url.trim()
         if (!trimmed.startsWith("https://", ignoreCase = true)) return ""
         return if (trimmed.endsWith("/")) trimmed else "$trimmed/"
+    }
+
+    /** True when the config says this platform is not running on a trial. */
+    fun neverExpires(): Boolean =
+        expiresAt.trim().equals(EventBypassDates.FOREVER, ignoreCase = true)
+
+    /** End of the last day this bypass is expected to work, or null when unknown. */
+    fun expiryMillis(): Long? = EventBypassDates.parseExpiryDay(expiresAt)
+
+    /**
+     * Whether the announced date has passed. The date is informational: it is typed
+     * by hand and read against a clock the user can change, so an expired entry is
+     * still offered and still routable — it is only labelled as expired.
+     */
+    fun isExpired(nowMillis: Long = System.currentTimeMillis()): Boolean {
+        val expiry = expiryMillis() ?: return false
+        return nowMillis > expiry
+    }
+}
+
+/**
+ * Date handling for the config. The published dates come in two different shapes
+ * on purpose: `updatedAt` is machine-written by the website and is ISO-8601, while
+ * `expiresAt` is typed by a human and is the far friendlier `dd-MM-yyyy`.
+ */
+object EventBypassDates {
+    /** Value of `expiresAt` meaning the platform is not on a trial. */
+    const val FOREVER = "forever"
+
+    private const val EXPIRY_PATTERN = "dd-MM-yyyy"
+
+    private val ISO_PATTERNS = listOf(
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "yyyy-MM-dd'T'HH:mm:ssXXX",
+        "yyyy-MM-dd'T'HH:mm'Z'",
+        "yyyy-MM-dd"
+    )
+
+    /**
+     * Turns `dd-MM-yyyy` into the last millisecond of that day, so a bypass marked
+     * as expiring today is not treated as dead at one minute past midnight.
+     * Returns null for "forever", for an empty value and for anything unparseable,
+     * all of which mean "do not show an expiry" rather than "expired".
+     */
+    fun parseExpiryDay(raw: String): Long? {
+        val trimmed = raw.trim()
+        if (trimmed.isEmpty() || trimmed.equals(FOREVER, ignoreCase = true)) return null
+        return try {
+            val format = SimpleDateFormat(EXPIRY_PATTERN, Locale.US).apply { isLenient = false }
+            val parsed = format.parse(trimmed) ?: return null
+            Calendar.getInstance().apply {
+                time = parsed
+                set(Calendar.HOUR_OF_DAY, 23)
+                set(Calendar.MINUTE, 59)
+                set(Calendar.SECOND, 59)
+                set(Calendar.MILLISECOND, 999)
+            }.timeInMillis
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Parses the `updatedAt` timestamp written by the website. Several shapes are
+     * accepted because the file is also edited by hand, and an unparseable value is
+     * reported as null so the UI can fall back to showing it verbatim.
+     */
+    fun parseIsoTimestamp(raw: String): Long? {
+        val trimmed = raw.trim()
+        if (trimmed.isEmpty()) return null
+        for (pattern in ISO_PATTERNS) {
+            val parsed = try {
+                val format = SimpleDateFormat(pattern, Locale.US).apply {
+                    isLenient = false
+                    if (pattern.endsWith("'Z'") || pattern == "yyyy-MM-dd") {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }
+                }
+                format.parse(trimmed)
+            } catch (e: Exception) {
+                null
+            }
+            if (parsed != null) return parsed.time
+        }
+        return null
     }
 }
 
