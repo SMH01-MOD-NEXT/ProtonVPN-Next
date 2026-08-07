@@ -84,6 +84,13 @@ class SettingsManager @Inject constructor(
         const val STRATEGY_BYEDPI = "byedpi"
         const val STRATEGY_CUSTOM_PROXY = "custom_proxy"
 
+        /**
+         * Temporary ("event") bypass. Unlike the other strategies its endpoint is not
+         * compiled in: it is fetched from event-bypass.json, so the platform behind it
+         * can be swapped without shipping a new build.
+         */
+        const val STRATEGY_EVENT = "event"
+
         const val PROXY_TYPE_HTTP = "http"
         const val PROXY_TYPE_SOCKS = "socks"
 
@@ -133,6 +140,13 @@ class SettingsManager @Inject constructor(
         private val SPOOF_COUNTRY_ENABLED = booleanPreferencesKey("spoof_country_enabled")
         private val SPOOF_COUNTRY_NULL = booleanPreferencesKey("spoof_country_null")
         private val SPOOF_COUNTRY_CODE = stringPreferencesKey("spoof_country_code")
+
+        // Cached copy of event-bypass.json. It is remote data, not a user preference,
+        // so it is deliberately left out of backup/restore: the app refetches it.
+        private val EVENT_BYPASS_NAME = stringPreferencesKey("event_bypass_name")
+        private val EVENT_BYPASS_URL = stringPreferencesKey("event_bypass_url")
+        private val EVENT_BYPASS_UPDATED_AT = stringPreferencesKey("event_bypass_updated_at")
+        private val EVENT_BYPASS_LAST_SYNC = longPreferencesKey("event_bypass_last_sync")
 
         private val OBFUSCATION_ENABLED = booleanPreferencesKey("obfuscation_enabled")
         private val OBFUSCATION_ADVANCED_MODE = booleanPreferencesKey("obfuscation_advanced_mode")
@@ -317,6 +331,11 @@ class SettingsManager @Inject constructor(
     val apiProxyUsername: Flow<String> = dataStore.data.map { it[API_PROXY_USERNAME] ?: "" }
     val apiProxyPassword: Flow<String> = dataStore.data.map { it[API_PROXY_PASSWORD] ?: "" }
 
+    val eventBypassName: Flow<String> = dataStore.data.map { it[EVENT_BYPASS_NAME] ?: "" }
+    val eventBypassUrl: Flow<String> = dataStore.data.map { it[EVENT_BYPASS_URL] ?: "" }
+    val eventBypassUpdatedAt: Flow<String> = dataStore.data.map { it[EVENT_BYPASS_UPDATED_AT] ?: "" }
+    val eventBypassLastSync: Flow<Long> = dataStore.data.map { it[EVENT_BYPASS_LAST_SYNC] ?: 0L }
+
     val spoofCountryEnabled: Flow<Boolean> = dataStore.data.map { it[SPOOF_COUNTRY_ENABLED] ?: false }
     val spoofCountryNull: Flow<Boolean> = dataStore.data.map { it[SPOOF_COUNTRY_NULL] ?: false }
     val spoofCountryCode: Flow<String> = dataStore.data.map { it[SPOOF_COUNTRY_CODE] ?: "" }
@@ -391,6 +410,10 @@ class SettingsManager @Inject constructor(
     fun getApiProxyTypeSync(): String = prefs.getString("api_proxy_type", PROXY_TYPE_SOCKS) ?: PROXY_TYPE_SOCKS
     fun getApiProxyUsernameSync(): String = prefs.getString("api_proxy_username", "") ?: ""
     fun getApiProxyPasswordSync(): String = prefs.getString("api_proxy_password", "") ?: ""
+
+    /** Read by the OkHttp interceptor, which cannot suspend. */
+    fun getEventBypassUrlSync(): String = prefs.getString("event_bypass_url", "") ?: ""
+    fun getEventBypassNameSync(): String = prefs.getString("event_bypass_name", "") ?: ""
 
     fun isSpoofCountryEnabledSync(): Boolean = prefs.getBoolean("spoof_country_enabled", false)
     fun isSpoofCountryNullSync(): Boolean = prefs.getBoolean("spoof_country_null", false)
@@ -663,6 +686,25 @@ class SettingsManager @Inject constructor(
     suspend fun setApiProxyPassword(password: String) {
         prefs.edit { putString("api_proxy_password", password) }
         dataStore.edit { it[API_PROXY_PASSWORD] = password }
+    }
+
+    /** Stores the event bypass published by event-bypass.json. An empty [url] means none. */
+    suspend fun setEventBypass(name: String, url: String, updatedAt: String) {
+        prefs.edit {
+            putString("event_bypass_name", name)
+            putString("event_bypass_url", url)
+            putString("event_bypass_updated_at", updatedAt)
+        }
+        dataStore.edit {
+            it[EVENT_BYPASS_NAME] = name
+            it[EVENT_BYPASS_URL] = url
+            it[EVENT_BYPASS_UPDATED_AT] = updatedAt
+        }
+    }
+
+    suspend fun setEventBypassLastSync(timestamp: Long) {
+        prefs.edit { putLong("event_bypass_last_sync", timestamp) }
+        dataStore.edit { it[EVENT_BYPASS_LAST_SYNC] = timestamp }
     }
 
     suspend fun setSpoofCountryEnabled(enabled: Boolean) {

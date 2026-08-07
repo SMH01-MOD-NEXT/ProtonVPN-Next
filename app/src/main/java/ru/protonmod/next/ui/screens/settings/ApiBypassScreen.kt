@@ -55,6 +55,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
+import ru.protonmod.next.data.repository.EventBypassResult
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
@@ -281,6 +282,114 @@ fun ApiBypassScreen(
                                     isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_DENO,
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_DENO) }
                                 )
+
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 24.dp),
+                                    color = colors.separatorNorm.copy(alpha = 0.2f)
+                                )
+
+                                // Strategy: Event (temporary; its address is published in
+                                // event-bypass.json instead of being compiled into the app)
+                                StrategySelectionRow(
+                                    title = if (uiState.eventBypassName.isNotEmpty()) {
+                                        stringResource(
+                                            R.string.api_bypass_strategy_event_named,
+                                            uiState.eventBypassName
+                                        )
+                                    } else {
+                                        stringResource(R.string.api_bypass_strategy_event)
+                                    },
+                                    description = stringResource(R.string.api_bypass_strategy_event_desc),
+                                    icon = ProtonIcons.Globe,
+                                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_EVENT,
+                                    onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_EVENT) }
+                                )
+
+                                // Configuration for the Event bypass
+                                AnimatedVisibility(
+                                    visible = uiState.apiBypassStrategy == SettingsManager.STRATEGY_EVENT,
+                                    enter = fadeIn() + expandVertically(),
+                                    exit = fadeOut() + shrinkVertically()
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                                            .background(colors.backgroundSecondary.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
+                                            .padding(12.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.api_bypass_event_warning),
+                                            color = colors.notificationWarning,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+
+                                        Spacer(modifier = Modifier.height(12.dp))
+
+                                        Text(
+                                            text = if (uiState.eventBypassUrl.isNotEmpty() && uiState.eventBypassName.isNotEmpty()) {
+                                                stringResource(R.string.api_bypass_event_current, uiState.eventBypassName)
+                                            } else {
+                                                stringResource(R.string.api_bypass_event_none)
+                                            },
+                                            color = colors.textNorm,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+
+                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                        Text(
+                                            text = if (uiState.eventBypassLastSync > 0L) {
+                                                val formatter = java.text.DateFormat.getDateTimeInstance(
+                                                    java.text.DateFormat.SHORT,
+                                                    java.text.DateFormat.SHORT
+                                                )
+                                                stringResource(
+                                                    R.string.api_bypass_event_last_check,
+                                                    formatter.format(java.util.Date(uiState.eventBypassLastSync))
+                                                )
+                                            } else {
+                                                stringResource(R.string.api_bypass_event_never_checked)
+                                            },
+                                            color = colors.textWeak,
+                                            style = MaterialTheme.typography.bodySmall
+                                        )
+
+                                        // Why the last attempt failed matters here: offline and
+                                        // "third-party VPN is up" are refusals, not network errors.
+                                        val statusText = if (uiState.isEventBypassRefreshing) {
+                                            stringResource(R.string.api_bypass_event_refreshing)
+                                        } else {
+                                            when (uiState.eventBypassLastResult) {
+                                                EventBypassResult.UPDATED -> stringResource(R.string.api_bypass_event_updated)
+                                                EventBypassResult.NOT_CONFIGURED -> stringResource(R.string.api_bypass_event_not_configured)
+                                                EventBypassResult.BLOCKED_OFFLINE -> stringResource(R.string.api_bypass_event_offline)
+                                                EventBypassResult.BLOCKED_VPN -> stringResource(R.string.api_bypass_event_blocked_vpn)
+                                                EventBypassResult.UNREACHABLE -> stringResource(R.string.api_bypass_event_unreachable)
+                                                null -> null
+                                            }
+                                        }
+
+                                        if (statusText != null) {
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = statusText,
+                                                color = colors.textWeak,
+                                                style = MaterialTheme.typography.bodySmall
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(16.dp))
+
+                                        Button(
+                                            onClick = { viewModel.refreshEventBypass() },
+                                            enabled = !uiState.isEventBypassRefreshing,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                                        ) {
+                                            Text(stringResource(R.string.api_bypass_event_refresh))
+                                        }
+                                    }
+                                }
 
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 24.dp),

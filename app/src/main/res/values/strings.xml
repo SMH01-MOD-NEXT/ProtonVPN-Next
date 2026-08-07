@@ -165,6 +165,21 @@
     <string name="api_bypass_strategy_deno_desc">Routes API requests through a secure Deno Deploy mirror.</string>
     <string name="api_bypass_strategy_mirrors">Proton Mirrors (DoH)</string>
     <string name="api_bypass_strategy_mirrors_desc">Discovers and uses dynamic Proton API mirrors via DNS-over-HTTPS fallback.</string>
+    <string name="api_bypass_strategy_event" translatable="false">Event</string>
+    <string name="api_bypass_strategy_event_named" translatable="false">Event (%1$s)</string>
+    <string name="api_bypass_strategy_event_desc">Temporary bypass. Its address is published separately and can change at any time, so stable operation is not guaranteed and the hosting platform may change often.</string>
+    <string name="api_bypass_event_warning">This bypass is a stop-gap: the platform behind it changes frequently and it can stop working without notice.</string>
+    <string name="api_bypass_event_current">Current bypass: %1$s</string>
+    <string name="api_bypass_event_none">No bypass published right now</string>
+    <string name="api_bypass_event_last_check">Last check: %1$s</string>
+    <string name="api_bypass_event_never_checked">Not checked yet</string>
+    <string name="api_bypass_event_refresh">Update now</string>
+    <string name="api_bypass_event_refreshing">Checking mirrors…</string>
+    <string name="api_bypass_event_updated">Address updated.</string>
+    <string name="api_bypass_event_not_configured">The mirrors report no active bypass right now.</string>
+    <string name="api_bypass_event_offline">No internet connection.</string>
+    <string name="api_bypass_event_blocked_vpn">Turn off the third-party VPN to update the address.</string>
+    <string name="api_bypass_event_unreachable">Could not reach any mirror.</string>
     <string name="btn_allow">Allow</string>
     <string name="btn_accept">Accept</string>
     <string name="api_bypass_strategy_custom">Custom Proxy (SOCKS5/HTTPS)</string>
@@ -341,6 +356,16 @@
 
     <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
     <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
+
+    <!-- Event bypass config mirrors, tried in this order. The git forges come first:
+         they hold the source of truth and stay reachable while a hosting platform
+         is being migrated, which is exactly when this config changes. -->
+    <string name="url_event_bypass_1" translatable="false">https://gitlab.com/vpn-next-group/protonvpn-next-web/-/raw/main/public/event-bypass.json</string>
+    <string name="url_event_bypass_2" translatable="false">https://raw.githubusercontent.com/SMH01-MOD-NEXT/ProtonVPN-Next-WEB/main/public/event-bypass.json</string>
+    <string name="url_event_bypass_3" translatable="false">https://protonvpn-next-web--main.smh01-mirrors.deno.net/event-bypass.json</string>
+    <string name="url_event_bypass_4" translatable="false">https://kvn.protonnext.qzz.io/event-bypass.json</string>
+    <string name="url_event_bypass_5" translatable="false">https://home.protonnext.qzz.io/event-bypass.json</string>
+    <string name="url_event_bypass_6" translatable="false">https://shimmering-stroopwafel-51675e.netlify.app/event-bypass.json</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">Licenses</string>

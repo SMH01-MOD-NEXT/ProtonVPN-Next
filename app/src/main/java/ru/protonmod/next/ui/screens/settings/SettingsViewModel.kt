@@ -51,8 +51,11 @@ import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.network.byedpi.ByeDpiManager
 import ru.protonmod.next.data.network.byedpi.ByeDpiStrategyTester
+import ru.protonmod.next.data.repository.EventBypassResult
 import ru.protonmod.next.data.repository.UpdateRepository
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.eventbypass.EventBypassManager
+import ru.protonmod.next.eventbypass.EventBypassSyncState
 import ru.protonmod.next.vpn.ProxyLinkParser
 import ru.protonmod.next.vpn.SentryConfigurator
 import java.security.SecureRandom
@@ -158,6 +161,13 @@ data class SettingsUiState(
     val isSentryMetricsEnabled: Boolean = false,
     val isSentryLogsEnabled: Boolean = false,
 
+    // Event bypass (temporary strategy whose endpoint is fetched at runtime)
+    val eventBypassName: String = "",
+    val eventBypassUrl: String = "",
+    val eventBypassLastSync: Long = 0L,
+    val isEventBypassRefreshing: Boolean = false,
+    val eventBypassLastResult: EventBypassResult? = null,
+
     val isPrivacyBuild: Boolean = ru.protonmod.next.BuildConfig.IS_PRIVACY_BUILD
 )
 
@@ -172,6 +182,7 @@ class SettingsViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val updateRepository: UpdateRepository,
     private val otaUpdateManager: OTAUpdateManager,
+    private val eventBypassManager: EventBypassManager,
     private val byeDpiManager: ByeDpiManager,
     private val byeDpiStrategyTester: ByeDpiStrategyTester
 ) : ViewModel() {
@@ -318,7 +329,13 @@ class SettingsViewModel @Inject constructor(
         settingsManager.torModeEnabled,
         settingsManager.reconnectHintEnabled,
         settingsManager.aiEnabled,
-        settingsManager.netShieldLevel
+        settingsManager.netShieldLevel,
+        // New flows must be appended here: the transform below reads them positionally,
+        // so inserting one in the middle would silently shift every later index.
+        settingsManager.eventBypassName,
+        settingsManager.eventBypassUrl,
+        settingsManager.eventBypassLastSync,
+        eventBypassManager.syncState
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -399,6 +416,11 @@ class SettingsViewModel @Inject constructor(
             reconnectHintEnabled = args[74] as Boolean,
             aiEnabled = args[75] as Boolean,
             netShieldEnabled = (args[76] as NetShieldLevel) != NetShieldLevel.DISABLED,
+            eventBypassName = args[77] as String,
+            eventBypassUrl = args[78] as String,
+            eventBypassLastSync = args[79] as Long,
+            isEventBypassRefreshing = (args[80] as EventBypassSyncState).isRefreshing,
+            eventBypassLastResult = (args[80] as EventBypassSyncState).lastResult,
         )
     }.stateIn(
         scope = viewModelScope,
@@ -457,6 +479,16 @@ class SettingsViewModel @Inject constructor(
             } finally {
                 _isCheckingForUpdates.value = false
             }
+        }
+    }
+
+    /**
+     * Manual refresh of the event bypass address. The repository refuses the fetch
+     * when there is no internet or a third-party VPN is up, and reports why.
+     */
+    fun refreshEventBypass() {
+        viewModelScope.launch {
+            eventBypassManager.refreshNow()
         }
     }
 

@@ -52,6 +52,7 @@ import ru.protonmod.next.data.network.ProtonAuthApi
 import ru.protonmod.next.data.network.ProtonVpnApi
 import ru.protonmod.next.data.network.SessionManager
 import ru.protonmod.next.data.network.TokenAuthenticator
+import ru.protonmod.next.data.network.eventbypass.EventBypassApi
 import ru.protonmod.next.data.network.ota.UpdateApi
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.NetworkMonitor
@@ -141,6 +142,23 @@ object NetworkModule {
         return settingsManager.isApiBypassEnabledSync()
     }
 
+    /**
+     * Base URL of the temporary ("event") bypass. It is fetched at runtime from
+     * event-bypass.json, so it can be missing or, if the cache was tampered with,
+     * unparseable; both cases fall back to talking to Proton directly rather than
+     * throwing inside an interceptor.
+     */
+    private fun eventProxyBaseUrl(settings: SettingsManager): String {
+        val stored = settings.getEventBypassUrlSync()
+        if (stored.isEmpty()) return PROTON_DIRECT_URL
+        return try {
+            stored.toHttpUrl().toString()
+        } catch (e: Exception) {
+            ProtonLogger.w("NetworkModule", "Stored event bypass URL is invalid, using direct API")
+            PROTON_DIRECT_URL
+        }
+    }
+
     @Provides
     @Singleton
     fun provideOkHttpClient(
@@ -194,6 +212,14 @@ object NetworkModule {
             
             // Only rewrite if it's a Proton API request (direct or through one of the proxies)
             val host = originalUrl.host
+            // The event proxy host is not a constant: it comes from event-bypass.json and
+            // changes whenever the temporary platform moves. A retried or re-authenticated
+            // request already carries it, so it has to be recognised as a Proton API call.
+            val eventProxyHost = try {
+                eventProxyBaseUrl(settingsManagerProvider.get()).toHttpUrl().host
+            } catch (e: Exception) {
+                null
+            }
             val isProtonApi = (host == protonDirectHost || 
                               host.endsWith(".proton.me") ||
                               host.endsWith(".protonmail.ch") ||
@@ -207,7 +233,8 @@ object NetworkModule {
                               host == "protonmail.com" ||
                               host == protonNetlifyHost ||
                               host == protonCloudflareHost ||
-                              host == protonDenoHost)
+                              host == protonDenoHost ||
+                              (eventProxyHost != null && host == eventProxyHost))
             
             if (!isProtonApi) {
                 // For non-Proton requests (like OTA mirrors), ensure we still provide a standard User-Agent.
@@ -258,6 +285,7 @@ object NetworkModule {
             val proxyBaseUrl = when (strategy) {
                 SettingsManager.STRATEGY_CLOUDFLARE -> PROTON_PROXY_CLOUDFLARE_URL
                 SettingsManager.STRATEGY_DENO -> PROTON_PROXY_DENO_URL
+                SettingsManager.STRATEGY_EVENT -> eventProxyBaseUrl(settings)
                 else -> PROTON_PROXY_NETLIFY_URL
             }
 
@@ -534,4 +562,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideUpdateApi(retrofit: Retrofit): UpdateApi = retrofit.create(UpdateApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideEventBypassApi(retrofit: Retrofit): EventBypassApi =
+        retrofit.create(EventBypassApi::class.java)
 }

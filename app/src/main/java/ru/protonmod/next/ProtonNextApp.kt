@@ -31,6 +31,7 @@ import okhttp3.OkHttp
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.SessionRefreshWorker
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.eventbypass.EventBypassManager
 import ru.protonmod.next.ota.OTAUpdateManager
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
@@ -55,6 +56,9 @@ class ProtonNextApp : Application(), Configuration.Provider {
 
     @Inject
     lateinit var otaUpdateManager: Lazy<OTAUpdateManager>
+
+    @Inject
+    lateinit var eventBypassManager: Lazy<EventBypassManager>
 
     @Inject
     lateinit var networkMonitor: Lazy<NetworkMonitor>
@@ -150,6 +154,10 @@ class ProtonNextApp : Application(), Configuration.Provider {
             MainScope().launch {
                 otaUpdateManager.get().scheduleUpdateCheck()
             }
+
+            // Keep the temporary (event) bypass endpoint fresh. The platform behind it
+            // changes often, so a stale cached URL means the strategy silently stops working.
+            eventBypassManager.get().scheduleRefresh()
         }
     }
 
