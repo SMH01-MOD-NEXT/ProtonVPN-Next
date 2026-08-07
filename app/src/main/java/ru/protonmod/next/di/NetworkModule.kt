@@ -298,13 +298,15 @@ object NetworkModule {
                 .apply {
                     if (useProxy && (strategy == SettingsManager.STRATEGY_CLOUDFLARE || 
                                     strategy == SettingsManager.STRATEGY_DENO ||
-                                    strategy == SettingsManager.STRATEGY_NETLIFY)) {
+                                    strategy == SettingsManager.STRATEGY_NETLIFY ||
+                                    strategy == SettingsManager.STRATEGY_EVENT)) {
                         // A proxy may live under a path prefix rather than at the root:
                         // the Deno deployment serves the website itself and mounts the
-                        // API under /api. newBuilder() only replaces the authority, so
-                        // that prefix has to be re-applied by hand. Without it a request
-                        // for /auth/v4/refresh reaches the website instead of the proxy
-                        // and comes back as 405 Method Not Allowed.
+                        // API under /api, and an event platform usually does the same.
+                        // newBuilder() only replaces the authority, so that prefix has to
+                        // be re-applied by hand. Without it a request for /auth/v4/refresh
+                        // reaches the website instead of the proxy and comes back as
+                        // 405 Method Not Allowed.
                         val basePathSegments = newBaseUrl.pathSegments.filter { it.isNotEmpty() }
                         val hostPrefix = when (originalUrl.host) {
                             "verify-api.proton.me" -> "verify-api"
