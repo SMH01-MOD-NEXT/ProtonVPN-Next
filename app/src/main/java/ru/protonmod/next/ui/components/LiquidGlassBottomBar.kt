@@ -17,7 +17,6 @@
 
 package ru.protonmod.next.ui.components
 
-import android.annotation.SuppressLint
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -66,9 +65,6 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
 
-// The two emitters are intentional: the outer Box centers the bar on screen,
-// the inner Box caps its width — merging them would change the layout.
-@SuppressLint("MultipleContentEmitters")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LiquidGlassBottomBar(
@@ -97,27 +93,28 @@ fun LiquidGlassBottomBar(
     targets.add(MainTarget.Profiles)
     targets.add(MainTarget.Settings)
 
-    // Gemini-style intro glow shown briefly when AI mode opens.
-    var showGeminiAnimation by remember { mutableStateOf(false) }
-    LaunchedEffect(aiModeActive) {
-        if (aiModeActive) {
-            showGeminiAnimation = true
-            delay(1200)
-            showGeminiAnimation = false
-        } else {
-            // Closing AI mode (e.g. tapping the close button right after a long press)
-            // cancels the coroutine above before its reset runs, so clear it here too;
-            // otherwise the border keeps shimmering indefinitely.
-            showGeminiAnimation = false
-        }
-    }
-
     Box(
         modifier = modifier
             .fillMaxWidth()
             .padding(bottom = 24.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Gemini-style intro glow shown briefly when AI mode opens. Kept inside the
+        // Box content lambda so this composable has a single top-level emitter.
+        var showGeminiAnimation by remember { mutableStateOf(false) }
+        LaunchedEffect(aiModeActive) {
+            if (aiModeActive) {
+                showGeminiAnimation = true
+                delay(1200)
+                showGeminiAnimation = false
+            } else {
+                // Closing AI mode (e.g. tapping the close button right after a long press)
+                // cancels the coroutine above before its reset runs, so clear it here too;
+                // otherwise the border keeps shimmering indefinitely.
+                showGeminiAnimation = false
+            }
+        }
+
         Box(
             modifier = Modifier
                 .widthIn(max = if (isTablet) 400.dp else 600.dp)
