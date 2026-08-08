@@ -46,6 +46,7 @@ import io.nekohasekai.libbox.OverrideOptions
 import io.nekohasekai.libbox.SetupOptions
 import io.nekohasekai.libbox.SystemProxyStatus
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -138,6 +139,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         private const val CRASH_REPORT_SOURCE = "ProtonVpnService"
         private const val LOGCAT_CHUNK_SIZE = 3_500
         private val libboxInitialized = AtomicBoolean(false)
+        private val libboxInitDeferred = CompletableDeferred<Unit>()
 
         /** Engine start failures that only mean the device currently has no usable network. */
         private val TRANSIENT_NETWORK_ERROR_MARKERS = listOf(
@@ -204,7 +206,9 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannels()
-        initializeLibbox()
+        // Libbox.setup is a long-running native call; run it on IO to avoid blocking the main
+        // thread and triggering a Background ANR.
+        scope.launch(Dispatchers.IO) { initializeLibbox() }
         platform = AwgBoxPlatform(this, vpnNetworkMonitor) { descriptor ->
             tunDescriptor?.close()
             tunDescriptor = descriptor
@@ -224,7 +228,10 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
     }
 
     private fun initializeLibbox() {
-        if (!libboxInitialized.compareAndSet(false, true)) return
+        if (!libboxInitialized.compareAndSet(false, true)) {
+            // Already initializing or done; just wait for the deferred to complete elsewhere.
+            return
+        }
         val workingDir = getExternalFilesDir(null)?.takeIf { it.exists() || it.mkdirs() } ?: filesDir
         val options = SetupOptions().apply {
             basePath = filesDir.absolutePath
@@ -241,8 +248,13 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             // workingPath.
             crashReportSource = CRASH_REPORT_SOURCE
         }
-        Libbox.setup(options)
-        Libbox.setLocale(Locale.getDefault().toLanguageTag().replace('-', '_'))
+        try {
+            Libbox.setup(options)
+            Libbox.setLocale(Locale.getDefault().toLanguageTag().replace('-', '_'))
+            libboxInitDeferred.complete(Unit)
+        } catch (t: Throwable) {
+            libboxInitDeferred.completeExceptionally(t)
+        }
     }
 
     override fun onBind(intent: Intent): IBinder? = super.onBind(intent)
@@ -322,6 +334,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         val pendingShutdown = shutdownJob
         engineJob = scope.launch(Dispatchers.IO) {
             try {
+                libboxInitDeferred.await()
                 pendingShutdown?.join()
                 currentCoroutineContext().ensureActive()
                 if (lifecycleGeneration.get() != generation) return@launch
