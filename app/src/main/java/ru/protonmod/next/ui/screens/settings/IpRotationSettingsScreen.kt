@@ -175,7 +175,7 @@ fun IpRotationSettingsScreen(
 }
 
 @Composable
-private fun RotationSection(title: String, modifier: Modifier, content: @Composable ColumnScope.() -> Unit) {
+private fun RotationSection(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     val colors = ProtonNextTheme.colors
     Column(modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(title.uppercase(), style = MaterialTheme.typography.labelMedium, color = colors.textWeak, modifier = Modifier.padding(start = 8.dp))

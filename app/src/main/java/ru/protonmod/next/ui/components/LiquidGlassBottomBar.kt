@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.ui.components
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -35,16 +36,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.node.DrawModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -53,7 +55,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.persistentSetOf
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import ru.protonmod.next.R
 import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.nav.MainTarget
@@ -61,6 +66,9 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
 import ru.protonmod.next.ui.utils.isTablet
 
+// The two emitters are intentional: the outer Box centers the bar on screen,
+// the inner Box caps its width — merging them would change the layout.
+@SuppressLint("MultipleContentEmitters")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LiquidGlassBottomBar(
@@ -281,57 +289,102 @@ private fun Modifier.geminiBorder(
     shape: Shape,
     isEnabled: Boolean,
     strokeWidth: Dp = 2.5.dp
-): Modifier = composed {
+): Modifier = this then GeminiBorderElement(shape, isEnabled, strokeWidth)
+
+private data class GeminiBorderElement(
+    val shape: Shape,
+    val isEnabled: Boolean,
+    val strokeWidth: Dp,
+) : ModifierNodeElement<GeminiBorderNode>() {
+    override fun create(): GeminiBorderNode = GeminiBorderNode(shape, strokeWidth, isEnabled)
+
+    override fun update(node: GeminiBorderNode) {
+        node.shape = shape
+        node.strokeWidth = strokeWidth
+        node.setEnabled(isEnabled)
+    }
+}
+
+private class GeminiBorderNode(
+    var shape: Shape,
+    var strokeWidth: Dp,
+    initialEnabled: Boolean,
+) : Modifier.Node(), DrawModifierNode {
+    private var isEnabled = initialEnabled
+    private val intensity = Animatable(0f)
+    private val offset = Animatable(0f)
+    private var sweepJob: Job? = null
+
+    override fun onAttach() {
+        if (isEnabled) fadeIn()
+    }
+
+    fun setEnabled(enabled: Boolean) {
+        if (enabled == isEnabled) return
+        isEnabled = enabled
+        if (enabled) fadeIn() else fadeOut()
+    }
+
     // Fade the glow in and out instead of snapping it on/off. The fade-out is a bit
     // slower so the border eases away gently rather than blinking off.
-    val intensity by animateFloatAsState(
-        targetValue = if (isEnabled) 1f else 0f,
-        animationSpec = tween(
-            durationMillis = if (isEnabled) 500 else 850,
-            easing = FastOutSlowInEasing
-        ),
-        label = "geminiIntensity"
-    )
+    private fun fadeIn() {
+        startSweep()
+        coroutineScope.launch {
+            intensity.animateTo(1f, tween(durationMillis = 500, easing = FastOutSlowInEasing))
+        }
+    }
 
-    // Nothing visible: skip the infinite animation entirely so it can't keep running.
-    if (intensity <= 0.001f) return@composed this
+    private fun fadeOut() {
+        coroutineScope.launch {
+            intensity.animateTo(0f, tween(durationMillis = 850, easing = FastOutSlowInEasing))
+            // Once fully faded out the border is invisible, so stop the sweep
+            // entirely instead of letting it run indefinitely.
+            stopSweep()
+        }
+    }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "gemini")
     // The sweep must loop seamlessly. With TileMode.Mirror the gradient pattern only
     // repeats identically every full period, which is 2x the 600px gradient vector = 1200px.
     // Wrapping the offset at anything other than a multiple of 1200 lands mid-pattern and
     // the colors visibly jump on restart. LinearEasing keeps the speed constant across the seam.
-    val offset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1200f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2600, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "offset"
-    )
+    private fun startSweep() {
+        if (sweepJob?.isActive == true) return
+        sweepJob = coroutineScope.launch {
+            while (isActive) {
+                offset.snapTo(0f)
+                offset.animateTo(1200f, tween(durationMillis = 2600, easing = LinearEasing))
+            }
+        }
+    }
 
-    drawWithContent {
+    private fun stopSweep() {
+        sweepJob?.cancel()
+        sweepJob = null
+    }
+
+    override fun ContentDrawScope.draw() {
         drawContent()
-        val colors = listOf(
-            Color(0xFF4285F4),
-            Color(0xFF9B72F3),
-            Color(0xFF34A853),
-            Color(0xFFFBBC05),
-            Color(0xFFEA4335),
-            Color(0xFF4285F4)
-        )
+        val alpha = intensity.value
+        // Nothing visible: skip drawing the border entirely.
+        if (alpha <= 0.001f) return
 
         drawOutline(
             outline = shape.createOutline(size, layoutDirection, this),
             brush = Brush.linearGradient(
-                colors = colors,
-                start = Offset(offset, offset),
-                end = Offset(offset + 600f, offset + 600f),
+                colors = listOf(
+                    Color(0xFF4285F4),
+                    Color(0xFF9B72F3),
+                    Color(0xFF34A853),
+                    Color(0xFFFBBC05),
+                    Color(0xFFEA4335),
+                    Color(0xFF4285F4)
+                ),
+                start = Offset(offset.value, offset.value),
+                end = Offset(offset.value + 600f, offset.value + 600f),
                 tileMode = TileMode.Mirror
             ),
             style = Stroke(width = strokeWidth.toPx()),
-            alpha = intensity
+            alpha = alpha
         )
     }
 }

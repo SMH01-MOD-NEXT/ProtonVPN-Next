@@ -195,7 +195,7 @@ fun CountriesScreen(
                                 isTablet = isTablet,
                                 loadDisplayMode = state.loadDisplayMode,
                                 connectionMode = state.connectionMode,
-                                onModeSelected = viewModel::setConnectionMode,
+                                onModeSelect = viewModel::setConnectionMode,
                             )
                         }
                     }
@@ -244,7 +244,7 @@ fun CountriesListContent(
     isTablet: Boolean = false,
     loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD,
-    onModeSelected: (CountryConnectionMode) -> Unit = {},
+    onModeSelect: (CountryConnectionMode) -> Unit = {},
 ) {
     val colors = ProtonNextTheme.colors
 
@@ -265,7 +265,7 @@ fun CountriesListContent(
                 item(span = { GridItemSpan(maxLineSpan) }, contentType = "Header") {
                     Column {
                         MainHeader(title = stringResource(R.string.countries_title))
-                        ConnectionModeSelector(connectionMode, onModeSelected)
+                        ConnectionModeSelector(connectionMode, onModeSelect)
                     }
                 }
 
@@ -294,7 +294,7 @@ fun CountriesListContent(
                 item(contentType = "Header") {
                     Column {
                         MainHeader(title = stringResource(R.string.countries_title))
-                        ConnectionModeSelector(connectionMode, onModeSelected)
+                        ConnectionModeSelector(connectionMode, onModeSelect)
                     }
                 }
 
@@ -316,7 +316,7 @@ fun CountriesListContent(
 @Composable
 private fun ConnectionModeSelector(
     selected: CountryConnectionMode,
-    onSelected: (CountryConnectionMode) -> Unit,
+    onSelect: (CountryConnectionMode) -> Unit,
 ) {
     val colors = ProtonNextTheme.colors
     Row(
@@ -329,7 +329,7 @@ private fun ConnectionModeSelector(
                 CountryConnectionMode.TOR -> stringResource(R.string.connection_mode_tor)
             }
             Button(
-                onClick = { onSelected(mode) },
+                onClick = { onSelect(mode) },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (selected == mode) colors.brandNorm else colors.backgroundSecondary,

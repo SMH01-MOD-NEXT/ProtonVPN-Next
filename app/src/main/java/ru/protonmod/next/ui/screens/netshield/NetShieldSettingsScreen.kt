@@ -336,7 +336,7 @@ fun NetShieldSettingsScreen(
                 item(contentType = "FilterSources") {
                     NetShieldSourcesSection(
                         state = state,
-                        onPresetSelected = viewModel::setCategoryPreset,
+                        onPresetSelect = viewModel::setCategoryPreset,
                         onCustomUrl = viewModel::setCategoryUrl,
                         onResetCategory = viewModel::resetCategorySource,
                         onApplyToAll = viewModel::applyPresetToAll,

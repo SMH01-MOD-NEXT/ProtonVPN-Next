@@ -291,7 +291,7 @@ private fun ProfileDetailPair(
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         ProfileDetail(leftLabel, leftValue, modifier = Modifier.weight(1f))
-        ProfileDetail(rightLabel, rightValue, rightEnabled, Modifier.weight(1f))
+        ProfileDetail(rightLabel, rightValue, modifier = Modifier.weight(1f), enabled = rightEnabled)
     }
 }
 
@@ -299,8 +299,8 @@ private fun ProfileDetailPair(
 private fun ProfileDetail(
     label: String,
     value: String,
-    enabled: Boolean = true,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val colors = ProtonNextTheme.colors
     Column(modifier) {

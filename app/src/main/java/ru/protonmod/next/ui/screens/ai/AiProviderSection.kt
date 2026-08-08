@@ -82,7 +82,7 @@ fun AiProviderSection(
             label = { Text(stringResource(R.string.ai_api_key)) },
             placeholder = { Text(stringResource(R.string.ai_hint_api_key)) },
             singleLine = true,
-            colors = aiFieldColors(),
+            colors = AiFieldColors(),
             shape = RoundedCornerShape(12.dp)
         )
 
@@ -225,7 +225,7 @@ private fun AiProviderFormDialog(
                     onValueChange = { name = it },
                     label = { Text(stringResource(R.string.ai_provider_name)) },
                     singleLine = true,
-                    colors = aiFieldColors(),
+                    colors = AiFieldColors(),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -235,7 +235,7 @@ private fun AiProviderFormDialog(
                     label = { Text(stringResource(R.string.ai_provider_base_url)) },
                     placeholder = { Text(stringResource(R.string.ai_provider_base_url_hint)) },
                     singleLine = true,
-                    colors = aiFieldColors(),
+                    colors = AiFieldColors(),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -368,7 +368,7 @@ private fun AiModelDialog(
                     onValueChange = { manualModel = it },
                     label = { Text(stringResource(R.string.ai_model_manual)) },
                     singleLine = true,
-                    colors = aiFieldColors(),
+                    colors = AiFieldColors(),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -392,7 +392,7 @@ private fun AiModelDialog(
 }
 
 @Composable
-private fun aiFieldColors() = OutlinedTextFieldDefaults.colors(
+private fun AiFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = ProtonNextTheme.colors.brandNorm,
     unfocusedBorderColor = ProtonNextTheme.colors.separatorNorm,
     focusedLabelColor = ProtonNextTheme.colors.brandNorm,

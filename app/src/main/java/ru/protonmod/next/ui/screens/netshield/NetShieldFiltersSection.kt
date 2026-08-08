@@ -49,6 +49,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import ru.protonmod.next.R
 import ru.protonmod.next.netshield.NetShieldCategory
 import ru.protonmod.next.netshield.NetShieldSourcePreset
@@ -89,7 +91,7 @@ fun NetShieldCustomFiltersSection(
             onValueChange = { rules = it },
             modifier = Modifier.fillMaxWidth().heightIn(min = 96.dp),
             label = { Text(stringResource(R.string.netshield_custom_filters_hint)) },
-            colors = netShieldFieldColors(),
+            colors = NetShieldFieldColors(),
             shape = RoundedCornerShape(12.dp),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -117,7 +119,7 @@ fun NetShieldCustomFiltersSection(
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             label = { Text(stringResource(R.string.netshield_source_url_hint)) },
-            colors = netShieldFieldColors(),
+            colors = NetShieldFieldColors(),
             shape = RoundedCornerShape(12.dp),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -153,7 +155,7 @@ fun NetShieldCustomFiltersSection(
 @Composable
 fun NetShieldSourcesSection(
     state: NetShieldSettingsUiState,
-    onPresetSelected: (NetShieldCategory, String) -> Unit,
+    onPresetSelect: (NetShieldCategory, String) -> Unit,
     onCustomUrl: (NetShieldCategory, String) -> Unit,
     onResetCategory: (NetShieldCategory) -> Unit,
     onApplyToAll: (String) -> Unit,
@@ -209,8 +211,8 @@ fun NetShieldSourcesSection(
             category = category,
             state = state,
             onDismiss = { editedCategory = null },
-            onPresetSelected = { presetId ->
-                onPresetSelected(category, presetId)
+            onPresetSelect = { presetId ->
+                onPresetSelect(category, presetId)
                 editedCategory = null
             },
             onCustomUrl = { value ->
@@ -227,10 +229,10 @@ fun NetShieldSourcesSection(
     if (showApplyToAll) {
         PresetPickerDialog(
             title = stringResource(R.string.netshield_source_apply_all),
-            presets = NetShieldSources.universalPresets(),
+            presets = NetShieldSources.universalPresets().toImmutableList(),
             selectedId = null,
             onDismiss = { showApplyToAll = false },
-            onSelected = {
+            onSelect = {
                 onApplyToAll(it)
                 showApplyToAll = false
             },
@@ -243,7 +245,7 @@ private fun CategorySourceDialog(
     category: NetShieldCategory,
     state: NetShieldSettingsUiState,
     onDismiss: () -> Unit,
-    onPresetSelected: (String) -> Unit,
+    onPresetSelect: (String) -> Unit,
     onCustomUrl: (String) -> Unit,
     onReset: () -> Unit,
 ) {
@@ -262,7 +264,7 @@ private fun CategorySourceDialog(
                     PresetRow(
                         preset = preset,
                         selected = state.sources.presetIds[category] == preset.id,
-                        onClick = { onPresetSelected(preset.id) },
+                        onClick = { onPresetSelect(preset.id) },
                     )
                 }
                 OutlinedTextField(
@@ -271,7 +273,7 @@ private fun CategorySourceDialog(
                     singleLine = true,
                     label = { Text(stringResource(R.string.netshield_source_custom_url)) },
                     placeholder = { Text(stringResource(R.string.netshield_source_url_hint)) },
-                    colors = netShieldFieldColors(),
+                    colors = NetShieldFieldColors(),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -297,10 +299,10 @@ private fun CategorySourceDialog(
 @Composable
 private fun PresetPickerDialog(
     title: String,
-    presets: List<NetShieldSourcePreset>,
+    presets: ImmutableList<NetShieldSourcePreset>,
     selectedId: String?,
     onDismiss: () -> Unit,
-    onSelected: (String) -> Unit,
+    onSelect: (String) -> Unit,
 ) {
     val colors = ProtonNextTheme.colors
     AlertDialog(
@@ -309,7 +311,7 @@ private fun PresetPickerDialog(
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 presets.forEach { preset ->
-                    PresetRow(preset = preset, selected = preset.id == selectedId, onClick = { onSelected(preset.id) })
+                    PresetRow(preset = preset, selected = preset.id == selectedId, onClick = { onSelect(preset.id) })
                 }
             }
         },
@@ -397,7 +399,7 @@ private fun categoryTitle(category: NetShieldCategory): Int = when (category) {
 }
 
 @Composable
-private fun netShieldFieldColors() = OutlinedTextFieldDefaults.colors(
+private fun NetShieldFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = ProtonNextTheme.colors.brandNorm,
     unfocusedBorderColor = ProtonNextTheme.colors.separatorNorm,
     focusedLabelColor = ProtonNextTheme.colors.brandNorm,
