@@ -116,33 +116,32 @@ class ProtonNextApp : Application(), Configuration.Provider {
             FlavorInitializer.initialize(this@ProtonNextApp)
         }
 
-        // Initialize logger settings from sync storage
-        val settings = SettingsManager(this)
-        ProtonLogger.isNonFatalEnabled = settings.isNonFatalEnabledSync()
-        ProtonLogger.isAnalyticsEnabled = settings.isAnalyticsEnabledSync()
-        ProtonLogger.isSentryLogsEnabled = settings.isLogsEnabledSync()
-
         val isMainProcess = try {
             packageName == getProcessName()
         } catch (e: Exception) {
             true
         }
 
-        if (isMainProcess) {
+        // SharedPreferences, Hilt lazy graph creation and WorkManager initialization can all touch
+        // disk. Keeping this startup graph off the main thread prevents cold-start Background ANRs
+        // in SettingsManager and SessionRefreshWorker.schedule (ANDROID-21A / ANDROID-1YB / 218).
+        MainScope().launch(Dispatchers.IO) {
+            val settings = SettingsManager(this@ProtonNextApp)
+            ProtonLogger.isNonFatalEnabled = settings.isNonFatalEnabledSync()
+            ProtonLogger.isAnalyticsEnabled = settings.isAnalyticsEnabledSync()
+            ProtonLogger.isSentryLogsEnabled = settings.isLogsEnabledSync()
+
+            if (!isMainProcess) return@launch
+
             // Instantiate main-process-only graphs here. Keeping them Lazy prevents the
             // dedicated :vpn process from opening Room during Application injection.
             vpnAutomationManager.get()
             vpnRepository.get().startAutoUpdate()
+            SessionRefreshWorker.schedule(this@ProtonNextApp)
 
-            // Schedule background session maintenance
-            SessionRefreshWorker.schedule(this)
-
-            // Sync servers on network changes.
-            // Debounce by 2 s so rapid connectivity toggles (e.g. Wi-Fi → mobile → Wi-Fi)
-            // collapse into a single refresh, preventing multiple concurrent forced fetches
-            // that would exhaust the heap with large API payloads (OOM in loads deserialization).
+            // Debounce rapid connectivity toggles into one server refresh.
             @OptIn(kotlinx.coroutines.FlowPreview::class)
-            MainScope().launch {
+            launch {
                 networkMonitor.get().networkChanged.debounce(2_000.milliseconds).collect { timestamp ->
                     if (timestamp > 0) {
                         vpnRepository.get().refreshServersOnNetworkChange()
@@ -150,8 +149,7 @@ class ProtonNextApp : Application(), Configuration.Provider {
                 }
             }
 
-            // Schedule OTA update checks
-            MainScope().launch {
+            launch {
                 otaUpdateManager.get().scheduleUpdateCheck()
             }
 
