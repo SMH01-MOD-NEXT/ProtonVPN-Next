@@ -83,6 +83,27 @@ internal fun isAwgHandshakeSuccess(message: String): Boolean {
 internal fun isAwgHandshakeAttempt(message: String): Boolean =
     "sending handshake initiation" in message.lowercase(Locale.ROOT)
 
+private const val FALLBACK_LIBBOX_LOCALE = "en"
+
+private fun String.hasOnlyAsciiLetters(): Boolean =
+    isNotEmpty() && all { it in 'a'..'z' || it in 'A'..'Z' }
+
+/**
+ * Converts Android's permissive Locale model into the conservative language[_REGION] form
+ * accepted by libbox. OEM builds can expose malformed legacy variants such as ru__RUzhzh;
+ * variants and scripts are intentionally omitted because localization must never block VPN start.
+ */
+internal fun libboxLocale(locale: Locale): String {
+    val language = locale.language
+        .takeIf { it.length in 2..3 && it.hasOnlyAsciiLetters() }
+        ?.lowercase(Locale.ROOT)
+        ?: FALLBACK_LIBBOX_LOCALE
+    val region = locale.country
+        .takeIf { it.length == 2 && it.hasOnlyAsciiLetters() }
+        ?.uppercase(Locale.ROOT)
+    return if (region == null) language else "${language}_$region"
+}
+
 /**
  * Android VPN service backed by amnezia-box (sing-box + AWG/AWG2).
  *
@@ -250,7 +271,17 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         }
         try {
             Libbox.setup(options)
-            Libbox.setLocale(Locale.getDefault().toLanguageTag().replace('-', '_'))
+            val preferredLocale = libboxLocale(Locale.getDefault())
+            try {
+                Libbox.setLocale(preferredLocale)
+            } catch (error: Exception) {
+                // Locale only controls engine messages. A malformed OEM locale must not make the
+                // service unavailable; English is known to exist in every libbox build.
+                ProtonLogger.w(TAG, "Libbox rejected locale $preferredLocale; using English")
+                if (preferredLocale != FALLBACK_LIBBOX_LOCALE) {
+                    runCatching { Libbox.setLocale(FALLBACK_LIBBOX_LOCALE) }
+                }
+            }
             libboxInitDeferred.complete(Unit)
         } catch (t: Throwable) {
             libboxInitDeferred.completeExceptionally(t)

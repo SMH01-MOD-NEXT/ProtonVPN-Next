@@ -17,9 +17,11 @@
 
 package ru.protonmod.next.vpn
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.Locale
 
 class ProtonVpnServiceTest {
     @Test
@@ -34,5 +36,24 @@ class ProtonVpnServiceTest {
         assertFalse(ProtonVpnService.shouldShowNotification(ProtonVpnService.STATE_CONNECTING, false))
         assertFalse(ProtonVpnService.shouldShowNotification(VpnTunnelState.UP.name, false))
         assertFalse(ProtonVpnService.shouldShowNotification(VpnTunnelState.DOWN.name, false))
+    }
+
+    @Test
+    fun `libbox locale keeps a valid language and region`() {
+        assertEquals("pt_BR", libboxLocale(Locale.forLanguageTag("pt-BR")))
+    }
+
+    @Test
+    fun `libbox locale drops malformed OEM variants`() {
+        val malformedOemLocale = Locale.Builder()
+            .setLanguage("ru")
+            .setVariant("RUzhzh")
+            .build()
+        assertEquals("ru", libboxLocale(malformedOemLocale))
+    }
+
+    @Test
+    fun `libbox locale falls back to English for invalid language`() {
+        assertEquals("en", libboxLocale(Locale.ROOT))
     }
 }
