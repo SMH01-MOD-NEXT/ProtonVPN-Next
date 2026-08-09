@@ -605,8 +605,27 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
         }
     }
 
+    private fun isDeadSystemFailure(error: Throwable): Boolean {
+        var cause: Throwable? = error
+        while (cause != null) {
+            if (cause.javaClass.name == "android.os.DeadSystemRuntimeException" ||
+                cause.javaClass.name == "android.os.DeadSystemException"
+            ) return true
+            cause = cause.cause
+        }
+        return false
+    }
+
+    /** Returns false only when Android is already tearing down its system services. */
+    private fun sendInternalBroadcast(intent: Intent): Boolean = try {
+        sendBroadcast(intent)
+        true
+    } catch (error: RuntimeException) {
+        if (isDeadSystemFailure(error)) false else throw error
+    }
+
     private fun sendState(explicitState: VpnTunnelState?) {
-        sendBroadcast(Intent(ACTION_STATE_CHANGED).apply {
+        sendInternalBroadcast(Intent(ACTION_STATE_CHANGED).apply {
             putExtra(EXTRA_STATE, explicitState?.name ?: STATE_CONNECTING)
             putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
             putExtra(EXTRA_IS_RECONNECTING, reconnectJob?.isActive == true)
@@ -630,7 +649,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                 lastRx = rx
                 lastTx = tx
                 lastSpeed = getString(R.string.vpn_speed_format, formatBytes(deltaTx, true), formatBytes(deltaRx, true))
-                sendBroadcast(Intent(ACTION_STATS_UPDATED).apply {
+                if (!sendInternalBroadcast(Intent(ACTION_STATS_UPDATED).apply {
                     putExtra(EXTRA_SPEED, lastSpeed)
                     putExtra(EXTRA_TRAFFIC_RX, formatBytes(rx, false))
                     putExtra(EXTRA_TRAFFIC_TX, formatBytes(tx, false))
@@ -639,7 +658,7 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                     putExtra(EXTRA_TRAFFIC_DELTA_SECONDS, 1L)
                     putExtra(EXTRA_LOGICAL_SERVER_ID, logicalServerId)
                     setPackage(packageName)
-                })
+                })) return@launch
                 if (state == VpnTunnelState.UP) updateNotification(state.name)
             }
         }
