@@ -245,7 +245,6 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
             },
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
-        ProtonLogger.i(TAG, "amnezia-box ${Libbox.version()} initialized")
     }
 
     private fun initializeLibbox() {
@@ -282,6 +281,11 @@ class ProtonVpnService : VpnService(), CommandServerHandler {
                     runCatching { Libbox.setLocale(FALLBACK_LIBBOX_LOCALE) }
                 }
             }
+            // Log the version from this IO thread only. Touching the Libbox class on the main
+            // thread (as onCreate did) races this coroutine: gomobile class init is ABBA-deadlock
+            // prone (SetupOptions.<clinit> -> Libbox.touch vs Libbox.<clinit> -> _init), which
+            // blocked onCreate, skipped startForeground() and ANR-killed the :vpn process.
+            ProtonLogger.i(TAG, "amnezia-box ${Libbox.version()} initialized")
             libboxInitDeferred.complete(Unit)
         } catch (t: Throwable) {
             libboxInitDeferred.completeExceptionally(t)
