@@ -18,7 +18,6 @@
 package ru.protonmod.next.di
 
 import android.content.Context
-import android.os.Build
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
@@ -250,17 +249,21 @@ object DatabaseModule {
      */
     private const val BUSY_TIMEOUT_MS = 5_000
 
+    /**
+     * Applies the timeout to the connection Room opens for its callback.
+     *
+     * Do not register this PRAGMA with execPerConnectionSQL: busy_timeout returns a result row,
+     * while Android replays registered statements through SQLiteConnection.execute(), which only
+     * accepts statements without results. On API 30+ that mismatch crashed every newly opened WAL
+     * connection before Room could run its query (ANDROID-23A / ANDROID-239).
+     */
+    internal fun configureBusyTimeout(db: SupportSQLiteDatabase) {
+        db.query("PRAGMA busy_timeout = $BUSY_TIMEOUT_MS").use { it.moveToFirst() }
+    }
+
     private val BUSY_TIMEOUT_CALLBACK = object : RoomDatabase.Callback() {
         override fun onOpen(db: SupportSQLiteDatabase) {
-            // busy_timeout is a per-connection setting and WAL mode makes the framework open a
-            // pool of connections, while onOpen only runs for the first one. Without registering
-            // the pragma for every pooled connection the extra readers/writers keep failing
-            // immediately with SQLITE_BUSY instead of waiting (ANDROID-228).
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                db.execPerConnectionSQL("PRAGMA busy_timeout = $BUSY_TIMEOUT_MS", null)
-            } else {
-                db.query("PRAGMA busy_timeout = $BUSY_TIMEOUT_MS").use { it.moveToFirst() }
-            }
+            configureBusyTimeout(db)
         }
     }
 
