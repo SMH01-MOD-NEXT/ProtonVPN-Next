@@ -58,8 +58,12 @@ object ProtonLogger {
     /** Abstracted reporter for crashlytics/analytics */
     var crashReporter: CrashReporter? = null
 
+    @PublishedApi
+    internal fun shouldEmitRoutineLog(): Boolean = isLogcatEnabled || isAnalyticsEnabled
+
     /** Log at VERBOSE level */
     fun v(tag: String? = null, message: String, throwable: Throwable? = null) {
+        if (!shouldEmitRoutineLog()) return
         val scrubbed = PiiScrubber.scrub(message)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
@@ -73,6 +77,7 @@ object ProtonLogger {
 
     /** Log at VERBOSE level with a lazy message lambda */
     inline fun v(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
+        if (!shouldEmitRoutineLog()) return
         val msg = message()
         val scrubbed = PiiScrubber.scrub(msg)
         val finalTag = tag ?: getAutoTag()
@@ -87,6 +92,7 @@ object ProtonLogger {
 
     /** Log at DEBUG level */
     fun d(tag: String? = null, message: String, throwable: Throwable? = null) {
+        if (!shouldEmitRoutineLog()) return
         val scrubbed = PiiScrubber.scrub(message)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
@@ -100,6 +106,7 @@ object ProtonLogger {
 
     /** Log at DEBUG level with a lazy message lambda */
     inline fun d(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
+        if (!shouldEmitRoutineLog()) return
         val msg = message()
         val scrubbed = PiiScrubber.scrub(msg)
         val finalTag = tag ?: getAutoTag()
@@ -114,6 +121,7 @@ object ProtonLogger {
 
     /** Log at INFO level */
     fun i(tag: String? = null, message: String, throwable: Throwable? = null) {
+        if (!shouldEmitRoutineLog()) return
         val scrubbed = PiiScrubber.scrub(message)
         val finalTag = tag ?: getAutoTag()
         val threadName = Thread.currentThread().name
@@ -127,6 +135,7 @@ object ProtonLogger {
 
     /** Log at INFO level with a lazy message lambda */
     inline fun i(tag: String? = null, throwable: Throwable? = null, crossinline message: () -> String) {
+        if (!shouldEmitRoutineLog()) return
         val msg = message()
         val scrubbed = PiiScrubber.scrub(msg)
         val finalTag = tag ?: getAutoTag()

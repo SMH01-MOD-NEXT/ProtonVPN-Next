@@ -57,10 +57,10 @@ object PiiScrubber {
         "\\b[a-zA-Z0-9._\\-+=/]{32,}(?:={1,2})?(?=\\s|$)"
     )
     
-    // Config markers to detect VPN configuration blocks
+    // Lowercase config markers avoid repeated case-insensitive scans for every log message.
     private val CONFIG_MARKERS = listOf(
-        "[Interface]", "[Peer]", "PrivateKey", "PresharedKey", "PublicKey", 
-        "Address", "DNS", "AllowedIPs", "Endpoint", "Jc =", "Jmin ="
+        "[interface]", "[peer]", "privatekey", "presharedkey", "publickey",
+        "address", "dns", "allowedips", "endpoint", "jc =", "jmin ="
     )
 
     /**
@@ -121,8 +121,15 @@ object PiiScrubber {
      * Checks if the string looks like a VPN configuration block.
      */
     private fun isConfigBlock(input: String): Boolean {
-        // A config block usually has multiple markers and is multi-line
-        val markersFound = CONFIG_MARKERS.count { input.contains(it, ignoreCase = true) }
-        return markersFound >= 3 && (input.contains("\n") || input.length > 200)
+        // Almost every routine log is short and single-line. Reject it before scanning markers;
+        // doing a case-insensitive search for every marker on the main thread caused widget ANRs.
+        if (input.length <= 200 && '\n' !in input) return false
+
+        val normalized = input.lowercase()
+        var markersFound = 0
+        for (marker in CONFIG_MARKERS) {
+            if (marker in normalized && ++markersFound >= 3) return true
+        }
+        return false
     }
 }
