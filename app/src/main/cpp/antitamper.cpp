@@ -318,7 +318,9 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
             if (line.find(XOR_STR("boot.oat")) != std::string::npos ||
                 line.find(XOR_STR("boot.art")) != std::string::npos ||
                 line.find(XOR_STR("/system/framework/")) != std::string::npos ||
-                line.find(XOR_STR("/apex/")) != std::string::npos) {
+                line.find(XOR_STR("/apex/")) != std::string::npos ||
+                line.find(XOR_STR("jit-cache")) != std::string::npos ||
+                line.find(XOR_STR("jit-zygote-cache")) != std::string::npos) {
                 isSuspiciousMemfd = false;
             }
         }
