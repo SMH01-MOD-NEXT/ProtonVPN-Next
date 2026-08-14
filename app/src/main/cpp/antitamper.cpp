@@ -307,21 +307,19 @@ bool AntiTamper::checkEnvironment(JNIEnv* env) {
             line.find(XOR_STR("libgadget")) != std::string::npos ||
             line.find(XOR_STR("substrate")) != std::string::npos);
 
-        // Detect anonymous executable memfd mappings that may be renamed Frida gadgets.
-        // A memfd line looks like: <range> r-xp 00000000 00:01 <inode> /memfd:<name> (deleted)
-        // We whitelist system components like boot.oat that are often mapped via memfd in modern Android.
+        // Detect anonymous executable memfd mappings used by attack tools (e.g. Frida gadget
+        // injected as an anonymous memfd with a distinctive name). Strategy: safe-by-default —
+        // a memfd mapping is only flagged when its name matches a known-bad pattern. Legitimate
+        // system mappings (ART JIT code cache, boot images, APEX modules, etc.) don't match
+        // these patterns and are therefore never flagged, regardless of Android version.
         bool isSuspiciousMemfd = (!isFridaByName &&
             line.find(XOR_STR("memfd:")) != std::string::npos &&
-            (line.find(XOR_STR("r-xp")) != std::string::npos || line.find(XOR_STR("rwxp")) != std::string::npos));
-
-        if (isSuspiciousMemfd) {
-            if (line.find(XOR_STR("boot.oat")) != std::string::npos ||
-                line.find(XOR_STR("boot.art")) != std::string::npos ||
-                line.find(XOR_STR("/system/framework/")) != std::string::npos ||
-                line.find(XOR_STR("/apex/")) != std::string::npos) {
-                isSuspiciousMemfd = false;
-            }
-        }
+            (line.find(XOR_STR("r-xp")) != std::string::npos || line.find(XOR_STR("rwxp")) != std::string::npos) &&
+            (line.find(XOR_STR("frida")) != std::string::npos ||
+             line.find(XOR_STR("xposed")) != std::string::npos ||
+             line.find(XOR_STR("libgadget")) != std::string::npos ||
+             line.find(XOR_STR("substrate")) != std::string::npos ||
+             line.find(XOR_STR("gadget")) != std::string::npos));
 
         if (isFridaByName || isSuspiciousMemfd) {
             LOGE("AntiTamper: Suspicious library detected in memory: %s", line.c_str());
