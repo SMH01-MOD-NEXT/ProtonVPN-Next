@@ -1,0 +1,31 @@
+# Netlify proxy configuration for ProtonVPN-Next
+
+[[redirects]]
+  from = "/verify/*"
+  to = "https://verify.proton.me/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/verify-api/*"
+  to = "https://verify-api.proton.me/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/assets/*"
+  to = "https://verify.proton.me/assets/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/captcha/*"
+  to = "https://verify-api.proton.me/captcha/:splat"
+  status = 200
+  force = true
+  
+[[redirects]]
+  from = "/*"
+  to = "https://vpn-api.proton.me/:splat"
+  status = 200
+  force = true
