@@ -176,7 +176,6 @@ By submitting a security vulnerability report, you agree that:
 ## Additional Resources
 
 - [Vulnerability Disclosure Program](https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next/security/advisories)
-- [Privacy Policy](https://protonvpn.example.com/privacy) *(update link)*
 - [Contributing Guidelines](CONTRIBUTING.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 
