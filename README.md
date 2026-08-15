@@ -12,9 +12,9 @@
 > **PROJECT TRANSFER NOTICE**
 > This project is moving from Codeberg to **GitLab**.
 > **New Repository:** [https://gitlab.com/vpn-next-group/proton-vpn-next](https://gitlab.com/vpn-next-group/proton-vpn-next)
-> **Reason:** Disagreement with Codeberg's new restrictive policies regarding AI-generated and AI-maintained projects. As this project is heavily AI-driven, GitLab provides a more suitable environment for its development.
+> **Reason:** Disagreement with Codeberg's new restrictive policies regarding AI-generated and AI-maintained projects. As this project is heavily AI-driven, GitLab provides a more suitable environment.
 
-**Proton VPN-Next** is a modern, high-performance **unofficial** Android client for Proton VPN. Built with a focus on privacy, speed, and a sleek Material 3 interface, it uses an AWGBox core built on sing-box with AmneziaWG/AWG2 and advanced bypass strategies to ensure stable connectivity in restrictive environments.
+**Proton VPN-Next** is a modern, high-performance **unofficial** Android client for Proton VPN. Built with a focus on privacy, speed, and a sleek Material 3 interface, it uses an AWGBox core built from wireguard-go with advanced features for circumventing network restrictions.
 
 ### ⚠️ IMPORTANT DISCLAIMER
 - **UNOFFICIAL CLIENT:** This application is **NOT** an official product of Proton AG.
@@ -31,7 +31,7 @@
 
 **Official Sources:**
 - ✅ [GitHub Mirror](https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next)
-- ✅ [GitLab Repo](https://gitlab.com/SMH01/proton-vpn-next)
+- ✅ [GitLab Repo](https://gitlab.com/vpn-next-group/proton-vpn-next)
 - ✅ [Telegram Channel](https://t.me/ProtonVPN_MOD)
 
 ### 📱 System Requirements
@@ -53,6 +53,10 @@
 ### 🛠 Development
 Detailed build instructions for both Terminal and Android Studio are available in **[BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md)**.
 
+### Powered by Netlify
+
+[![Deployed to Netlify](https://www.netlify.com/img/global/badges/netlify-color-bg.svg)](https://www.netlify.com)
+
 ---
 
 ## Русский
@@ -60,17 +64,17 @@ Detailed build instructions for both Terminal and Android Studio are available i
 > [!IMPORTANT]
 > **УВЕДОМЛЕНИЕ О ПЕРЕЕЗДЕ**
 > Проект переезжает с Codeberg на **GitLab**.
-> **Новый репозиторий:** [https://gitlab.com/SMH01/proton-vpn-next](https://gitlab.com/SMH01/proton-vpn-next)
-> **Причина:** Несогласие с новой политикой Codeberg в отношении проектов, созданных и поддерживаемых с помощью ИИ. Поскольку данный проект на 100% разработан с использованием нейросетей, GitLab является более подходящей площадкой для его дальнейшего развития.
+> **Новый репозиторий:** [https://gitlab.com/vpn-next-group/proton-vpn-next](https://gitlab.com/vpn-next-group/proton-vpn-next)
+> **Причина:** Несогласие с новой политикой Codeberg в отношении проектов, созданных и поддерживаемых с помощью ИИ. Поскольку этот проект интенсивно использует ИИ, GitLab предоставляет более подходящую среду.
 
-**Proton VPN-Next** — это современный высокопроизводительный **неофициальный** Android-клиент для Proton VPN. Создан с упором на приватность и скорость, использует ядро AWGBox на базе sing-box с AmneziaWG/AWG2 и продвинутые стратегии обхода блокировок.
+**Proton VPN-Next** — это современный высокопроизводительный **неофициальный** Android-клиент для Proton VPN. Создан с упором на приватность, скорость и стильный интерфейс Material 3, использует ядро AWGBox, созданное из wireguard-go с передовыми функциями для обхода сетевых ограничений.
 
 ### ⚠️ ВАЖНЫЙ ОТКАЗ ОТ ОТВЕТСТВЕННОСТИ
 - **НЕОФИЦИАЛЬНЫЙ КЛИЕНТ:** Приложение **НЕ ЯВЛЯЕТСЯ** официальным продуктом Proton AG.
 - **ИСПОЛЬЗУЙТЕ НА СВОЙ СТРАХ И РИСК:** Разработчик **не несет ответственности** за ваши аккаунты или данные.
 
 ### 🚨 Безопасность: Фейки и подделки
-> **Внимание:** Поддельные версии приложения опасны. Список вредоносных каналов доступен на **[Доске позора (Wall of Shame)](WALL_OF_SHAME.md)**.
+> **Внимание:** Поддельные версии приложения опасны. Список вредоносных каналов доступен на **[Доске позора](WALL_OF_SHAME.md)**.
 
 **Официальные Package Name:**
 - 🟢 **Stable:** `ru.protonmod.next`
@@ -79,7 +83,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 
 **Официальные источники:**
 - ✅ [Зеркало GitHub](https://github.com/SMH01-MOD-NEXT/ProtonVPN-Next)
-- ✅ [Репозиторий GitLab](https://gitlab.com/SMH01/proton-vpn-next)
+- ✅ [Репозиторий GitLab](https://gitlab.com/vpn-next-group/proton-vpn-next)
 - ✅ [Telegram-канал](https://t.me/ProtonVPN_MOD)
 
 ### 📱 Системные требования
@@ -104,10 +108,10 @@ Detailed build instructions for both Terminal and Android Studio are available i
 > [!IMPORTANT]
 > **АПАВЯШЧЭННЕ А ПЕРАЕЗДЗЕ**
 > Праект пераязджае з Codeberg на **GitLab**.
-> **Новы рэпазіторый:** [https://gitlab.com/SMH01/proton-vpn-next](https://gitlab.com/SMH01/proton-vpn-next)
+> **Новы рэпазіторый:** [https://gitlab.com/vpn-next-group/proton-vpn-next](https://gitlab.com/vpn-next-group/proton-vpn-next)
 > **Прычына:** Нязгода з новай палітыкай Codeberg адносна праектаў, створаных і падтрымоўваных з дапамогай ШІ.
 
-**Proton VPN-Next** — гэта сучасны высокапрадукцыйны **неафіцыйны** Android-кліент для Proton VPN. Распрацаваны з упорам на прыватнасць і хуткасць, выкарыстоўвае AmneziaWG і прасунутыя стратэгіі абыходу блакіровак.
+**Proton VPN-Next** — гэта сучасны высокапрадукцыйны **неафіцыйны** Android-кліент для Proton VPN. Распрацаваны з упорам на прыватнасць, хуткасць і стыльны інтэрфейс Material 3.
 
 ### 🚨 Бяспека
 > **Увага:** Падробленыя версіі небяспечныя. Глядзіце **[Дошку ганьбы](WALL_OF_SHAME.md)**.
@@ -129,7 +133,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 > [!IMPORTANT]
 > **اطلاعیه انتقال پروژه**
 > این پروژه از Codeberg به **GitLab** منتقل می‌شود.
-> **مخزن جدید:** [https://gitlab.com/SMH01/proton-vpn-next](https://gitlab.com/SMH01/proton-vpn-next)
+> **مخزن جدید:** [https://gitlab.com/vpn-next-group/proton-vpn-next](https://gitlab.com/vpn-next-group/proton-vpn-next)
 > **دلیل:** مخالفت با سیاست‌های جدید Codeberg در مورد پروژه‌های توسعه‌یافته توسط هوش مصنوعی.
 
 **Proton VPN-Next** یک کلاینت **غیررسمی**، مدرن و با کارایی بالا برای اندروید است.
@@ -142,7 +146,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 - **معماری پردازنده:** **فقط ARM64-v8a** (پشتیبانی از x86_64 و ۳۲ بیت متوقف شده است).
 
 ### ✨ ویژگی‌های کلیدی
-- **🚀 دور زدن DPI (ByeDPI):** ابزارهای داخلی برای عبور از فیلترینг.
+- **🚀 دور زدن DPI (ByeDPI):** ابزارهای داخلی برای عبور از فیلترینج.
 - **🌐 میانبر API:** دسترسی از طریق SOCKS5 و پروکسی Deno.
 - **🔐 نسخه حریم خصوصی:** بدون ابزارهای ردیابی (Sentry) و بدون قابلیت به‌روزرسانی OTA.
 - **📦 پشتیبان‌گیری:** امکان استخراج و وارد کردن نشست‌ها.
@@ -154,7 +158,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 > [!IMPORTANT]
 > **ЖОБАНЫ КӨШІРУ ТУРАЛЫ ХАБАРЛАМА**
 > Жоба Codeberg-тен **GitLab**-қа көшеді.
-> **Жаңа репозиторий:** [https://gitlab.com/SMH01/proton-vpn-next](https://gitlab.com/SMH01/proton-vpn-next)
+> **Жаңа репозиторий:** [https://gitlab.com/vpn-next-group/proton-vpn-next](https://gitlab.com/vpn-next-group/proton-vpn-next)
 > **Себебі:** Codeberg-тің жасанды интеллект көмегімен жасалған жобаларға қатысты жаңа саясатымен келіспеушілік.
 
 **Proton VPN-Next** — Proton VPN үшін заманауи, жоғары өнімді **бейресми** Android клиенті.
@@ -179,7 +183,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 > [!IMPORTANT]
 > **ПОВІДОМЛЕННЯ ПРО ПЕРЕЇЗД**
 > Проект переїжджає з Codeberg на **GitLab**.
-> **Новий репозиторій:** [https://gitlab.com/SMH01/proton-vpn-next](https://gitlab.com/SMH01/proton-vpn-next)
+> **Новий репозиторій:** [https://gitlab.com/vpn-next-group/proton-vpn-next](https://gitlab.com/vpn-next-group/proton-vpn-next)
 > **Причина:** Незгода з новою політикою Codeberg щодо проектів, створених і підтримуваних за допомогою ШІ.
 
 **Proton VPN-Next** — це сучасний високопродуктивний **неофіційний** Android-клієнт для Proton VPN.
@@ -204,7 +208,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 > [!IMPORTANT]
 > **项目迁移通知**
 > 本项目正从 Codeberg 迁移至 **GitLab**。
-> **新代码仓库：** [https://gitlab.com/SMH01/proton-vpn-next](https://gitlab.com/SMH01/proton-vpn-next)
+> **新代码仓库：** [https://gitlab.com/vpn-next-group/proton-vpn-next](https://gitlab.com/vpn-next-group/proton-vpn-next)
 > **原因：** 反对 Codeberg 针对 AI 生成和维护项目的限制性新政策。
 
 **Proton VPN-Next** 是一款现代、高性能的 **非官方** Android 客户端。
