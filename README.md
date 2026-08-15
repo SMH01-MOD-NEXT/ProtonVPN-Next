@@ -55,7 +55,9 @@ Detailed build instructions for both Terminal and Android Studio are available i
 
 ### Powered by Netlify
 
-[![Deployed to Netlify](https://www.netlify.com/img/global/badges/netlify-color-bg.svg)](https://www.netlify.com)
+[![Deployed to Netlify](https://www.netlify.com/img/global/badges/netlify-color-bg.svg)](https://shimmering-stroopwafel-51675e.netlify.app)
+
+This site is [deployed to Netlify](https://www.netlify.com).
 
 ---
 
@@ -199,7 +201,7 @@ Detailed build instructions for both Terminal and Android Studio are available i
 - **🚀 ByeDPI:** Вбудовані інструменти для обходу DPI.
 - **🌐 API Bypass:** Доступ до API через SOCKS5 та Deno-проксі.
 - **🔐 Privacy Flavor:** Збірка без телеметрії (Sentry) та без OTA-оновлень.
-- **📦 Бекап та відновлення:** Експорт та імпорт сесій.
+- **📦 Бекап та відновлення:** Експ��рт та імпорт сесій.
 
 ---
 
