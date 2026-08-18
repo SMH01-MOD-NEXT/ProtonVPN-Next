@@ -45,7 +45,7 @@ class TokenAuthenticator @Inject constructor(
         // These are hardcoded for safety as this is sensitive logic.
         val isProtonApi = requestHost == "vpn-api.proton.me" || 
                           requestHost == "shimmering-stroopwafel-51675e.netlify.app" ||
-                          requestHost == "api.protonnext.qzz.io"
+                          requestHost == "protonvpn-next-web.smh01.workers.dev"
         
         // Do not attempt to authenticate if it's already an authentication or refresh request
         val isAuthRequest = requestUrl.encodedPath.contains("auth/v4")

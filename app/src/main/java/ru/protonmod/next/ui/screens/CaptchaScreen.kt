@@ -216,7 +216,7 @@ fun CaptchaScreen(
                 var webView by remember { mutableStateOf<WebView?>(null) }
 
                 val proxyBaseUrl = when (apiBypassStrategy) {
-                    SettingsManager.STRATEGY_CLOUDFLARE -> "https://api.protonnext.qzz.io"
+                    SettingsManager.STRATEGY_CLOUDFLARE -> "https://protonvpn-next-web.smh01.workers.dev/api"
                     SettingsManager.STRATEGY_DENO -> "https://protonvpn-next-web--main.smh01-mirrors.deno.net/api"
                     else -> "https://shimmering-stroopwafel-51675e.netlify.app"
                 }
@@ -228,7 +228,7 @@ fun CaptchaScreen(
                     val directWebUrl = try {
                         val httpUrl = webUrl.toHttpUrl()
                         val host = httpUrl.host
-                        if (host.endsWith("netlify.app") || host.endsWith("qzz.io")) {
+                        if (host.endsWith("netlify.app") || host.endsWith("workers.dev")) {
                             val isApi = host.contains("-api") || httpUrl.encodedPath.contains("/verify-api")
                             val directHost = if (isApi) "verify-api.proton.me" else "verify.proton.me"
                             httpUrl.newBuilder().host(directHost).build().toString()
