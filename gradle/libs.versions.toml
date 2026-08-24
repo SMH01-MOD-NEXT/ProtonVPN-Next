@@ -24,7 +24,10 @@ retrofit = "3.0.0"
 retrofitSerialization = "1.0.0"
 serializationJson = "1.11.0"
 leakcanary = "2.14"
-bouncycastle = "1.85.2"
+# NOTE: bcprov-jdk18on has a 1.85.2 patch release, but bcpg-jdk18on does not
+# (latest published bcpg is 1.85). Keep both artifacts pinned to a version that
+# exists for every BouncyCastle module we depend on.
+bouncycastle = "1.85"
 bcrypt = "0.10.2"
 junit = "4.13.2"
 mockito = "5.23.0"
