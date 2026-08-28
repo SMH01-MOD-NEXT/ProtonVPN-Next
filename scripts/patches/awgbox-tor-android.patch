@@ -1,4 +1,5 @@
 diff --git a/protocol/tor/outbound.go b/protocol/tor/outbound.go
+index 3220f8c..db0cb42 100644
 --- a/protocol/tor/outbound.go
 +++ b/protocol/tor/outbound.go
 @@ -6,6 +6,7 @@ import (
@@ -9,7 +10,7 @@ diff --git a/protocol/tor/outbound.go b/protocol/tor/outbound.go
  
  	"github.com/sagernet/sing-box/adapter"
  	"github.com/sagernet/sing-box/adapter/outbound"
-@@ -45,6 +46,7 @@ type Outbound struct {
+@@ -42,6 +43,7 @@ type Outbound struct {
  	events      chan control.Event
  	instance    *tor.Tor
  	socksClient *socks.Client
@@ -17,7 +18,7 @@ diff --git a/protocol/tor/outbound.go b/protocol/tor/outbound.go
  }
  
  func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextLogger, tag string, options option.TorOutboundOptions) (adapter.Outbound, error) {
-@@ -76,6 +78,13 @@ func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextL
+@@ -77,6 +79,13 @@ func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextL
  		startConf.TorrcFile = torrcFile
  	}
  	startConf.ExtraArgs = options.ExtraArgs
@@ -29,9 +30,9 @@ diff --git a/protocol/tor/outbound.go b/protocol/tor/outbound.go
 +		startConf.ExtraArgs = append(startConf.ExtraArgs, "--SocksPort", "unix:"+socksPath)
 +	}
  	if options.ExecutablePath != "" {
- 		err := adapter.CheckSecurityFeature(ctx, "Tor `executable_path`")
- 		if err != nil {
-@@ -95,6 +104,7 @@ func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextL
+ 		startConf.ExePath = options.ExecutablePath
+ 		startConf.ProcessCreator = nil
+@@ -93,6 +102,7 @@ func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextL
  		dialer:    outboundDialer,
  		startConf: &startConf,
  		options:   options.Options,
@@ -39,7 +40,7 @@ diff --git a/protocol/tor/outbound.go b/protocol/tor/outbound.go
  	}, nil
  }
  
-@@ -188,6 +198,14 @@ func (t *Outbound) start() error {
+@@ -189,6 +199,14 @@ func (t *Outbound) start() error {
  	if err != nil {
  		return err
  	}
@@ -54,12 +55,7 @@ diff --git a/protocol/tor/outbound.go b/protocol/tor/outbound.go
  	info, err := torInstance.Control.GetInfo("net/listeners/socks")
  	if err != nil {
  		return err
-@@ -196,11 +214,49 @@ func (t *Outbound) start() error {
- 		return E.New("get socks proxy address")
- 	}
- 	t.logger.Trace("obtained tor socks5 address ", info[0].Val)
--	// TODO: set password for tor socks5 server if supported
- 	t.socksClient = socks.NewClient(N.SystemDialer, M.ParseSocksaddr(info[0].Val), socks.Version5, "", "")
+@@ -202,6 +220,45 @@ func (t *Outbound) start() error {
  	return nil
  }
  

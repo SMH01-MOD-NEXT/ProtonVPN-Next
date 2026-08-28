@@ -8,9 +8,9 @@ possible without replacing Android's VPN lifecycle again.
 
 ## Selected core
 
-The integration uses `hoaxisr/amnezia-box` `1.14.0-beta.4-awgm.5` because it:
+The integration uses `hoaxisr/amnezia-box` `1.14.0-rc.1-awgm.14` because it:
 
-- tracks stable sing-box;
+- tracks the sing-box 1.14 release line;
 - embeds `amneziawg-go`;
 - exposes AWG 1.x and AWG2 fields (`Jc`, `Jmin/Jmax`, `S1-S4`, `H1-H4`, `I1-I5`);
 - provides gomobile `libbox` bindings for Android;

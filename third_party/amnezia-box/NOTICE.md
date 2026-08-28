@@ -2,7 +2,7 @@
 
 The generated (git-ignored) `app/libs/libbox-awgbox.aar` is built from
 [hoaxisr/amnezia-box](https://github.com/hoaxisr/amnezia-box), release
-`1.14.0-beta.4-awgm.5`, with a minimal mobile feature set: `with_awg`, `with_utls`,
+`1.14.0-rc.1-awgm.14`, with a minimal mobile feature set: `with_awg`, `with_utls`,
 `with_clash_api`, `badlinkname` and `tfogo_checklinkname0`.
 
 VLESS, VMess, SOCKS/HTTP and proxy chaining are included in the base sing-box

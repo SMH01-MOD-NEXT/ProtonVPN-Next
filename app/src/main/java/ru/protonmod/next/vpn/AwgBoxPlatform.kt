@@ -102,6 +102,11 @@ class AwgBoxPlatform(
     override fun readWIFIState(): WIFIState? = null
     override fun sendNotification(notification: Notification) = Unit
 
+    // libbox 1.14 added notification cancellation to PlatformInterface. The client
+    // renders its own foreground-service notification and never surfaces core
+    // notifications, so there is nothing to cancel.
+    override fun cancelNotification(identifier: String, typeID: Int) = Unit
+
     override fun openTun(options: TunOptions): Int {
         // VpnService.prepare() throws SecurityException ("<package> does not belong to uid ...")
         // when the consent record belongs to another Android user/profile or was invalidated by
