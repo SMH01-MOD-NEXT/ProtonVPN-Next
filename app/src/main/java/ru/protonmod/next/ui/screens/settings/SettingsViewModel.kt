@@ -45,6 +45,7 @@ import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.repository.AuthRepository
 import ru.protonmod.next.ota.OTAUpdateManager
 import ru.protonmod.next.ui.theme.AppTheme
+import ru.protonmod.next.utils.RegionUtils
 import ru.protonmod.next.utils.system.SystemUtils
 import ru.protonmod.next.utils.crypto.QuicI1Generator
 import ru.protonmod.next.vpn.AmneziaVpnManager
@@ -148,6 +149,16 @@ data class SettingsUiState(
     val customObfuscationProfiles: List<ObfuscationProfile> = emptyList(),
     val selectedProfileId: String = "standard_1",
     val customDns: String = "",
+    /** Preferred encrypted resolver. Empty means the built-in order is used. */
+    val dnsProviderId: String = "",
+    val dnsOverTlsFallbackEnabled: Boolean = true,
+    /** Set when the last submitted custom resolver was refused for being Russian. */
+    val customDnsRejected: Boolean = false,
+    /**
+     * Whether the device looks Russian. DoT is mandatory there, so the screen
+     * renders its switch locked on rather than merely pre-enabled.
+     */
+    val isRussianRegion: Boolean = false,
     val proxyChainEnabled: Boolean = false,
     val proxyChainConfig: String = "",
     val isProxyChainConfigValid: Boolean = false,
@@ -197,6 +208,12 @@ class SettingsViewModel @Inject constructor(
     private val _isAnyVpnActive = MutableStateFlow(false)
     private val _isCheckingForUpdates = MutableStateFlow(false)
     private val _isUpdateAvailable = MutableStateFlow(false)
+
+    /**
+     * Raised when the store refuses a custom resolver. Kept here rather than in
+     * the store because it describes one submission, not a persisted setting.
+     */
+    private val _customDnsRejected = MutableStateFlow(false)
 
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
@@ -344,7 +361,10 @@ class SettingsViewModel @Inject constructor(
         eventBypassManager.syncState,
         settingsManager.eventBypassEvents,
         settingsManager.eventBypassSelectedId,
-        settingsManager.eventBypassUpdatedAt
+        settingsManager.eventBypassUpdatedAt,
+        settingsManager.dnsProviderId,
+        settingsManager.dnsOverTlsFallbackEnabled,
+        _customDnsRejected
     ) { args: Array<Any?> ->
         SettingsUiState(
             killSwitchEnabled = args[0] as Boolean,
@@ -433,6 +453,12 @@ class SettingsViewModel @Inject constructor(
             eventBypassOptions = EventBypassCache.decode(args[81] as String),
             eventBypassSelectedId = args[82] as String,
             eventBypassUpdatedAt = args[83] as String,
+            dnsProviderId = args[84] as String,
+            dnsOverTlsFallbackEnabled = args[85] as Boolean,
+            customDnsRejected = args[86] as Boolean,
+            // Read directly rather than as a flow: the region cannot change
+            // while the process is alive.
+            isRussianRegion = RegionUtils.isRussianRegion(),
         )
     }.stateIn(
         scope = viewModelScope,
@@ -529,9 +555,33 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Saves a custom resolver.
+     *
+     * The store refuses Russian resolvers, so the outcome is surfaced instead of
+     * discarded. Without this the screen would close as though the address had
+     * been accepted, leaving the old value in place with no explanation.
+     */
     fun setCustomDns(dns: String) {
         viewModelScope.launch {
-            settingsManager.setCustomDns(dns)
+            val accepted = settingsManager.setCustomDns(dns)
+            _customDnsRejected.value = !accepted
+        }
+    }
+
+    fun clearCustomDnsRejection() {
+        _customDnsRejected.value = false
+    }
+
+    fun setDnsProviderId(providerId: String) {
+        viewModelScope.launch {
+            settingsManager.setDnsProviderId(providerId)
+        }
+    }
+
+    fun setDnsOverTlsFallbackEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsManager.setDnsOverTlsFallbackEnabled(enabled)
         }
     }
 

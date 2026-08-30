@@ -45,6 +45,9 @@ vpn-core/
 .DS_Store
 Thumbs.db
 
+# AI
+TASK_PLAN.md
+
 # AWGBox is generated locally by scripts/build-awgbox-lib.sh.
 # The pinned source revision and build recipe remain in scripts/build-awgbox-lib.sh.
 

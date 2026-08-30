@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
+import ru.protonmod.next.data.network.dns.DnsProviders
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.icons.ProtonIcons
@@ -146,6 +147,114 @@ fun DnsSettingsScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
 
+                item(contentType = "ProviderSelection") {
+                    Box(
+                        modifier = contentModifier
+                            .padding(horizontal = 16.dp)
+                            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.4f, shadowElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            // Section Title
+                            Text(
+                                text = stringResource(R.string.settings_dns_provider_title).uppercase(),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = colors.textWeak,
+                                modifier = Modifier.padding(start = 24.dp, top = 16.dp, bottom = 8.dp)
+                            )
+
+                            // Automatic ordering
+                            ProviderRow(
+                                title = stringResource(R.string.settings_dns_provider_auto),
+                                subtitle = stringResource(R.string.settings_dns_provider_auto_desc),
+                                selected = DnsProviders.byId(uiState.dnsProviderId) == null,
+                                onClick = { viewModel.setDnsProviderId("") }
+                            )
+
+                            DnsSectionDivider()
+
+                            DnsProviders.ALL.forEachIndexed { index, provider ->
+                                ProviderRow(
+                                    title = provider.displayName,
+                                    subtitle = stringResource(
+                                        R.string.settings_dns_provider_jurisdiction,
+                                        provider.jurisdiction
+                                    ),
+                                    selected = uiState.dnsProviderId == provider.id,
+                                    onClick = { viewModel.setDnsProviderId(provider.id) }
+                                )
+                                if (index != DnsProviders.ALL.lastIndex) {
+                                    DnsSectionDivider()
+                                }
+                            }
+
+                            Text(
+                                text = stringResource(R.string.settings_dns_provider_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.textWeak,
+                                modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 16.dp)
+                            )
+                        }
+                    }
+                }
+
+                item(contentType = "DotFallback") {
+                    // Mandatory inside Russia: DoH on 443 is filtered there, so 853
+                    // is frequently the last encrypted path. The switch is shown
+                    // locked on rather than hidden, so the behaviour stays visible.
+                    val locked = uiState.isRussianRegion
+
+                    Box(
+                        modifier = contentModifier
+                            .padding(horizontal = 16.dp)
+                            .liquidGlass(shape = RoundedCornerShape(20.dp), alpha = 0.4f, shadowElevation = 0.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable(enabled = !locked) {
+                                        viewModel.setDnsOverTlsFallbackEnabled(!uiState.dnsOverTlsFallbackEnabled)
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.settings_dns_dot_fallback),
+                                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                                        color = colors.textNorm
+                                    )
+                                    Text(
+                                        text = if (locked) {
+                                            stringResource(R.string.settings_dns_dot_locked_region)
+                                        } else {
+                                            stringResource(R.string.settings_dns_dot_fallback_desc)
+                                        },
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = colors.textWeak,
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Switch(
+                                    checked = locked || uiState.dnsOverTlsFallbackEnabled,
+                                    onCheckedChange = { viewModel.setDnsOverTlsFallbackEnabled(it) },
+                                    enabled = !locked,
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = colors.textInverted,
+                                        checkedTrackColor = colors.brandNorm,
+                                        uncheckedThumbColor = colors.shade60,
+                                        uncheckedTrackColor = colors.shade20,
+                                        uncheckedBorderColor = Color.Transparent,
+                                        disabledCheckedThumbColor = colors.textInverted,
+                                        disabledCheckedTrackColor = colors.brandNorm,
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
                 item(contentType = "ModeSelection") {
                     Box(
                         modifier = contentModifier
@@ -223,7 +332,10 @@ fun DnsSettingsScreen(
                                 ) {
                                     SmoothOutlinedTextField(
                                         value = inputText,
-                                        onValueChange = { inputText = it },
+                                        onValueChange = {
+                                            inputText = it
+                                            viewModel.clearCustomDnsRejection()
+                                        },
                                         placeholder = {
                                             Text(
                                                 stringResource(R.string.settings_custom_dns_placeholder),
@@ -231,16 +343,31 @@ fun DnsSettingsScreen(
                                             )
                                         },
                                         singleLine = true,
+                                        isError = uiState.customDnsRejected,
                                         shape = RoundedCornerShape(8.dp),
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = colors.brandNorm,
                                             unfocusedBorderColor = colors.separatorNorm,
                                             focusedTextColor = colors.textNorm,
                                             unfocusedTextColor = colors.textNorm,
-                                            cursorColor = colors.brandNorm
+                                            cursorColor = colors.brandNorm,
+                                            errorBorderColor = colors.notificationError
                                         ),
                                         modifier = Modifier.fillMaxWidth()
                                     )
+
+                                    AnimatedVisibility(
+                                        visible = uiState.customDnsRejected,
+                                        enter = fadeIn() + expandVertically(),
+                                        exit = fadeOut() + shrinkVertically()
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.settings_dns_rejected_russian),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = colors.notificationError,
+                                            modifier = Modifier.padding(top = 8.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -261,7 +388,12 @@ fun DnsSettingsScreen(
                             onClick = {
                                 val finalDns = if (useDefaultDns) "" else inputText.trim()
                                 viewModel.setCustomDns(finalDns)
-                                onBack()
+                                // The store is authoritative and refuses Russian
+                                // resolvers. Checking here as well keeps the screen
+                                // open on rejection so the reason stays visible.
+                                if (!DnsProviders.isDenied(finalDns)) {
+                                    onBack()
+                                }
                             },
                             enabled = isChanged || !useDefaultDns && inputText.isNotBlank(),
                             modifier = Modifier
@@ -299,4 +431,48 @@ fun DnsSettingsScreen(
             }
         }
     }
+}
+
+@Composable
+private fun ProviderRow(
+    title: String,
+    subtitle: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val colors = ProtonNextTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                color = colors.textNorm
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.textWeak,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
+        RadioButton(
+            selected = selected,
+            onClick = null,
+            colors = RadioButtonDefaults.colors(selectedColor = colors.brandNorm)
+        )
+    }
+}
+
+@Composable
+private fun DnsSectionDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(horizontal = 16.dp),
+        color = ProtonNextTheme.colors.separatorNorm.copy(alpha = 0.5f)
+    )
 }
