@@ -43,7 +43,17 @@ class SessionManager @Inject constructor(
      * Refreshes the session using the provided [session].
      * If a refresh is already in progress, it waits for it and returns the updated session.
      */
-    suspend fun refreshSession(session: SessionEntity): Result<SessionEntity> = refreshMutex.withLock {
+    suspend fun refreshSession(session: SessionEntity): Result<SessionEntity> =
+        refreshSession(session, force = false)
+
+    /**
+     * Refreshes the session, optionally bypassing the time debounce after the API explicitly
+     * rejects the current token.
+     */
+    suspend fun refreshSession(
+        session: SessionEntity,
+        force: Boolean
+    ): Result<SessionEntity> = refreshMutex.withLock {
         val currentTime = System.currentTimeMillis()
         val recentlyRefreshed = currentTime - lastRefreshTime < REFRESH_DEBOUNCE_MS
 
@@ -54,7 +64,7 @@ class SessionManager @Inject constructor(
             return Result.success(currentSession)
         }
 
-        if (recentlyRefreshed) {
+        if (recentlyRefreshed && !force) {
             ProtonLogger.i(TAG, "Refresh debounced, returning current session.")
             return currentSession?.let { Result.success(it) } ?: Result.failure(Exception("No session available"))
         }

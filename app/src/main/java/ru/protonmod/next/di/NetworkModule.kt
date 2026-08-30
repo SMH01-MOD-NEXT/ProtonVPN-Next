@@ -49,6 +49,7 @@ import ru.protonmod.next.data.network.MirrorTrustManager
 import ru.protonmod.next.data.network.NetworkConstants
 import ru.protonmod.next.data.network.PinVerifier
 import ru.protonmod.next.data.network.ProtonAuthApi
+import ru.protonmod.next.data.network.ProtonApiRequestTag
 import ru.protonmod.next.data.network.ProtonVpnApi
 import ru.protonmod.next.data.network.SessionManager
 import ru.protonmod.next.data.network.TokenAuthenticator
@@ -250,6 +251,12 @@ object NetworkModule {
                 return@Interceptor chain.proceed(builder.build())
             }
 
+            // Preserve the Proton classification after rewriting to Deno or a rotating
+            // Event host. OkHttp's authenticator receives the rewritten request.
+            val protonRequest = request.newBuilder()
+                .tag(ProtonApiRequestTag::class.java, ProtonApiRequestTag)
+                .build()
+
             val spoofedVersion = DeviceInfoProvider.SPOOFED_APP_VERSION
 
             val useProxy = shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
@@ -262,7 +269,7 @@ object NetworkModule {
                 // For Proton Mirrors strategy, we rely on DohFallbackInterceptor and dynamicDns
                 // For Custom Proxy strategy, we rely on ProxySelector and use original Host.
                 // No URL rewriting needed here, just proceed with original Host.
-                val builder = request.newBuilder()
+                val builder = protonRequest.newBuilder()
                     .header("User-Agent", userAgent)
                     .header("x-pm-appversion", "android-vpn@$spoofedVersion-dev+play")
                     .header("x-pm-apiversion", "4")
@@ -324,7 +331,7 @@ object NetworkModule {
                 }
                 .build()
 
-            val newRequest = request.newBuilder()
+            val newRequest = protonRequest.newBuilder()
                 .url(newUrl)
                 .header("User-Agent", userAgent)
                 .header("x-pm-appversion", "android-vpn@$spoofedVersion-dev+play")

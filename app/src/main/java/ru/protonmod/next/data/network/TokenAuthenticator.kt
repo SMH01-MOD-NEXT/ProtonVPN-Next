@@ -24,10 +24,10 @@ import okhttp3.Authenticator
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.Route
-import ru.protonmod.next.data.local.SessionDao
-import ru.protonmod.next.data.repository.AuthRepository
 import javax.inject.Inject
-import javax.inject.Provider
+
+/** Marker retained on rewritten requests so rotating event-proxy hosts remain authenticated. */
+internal object ProtonApiRequestTag
 
 class TokenAuthenticator @Inject constructor(
     private val sessionManager: SessionManager
@@ -41,11 +41,19 @@ class TokenAuthenticator @Inject constructor(
         val requestUrl = response.request.url
         val requestHost = requestUrl.host
         
-        // Only authenticate for Proton API requests.
-        // These are hardcoded for safety as this is sensitive logic.
-        val isProtonApi = requestHost == "vpn-api.proton.me" || 
-                          requestHost == "shimmering-stroopwafel-51675e.netlify.app" ||
-                          requestHost == "protonvpn-next-web.smh01.workers.dev"
+        // Only authenticate requests that were classified as Proton API traffic before
+        // URL rewriting, or requests to a known Proton/proxy host. The marker is needed
+        // for the rotating Event bypass host and avoids duplicating its mutable URL here.
+        val isProtonApi = response.request.tag(ProtonApiRequestTag::class.java) === ProtonApiRequestTag ||
+            requestHost == "vpn-api.proton.me" ||
+            requestHost.endsWith(".proton.me") ||
+            requestHost.endsWith(".protonmail.ch") ||
+            requestHost.endsWith(".protonvpn.ch") ||
+            requestHost.endsWith(".protonvpn.com") ||
+            requestHost.endsWith(".protonmail.com") ||
+            requestHost == "shimmering-stroopwafel-51675e.netlify.app" ||
+            requestHost == "protonvpn-next-web.smh01.workers.dev" ||
+            requestHost == "protonvpn-next-web--main.smh01-mirrors.deno.net"
         
         // Do not attempt to authenticate if it's already an authentication or refresh request
         val isAuthRequest = requestUrl.encodedPath.contains("auth/v4")
@@ -57,9 +65,10 @@ class TokenAuthenticator @Inject constructor(
         ProtonLogger.i(TAG, "HTTP 401 detected for $requestUrl. Initializing token refresh cycle.")
         ProtonLogger.addSentryBreadcrumb(TAG, "Auth Step: Token Expired ($requestUrl)", "WARNING", "auth.token")
 
-        // Prevent infinite loops if the new token also returns 401 Unauthorized
-        if (response.responseCount >= 3) {
-            ProtonLogger.e(TAG, "Aborting refresh cycle: Max retry count (3) exceeded for $requestUrl. Session might be completely broken.")
+        // A failed request may be retried once. If the replacement token is also rejected,
+        // return the second 401 instead of refreshing indefinitely.
+        if (response.responseCount >= 2) {
+            ProtonLogger.e(TAG, "Aborting refresh cycle: replacement token was also rejected for $requestUrl.")
             return null
         }
 
@@ -81,7 +90,7 @@ class TokenAuthenticator @Inject constructor(
 
         // Token is genuinely expired, we need to refresh it
         val refreshResult = runBlocking(Dispatchers.IO) {
-            sessionManager.refreshSession(session)
+            sessionManager.refreshSession(session, force = true)
         }
 
         return if (refreshResult.isSuccess) {
