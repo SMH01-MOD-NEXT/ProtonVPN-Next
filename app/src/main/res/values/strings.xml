@@ -233,6 +233,7 @@
     <string name="settings_dns_provider_jurisdiction">Jurisdiction: %1$s</string>
     <string name="settings_dns_dot_fallback">DNS over TLS fallback</string>
     <string name="settings_dns_dot_fallback_desc">If DoH on port 443 is blocked, retry over port 853. Slower, but frequently still reachable.</string>
+    <string name="settings_dns_dot_locked_region">Required in your region. DoH on port 443 is filtered here, so port 853 stays on.</string>
     <string name="settings_dns_rejected_russian">That resolver operates under Russian jurisdiction and would expose you to NSDI redirection. It was not saved.</string>
     <string name="settings_dns_hijack_detected">Your network resolver is returning fake answers. Encrypted DNS is being used instead.</string>
     <string name="settings_dns_hijack_clean">Your network resolver answers honestly. Encrypted DNS is still preferred.</string>

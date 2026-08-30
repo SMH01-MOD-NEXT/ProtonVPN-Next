@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.utils
 
+import java.util.Locale
 import java.util.TimeZone
 
 object RegionUtils {
@@ -55,4 +56,24 @@ object RegionUtils {
         val defaultTz = TimeZone.getDefault().id
         return russianTimezones.contains(defaultTz)
     }
+
+    /**
+     * Whether the device appears to be used inside Russia.
+     *
+     * Decided from device settings alone. The obvious alternative, asking a
+     * geolocation service, would mean disclosing the user's address to a third
+     * party in order to decide how to protect that user's DNS queries, which
+     * defeats the purpose. Timezone and configured region are both local and
+     * free.
+     *
+     * The two signals are OR-ed rather than AND-ed because they fail in
+     * different directions: a traveller keeps their region while changing
+     * timezone, and a user who sets an English locale keeps their timezone.
+     *
+     * The asymmetry is intentional. A false positive only leaves DNS over TLS
+     * available as a fallback, which is never harmful. A false negative gives
+     * up a defence, so this errs towards over-detection.
+     */
+    fun isRussianRegion(): Boolean =
+        isRussianTimezone() || Locale.getDefault().country.equals("RU", ignoreCase = true)
 }

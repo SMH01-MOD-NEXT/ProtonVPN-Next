@@ -51,6 +51,7 @@ import ru.protonmod.next.data.network.dns.DnsProviders
 import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.netshield.NetShieldStats
 import ru.protonmod.next.ui.theme.AppTheme
+import ru.protonmod.next.utils.RegionUtils
 import ru.protonmod.next.utils.system.SystemUtils
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -693,9 +694,23 @@ class SettingsManager @Inject constructor(
         editConnectionSetting(DNS_PROVIDER_ID, "", providerId)
     }
 
-    suspend fun setDnsOverTlsFallbackEnabled(enabled: Boolean) {
+    /**
+     * Stores the DoT fallback preference.
+     *
+     * Refuses to disable it inside Russia, where DoH on 443 is filtered and 853
+     * is frequently the last encrypted path left. Rejecting at the store rather
+     * than in the screen means a restored backup cannot switch it off either.
+     *
+     * @return false when the change was refused and nothing was saved.
+     */
+    suspend fun setDnsOverTlsFallbackEnabled(enabled: Boolean): Boolean {
+        if (!enabled && RegionUtils.isRussianRegion()) {
+            ProtonLogger.w("SettingsManager", "Refusing to disable DNS over TLS: mandatory in this region")
+            return false
+        }
         prefs.edit { putBoolean("dns_dot_fallback", enabled) }
         editConnectionSetting(DNS_DOT_FALLBACK, true, enabled)
+        return true
     }
 
     suspend fun setApiBypassEnabled(enabled: Boolean) {

@@ -23,6 +23,7 @@ import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.utils.ProtonLogger
+import ru.protonmod.next.utils.RegionUtils
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.UnknownHostException
@@ -234,10 +235,24 @@ class SecureDnsResolver @Inject constructor(
         return listOf(preferred) + DnsProviders.ALL.filter { it.id != preferred.id }
     }
 
-    private fun isDotFallbackEnabled(): Boolean = try {
-        settingsManagerProvider.get().isDnsOverTlsFallbackEnabledSync()
-    } catch (e: Exception) {
-        true
+    /**
+     * Whether the DoT stage may run. Forced on inside Russia.
+     *
+     * The preference exists for networks where 853 is merely slow and the user
+     * would rather fail fast. Under RKN that is not a trade-off worth offering:
+     * DoH on 443 is actively filtered, so 853 is often the last encrypted path,
+     * and switching it off hands resolution back to a system resolver that
+     * answers with NSDI block pages. The stored value is therefore ignored
+     * rather than merely defaulted to true, so neither a stale preference nor a
+     * restored backup can disable it.
+     */
+    private fun isDotFallbackEnabled(): Boolean {
+        if (RegionUtils.isRussianRegion()) return true
+        return try {
+            settingsManagerProvider.get().isDnsOverTlsFallbackEnabledSync()
+        } catch (e: Exception) {
+            true
+        }
     }
 
     private fun cached(hostname: String): List<InetAddress>? {

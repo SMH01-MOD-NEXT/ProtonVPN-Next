@@ -200,6 +200,7 @@
     <string name="settings_dns_provider_jurisdiction">Юрисдикция: %1$s</string>
     <string name="settings_dns_dot_fallback">Запасной DNS over TLS</string>
     <string name="settings_dns_dot_fallback_desc">Если DoH на порту 443 заблокирован, повторить через порт 853. Медленнее, но часто всё ещё доступен.</string>
+    <string name="settings_dns_dot_locked_region">Обязательно в вашем регионе. DoH на порту 443 здесь фильтруется, поэтому порт 853 остаётся включённым.</string>
     <string name="settings_dns_rejected_russian">Этот резолвер работает под российской юрисдикцией и подставит вас под перенаправление на НСДИ. Он не сохранён.</string>
     <string name="settings_dns_hijack_detected">Резолвер вашей сети возвращает поддельные ответы. Используется шифрованный DNS.</string>
     <string name="settings_dns_hijack_clean">Резолвер вашей сети отвечает честно. Шифрованный DNS всё равно в приоритете.</string>

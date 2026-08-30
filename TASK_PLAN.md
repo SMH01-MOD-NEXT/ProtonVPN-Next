@@ -56,7 +56,9 @@ Secondary problems:
 - [x] `SettingsManager`: provider + DoT preferences; reject RU custom DNS at the store
 - [x] Localise new strings (en + ru; remaining locales fall back to en via Crowdin)
 - [/] Unit tests: canary logic, provider ordering, RU denylist enforcement
-- [ ] Settings UI: provider picker + DoT toggle + rejection warning
+- [x] `RegionUtils.isRussianRegion()` — timezone OR locale region, decided locally
+- [x] DoT forced on in RU: preference ignored in the resolver, disable refused at the store
+- [ ] Settings UI: provider picker + DoT toggle (locked in RU) + rejection warning
 - [ ] `./gradlew assembleDebug` + `testStableStandardDebugUnitTest` green
 - [ ] Atomic Conventional Commits
 
