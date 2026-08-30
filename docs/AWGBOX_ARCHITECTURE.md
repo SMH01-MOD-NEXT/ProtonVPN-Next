@@ -18,7 +18,16 @@ The integration uses `hoaxisr/amnezia-box` `1.14.0-rc.1-awgm.14` because it:
 
 The binary is pinned and reproducible rather than downloaded during a normal app
 build. Upgrading the core must be a deliberate review because it is part of the
-trusted network boundary.
+trusted network boundary. The build also pins Go 1.25.5, matching upstream's
+`go.mod`: Go 1.27 accepted a private `x/net/http2` linkname but emitted it as an
+undefined Android ELF symbol, which made `System.loadLibrary("box")` fail. The
+build validates that generated `libbox.so` has no unresolved Go symbols.
+
+`1.14.0-rc.1-awgm.15` was reviewed on 2026-08-30 but not adopted: it does not
+change the private `x/net/http2` linkname call sites involved in this crash, and
+its updated `amneziawg-go` dependency references a gVisor revision that is no
+longer resolvable from the upstream Git repository. The loader fix therefore
+belongs in the reproducible build, not in an unrelated core upgrade.
 
 ## Runtime layers
 
