@@ -47,6 +47,7 @@ import kotlinx.serialization.json.Json
 import org.json.JSONArray
 import org.json.JSONObject
 import ru.protonmod.next.data.model.ObfuscationProfile
+import ru.protonmod.next.data.network.dns.DnsProviders
 import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.netshield.NetShieldStats
 import ru.protonmod.next.ui.theme.AppTheme
@@ -122,6 +123,11 @@ class SettingsManager @Inject constructor(
 
         // Custom DNS IP setting (IPv4 or IPv6)
         private val CUSTOM_DNS = stringPreferencesKey("custom_dns")
+
+        // Encrypted-resolver settings. Plaintext DNS inside RU is redirected to
+        // NSDI answers, so these decide which trusted resolver is asked instead.
+        private val DNS_PROVIDER_ID = stringPreferencesKey("dns_provider_id")
+        private val DNS_DOT_FALLBACK = booleanPreferencesKey("dns_dot_fallback")
 
         // API Bypass Settings
         private val API_BYPASS_ENABLED = booleanPreferencesKey("api_bypass_enabled")
@@ -324,6 +330,12 @@ class SettingsManager @Inject constructor(
     val vpnPort: Flow<Int> = dataStore.data.map { it[VPN_PORT] ?: 0 }
     val customDns: Flow<String> = dataStore.data.map { it[CUSTOM_DNS] ?: "" }
 
+    /** Preferred encrypted resolver. Empty means "race the whole trusted set". */
+    val dnsProviderId: Flow<String> = dataStore.data.map { it[DNS_PROVIDER_ID] ?: "" }
+
+    /** Whether DoT on port 853 may be tried once DoH on 443 has failed. */
+    val dnsOverTlsFallbackEnabled: Flow<Boolean> = dataStore.data.map { it[DNS_DOT_FALLBACK] ?: true }
+
     val apiBypassEnabled: Flow<Boolean> = dataStore.data.map { it[API_BYPASS_ENABLED] ?: false }
     val apiBypassStrategy: Flow<String> = dataStore.data.map { it[API_BYPASS_STRATEGY] ?: "netlify" }
 
@@ -403,6 +415,14 @@ class SettingsManager @Inject constructor(
     fun isAnrEnabledSync(): Boolean = prefs.getBoolean("sentry_anr_enabled", false)
     fun isMetricsEnabledSync(): Boolean = prefs.getBoolean("sentry_metrics_enabled", false)
     fun isLogsEnabledSync(): Boolean = prefs.getBoolean("sentry_logs_enabled", false)
+
+    /**
+     * Mirrored into SharedPreferences because the secure DNS resolver reads
+     * them from inside OkHttp's DNS callback, which is synchronous and cannot
+     * suspend on DataStore.
+     */
+    fun getDnsProviderIdSync(): String = prefs.getString("dns_provider_id", "") ?: ""
+    fun isDnsOverTlsFallbackEnabledSync(): Boolean = prefs.getBoolean("dns_dot_fallback", true)
 
     fun isApiBypassEnabledSync(): Boolean = prefs.getBoolean("api_bypass_enabled", false)
     fun getApiBypassStrategySync(): String {
@@ -647,8 +667,35 @@ class SettingsManager @Inject constructor(
         editConnectionSetting(VPN_PORT, 0, port)
     }
 
-    suspend fun setCustomDns(dnsIp: String) {
-        editConnectionSetting(CUSTOM_DNS, "", dnsIp)
+    /**
+     * Stores a custom resolver, refusing Russian ones.
+     *
+     * A resolver under RU jurisdiction answers from NSDI, so accepting one here
+     * would reintroduce the very redirection the encrypted resolvers exist to
+     * avoid — including by way of a restored backup, which is why the check
+     * lives here rather than in the screen. The value is dropped instead of
+     * being silently corrected so the UI can explain what happened.
+     *
+     * @return false when the address was rejected and nothing was saved.
+     */
+    suspend fun setCustomDns(dnsIp: String): Boolean {
+        val trimmed = dnsIp.trim()
+        if (DnsProviders.isDenied(trimmed)) {
+            ProtonLogger.w("SettingsManager", "Rejected a Russian DNS resolver submitted as custom DNS")
+            return false
+        }
+        editConnectionSetting(CUSTOM_DNS, "", trimmed)
+        return true
+    }
+
+    suspend fun setDnsProviderId(providerId: String) {
+        prefs.edit { putString("dns_provider_id", providerId) }
+        editConnectionSetting(DNS_PROVIDER_ID, "", providerId)
+    }
+
+    suspend fun setDnsOverTlsFallbackEnabled(enabled: Boolean) {
+        prefs.edit { putBoolean("dns_dot_fallback", enabled) }
+        editConnectionSetting(DNS_DOT_FALLBACK, true, enabled)
     }
 
     suspend fun setApiBypassEnabled(enabled: Boolean) {

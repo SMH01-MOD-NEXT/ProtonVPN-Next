@@ -226,6 +226,16 @@
     <string name="settings_custom_dns_desc">Enter an IPv4 or IPv6 address. Leave blank to use Proton\'s default secure DNS.</string>
     <string name="settings_custom_dns_reset">Reset Default</string>
     <string name="settings_custom_dns_placeholder">e.g. 1.1.1.1 or 2606:4700:4700::1111</string>
+    <string name="settings_dns_provider_title">Encrypted DNS provider</string>
+    <string name="settings_dns_provider_desc">Choose which resolver the app queries. Every option is outside Russian jurisdiction, so answers cannot be redirected to NSDI.</string>
+    <string name="settings_dns_provider_auto">Automatic</string>
+    <string name="settings_dns_provider_auto_desc">Queries all trusted resolvers at once and uses the first reply. Recommended while providers are being blocked.</string>
+    <string name="settings_dns_provider_jurisdiction">Jurisdiction: %1$s</string>
+    <string name="settings_dns_dot_fallback">DNS over TLS fallback</string>
+    <string name="settings_dns_dot_fallback_desc">If DoH on port 443 is blocked, retry over port 853. Slower, but frequently still reachable.</string>
+    <string name="settings_dns_rejected_russian">That resolver operates under Russian jurisdiction and would expose you to NSDI redirection. It was not saved.</string>
+    <string name="settings_dns_hijack_detected">Your network resolver is returning fake answers. Encrypted DNS is being used instead.</string>
+    <string name="settings_dns_hijack_clean">Your network resolver answers honestly. Encrypted DNS is still preferred.</string>
 
     <!-- Customization -->
     <string name="settings_customization">Customization</string>

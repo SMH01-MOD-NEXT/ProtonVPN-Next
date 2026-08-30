@@ -193,6 +193,16 @@
     <string name="settings_custom_dns_desc">Введите IPv4 или IPv6 адрес. Оставьте пустым, чтобы использовать безопасный DNS Proton по умолчанию.</string>
     <string name="settings_custom_dns_reset">Сбросить</string>
     <string name="settings_custom_dns_placeholder">напр. 1.1.1.1, 8.8.8.8, 2001:4860:4860::8888</string>
+    <string name="settings_dns_provider_title">Провайдер шифрованного DNS</string>
+    <string name="settings_dns_provider_desc">Выберите резолвер, к которому обращается приложение. Все варианты находятся вне российской юрисдикции, поэтому ответы нельзя перенаправить на НСДИ.</string>
+    <string name="settings_dns_provider_auto">Автоматически</string>
+    <string name="settings_dns_provider_auto_desc">Опрашивает все доверенные резолверы одновременно и берёт первый ответ. Рекомендуется, пока провайдеров блокируют.</string>
+    <string name="settings_dns_provider_jurisdiction">Юрисдикция: %1$s</string>
+    <string name="settings_dns_dot_fallback">Запасной DNS over TLS</string>
+    <string name="settings_dns_dot_fallback_desc">Если DoH на порту 443 заблокирован, повторить через порт 853. Медленнее, но часто всё ещё доступен.</string>
+    <string name="settings_dns_rejected_russian">Этот резолвер работает под российской юрисдикцией и подставит вас под перенаправление на НСДИ. Он не сохранён.</string>
+    <string name="settings_dns_hijack_detected">Резолвер вашей сети возвращает поддельные ответы. Используется шифрованный DNS.</string>
+    <string name="settings_dns_hijack_clean">Резолвер вашей сети отвечает честно. Шифрованный DNS всё равно в приоритете.</string>
     <!-- Customization -->
     <string name="settings_customization">Кастомизация</string>
     <string name="settings_app_theme">Тема приложения</string>
