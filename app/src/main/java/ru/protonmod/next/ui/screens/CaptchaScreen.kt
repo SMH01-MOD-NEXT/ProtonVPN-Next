@@ -106,8 +106,12 @@ fun CaptchaScreen(
             .readTimeout(15, TimeUnit.SECONDS)
             .build()
 
+        // Addressed by IP literal rather than by name. TLS to a bare address
+        // sends no SNI, so there is no "cloudflare-dns.com" in the handshake
+        // for DPI to match and reset on. The bootstrap hosts stay as a safety
+        // net in case the URL is ever changed back to a hostname.
         val doh = DnsOverHttps.Builder().client(bootstrapClient)
-            .url("https://cloudflare-dns.com/dns-query".toHttpUrl())
+            .url("https://1.1.1.1/dns-query".toHttpUrl())
             .bootstrapDnsHosts(
                 InetAddress.getByName("1.1.1.1"),
                 InetAddress.getByName("1.0.0.1")

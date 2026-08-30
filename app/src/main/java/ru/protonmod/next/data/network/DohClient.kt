@@ -23,8 +23,11 @@ import kotlinx.serialization.json.Json
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import ru.protonmod.next.data.network.dns.DnsProviders
+import ru.protonmod.next.data.network.dns.SecureDnsResolver
 import ru.protonmod.next.utils.Base32
 import ru.protonmod.next.utils.ProtonLogger
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -41,25 +44,59 @@ data class DohAnswer(
     @SerialName("data") val data: String
 )
 
+/**
+ * Proton's alternative-routing discovery: a TXT lookup under `protonpro.xyz`
+ * that returns the addresses to use when the API's own domain is unreachable.
+ *
+ * This used to query `https://dns.google/resolve` and
+ * `https://cloudflare-dns.com/dns-query` by name. Both hostnames had to be
+ * resolved before the request could be sent, and the only resolver available
+ * to do that was the system one — which, on a network redirecting DNS to NSDI,
+ * is the thing being worked around. Discovery therefore failed exactly when it
+ * was needed, and did so silently, because a redirected answer is a successful
+ * lookup.
+ *
+ * Two changes fix that. Endpoints are addressed by IP literal, so there is no
+ * name to resolve and no SNI hostname for DPI to match on; and the client is
+ * given [SecureDnsResolver] rather than the default, so that if a named
+ * endpoint is ever added here it still cannot reach the system resolver.
+ */
 @Singleton
 class DohClient @Inject constructor(
-    private val json: Json
+    private val json: Json,
+    secureDnsResolver: SecureDnsResolver,
 ) {
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+        .dns(secureDnsResolver)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
         .build()
 
+    /**
+     * JSON-API endpoints, primary and secondary address for each operator.
+     *
+     * Only Cloudflare and Google appear here, and deliberately so: the JSON
+     * DoH API is not part of RFC 8484 and the other trusted providers in
+     * [DnsProviders] either do not serve it or do not serve it on a literal
+     * with a matching certificate. Those providers still back ordinary
+     * resolution through [SecureDnsResolver]; this list covers only the TXT
+     * discovery query, where the JSON shape below is required.
+     *
+     * Cloudflare uses `/dns-query`, Google uses `/resolve`. Both certificates
+     * carry the IP SANs used here, so TLS validates against the literal.
+     */
     private val providers = listOf(
-        "https://dns.google/resolve",
-        "https://cloudflare-dns.com/dns-query"
+        "https://1.1.1.1/dns-query",
+        "https://8.8.8.8/resolve",
+        "https://1.0.0.1/dns-query",
+        "https://8.8.4.4/resolve",
     )
 
     suspend fun getAlternativeHosts(sessionId: String?, originalHost: String): List<String> {
         val base32Host = Base32.encode(originalHost.toByteArray())
         val sessionPrefix = if (sessionId != null) "$sessionId." else ""
         val queryDomain = "${sessionPrefix}d$base32Host.protonpro.xyz"
-        
+
         ProtonLogger.d("DohClient", "Querying alternative hosts for: $queryDomain")
 
         for (provider in providers) {

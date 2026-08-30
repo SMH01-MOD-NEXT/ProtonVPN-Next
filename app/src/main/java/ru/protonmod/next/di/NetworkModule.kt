@@ -45,6 +45,7 @@ import ru.protonmod.next.data.network.ApiBypassSocketFactory
 import ru.protonmod.next.data.network.AuthLoggingInterceptor
 import ru.protonmod.next.data.network.DohFallbackInterceptor
 import ru.protonmod.next.data.network.DohFallbackStore
+import ru.protonmod.next.data.network.dns.SecureDnsResolver
 import ru.protonmod.next.data.network.MirrorTrustManager
 import ru.protonmod.next.data.network.NetworkConstants
 import ru.protonmod.next.data.network.PinVerifier
@@ -91,16 +92,6 @@ object NetworkModule {
     fun provideJson(): Json = Json {
         ignoreUnknownKeys = true
         isLenient = true
-    }
-
-    private fun buildDnsOverHttps(bootstrapClient: OkHttpClient): DnsOverHttps {
-        return DnsOverHttps.Builder().client(bootstrapClient)
-            .url("https://cloudflare-dns.com/dns-query".toHttpUrl())
-            .bootstrapDnsHosts(
-                InetAddress.getByName("1.1.1.1"),
-                InetAddress.getByName("1.0.0.1")
-            )
-            .build()
     }
 
     @Provides
@@ -169,6 +160,7 @@ object NetworkModule {
         tokenAuthenticator: TokenAuthenticator,
         dohFallbackInterceptor: DohFallbackInterceptor,
         dohFallbackStore: DohFallbackStore,
+        secureDnsResolver: SecureDnsResolver,
         networkMonitor: NetworkMonitor
     ): OkHttpClient {
         try {
@@ -364,14 +356,9 @@ object NetworkModule {
             }
         }
 
-        // Bootstrap client for DNS over HTTPS requires longer timeouts
-        val bootstrapClient = OkHttpClient.Builder()
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .build()
-
-        val doh = buildDnsOverHttps(bootstrapClient)
-
+        // The DoH bootstrap that used to live here now belongs to
+        // SecureDnsResolver, which owns provider selection, racing and the
+        // hijack check rather than exposing a single Cloudflare endpoint.
         val trustManager = MirrorTrustManager()
         val sslContext = SSLContext.getInstance("TLS")
         sslContext.init(null, arrayOf(trustManager), null)
@@ -424,25 +411,19 @@ object NetworkModule {
                     }
                 }
 
-                if (useProxy) {
-                    try {
-                        result.addAll(doh.lookup(hostname))
-                    } catch (e: Exception) {
-                        result.addAll(Dns.SYSTEM.lookup(hostname))
-                    }
-                } else {
-                    try {
-                        // Try system DNS first
-                        result.addAll(Dns.SYSTEM.lookup(hostname))
-                    } catch (e: Exception) {
-                        // Fallback to DoH if system DNS fails (helps bypass some blocks)
-                        try {
-                            result.addAll(doh.lookup(hostname))
-                        } catch (ignore: Exception) {
-                            throw e // Throw original exception if both fail
-                        }
-                    }
-                }
+                // Encrypted resolvers first, unconditionally.
+                //
+                // The previous order asked the system resolver first whenever
+                // the API bypass was off, and reached DoH only if that threw.
+                // An NSDI redirect never throws — it returns a well-formed A
+                // record pointing at the block page — so the DoH fallback could
+                // never fire for the one attack it existed to defeat.
+                //
+                // SecureDnsResolver races DoH across the trusted providers,
+                // falls back to DoT on 853 when 443 is filtered, and consults
+                // the system resolver only after proving it does not fabricate
+                // answers.
+                result.addAll(secureDnsResolver.lookup(hostname))
             }
 
             // Prefer IPv4 over IPv6 to avoid ENETUNREACH on IPv4-only networks.
