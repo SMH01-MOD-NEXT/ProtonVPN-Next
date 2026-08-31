@@ -55,7 +55,10 @@ class IpEchoSourcesTest {
             )
         )
 
-        assertEquals(listOf("deno", "event", "cloudflare"), ordered.filter { it != "api.myip.com" && it != "freeipapi" })
+        assertEquals(
+            listOf("deno", "event", "vercel", "cloudflare"),
+            ordered.filter { it != "api.myip.com" && it != "freeipapi" }
+        )
     }
 
     @Test
@@ -121,10 +124,43 @@ class IpEchoSourcesTest {
     }
 
     @Test
-    fun `the country probe is one of our own deployments`() {
-        val probe = IpEchoSources.countryProbeUrl()
+    fun `the country is asked only of hosts that can name it`() {
+        // The Deno deployment answers with an address but never a country, so
+        // asking it would spend a round trip to learn nothing.
+        for (russian in listOf(true, false)) {
+            val probes = IpEchoSources.countryProbeSources(isRussianRegion = russian)
 
-        assertTrue(probe.startsWith(IpEchoSources.CLOUDFLARE_ORIGIN))
-        assertTrue(probe.endsWith(IpEchoSources.WHOAMI_PATH))
+            assertTrue("there must be more than one place to ask", probes.size > 1)
+            for (probe in probes) {
+                assertTrue(probe.id, probe.isOwn)
+                assertFalse(probe.id, probe.url.startsWith(IpEchoSources.DENO_ORIGIN))
+            }
+        }
+    }
+
+    @Test
+    fun `the country probe steps over Cloudflare inside Russia`() {
+        // This is the bug that hid the country: the only probe was Cloudflare,
+        // the very host ranked last inside Russia for being unreachable, so an
+        // address resolved through Deno arrived with no country at all.
+        assertEquals(
+            listOf("vercel", "cloudflare"),
+            ids(IpEchoSources.countryProbeSources(isRussianRegion = true))
+        )
+        assertEquals(
+            listOf("cloudflare", "vercel"),
+            ids(IpEchoSources.countryProbeSources(isRussianRegion = false))
+        )
+    }
+
+    @Test
+    fun `Vercel is asked on the only path that reaches the proxy`() {
+        // Its static site answers 404 on the plain path, so the Proton path has
+        // to ride in __path on /api.
+        val vercel = IpEchoSources.countryProbeSources(isRussianRegion = true).first()
+
+        assertEquals(IpEchoSources.VERCEL_WHOAMI, vercel.url)
+        assertTrue(vercel.url, vercel.url.startsWith(IpEchoSources.VERCEL_ORIGIN + "/api?"))
+        assertTrue(vercel.url, vercel.url.endsWith(IpEchoSources.WHOAMI_PATH))
     }
 }
