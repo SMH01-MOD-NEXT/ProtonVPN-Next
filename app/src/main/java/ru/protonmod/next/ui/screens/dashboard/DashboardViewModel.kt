@@ -56,6 +56,8 @@ import ru.protonmod.next.netshield.LocalNetShield
 import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.netshield.NetShieldStats
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.data.network.ip.IpEchoSources
+import ru.protonmod.next.utils.RegionUtils
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
@@ -305,10 +307,17 @@ class DashboardViewModel @Inject constructor(
         viewModelScope.launch {
             val location = fetchRealLocation()
             if (location != null) {
-                val cleanCode = location.countryCode.trim().uppercase().ifBlank { "US" }
-                val localizedCountry = CountryUtils.getCountryName(context, cleanCode)
-                    .ifBlank { cleanCode }
-                _originalLocationText.value = LocationText(localizedCountry, cleanCode, location.ip)
+                val cleanCode = location.countryCode.trim().uppercase()
+                // An address with no country is still the answer the user asked
+                // for. Naming a country we could not resolve — this defaulted to
+                // "US" — presents a guess as a fact, so it stays visibly unknown.
+                val localizedCountry = if (cleanCode.isEmpty()) {
+                    context.getString(R.string.unknown)
+                } else {
+                    CountryUtils.getCountryName(context, cleanCode).ifBlank { cleanCode }
+                }
+                _originalLocationText.value =
+                    LocationText(localizedCountry, cleanCode.ifBlank { null }, location.ip)
             } else {
                 // Fallback if API completely fails on boot
                 val unknown = context.getString(R.string.unknown)
@@ -379,9 +388,19 @@ class DashboardViewModel @Inject constructor(
      * @param bypassVpn If true, attempts to bypass the VPN tunnel (used for original IP).
      * @return [LocationData] object containing location info, or null in case of an error.
      */
+    /**
+     * The address this device is seen at, and the country it belongs to.
+     *
+     * Asks this project's own deployments first; see [IpEchoSources] for the
+     * order and for why the two public services are last.
+     *
+     * @param bypassVpn when true the request is bound to a physical interface,
+     *   so the answer is the device's real address rather than the tunnel's.
+     * @return null only when every source failed.
+     */
     private suspend fun fetchRealLocation(bypassVpn: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
-        
+
         // CRITICAL FIX: To truly bypass the VPN tunnel on Android, we must bind the socket
         // to a physical network interface (WiFi or Cellular). Proxy.NO_PROXY only affects
         // HTTP proxies, not the routing table / TUN interface.
@@ -392,7 +411,7 @@ class DashboardViewModel @Inject constructor(
                 caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
                         caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) == true
             }
-            
+
             if (network != null) {
                 noProxyClient.newBuilder()
                     .socketFactory(network.socketFactory)
@@ -404,52 +423,119 @@ class DashboardViewModel @Inject constructor(
             defaultClient
         }
 
-        // Only the lightest and fastest APIs (IP + Country Code)
-        val endpoints = listOf(
-            "https://api.myip.com",
-            "https://freeipapi.com/api/json",
-            "http://ip-api.com/json/"
+        val sources = IpEchoSources.ordered(
+            isRussianRegion = RegionUtils.isRussianRegion(),
+            eventBypassUrl = settingsManager.getEventBypassUrlSync(),
         )
 
-        for (url in endpoints) {
-            // Try each endpoint up to 3 times with 1s delay before moving to next
-            for (attempt in 1..3) {
-                try {
-                    val request = Request.Builder().url(url).build()
-                    client.newCall(request).execute().use { response ->
-                        if (response.isSuccessful) {
-                            val body = response.body.string()
-                            if (body.isNotBlank()) {
-                                val json = JSONObject(body)
-                                
-                                val ip = json.optString("ip")
-                                    .ifBlank { json.optString("ipAddress") }
-                                    .ifBlank { json.optString("query") }
-                                
-                                val countryCode = json.optString("cc")
-                                    .ifBlank { json.optString("countryCode") }
-                                    .ifBlank { json.optString("country_code") }
+        for (source in sources) {
+            // Our own deployments earn a second try. A service that is blocked,
+            // or that refuses this traffic on purpose, refuses it just as fast
+            // the third time — the old three-attempt loop over three such
+            // services is what turned a failure into a twenty-second wait.
+            val attempts = if (source.isOwn) 2 else 1
 
-                                if (ip.isNotBlank() && countryCode.isNotBlank()) {
-                                    val duration = System.currentTimeMillis() - startTime
-                                    ProtonLogger.recordDistribution("location_fetch_latency", duration.toDouble())
-                                    ProtonLogger.recordCount("location_fetch_success", 1.0)
-                                    
-                                    return@withContext LocationData(ip.trim(), countryCode.trim())
-                                }
-                            }
-                        }
+            for (attempt in 1..attempts) {
+                try {
+                    val request = Request.Builder().url(source.url).build()
+                    val found = client.newCall(request).execute().use { response ->
+                        if (!response.isSuccessful) return@use null
+                        val body = response.body.string()
+                        if (body.isBlank()) return@use null
+                        readLocation(body)
+                    }
+
+                    if (found != null) {
+                        val located = ensureCountry(found, client, source)
+                        val duration = System.currentTimeMillis() - startTime
+                        ProtonLogger.recordDistribution("location_fetch_latency", duration.toDouble())
+                        ProtonLogger.recordCount("location_fetch_success", 1.0)
+                        ProtonLogger.d("DashboardVM", "Location resolved by ${source.id}")
+
+                        return@withContext located
                     }
                 } catch (e: Exception) {
-                    ProtonLogger.w("DashboardVM", "Fetch failed from $url (attempt $attempt): ${e.message}")
+                    // Named by source, not by URL: a log that reads
+                    // "[URL_REDACTED] timed out" cannot tell anyone which
+                    // deployment to go and look at.
+                    ProtonLogger.w("DashboardVM", "Fetch failed from ${source.id} (attempt $attempt): ${e.message}")
                 }
-                if (attempt < 3) delay(1000)
+                if (attempt < attempts) delay(1000)
             }
         }
-        
+
         // Metrics
         ProtonLogger.recordCount("location_fetch_error", 1.0)
         null
+    }
+
+    /**
+     * Reads an address out of whichever shape a source answers in.
+     *
+     * A missing country is not a failure. The Deno deployment has no country
+     * signal at all, and demanding one before accepting its answer is what left
+     * the dashboard with no address to show even when a mirror had replied.
+     *
+     * The country is taken from the first field that actually holds a two-letter
+     * code, because the keys collide across sources: our own deployments put the
+     * code in `country`, while one public service puts the country's full name
+     * there and the code in `cc`.
+     */
+    private fun readLocation(body: String): LocationData? {
+        val json = JSONObject(body)
+
+        val ip = IpEchoSources.normaliseAddress(
+            json.optString("ip")
+                .ifBlank { json.optString("ipAddress") }
+                .ifBlank { json.optString("query") }
+        )
+        if (ip.isBlank()) return null
+
+        val code = listOf(
+            json.optString("country"),
+            json.optString("cc"),
+            json.optString("countryCode"),
+            json.optString("country_code"),
+        ).map { it.trim().uppercase() }
+            .firstOrNull { candidate -> candidate.length == 2 && candidate.all { it in 'A'..'Z' } }
+            .orEmpty()
+
+        // XX and T1 are placeholders for "unknown" and "Tor" rather than
+        // countries; passing them on would be a lie the dashboard cannot detect.
+        return LocationData(ip, if (code == "XX" || code == "T1") "" else code)
+    }
+
+    /**
+     * Fills in a country the answering deployment could not name.
+     *
+     * Only the Cloudflare deployment is told the caller's country by its host,
+     * so an answer from the Deno one arrives without it. That gap is closed by
+     * asking our own Cloudflare copy instead of a geolocation service, so the
+     * address never leaves this project just to be labelled.
+     *
+     * Best effort on purpose, and on the same client, so the country describes
+     * the same route the address was read from. An unanswered probe leaves the
+     * country unknown rather than discarding an address the user asked for.
+     */
+    private fun ensureCountry(
+        found: LocationData,
+        client: OkHttpClient,
+        source: IpEchoSources.Source
+    ): LocationData {
+        if (found.countryCode.isNotBlank() || !source.isOwn) return found
+        if (source.url == IpEchoSources.countryProbeUrl()) return found
+
+        return try {
+            val request = Request.Builder().url(IpEchoSources.countryProbeUrl()).build()
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return found
+                val probed = readLocation(response.body.string()) ?: return found
+                if (probed.countryCode.isBlank()) found else found.copy(countryCode = probed.countryCode)
+            }
+        } catch (e: Exception) {
+            ProtonLogger.w("DashboardVM", "Country probe failed: ${e.message}")
+            found
+        }
     }
 
     private data class LocationData(val ip: String, val countryCode: String)
