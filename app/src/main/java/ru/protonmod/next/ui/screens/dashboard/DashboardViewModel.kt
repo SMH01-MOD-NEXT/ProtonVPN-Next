@@ -57,6 +57,7 @@ import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.netshield.NetShieldStats
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.ip.IpEchoSources
+import ru.protonmod.next.data.network.ip.RealLocationCache
 import ru.protonmod.next.utils.RegionUtils
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.utils.CountryUtils
@@ -133,8 +134,16 @@ class DashboardViewModel @Inject constructor(
 
     private val _errorMessage = MutableStateFlow<String?>(null)
 
-    // Store original unprotected location
-    private val _originalLocationText = MutableStateFlow<LocationText?>(null)
+    // The address seen with no tunnel up. Seeded from disk so the map opens at
+    // the user's own country on the first frame, instead of waiting for a
+    // request that takes seconds — or, on a filtered network, never finishes.
+    private val _originalLocationText = MutableStateFlow(cachedRealLocation())
+
+    // Only an address confirmed during this session can serve as the baseline
+    // for the leak check in fetchVpnLocation: a remembered one may describe a
+    // network the device has since left.
+    private var realIpConfirmedThisSession = false
+
     // Store the secure VPN location (fetched after connection)
     private val _vpnLocationText = MutableStateFlow<LocationText?>(null)
 
@@ -232,9 +241,13 @@ class DashboardViewModel @Inject constructor(
 
     private var hasAttemptedAutoConnect = false
 
+    // Set while a tunnel is up, so the real address is only asked for again
+    // after a session that could have changed it.
+    private var tunnelWasUp = false
+
     init {
         loadServers()
-        fetchOriginalLocation()
+        refreshOriginalLocation()
 
         viewModelScope.launch {
             val autoConnect = settingsManager.autoConnectEnabled.first()
@@ -283,6 +296,8 @@ class DashboardViewModel @Inject constructor(
                             lastConnectedAt = System.currentTimeMillis()
                         )
                     )
+                    tunnelWasUp = true
+
                     // Fetch the new secure IP of the VPN server
                     fetchVpnLocation(server.exitCountry)
 
@@ -290,6 +305,14 @@ class DashboardViewModel @Inject constructor(
                     loadServers()
                 } else if (state == AmneziaVpnManager.VpnState.DISCONNECTED) {
                     _vpnLocationText.value = null
+                    if (tunnelWasUp) {
+                        tunnelWasUp = false
+                        // The session may have begun on one network and ended on another,
+                        // and the physical route only becomes trustworthy once the tunnel
+                        // has finished coming down.
+                        delay(1500)
+                        refreshOriginalLocation()
+                    }
                 }
             }
         }
@@ -303,25 +326,77 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    private fun fetchOriginalLocation() {
+    /**
+     * The last unprotected address this device was seen at, restored from disk.
+     *
+     * Read during construction, before any coroutine runs, so the first frame of
+     * the dashboard can already place the user on the map.
+     *
+     * @return null when nothing usable was stored, which leaves the location
+     *   fields in the same "still looking" state as before.
+     */
+    private fun cachedRealLocation(): LocationText? =
+        RealLocationCache.sanitise(
+            settingsManager.getCachedRealIpSync(),
+            settingsManager.getCachedRealCountrySync()
+        )?.let { locationTextOf(it.ip, it.countryCode) }
+
+    /**
+     * Names a location for display.
+     *
+     * An address with no country is still the answer the user asked for. Naming
+     * a country we could not resolve — this defaulted to "US" — presents a guess
+     * as a fact, so it stays visibly unknown.
+     */
+    private fun locationTextOf(ip: String, countryCode: String?): LocationText {
+        val code = countryCode?.trim()?.uppercase()?.ifBlank { null }
+        val country = if (code == null) {
+            context.getString(R.string.unknown)
+        } else {
+            CountryUtils.getCountryName(context, code).ifBlank { code }
+        }
+        return LocationText(country, code, ip)
+    }
+
+    /**
+     * Brings the unprotected address up to date without a visible reload.
+     *
+     * Whatever was remembered is already on screen, so the value is replaced only
+     * when it actually changed: the map moves and the address field changes, with
+     * no loading state in between. Storage is written on the same condition, so a
+     * launch that merely confirms the known address writes nothing.
+     *
+     * A refresh that fails leaves the remembered answer in place. A known address
+     * is worth more than the word "unknown", and the sources likeliest to fail are
+     * the ones blocked on this device's network.
+     */
+    private fun refreshOriginalLocation() {
         viewModelScope.launch {
+            val tunnelActive =
+                amneziaVpnManager.vpnState.value != AmneziaVpnManager.VpnState.DISCONNECTED
+            if (!RealLocationCache.shouldRefresh(tunnelActive, _originalLocationText.value != null)) {
+                ProtonLogger.d("DashboardVM", "Real address left as remembered: a tunnel is up")
+                return@launch
+            }
+
             val location = fetchRealLocation()
-            if (location != null) {
-                val cleanCode = location.countryCode.trim().uppercase()
-                // An address with no country is still the answer the user asked
-                // for. Naming a country we could not resolve — this defaulted to
-                // "US" — presents a guess as a fact, so it stays visibly unknown.
-                val localizedCountry = if (cleanCode.isEmpty()) {
-                    context.getString(R.string.unknown)
-                } else {
-                    CountryUtils.getCountryName(context, cleanCode).ifBlank { cleanCode }
+            val fresh = RealLocationCache.sanitise(location?.ip, location?.countryCode)
+            if (fresh == null) {
+                // Nothing usable came back. Say so only when there is nothing to
+                // show at all, so a remembered address survives a failed refresh.
+                if (_originalLocationText.value == null) {
+                    val unknown = context.getString(R.string.unknown)
+                    _originalLocationText.value = LocationText(unknown, null, unknown)
                 }
-                _originalLocationText.value =
-                    LocationText(localizedCountry, cleanCode.ifBlank { null }, location.ip)
-            } else {
-                // Fallback if API completely fails on boot
-                val unknown = context.getString(R.string.unknown)
-                _originalLocationText.value = LocationText(unknown, null, unknown)
+                return@launch
+            }
+
+            realIpConfirmedThisSession = true
+
+            val text = locationTextOf(fresh.ip, fresh.countryCode)
+            if (_originalLocationText.value != text) {
+                _originalLocationText.value = text
+                settingsManager.setCachedRealLocation(fresh.ip, fresh.countryCode)
             }
         }
     }
@@ -329,7 +404,9 @@ class DashboardViewModel @Inject constructor(
     private fun fetchVpnLocation(countryCode: String) {
         viewModelScope.launch {
             val unknown = context.getString(R.string.unknown)
-            val originalIp = _originalLocationText.value?.ip
+            // Only an address confirmed in this session can prove a leak; one
+            // restored from disk may describe a network we have since left.
+            val originalIp = _originalLocationText.value?.ip?.takeIf { realIpConfirmedThisSession }
 
             // Clear connection pool to ensure we don't reuse a pre-VPN connection.
             withContext(Dispatchers.IO) {
@@ -344,7 +421,7 @@ class DashboardViewModel @Inject constructor(
                 
                 if (location != null) {
                     // If we got an IP and it's different from original (or original is unknown) - success
-                    if (location.ip != originalIp || originalIp == unknown) {
+                    if (originalIp == null || location.ip != originalIp) {
                         break 
                     } else {
                         ProtonLogger.d("DashboardVM", "Leak detected: fetched IP matches original (cycle $cycle). Waiting...")

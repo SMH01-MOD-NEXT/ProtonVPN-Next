@@ -133,6 +133,8 @@ class SettingsManager @Inject constructor(
         // API Bypass Settings
         private val API_BYPASS_ENABLED = booleanPreferencesKey("api_bypass_enabled")
         private val API_BYPASS_STRATEGY = stringPreferencesKey("api_bypass_strategy")
+        private val REAL_IP = stringPreferencesKey("real_ip")
+        private val REAL_IP_COUNTRY = stringPreferencesKey("real_ip_country")
 
         private val BYEDPI_FLAGS = stringPreferencesKey("byedpi_flags")
         private val BYEDPI_SNI = stringPreferencesKey("byedpi_sni")
@@ -444,6 +446,19 @@ class SettingsManager @Inject constructor(
     fun getEventBypassNameSync(): String = prefs.getString("event_bypass_name", "") ?: ""
     fun getEventBypassEventsSync(): String = prefs.getString("event_bypass_events", "") ?: ""
     fun getEventBypassSelectedIdSync(): String = prefs.getString("event_bypass_selected_id", "") ?: ""
+
+    /**
+     * The address this device was last seen at with no tunnel up.
+     *
+     * Read while the dashboard is being built, before any coroutine can run,
+     * so the map can be drawn at the user's own country on the first frame.
+     * Null means nothing has been stored yet, which is a different screen
+     * from an address stored as blank.
+     */
+    fun getCachedRealIpSync(): String? = prefs.getString("real_ip", null)?.ifBlank { null }
+
+    /** The country of [getCachedRealIpSync], when a source could name one. */
+    fun getCachedRealCountrySync(): String? = prefs.getString("real_ip_country", null)?.ifBlank { null }
 
     fun isSpoofCountryEnabledSync(): Boolean = prefs.getBoolean("spoof_country_enabled", false)
     fun isSpoofCountryNullSync(): Boolean = prefs.getBoolean("spoof_country_null", false)
@@ -795,6 +810,23 @@ class SettingsManager @Inject constructor(
     suspend fun setEventBypassLastSync(timestamp: Long) {
         prefs.edit { putLong("event_bypass_last_sync", timestamp) }
         dataStore.edit { it[EVENT_BYPASS_LAST_SYNC] = timestamp }
+    }
+
+    /**
+     * Remembers where this device is seen from while no tunnel is up.
+     *
+     * The dashboard calls this only when the answer changed, so a launch that
+     * merely confirms the known address touches no storage.
+     */
+    suspend fun setCachedRealLocation(ip: String, countryCode: String?) {
+        prefs.edit {
+            putString("real_ip", ip)
+            putString("real_ip_country", countryCode ?: "")
+        }
+        dataStore.edit {
+            it[REAL_IP] = ip
+            it[REAL_IP_COUNTRY] = countryCode ?: ""
+        }
     }
 
     suspend fun setSpoofCountryEnabled(enabled: Boolean) {
