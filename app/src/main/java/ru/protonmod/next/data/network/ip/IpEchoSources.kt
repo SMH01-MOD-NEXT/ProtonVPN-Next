@@ -40,6 +40,15 @@ object IpEchoSources {
     const val WHOAMI_PATH = "/__proxy/whoami"
 
     const val CLOUDFLARE_ORIGIN = "https://protonvpn-next-web.smh01.workers.dev"
+
+    /**
+     * The same Cloudflare deployment under the project's own name.
+     *
+     * Sharing one hostname with every free Worker is what makes the
+     * `workers.dev` spelling easy to filter wholesale, so this is the copy to
+     * ask first: it is the name the site itself is served under.
+     */
+    const val CLOUDFLARE_SITE_ORIGIN = "https://home.protonnext.qzz.io"
     const val DENO_ORIGIN = "https://protonvpn-next-web--main.smh01-mirrors.deno.net"
     const val VERCEL_ORIGIN = "https://proton-vpn-next-web.vercel.app"
 
@@ -60,6 +69,8 @@ object IpEchoSources {
     data class Source(val id: String, val url: String, val isOwn: Boolean)
 
     private val cloudflare = Source("cloudflare", CLOUDFLARE_ORIGIN + WHOAMI_PATH, isOwn = true)
+    private val cloudflareSite =
+        Source("cloudflare-site", CLOUDFLARE_SITE_ORIGIN + WHOAMI_PATH, isOwn = true)
     private val deno = Source("deno", DENO_ORIGIN + WHOAMI_PATH, isOwn = true)
     private val vercel = Source("vercel", VERCEL_WHOAMI, isOwn = true)
 
@@ -89,9 +100,9 @@ object IpEchoSources {
         val event = originOf(eventBypassUrl)?.let { Source("event", it + WHOAMI_PATH, isOwn = true) }
 
         val own = if (isRussianRegion) {
-            listOfNotNull(deno, event, vercel, cloudflare)
+            listOfNotNull(deno, event, cloudflareSite, vercel, cloudflare)
         } else {
-            listOfNotNull(cloudflare, vercel, deno, event)
+            listOfNotNull(cloudflareSite, cloudflare, vercel, deno, event)
         }
 
         return own + publicFallbacks
@@ -103,7 +114,8 @@ object IpEchoSources {
      *
      * Only a host that is itself told the caller's country can answer this:
      * Cloudflare and Vercel are, the Deno deployment is not and returns the
-     * field empty. That is why this is a list rather than a single URL. The
+     * field empty. Cloudflare appears twice, under the project's own name
+     * first, because that name is the one that stays reachable. That is why this is a list rather than a single URL. The
      * earlier version asked Cloudflare alone — the very host ranked last inside
      * Russia for being unreachable — so an address resolved through Deno could
      * never be given a country there, which is exactly how it failed.
@@ -112,7 +124,11 @@ object IpEchoSources {
      * service merely to be labelled.
      */
     fun countryProbeSources(isRussianRegion: Boolean): List<Source> =
-        if (isRussianRegion) listOf(vercel, cloudflare) else listOf(cloudflare, vercel)
+        if (isRussianRegion) {
+            listOf(cloudflareSite, vercel, cloudflare)
+        } else {
+            listOf(cloudflareSite, cloudflare, vercel)
+        }
 
     /**
      * One spelling per address, mirroring `normaliseAddress` on the server.

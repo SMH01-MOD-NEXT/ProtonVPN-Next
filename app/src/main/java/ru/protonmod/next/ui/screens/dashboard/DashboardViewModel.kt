@@ -531,6 +531,13 @@ class DashboardViewModel @Inject constructor(
     ): LocationData {
         if (found.countryCode.isNotBlank() || !source.isOwn) return found
 
+        // Deliberately shorter than the client's own timeout: some of these
+        // hosts are expected to be unreachable, and the address is already
+        // resolved and waiting to be shown beside whatever country arrives.
+        val probeClient = client.newBuilder()
+            .callTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+
         for (probe in IpEchoSources.countryProbeSources(isRussianRegion)) {
             // The deployment that just answered has already said it knows no
             // country; asking it again only costs another round trip.
@@ -538,7 +545,7 @@ class DashboardViewModel @Inject constructor(
 
             try {
                 val request = Request.Builder().url(probe.url).build()
-                val probed = client.newCall(request).execute().use { response ->
+                val probed = probeClient.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) return@use null
                     readLocation(response.body.string())
                 }
