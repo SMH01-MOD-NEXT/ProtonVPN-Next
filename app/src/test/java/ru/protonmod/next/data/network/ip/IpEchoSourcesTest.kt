@@ -40,10 +40,13 @@ class IpEchoSourcesTest {
     @Test
     fun `Cloudflare is asked last of ours inside Russia and first elsewhere`() {
         assertEquals("deno", ids(IpEchoSources.ordered(isRussianRegion = true)).first())
-        assertEquals("cloudflare", ids(IpEchoSources.ordered(isRussianRegion = false)).first())
+        assertEquals("cloudflare-site", ids(IpEchoSources.ordered(isRussianRegion = false)).first())
 
+        // The shared workers.dev name is the one filtered wholesale, so inside
+        // Russia it goes behind everything else of ours.
         val inRussia = ids(IpEchoSources.ordered(isRussianRegion = true))
-        assertTrue(inRussia.indexOf("deno") < inRussia.indexOf("cloudflare"))
+        assertEquals("cloudflare", inRussia.last { it != "api.myip.com" && it != "freeipapi" })
+        assertTrue(inRussia.indexOf("deno") < inRussia.indexOf("cloudflare-site"))
     }
 
     @Test
@@ -56,7 +59,7 @@ class IpEchoSourcesTest {
         )
 
         assertEquals(
-            listOf("deno", "event", "vercel", "cloudflare"),
+            listOf("deno", "event", "cloudflare-site", "vercel", "cloudflare"),
             ordered.filter { it != "api.myip.com" && it != "freeipapi" }
         )
     }
@@ -78,7 +81,7 @@ class IpEchoSourcesTest {
             val ordered = ids(IpEchoSources.ordered(isRussianRegion = false, eventBypassUrl = raw))
 
             assertFalse("'$raw' must not become a source", ordered.contains("event"))
-            assertEquals("cloudflare", ordered.first())
+            assertEquals("cloudflare-site", ordered.first())
         }
     }
 
@@ -144,11 +147,11 @@ class IpEchoSourcesTest {
         // the very host ranked last inside Russia for being unreachable, so an
         // address resolved through Deno arrived with no country at all.
         assertEquals(
-            listOf("vercel", "cloudflare"),
+            listOf("cloudflare-site", "vercel", "cloudflare"),
             ids(IpEchoSources.countryProbeSources(isRussianRegion = true))
         )
         assertEquals(
-            listOf("cloudflare", "vercel"),
+            listOf("cloudflare-site", "cloudflare", "vercel"),
             ids(IpEchoSources.countryProbeSources(isRussianRegion = false))
         )
     }
@@ -157,7 +160,8 @@ class IpEchoSourcesTest {
     fun `Vercel is asked on the only path that reaches the proxy`() {
         // Its static site answers 404 on the plain path, so the Proton path has
         // to ride in __path on /api.
-        val vercel = IpEchoSources.countryProbeSources(isRussianRegion = true).first()
+        val vercel = IpEchoSources.countryProbeSources(isRussianRegion = true)
+            .first { it.id == "vercel" }
 
         assertEquals(IpEchoSources.VERCEL_WHOAMI, vercel.url)
         assertTrue(vercel.url, vercel.url.startsWith(IpEchoSources.VERCEL_ORIGIN + "/api?"))
