@@ -174,6 +174,11 @@ class DashboardViewModelTest {
         whenever(profileDao.getAllProfilesFlow()).thenReturn(MutableStateFlow(emptyList()))
         whenever(trafficStatsDao.observeAll()).thenReturn(flowOf(emptyList()))
         
+        // Resolving the device's address asks for the event bypass host. The
+        // real accessor cannot return null, but an unstubbed mock does, and the
+        // non-null Kotlin signature rejects it before the test body even runs.
+        whenever(settingsManager.getEventBypassUrlSync()).thenReturn("")
+
         whenever(settingsManager.quickConnectStrategy).thenReturn(quickConnectStrategyFlow)
         whenever(settingsManager.quickConnectTargetId).thenReturn(quickConnectTargetIdFlow)
         whenever(settingsManager.serverLoadDisplayMode).thenReturn(serverLoadDisplayModeFlow)
