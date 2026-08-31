@@ -423,8 +423,9 @@ class DashboardViewModel @Inject constructor(
             defaultClient
         }
 
+        val russian = RegionUtils.isRussianRegion()
         val sources = IpEchoSources.ordered(
-            isRussianRegion = RegionUtils.isRussianRegion(),
+            isRussianRegion = russian,
             eventBypassUrl = settingsManager.getEventBypassUrlSync(),
         )
 
@@ -446,7 +447,7 @@ class DashboardViewModel @Inject constructor(
                     }
 
                     if (found != null) {
-                        val located = ensureCountry(found, client, source)
+                        val located = ensureCountry(found, client, source, russian)
                         val duration = System.currentTimeMillis() - startTime
                         ProtonLogger.recordDistribution("location_fetch_latency", duration.toDouble())
                         ProtonLogger.recordCount("location_fetch_success", 1.0)
@@ -508,10 +509,15 @@ class DashboardViewModel @Inject constructor(
     /**
      * Fills in a country the answering deployment could not name.
      *
-     * Only the Cloudflare deployment is told the caller's country by its host,
-     * so an answer from the Deno one arrives without it. That gap is closed by
-     * asking our own Cloudflare copy instead of a geolocation service, so the
-     * address never leaves this project just to be labelled.
+     * Only a host that is itself told the caller's country can answer this.
+     * Cloudflare and Vercel are; the Deno deployment is not, and returns the
+     * field empty.
+     *
+     * Every candidate is one of ours, so the address is never handed to a
+     * geolocation service merely to be labelled. They are tried in turn because
+     * the first version of this asked Cloudflare alone — the host ranked last
+     * inside Russia for being unreachable — so an address resolved through Deno
+     * arrived with no country at all, which is exactly how this failed.
      *
      * Best effort on purpose, and on the same client, so the country describes
      * the same route the address was read from. An unanswered probe leaves the
@@ -520,22 +526,32 @@ class DashboardViewModel @Inject constructor(
     private fun ensureCountry(
         found: LocationData,
         client: OkHttpClient,
-        source: IpEchoSources.Source
+        source: IpEchoSources.Source,
+        isRussianRegion: Boolean
     ): LocationData {
         if (found.countryCode.isNotBlank() || !source.isOwn) return found
-        if (source.url == IpEchoSources.countryProbeUrl()) return found
 
-        return try {
-            val request = Request.Builder().url(IpEchoSources.countryProbeUrl()).build()
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return found
-                val probed = readLocation(response.body.string()) ?: return found
-                if (probed.countryCode.isBlank()) found else found.copy(countryCode = probed.countryCode)
+        for (probe in IpEchoSources.countryProbeSources(isRussianRegion)) {
+            // The deployment that just answered has already said it knows no
+            // country; asking it again only costs another round trip.
+            if (probe.url == source.url) continue
+
+            try {
+                val request = Request.Builder().url(probe.url).build()
+                val probed = client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) return@use null
+                    readLocation(response.body.string())
+                }
+
+                if (probed != null && probed.countryCode.isNotBlank()) {
+                    return found.copy(countryCode = probed.countryCode)
+                }
+            } catch (e: Exception) {
+                ProtonLogger.w("DashboardVM", "Country probe failed at ${probe.id}: ${e.message}")
             }
-        } catch (e: Exception) {
-            ProtonLogger.w("DashboardVM", "Country probe failed: ${e.message}")
-            found
         }
+
+        return found
     }
 
     private data class LocationData(val ip: String, val countryCode: String)

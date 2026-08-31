@@ -41,6 +41,14 @@ object IpEchoSources {
 
     const val CLOUDFLARE_ORIGIN = "https://protonvpn-next-web.smh01.workers.dev"
     const val DENO_ORIGIN = "https://protonvpn-next-web--main.smh01-mirrors.deno.net"
+    const val VERCEL_ORIGIN = "https://proton-vpn-next-web.vercel.app"
+
+    /**
+     * Vercel routes to the proxy only through `/api`, so the path travels as a
+     * query parameter. Asking for `WHOAMI_PATH` directly there returns the
+     * static site's 404 page instead of an address.
+     */
+    const val VERCEL_WHOAMI = "$VERCEL_ORIGIN/api?__path=$WHOAMI_PATH"
 
     /**
      * A place to ask, and whether this project owns it.
@@ -50,6 +58,10 @@ object IpEchoSources {
      * address, because doing so means showing them that address.
      */
     data class Source(val id: String, val url: String, val isOwn: Boolean)
+
+    private val cloudflare = Source("cloudflare", CLOUDFLARE_ORIGIN + WHOAMI_PATH, isOwn = true)
+    private val deno = Source("deno", DENO_ORIGIN + WHOAMI_PATH, isOwn = true)
+    private val vercel = Source("vercel", VERCEL_WHOAMI, isOwn = true)
 
     /**
      * Last resort, and deliberately short.
@@ -66,35 +78,41 @@ object IpEchoSources {
     /**
      * The sources to try, in order.
      *
-     * Ours come first, always. Inside Russia Cloudflare goes last of ours,
-     * since that is where it is throttled, and a temporary event bypass — which
-     * exists precisely because the fixed hosts stopped being reachable — is
-     * tried ahead of it.
+     * Ours come first, always. Outside Russia the two that report a country in
+     * the same answer lead, which saves a second request. Inside Russia
+     * reachability decides instead: Deno answers there, Cloudflare is
+     * throttled, and a temporary event bypass — which exists precisely because
+     * the fixed hosts stopped being reachable — is tried before either of the
+     * hosts it was meant to stand in for.
      */
     fun ordered(isRussianRegion: Boolean, eventBypassUrl: String = ""): List<Source> {
-        val cloudflare = Source("cloudflare", CLOUDFLARE_ORIGIN + WHOAMI_PATH, isOwn = true)
-        val deno = Source("deno", DENO_ORIGIN + WHOAMI_PATH, isOwn = true)
         val event = originOf(eventBypassUrl)?.let { Source("event", it + WHOAMI_PATH, isOwn = true) }
 
         val own = if (isRussianRegion) {
-            listOfNotNull(deno, event, cloudflare)
+            listOfNotNull(deno, event, vercel, cloudflare)
         } else {
-            listOfNotNull(cloudflare, deno, event)
+            listOfNotNull(cloudflare, vercel, deno, event)
         }
 
         return own + publicFallbacks
     }
 
     /**
-     * Where to ask for a country when a deployment reports an address without
-     * one.
+     * Who to ask for a country when a deployment reports an address without
+     * one, in the order to try.
      *
-     * Only the Cloudflare deployment is told the caller's country by its host;
-     * the Deno one has no such signal and returns the field empty. Asking our
-     * own Cloudflare copy keeps that lookup inside this project, instead of
-     * handing the user's address to a geolocation service just to label it.
+     * Only a host that is itself told the caller's country can answer this:
+     * Cloudflare and Vercel are, the Deno deployment is not and returns the
+     * field empty. That is why this is a list rather than a single URL. The
+     * earlier version asked Cloudflare alone — the very host ranked last inside
+     * Russia for being unreachable — so an address resolved through Deno could
+     * never be given a country there, which is exactly how it failed.
+     *
+     * Both entries are ours, so the address is never handed to a geolocation
+     * service merely to be labelled.
      */
-    fun countryProbeUrl(): String = CLOUDFLARE_ORIGIN + WHOAMI_PATH
+    fun countryProbeSources(isRussianRegion: Boolean): List<Source> =
+        if (isRussianRegion) listOf(vercel, cloudflare) else listOf(cloudflare, vercel)
 
     /**
      * One spelling per address, mirroring `normaliseAddress` on the server.
