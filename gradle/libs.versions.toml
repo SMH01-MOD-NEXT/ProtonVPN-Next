@@ -1,12 +1,12 @@
 [versions]
-agp = "9.5.0-alpha04"
+agp = "9.5.0-alpha06"
 kotlin = "2.4.20"
 ksp = "2.3.10"
 hilt = "2.60.1"
 room = "2.8.5"
 roomKsp = "2.8.5"
 sentry = "6.21.0"
-sentryAndroid = "8.56.0"
+sentryAndroid = "8.57.0"
 coreKtx = "1.19.0"
 lifecycle = "2.11.0"
 collectionsImmutable = "0.5.2"
@@ -24,10 +24,10 @@ retrofit = "3.0.0"
 retrofitSerialization = "1.0.0"
 serializationJson = "1.11.0"
 leakcanary = "2.14"
-# NOTE: bcprov-jdk18on has a 1.85.2 patch release, but bcpg-jdk18on does not
-# (latest published bcpg is 1.85). Keep both artifacts pinned to a version that
-# exists for every BouncyCastle module we depend on.
-bouncycastle = "1.85"
+# NOTE: bcprov-jdk18on ships patch releases (e.g. 1.85.2) that bcpg-jdk18on does
+# not. Keep both artifacts pinned to a version that exists for every BouncyCastle
+# module we depend on (1.85 and 1.86 do, 1.85.1/1.85.2 do not).
+bouncycastle = "1.86"
 bcrypt = "0.10.2"
 junit = "4.13.2"
 mockito = "5.23.0"
