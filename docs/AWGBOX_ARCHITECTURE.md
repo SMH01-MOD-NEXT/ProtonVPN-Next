@@ -8,9 +8,9 @@ possible without replacing Android's VPN lifecycle again.
 
 ## Selected core
 
-The integration uses `hoaxisr/amnezia-box` `1.14.0-rc.1-awgm.14` because it:
+The integration uses `hoaxisr/amnezia-box` `1.15.0-alpha.8-awgm.29` because it:
 
-- tracks the sing-box 1.14 release line;
+- tracks the sing-box 1.15 development line;
 - embeds `amneziawg-go`;
 - exposes AWG 1.x and AWG2 fields (`Jc`, `Jmin/Jmax`, `S1-S4`, `H1-H4`, `I1-I5`);
 - provides gomobile `libbox` bindings for Android;
@@ -25,9 +25,28 @@ build validates that generated `libbox.so` has no unresolved Go symbols.
 
 `1.14.0-rc.1-awgm.15` was reviewed on 2026-08-30 but not adopted: it does not
 change the private `x/net/http2` linkname call sites involved in this crash, and
-its updated `amneziawg-go` dependency references a gVisor revision that is no
+its updated `amneziawg-go` dependency referenced a gVisor revision that was no
 longer resolvable from the upstream Git repository. The loader fix therefore
 belongs in the reproducible build, not in an unrelated core upgrade.
+
+The core was moved from `1.14.0-rc.1-awgm.14` to `1.15.0-alpha.8-awgm.29` on
+2026-09-25. The upgrade resolves cleanly (`amneziawg-go` now comes from
+`hoaxisr/amneziawg-go v3.1.0-awgm.2`), keeps Go 1.25.5 as the pinned toolchain
+per upstream `go.mod`, and both Tor patches still apply unchanged. Two
+integration-visible changes came with sing-box 1.15:
+
+- `PlatformInterface` gained `usePlatformAutoRedirect()` and
+  `createAutoRedirect()`. `AwgBoxPlatform` reports `false` and leaves
+  auto-redirect to libbox, because all traffic already enters through the TUN
+  inbound.
+- The default libbox feature tags moved from `with_gvisor, ...` to
+  `with_quic, with_wireguard, ..., with_usbip, with_openvpn, with_openconnect`,
+  so the minimal-build rewrite in `scripts/build-awgbox-lib.sh` now matches the
+  new tag line and also drops USB/IP, OpenVPN and OpenConnect.
+
+The AWG endpoint schema is unchanged for the fields the client emits; AWG 3.1
+adds optional `random_trailers` and `disable_cookies` device flags, which the
+client does not set yet (both require 3.1 on the server side too).
 
 ## Runtime layers
 
@@ -61,7 +80,7 @@ extensibility.
 The embedded core is compiled only with `with_awg` and `with_utls` optional
 features, plus `with_clash_api` because libbox CommandServer requires its internal connection tracker. VLESS, VMess, SOCKS/HTTP and proxy chaining are part of the base core.
 QUIC protocols (Hysteria2/TUIC), gVisor, standard WireGuard, Tailscale, Naive
-outbound are omitted. No external Clash controller is configured. Android's system TUN stack replaces gVisor.
+outbound, USB/IP, OpenVPN and OpenConnect are omitted. No external Clash controller is configured. Android's system TUN stack replaces gVisor.
 This keeps VLESS/Reality client compatibility while substantially reducing the
 native library size.
 

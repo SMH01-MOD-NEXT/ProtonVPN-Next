@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REF="${AWGBOX_REF:-1.14.0-rc.1-awgm.14}"
-EXPECTED_COMMIT="${AWGBOX_COMMIT:-34da3ebcda89b74ddab690ce36ad495927fb7a97}"
+REF="${AWGBOX_REF:-1.15.0-alpha.8-awgm.29}"
+EXPECTED_COMMIT="${AWGBOX_COMMIT:-e93bd650172bbcc6c4116b9aff1ab1d72cb80210}"
 GO_TOOLCHAIN="${AWGBOX_GO_TOOLCHAIN:-go1.25.5}"
 REPO="${AWGBOX_REPO:-https://github.com/hoaxisr/amnezia-box.git}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -157,8 +157,8 @@ GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gobind@v0.1.12
 # proxy chaining are part of the base build. AWG and uTLS are the only optional
 # protocol features required by ProtonVPN-Next. Clash API is retained
 # because libbox CommandServer uses its internal tracker even without an external
-# controller. This excludes QUIC (Hysteria2/TUIC), gVisor, WireGuard, Tailscale
-# and Naive.
+# controller. This excludes QUIC (Hysteria2/TUIC), gVisor, WireGuard, Tailscale,
+# Naive, USB/IP, OpenVPN and OpenConnect.
 python3 - "$WORK/cmd/internal/build_libbox/main.go" <<'PY'
 from pathlib import Path
 import re
@@ -167,7 +167,7 @@ import sys
 path = Path(sys.argv[1])
 text = path.read_text()
 text, count = re.subn(
-    r'sharedTags = append\(sharedTags, "with_gvisor"[^\n]+',
+    r'sharedTags = append\(sharedTags, "with_quic"[^\n]+',
     'sharedTags = append(sharedTags, "with_awg", "with_utls", "with_clash_api", "badlinkname", "tfogo_checklinkname0")',
     text,
     count=1,

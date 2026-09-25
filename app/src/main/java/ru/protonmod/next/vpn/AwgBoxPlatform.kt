@@ -28,6 +28,8 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.os.Process
 import android.system.OsConstants
+import io.nekohasekai.libbox.AutoRedirectHandler
+import io.nekohasekai.libbox.AutoRedirectSession
 import io.nekohasekai.libbox.BridgeOptions
 import io.nekohasekai.libbox.BridgeSession
 import io.nekohasekai.libbox.ConnectionOwner
@@ -272,6 +274,17 @@ class AwgBoxPlatform(
     override fun checkPlatformShell() = Unit
     override fun tailscaleHostname() = ""
     override fun usePlatformBridge() = false
+
+    // sing-box 1.15 can delegate its auto-redirect (transparent proxy) setup to the platform.
+    // ProtonVPN-Next routes everything through the TUN inbound instead, so libbox keeps its
+    // own implementation and never calls createAutoRedirect().
+    override fun usePlatformAutoRedirect() = false
+
+    override fun createAutoRedirect(
+        options: ByteArray,
+        handler: AutoRedirectHandler
+    ): AutoRedirectSession =
+        throw UnsupportedOperationException("Platform auto-redirect is not supported")
 
     override fun openShellSession(
         user: PlatformUser,
