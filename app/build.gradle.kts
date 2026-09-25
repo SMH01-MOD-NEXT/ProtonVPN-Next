@@ -75,6 +75,10 @@ android {
     namespace = "ru.protonmod.next"
     compileSdk = 37
 
+    // tor-android 0.4.9.12 is published against the 37.1 minor SDK, so the
+    // compile SDK has to follow it. targetSdk stays on the 37.0 behavior set.
+    compileSdkMinor = 1
+
     // Force AGP to use a specific NDK version instead of the default one
     ndkVersion = "29.0.14206865"
 
