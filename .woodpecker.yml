@@ -32,10 +32,12 @@ steps:
       SENTRY_PROJECT:
         from_secret: SENTRY_PROJECT
     commands:
-      # 1. Force update sdkmanager and install Android 37.0, NDK and CMake
+      # 1. Force update sdkmanager and install Android 37.1, NDK and CMake.
+      #    The 37.1 minor platform is required: compileSdk = 37 / compileSdkMinor = 1,
+      #    because tor-android 0.4.9.12 is published against 37.1.
       - yes | sdkmanager --licenses > /dev/null
       - sdkmanager --update
-      - sdkmanager "platforms;android-37.0" "build-tools;37.0.0" "platform-tools" "ndk;29.0.14206865" "cmake;3.22.1"
+      - sdkmanager "platforms;android-37.1" "build-tools;37.0.0" "platform-tools" "ndk;29.0.14206865" "cmake;3.22.1"
 
       # 2. Build the generated AWGBox dependency when it is not restored/present
       - |

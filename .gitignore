@@ -34,6 +34,10 @@ desktop/libs/
 # External / nested repos or builds (e.g. Go-based VPN cores)
 vpn-core/
 
+# Python bytecode cache from the scripts/ helpers
+__pycache__/
+*.pyc
+
 # Environment, logs, and local runtime data
 .env
 .env.*

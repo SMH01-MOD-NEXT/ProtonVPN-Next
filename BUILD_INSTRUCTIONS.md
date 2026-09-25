@@ -11,7 +11,7 @@ This document explains how to build **Proton VPN-Next** from source.
 
 ### Prerequisites
 - **JDK:** JDK 17 is required.
-- **Android SDK:** Latest platforms and build tools.
+- **Android SDK:** Latest platforms and build tools. The **`android-37.1` minor platform is mandatory** — the project builds with `compileSdk = 37` / `compileSdkMinor = 1`, because `tor-android 0.4.9.12` is published against 37.1. Install it with `sdkmanager "platforms;android-37.1" "build-tools;37.0.0"` (or `android sdk install "platforms/android-37.1"` with the new Android CLI). `targetSdk` stays on 37.0.
 - **NDK:** Version `29.0.14206865`.
 
 ### Recommended IDE 🚀
@@ -39,7 +39,7 @@ It is **highly recommended** to use the latest **Android Studio Canary** version
 
 ### Предварительные требования
 - **JDK:** Требуется JDK 17.
-- **Android SDK:** Последние версии платформ и инструментов сборки.
+- **Android SDK:** Последние версии платформ и инструментов сборки. **Обязательна минорная платформа `android-37.1`** — проект собирается с `compileSdk = 37` / `compileSdkMinor = 1`, так как `tor-android 0.4.9.12` опубликован под 37.1. Установка: `sdkmanager "platforms;android-37.1" "build-tools;37.0.0"` (или `android sdk install "platforms/android-37.1"` в новом Android CLI). `targetSdk` остаётся на 37.0.
 - **NDK:** Версия `29.0.14206865`.
 
 ### Рекомендуемая IDE 🚀
