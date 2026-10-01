@@ -1,3 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Resource-name retention adapted from drxekus/308a7d9 (GPL-3.0). -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/flag_*,@string/tamper_*,@font/roboto_*" />
+    tools:keep="@drawable/flag_*,@string/tamper_*,@font/roboto_*,@string/url_gitlab,@string/url_telegram,@string/url_crowdin" />

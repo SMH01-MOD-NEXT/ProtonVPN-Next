@@ -95,7 +95,11 @@ class VpnNetworkMonitor @Inject constructor(
 
     init {
         try {
-            val request = NetworkRequest.Builder().build()
+            // Adapted from drxekus/0c7543e: Builder defaults to NOT_VPN, making
+            // verification blind to the very tunnel it is supposed to observe.
+            val request = NetworkRequest.Builder()
+                .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                .build()
             connectivityManager.registerNetworkCallback(request, networkCallback)
         } catch (error: Exception) {
             ProtonLogger.e(TAG, "Failed to register network callback", error)

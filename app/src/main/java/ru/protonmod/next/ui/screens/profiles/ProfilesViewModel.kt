@@ -32,6 +32,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+import ru.protonmod.next.di.ApplicationScope
 import kotlinx.coroutines.withTimeout
 import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.R
@@ -57,7 +59,8 @@ class ProfilesViewModel @Inject constructor(
     private val amneziaVpnManager: AmneziaVpnManager,
     private val connectedServerState: ConnectedServerState,
     private val profileDao: ProfileDao,
-    private val settingsManager: SettingsManager
+    private val settingsManager: SettingsManager,
+    @ApplicationScope private val applicationScope: CoroutineScope
 ) : ViewModel() {
 
     companion object {
@@ -170,8 +173,9 @@ class ProfilesViewModel @Inject constructor(
         }
     }
 
+    // Adapted from drxekus/0c7543e; keep all AWG fields and survive screen navigation.
     fun connectWithProfile(profile: VpnProfileUiModel) {
-        viewModelScope.launch {
+        applicationScope.launch {
             val session = sessionDao.getSession()
             if (session == null) {
                 ProtonLogger.e(TAG, "Cannot connect: No session found")
@@ -220,9 +224,9 @@ class ProfilesViewModel @Inject constructor(
                 selectedConfig?.let {
                     obfuscationParams = AmneziaVpnManager.ObfuscationParams(
                         jc = it.jc, jmin = it.jmin, jmax = it.jmax,
-                        s1 = it.s1, s2 = it.s2,
+                        s1 = it.s1, s2 = it.s2, s3 = it.s3, s4 = it.s4,
                         h1 = it.h1, h2 = it.h2, h3 = it.h3, h4 = it.h4,
-                        i1 = it.i1
+                        i1 = it.i1, i2 = it.i2, i3 = it.i3, i4 = it.i4, i5 = it.i5
                     )
                 }
             }

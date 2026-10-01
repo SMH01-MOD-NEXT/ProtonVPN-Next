@@ -104,7 +104,7 @@ class ProfilesViewModelTest {
 
         viewModel = ProfilesViewModel(
             context, vpnRepository, sessionDao, amneziaVpnManager,
-            connectedServerState, profileDao, settingsManager
+            connectedServerState, profileDao, settingsManager, kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main)
         )
     }
 
@@ -147,5 +147,26 @@ class ProfilesViewModelTest {
         verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any())
         
         collectJob.cancel()
+    }
+
+    @Test fun `AWG profile parameters survive navigation and reach the engine`() = runTest {
+        val config = ru.protonmod.next.data.model.ObfuscationProfile.createDefaultCustomProfile("custom", "Custom").copy(
+            s3 = 11, s4 = 12, i2 = "i2", i3 = "i3", i4 = "i4", i5 = "i5",
+        )
+        whenever(settingsManager.customProfiles).thenReturn(flowOf(listOf(config)))
+        whenever(context.getString(any())).thenReturn("Standard")
+        val store = androidx.lifecycle.ViewModelStore()
+        store.put("profiles", viewModel)
+        viewModel.connectWithProfile(VpnProfileUiModel(
+            id = "profile", name = "Profile", targetCountry = "US",
+            isObfuscationEnabled = true, obfuscationProfileId = "custom",
+        ))
+        store.clear()
+        advanceUntilIdle()
+        val params = argumentCaptor<AmneziaVpnManager.ObfuscationParams>()
+        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), params.capture(), anyOrNull(), any())
+        assertEquals(11, params.firstValue.s3)
+        assertEquals(12, params.firstValue.s4)
+        assertEquals(listOf("i2", "i3", "i4", "i5"), listOf(params.firstValue.i2, params.firstValue.i3, params.firstValue.i4, params.firstValue.i5))
     }
 }

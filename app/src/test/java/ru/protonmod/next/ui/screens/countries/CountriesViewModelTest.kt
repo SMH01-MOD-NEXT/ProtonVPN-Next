@@ -104,7 +104,7 @@ class CountriesViewModelTest {
         whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
         whenever(settingsManager.torModeEnabled).thenReturn(flowOf(false))
 
-        viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager)
+        viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager, kotlinx.coroutines.CoroutineScope(Dispatchers.Main))
     }
 
     @Test
@@ -179,5 +179,14 @@ class CountriesViewModelTest {
         verify(amneziaVpnManager).connect(eq("de_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any())
         
         collectJob.cancel()
+    }
+
+    @Test fun `country connection survives leaving the screen`() = runTest {
+        val store = androidx.lifecycle.ViewModelStore()
+        store.put("countries", viewModel)
+        viewModel.selectCountry("US")
+        store.clear()
+        advanceUntilIdle()
+        verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any())
     }
 }
