@@ -27,7 +27,7 @@ class SentryCrashReporter : CrashReporter {
     override fun addBreadcrumb(tag: String, message: String, level: String, category: String) {
         val breadcrumb = Breadcrumb().apply {
             this.category = if (category == "log.message") tag else category
-            this.message = message
+            this.message = PiiScrubber.scrub(message)
             this.level = parseLevel(level)
             if (category != "log.message") {
                 this.setData("tag", tag)
@@ -37,7 +37,7 @@ class SentryCrashReporter : CrashReporter {
     }
 
     override fun addLog(tag: String, message: String, level: String, throwable: Throwable?) {
-        val fullMessage = "[$tag] $message"
+        val fullMessage = PiiScrubber.scrub("[$tag] $message")
         val sentryLogLevel = when (parseLevel(level)) {
             SentryLevel.DEBUG -> SentryLogLevel.DEBUG
             SentryLevel.INFO -> SentryLogLevel.INFO
@@ -48,7 +48,8 @@ class SentryCrashReporter : CrashReporter {
 
         if (throwable != null) {
             val scrubbedThrowableMsg = PiiScrubber.scrub(throwable.message)
-            Sentry.logger().log(sentryLogLevel, "$fullMessage: $scrubbedThrowableMsg", throwable)
+            // Do not let the logger serialize the unsanitized throwable/cause.
+            Sentry.logger().log(sentryLogLevel, "$fullMessage: $scrubbedThrowableMsg")
         } else {
             Sentry.logger().log(sentryLogLevel, fullMessage)
         }
@@ -71,10 +72,10 @@ class SentryCrashReporter : CrashReporter {
             Sentry.withScope { scope ->
                 extras.forEach { (k, v) -> scope.setExtra(k, v) }
                 scope.level = sentryLevel
-                Sentry.captureMessage(message)
+                Sentry.captureMessage(PiiScrubber.scrub(message))
             }
         } else {
-            Sentry.captureMessage(message, sentryLevel)
+            Sentry.captureMessage(PiiScrubber.scrub(message), sentryLevel)
         }
     }
 

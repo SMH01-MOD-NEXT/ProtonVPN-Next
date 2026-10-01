@@ -72,4 +72,20 @@ class PiiScrubberTest {
         val expected = "[SessionRefreshWorker] Starting background session keep-alive for [REDACTED]"
         assertEquals(expected, PiiScrubber.scrub(input))
     }
+
+    @Test fun `compressed and mapped IPv6 email and bearer are removed`() {
+        val scrubbed = PiiScrubber.scrub("[2001:db8::1] ::1 ::ffff:192.0.2.1 alice@example.org Bearer abc123")
+        assertEquals("[[IPv6]] [IPv6] [IPv6] [EMAIL] [AUTH_REDACTED]", scrubbed)
+    }
+    @Test fun `nested data and short secrets are redacted by key`() {
+        val input = mapOf("nested" to listOf(mapOf("Authorization" to "Bearer a", "TwoFactorCode" to "123", "address" to "2001:db8::1")))
+        val expected = mapOf("nested" to listOf(mapOf("Authorization" to "[REDACTED]", "TwoFactorCode" to "[REDACTED]", "address" to "[IPv6]")))
+        assertEquals(expected, PiiScrubber.scrubValue(input))
+    }
+    @Test fun `unknown objects and recursive data cannot expose credentials`() {
+        assertEquals("[REDACTED]", PiiScrubber.scrubValue(object { override fun toString() = "password" }))
+        val recursive = mutableListOf<Any>()
+        recursive.add(recursive)
+        org.junit.Assert.assertTrue(PiiScrubber.scrubValue(recursive).toString().contains("[REDACTED]"))
+    }
 }

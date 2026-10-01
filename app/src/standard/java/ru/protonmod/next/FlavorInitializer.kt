@@ -27,6 +27,7 @@ import ru.protonmod.next.data.repository.ProtonApiException
 import ru.protonmod.next.utils.PiiScrubber
 import ru.protonmod.next.utils.ProtonLogger
 import ru.protonmod.next.utils.SentryCrashReporter
+import ru.protonmod.next.utils.SentryEventSanitizer
 import ru.protonmod.next.vpn.SentryBridge
 import java.io.EOFException
 import java.io.IOException
@@ -78,21 +79,39 @@ object FlavorInitializer {
                 // Filter out common network noise that is not actionable
                 if (shouldFilterNetworkNoise(event, hint)) return@setBeforeSend null
 
-                event.message?.let { it.message = PiiScrubber.scrub(it.message) }
+                event.message?.let {
+                    it.message = PiiScrubber.scrub(it.message)
+                    it.formatted = PiiScrubber.scrub(it.formatted)
+                    it.params = it.params?.map(PiiScrubber::scrub)
+                }
                 event.exceptions?.forEach { ex -> ex.value = PiiScrubber.scrub(ex.value) }
-                event.user?.let { user -> user.ipAddress = null }
-                event.extras?.forEach { (k, v) -> if (v is String) event.setExtra(k, PiiScrubber.scrub(v)) }
-                event.breadcrumbs?.forEach { b ->
-                    b.message = PiiScrubber.scrub(b.message)
-                    b.data.forEach { (k, v) -> if (v is String) b.setData(k, PiiScrubber.scrub(v)) }
+                SentryEventSanitizer.scrub(event)
+                event.exceptions?.forEach { exception ->
+                    exception.stacktrace?.frames?.forEach { frame -> frame.vars = null }
                 }
                 event
             }
 
-            options.setBeforeBreadcrumb { b, _ ->
-                b.message = PiiScrubber.scrub(b.message)
-                b.data.forEach { (k, v) -> if (v is String) b.setData(k, PiiScrubber.scrub(v)) }
-                b
+            options.setBeforeBreadcrumb { breadcrumb, _ ->
+                if (!settingsManager.isAnalyticsEnabledSync()) null
+                else breadcrumb.apply { SentryEventSanitizer.scrubBreadcrumb(this) }
+            }
+            options.setBeforeSendTransaction { transaction, _ ->
+                if (!settingsManager.isPerformanceEnabledSync() || PiiScrubber.scrub(transaction.transaction) != transaction.transaction) null
+                else transaction.apply {
+                    SentryEventSanitizer.scrub(this)
+                    // Span descriptions are immutable in this SDK; discard sensitive spans.
+                    transaction.spans.removeAll { it.description != null && PiiScrubber.scrub(it.description) != it.description }
+                    transaction.spans.forEach { span ->
+                        @Suppress("UNCHECKED_CAST")
+                        val data = PiiScrubber.scrubValue(span.data) as? Map<String, Any>
+                        span.data = data
+                    }
+                }
+            }
+            options.logs.setBeforeSend { log ->
+                if (!settingsManager.isLogsEnabledSync()) null
+                else log.apply { body = PiiScrubber.scrub(body); attributes = null }
             }
 
             options.tracesSampleRate = if (isPerformanceEnabled) 1.0 else 0.0
@@ -103,8 +122,8 @@ object FlavorInitializer {
             options.isEnableUserInteractionTracing = isAnalyticsEnabled
             options.metrics.isEnabled = isMetricsEnabled
             options.logs.isEnabled = isLogsEnabled
-            options.isAttachScreenshot = isAnalyticsEnabled
-            options.isAttachViewHierarchy = isAnalyticsEnabled
+            options.isAttachScreenshot = false
+            options.isAttachViewHierarchy = false
 
             if (isSessionReplayEnabled) {
                 options.sessionReplay.sessionSampleRate = 1.0

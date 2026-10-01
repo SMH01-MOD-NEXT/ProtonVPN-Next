@@ -28,13 +28,26 @@ object PiiScrubber {
     // IPv4 Address regex
     private val IPV4_PATTERN = Pattern.compile("\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b")
     
-    // IPv6 Address regex (simplified but covers most cases)
-    private val IPV6_PATTERN = Pattern.compile(
-        "\\b(?:[A-Fa-f0-9]{1,4}:){2,7}[A-Fa-f0-9]{1,4}\\b|" +
-        "\\b(?:[A-Fa-f0-9]{1,4}:){1,7}:\\b|" +
-        "\\b:(?::[A-Fa-f0-9]{1,4}){1,7}\\b"
-    )
-    
+    // Literal candidates only: parsing a colon-containing literal does not perform DNS lookup.
+    private val IPV6_CANDIDATE = Regex("(?<![a-zA-Z0-9])(?:[a-fA-F0-9]{0,4}:){2,}[a-fA-F0-9:.]*(?:%[a-zA-Z0-9]+)?")
+    private val EMAIL = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
+    private val BEARER = Regex("(?i)\\b(Bearer|Basic)\\s+[a-zA-Z0-9._~+/-]+=*")
+    private val SENSITIVE_KEY = Regex("(?i).*(token|authorization|cookie|password|private.?key|preshared.?key|secret|email|username|user.?id|session|twofactor|srp|ephemeral|proof|ip.?address|android.?id).*")
+
+    /** Bounded, recursive redaction for structured extras and breadcrumb data. */
+    fun scrubValue(value: Any?, depth: Int = 0): Any? = when {
+        depth >= 8 -> "[REDACTED]"
+        value == null || value is Boolean || value is Number -> value
+        value is String -> scrub(value)
+        value is Map<*, *> -> value.entries.take(100).associate { (key, item) ->
+            val name = key as? String ?: "[KEY]"
+            scrub(name) to if (SENSITIVE_KEY.matches(name)) "[REDACTED]" else scrubValue(item, depth + 1)
+        }
+        value is Iterable<*> -> value.take(100).map { scrubValue(it, depth + 1) }
+        value is Array<*> -> value.take(100).map { scrubValue(it, depth + 1) }
+        else -> "[REDACTED]" // Never stringify an unknown object containing credentials.
+    }
+
     // Sensitive key-value pairs in logs (e.g., "accessToken=...", "sessionId: ...", "session: ...", "user: ...")
     private val SENSITIVE_KV_REGEX = Regex(
         "(?i)[\"']?\\b(accessToken|refreshToken|sessionId|session|captchaToken|token|privateKey|presharedKey|pass|password|secret|auth|nonce|wgPrivateKey|wgCertificate|username|user|email|UserID|UID|AccessToken|RefreshToken|SRPSession|ServerEphemeral|ClientEphemeral|ClientProof|TwoFactorCode)\\b[\"']?\\s*[:=->]+\\s*[\"']?([a-zA-Z0-9._\\-+=/]{4,})[\"']?"
@@ -76,8 +89,13 @@ object PiiScrubber {
         }
 
         // 2. Redact IP Addresses
+        result = IPV6_CANDIDATE.replace(result) { match ->
+            if (runCatching { java.net.InetAddress.getByName(match.value.substringBefore('%')) }.isSuccess)
+                "[IPv6]" else match.value
+        }
         result = IPV4_PATTERN.matcher(result).replaceAll("[IPv4]")
-        result = IPV6_PATTERN.matcher(result).replaceAll("[IPv6]")
+        result = EMAIL.replace(result, "[EMAIL]")
+        result = BEARER.replace(result, "[AUTH_REDACTED]")
 
         // 3. Redact Sensitive Key-Value pairs
         result = SENSITIVE_KV_REGEX.replace(result) { match ->
