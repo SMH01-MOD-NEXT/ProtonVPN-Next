@@ -204,6 +204,7 @@ class DashboardViewModelTest {
             whenever(sessionDao.getSession()).thenReturn(testSession)
         }
 
+        whenever(settingsManager.ipLookupCatalogue).thenReturn(flowOf(ru.protonmod.next.data.network.ip.IpEchoSources.catalogue()))
         whenever(settingsManager.ipLookupServices).thenReturn(flowOf(emptySet()))
         viewModel = DashboardViewModel(
             context,

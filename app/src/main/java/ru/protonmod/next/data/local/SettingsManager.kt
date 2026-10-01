@@ -342,15 +342,25 @@ class SettingsManager @Inject constructor(
     /** Whether DoT on port 853 may be tried once DoH on 443 has failed. */
     val dnsOverTlsFallbackEnabled: Flow<Boolean> = dataStore.data.map { it[DNS_DOT_FALLBACK] ?: true }
 
-    val ipLookupServices: Flow<Set<String>> = dataStore.data.map {
-        it[IP_LOOKUP_SERVICES] ?: ru.protonmod.next.data.network.ip.IpEchoSources.DEFAULT_ENABLED_IDS
+    private fun ipCatalogue(values: Preferences) = ru.protonmod.next.data.network.ip.IpEchoSources.catalogue(
+        values[EVENT_BYPASS_EVENTS].orEmpty(), values[EVENT_BYPASS_URL].orEmpty(), values[EVENT_BYPASS_NAME].orEmpty(),
+    )
+    val ipLookupCatalogue = dataStore.data.map(::ipCatalogue).distinctUntilChanged()
+    val ipLookupServices: Flow<Set<String>> = dataStore.data.map { values ->
+        ru.protonmod.next.data.network.ip.IpEchoSources.currentEnabled(
+            values[IP_LOOKUP_SERVICES] ?: ru.protonmod.next.data.network.ip.IpEchoSources.DEFAULT_ENABLED_IDS,
+            ipCatalogue(values),
+        )
     }.distinctUntilChanged()
 
     suspend fun setIpLookupService(ids: Set<String>, enabled: Boolean) {
         dataStore.edit { values ->
-            val current = values[IP_LOOKUP_SERVICES] ?: ru.protonmod.next.data.network.ip.IpEchoSources.DEFAULT_ENABLED_IDS
-            values[IP_LOOKUP_SERVICES] = (if (enabled) current + ids else current - ids)
-                .intersect(ru.protonmod.next.data.network.ip.IpEchoSources.ALL_IDS)
+            val current = ru.protonmod.next.data.network.ip.IpEchoSources.currentEnabled(
+                values[IP_LOOKUP_SERVICES] ?: ru.protonmod.next.data.network.ip.IpEchoSources.DEFAULT_ENABLED_IDS,
+                ipCatalogue(values),
+            )
+            val available = ipCatalogue(values).map { it.id }.toSet()
+            values[IP_LOOKUP_SERVICES] = (if (enabled) current + ids else current - ids).intersect(available)
         }
     }
 

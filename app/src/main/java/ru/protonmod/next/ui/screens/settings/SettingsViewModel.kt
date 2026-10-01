@@ -17,6 +17,8 @@
 
 package ru.protonmod.next.ui.screens.settings
 
+import ru.protonmod.next.utils.ProtonLogger
+
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -30,6 +32,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -205,6 +208,9 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     // Internal state tracking if any VPN is operating at the OS level
+    private val _eventActionFailed = MutableStateFlow(false)
+    val eventActionFailed = _eventActionFailed.asStateFlow()
+
     private val _isAnyVpnActive = MutableStateFlow(false)
     private val _isCheckingForUpdates = MutableStateFlow(false)
     private val _isUpdateAvailable = MutableStateFlow(false)
@@ -450,7 +456,7 @@ class SettingsViewModel @Inject constructor(
             eventBypassLastSync = args[79] as Long,
             isEventBypassRefreshing = (args[80] as EventBypassSyncState).isRefreshing,
             eventBypassLastResult = (args[80] as EventBypassSyncState).lastResult,
-            eventBypassOptions = EventBypassCache.decode(args[81] as String),
+            eventBypassOptions = EventBypassCache.decode(args[81] as String).filter { it.normalizedUrl().isNotEmpty() },
             eventBypassSelectedId = args[82] as String,
             eventBypassUpdatedAt = args[83] as String,
             dnsProviderId = args[84] as String,
@@ -523,7 +529,15 @@ class SettingsViewModel @Inject constructor(
     /** Switches to another published bypass. Cached, so it works offline. */
     fun selectEventBypass(id: String) {
         viewModelScope.launch {
-            eventBypassManager.selectEvent(id)
+            _eventActionFailed.value = false
+            try {
+                eventBypassManager.selectEvent(id)
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                _eventActionFailed.value = true
+                ProtonLogger.w("SettingsViewModel", "Event selection failed: ${error.message}")
+            }
         }
     }
 
@@ -593,7 +607,20 @@ class SettingsViewModel @Inject constructor(
 
     fun setApiBypassStrategy(strategy: String) {
         viewModelScope.launch {
-            settingsManager.setApiBypassStrategy(strategy)
+            _eventActionFailed.value = false
+            try {
+                if (strategy == SettingsManager.STRATEGY_EVENT &&
+                    ru.protonmod.next.data.network.ProxyEndpoints.httpsBase(settingsManager.getEventBypassUrlSync()) == null) {
+                    _eventActionFailed.value = true
+                    return@launch
+                }
+                settingsManager.setApiBypassStrategy(strategy)
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (error: Exception) {
+                _eventActionFailed.value = true
+                ProtonLogger.w("SettingsViewModel", "Bypass selection failed: ${error.message}")
+            }
         }
     }
 

@@ -110,7 +110,7 @@ class EventBypassRepository @Inject constructor(
 
     /** The bypasses cached by the last successful refresh. */
     fun cachedEvents(): List<EventBypassEntry> =
-        EventBypassCache.decode(settingsManager.getEventBypassEventsSync())
+        EventBypassCache.decode(settingsManager.getEventBypassEventsSync()).filter { it.normalizedUrl().isNotEmpty() }
 
     private suspend fun fetchConfig(url: String): EventBypassResponse {
         val response = eventBypassApi.getEventBypassConfig(url)

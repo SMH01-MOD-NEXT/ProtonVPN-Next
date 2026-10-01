@@ -1,102 +1,61 @@
-/*
- * Copyright (C) 2026 SMH01
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
- */
-
+/* Copyright (C) 2026 SMH01 — GPL-3.0-or-later */
 package ru.protonmod.next.data.network.ip
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Test
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
+import ru.protonmod.next.data.model.eventbypass.EventBypassCache
+import ru.protonmod.next.data.network.ProxyEndpoints
 
 class IpEchoSourcesTest {
-
-    private fun ids(sources: List<IpEchoSources.Source>) = sources.map { it.id }
-
-    @Test
-    fun `every source this project owns is asked before any third party`() {
-        for (russian in listOf(true, false)) {
-            val ordered = IpEchoSources.ordered(isRussianRegion = russian)
-            val lastOwn = ordered.indexOfLast { it.isOwn }
-            val firstForeign = ordered.indexOfFirst { !it.isOwn }
-
-            assertTrue("our own deployments must come first", lastOwn < firstForeign)
+    private fun cached(vararg entries: EventBypassEntry) = EventBypassCache.encode(entries.toList())
+    private val vercel = EventBypassEntry(id = "vercel", name = "Vercel", url = "https://dynamic.vercel.app/api/", enabled = true)
+    @Test fun `catalogue uses shared builtins and never invents Vercel`() {
+        val catalogue = IpEchoSources.catalogue()
+        assertEquals(ProxyEndpoints.builtIn.map { it.id }, catalogue.filter { it.kind == IpEchoSources.Kind.BUILT_IN }.map { it.id })
+        assertTrue(catalogue.none { it.kind == IpEchoSources.Kind.EVENT || it.id == "vercel" })
+    }
+    @Test fun `Vercel is exactly one named dynamic event with query echo route`() {
+        val events = IpEchoSources.catalogue(cached(vercel, vercel)).filter { it.kind == IpEchoSources.Kind.EVENT }
+        assertEquals(1, events.size)
+        assertEquals("Vercel", events.single().name)
+        val url = events.single().urls.first().toHttpUrl()
+        assertEquals("/api", url.encodedPath)
+        assertEquals("/__proxy/whoami", url.queryParameter("__path"))
+    }
+    @Test fun `invalid disabled plaintext and corrupt event data cannot crash or create providers`() {
+        for (raw in listOf("", "garbage", "[]", cached(vercel.copy(enabled = false)), cached(vercel.copy(url = "https://")),
+            cached(vercel.copy(url = "http://insecure.example/api/")), cached(vercel.copy(url = "https://u:p@example.com/")))) {
+            assertTrue(IpEchoSources.catalogue(raw).none { it.kind == IpEchoSources.Kind.EVENT })
         }
     }
-
-    @Test
-    fun `Cloudflare is asked last of ours inside Russia and first elsewhere`() {
-        assertEquals("deno", ids(IpEchoSources.ordered(isRussianRegion = true)).first())
-        assertEquals("cloudflare-site", ids(IpEchoSources.ordered(isRussianRegion = false)).first())
-
-        // The shared workers.dev name is the one filtered wholesale, so inside
-        // Russia it goes behind everything else of ours.
-        val inRussia = ids(IpEchoSources.ordered(isRussianRegion = true))
-        assertEquals("cloudflare", inRussia.last { it != "api.myip.com" && it != "freeipapi" })
-        assertTrue(inRussia.indexOf("deno") < inRussia.indexOf("cloudflare-site"))
+    @Test fun `new rotating endpoint never inherits old event permission`() {
+        val old = IpEchoSources.catalogue(cached(vercel)).first { it.kind == IpEchoSources.Kind.EVENT }
+        val changed = IpEchoSources.catalogue(cached(vercel.copy(url = "https://replacement.example/api/")))
+        assertTrue(IpEchoSources.selected(false, changed, setOf(old.id)).isEmpty())
+        assertTrue(IpEchoSources.selected(false, changed, setOf("event", "vercel")).isEmpty())
     }
-
-    @Test
-    fun `an event bypass is tried ahead of Cloudflare inside Russia`() {
-        val ordered = ids(
-            IpEchoSources.ordered(
-                isRussianRegion = true,
-                eventBypassUrl = "https://bypass.invalid/api/"
-            )
-        )
-
-        assertEquals(
-            listOf("deno", "event", "cloudflare-site", "vercel", "cloudflare"),
-            ordered.filter { it != "api.myip.com" && it != "freeipapi" }
-        )
-    }
-
-    @Test
-    fun `a cleartext bypass URL is refused rather than used`() {
-        // The whole point of the request is "what is my address". Asking that
-        // over plain HTTP would broadcast the answer.
-        val ordered = ids(
-            IpEchoSources.ordered(isRussianRegion = true, eventBypassUrl = "http://bypass.invalid/")
-        )
-
-        assertFalse(ordered.contains("event"))
-    }
-
-    @Test
-    fun `an unusable bypass value is skipped without breaking the chain`() {
-        for (raw in listOf("", "   ", "not a url", "ftp://bypass.invalid")) {
-            val ordered = ids(IpEchoSources.ordered(isRussianRegion = false, eventBypassUrl = raw))
-
-            assertFalse("'$raw' must not become a source", ordered.contains("event"))
-            assertEquals("cloudflare-site", ordered.first())
+    @Test fun `only explicitly selected catalogue providers participate in all probes`() {
+        val catalogue = IpEchoSources.catalogue(cached(vercel))
+        for (russian in listOf(true, false)) for (service in catalogue) {
+            val sources = IpEchoSources.selected(russian, catalogue, setOf(service.id))
+            assertTrue(sources.isNotEmpty())
+            assertTrue(sources.all { it.id == service.id })
+            assertTrue(IpEchoSources.selectedCountryProbes(russian, catalogue, setOf(service.id)).all { it.id == service.id })
         }
+        assertTrue(IpEchoSources.selected(false, catalogue, emptySet()).isEmpty())
+        assertTrue(IpEchoSources.selectedCountryProbes(true, catalogue, emptySet()).isEmpty())
+        assertTrue(IpEchoSources.selected(false, catalogue, IpEchoSources.DEFAULT_ENABLED_IDS).none { it.isOwn })
     }
-
-    @Test
-    fun `no source is ever plain HTTP`() {
-        val ordered = IpEchoSources.ordered(
-            isRussianRegion = true,
-            eventBypassUrl = "https://bypass.invalid"
-        )
-
-        for (source in ordered) {
-            assertTrue(source.url, source.url.startsWith("https://"))
-        }
+    @Test fun `legacy selected entry works offline but retired cache is not resurrected`() {
+        assertEquals(1, IpEchoSources.catalogue("", vercel.url, vercel.name).count { it.kind == IpEchoSources.Kind.EVENT })
+        assertEquals(0, IpEchoSources.catalogue("[]", vercel.url, vercel.name).count { it.kind == IpEchoSources.Kind.EVENT })
     }
-
+    @Test fun `duplicate builtin endpoint in remote config is not shown twice`() {
+        val cache = cached(vercel.copy(url = ProxyEndpoints.DENO_URL))
+        assertTrue(IpEchoSources.catalogue(cache).none { it.kind == IpEchoSources.Kind.EVENT })
+    }
     @Test
     fun `the mapped form the Deno mirror returned reads as a plain address`() {
         assertEquals("149.102.244.111", IpEchoSources.normaliseAddress("::ffff:149.102.244.111"))
@@ -126,66 +85,4 @@ class IpEchoSourcesTest {
         }
     }
 
-    @Test
-    fun `the country is asked only of hosts that can name it`() {
-        // The Deno deployment answers with an address but never a country, so
-        // asking it would spend a round trip to learn nothing.
-        for (russian in listOf(true, false)) {
-            val probes = IpEchoSources.countryProbeSources(isRussianRegion = russian)
-
-            assertTrue("there must be more than one place to ask", probes.size > 1)
-            for (probe in probes) {
-                assertTrue(probe.id, probe.isOwn)
-                assertFalse(probe.id, probe.url.startsWith(IpEchoSources.DENO_ORIGIN))
-            }
-        }
-    }
-
-    @Test
-    fun `the country probe steps over Cloudflare inside Russia`() {
-        // This is the bug that hid the country: the only probe was Cloudflare,
-        // the very host ranked last inside Russia for being unreachable, so an
-        // address resolved through Deno arrived with no country at all.
-        assertEquals(
-            listOf("cloudflare-site", "vercel", "cloudflare"),
-            ids(IpEchoSources.countryProbeSources(isRussianRegion = true))
-        )
-        assertEquals(
-            listOf("cloudflare-site", "cloudflare", "vercel"),
-            ids(IpEchoSources.countryProbeSources(isRussianRegion = false))
-        )
-    }
-
-    @Test
-    fun `Vercel is asked on the only path that reaches the proxy`() {
-        // Its static site answers 404 on the plain path, so the Proton path has
-        // to ride in __path on /api.
-        val vercel = IpEchoSources.countryProbeSources(isRussianRegion = true)
-            .first { it.id == "vercel" }
-
-        assertEquals(IpEchoSources.VERCEL_WHOAMI, vercel.url)
-        assertTrue(vercel.url, vercel.url.startsWith(IpEchoSources.VERCEL_ORIGIN + "/api?"))
-        assertTrue(vercel.url, vercel.url.endsWith(IpEchoSources.WHOAMI_PATH))
-    }
-
-    @Test fun `empty selection never permits fallbacks or country probes`() {
-        for (russian in listOf(true, false)) {
-            assertTrue(IpEchoSources.selected(russian, "https://event.invalid", emptySet()).isEmpty())
-            assertTrue(IpEchoSources.selectedCountryProbes(russian, emptySet()).isEmpty())
-        }
-    }
-    @Test fun `selection is an allowlist for every provider`() {
-        for (russian in listOf(true, false)) {
-            for (id in IpEchoSources.ALL_IDS) {
-                val selected = IpEchoSources.selected(russian, "https://event.invalid", setOf(id))
-                assertEquals(listOf(id), selected.map { it.id })
-                assertTrue(IpEchoSources.selectedCountryProbes(russian, setOf(id)).all { it.id == id })
-            }
-        }
-    }
-    @Test fun `defaults never contact project infrastructure`() {
-        val sources = IpEchoSources.selected(true, "https://event.invalid", IpEchoSources.DEFAULT_ENABLED_IDS)
-        assertEquals(listOf("proton", "api.myip.com", "freeipapi"), sources.map { it.id })
-        assertTrue(sources.none { it.isOwn })
-    }
 }

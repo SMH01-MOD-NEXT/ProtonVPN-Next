@@ -483,7 +483,7 @@ class DashboardViewModel @Inject constructor(
         val russian = RegionUtils.isRussianRegion()
         val sources = IpEchoSources.selected(
             isRussianRegion = russian,
-            eventBypassUrl = settingsManager.getEventBypassUrlSync(),
+            services = settingsManager.ipLookupCatalogue.first(),
             enabledIds = enabledIds,
         )
 
@@ -602,7 +602,7 @@ class DashboardViewModel @Inject constructor(
             .callTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
             .build()
 
-        for (probe in IpEchoSources.selectedCountryProbes(isRussianRegion, enabledIds)) {
+        for (probe in IpEchoSources.selectedCountryProbes(isRussianRegion, settingsManager.ipLookupCatalogue.first(), enabledIds)) {
             // The deployment that just answered has already said it knows no
             // country; asking it again only costs another round trip.
             if (probe.url == source.url) continue

@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.protonmod.next.R
+import ru.protonmod.next.data.network.ip.IpEchoSources
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
@@ -27,16 +28,9 @@ fun IpLookupSettingsScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val enabled by viewModel.enabledIds.collectAsStateWithLifecycle()
+    val updateFailed by viewModel.updateFailed.collectAsStateWithLifecycle()
     val tablet = isTablet()
-    val services = listOf(
-        Triple(setOf("proton"), R.string.ip_lookup_proton, R.string.ip_lookup_proton_desc),
-        Triple(setOf("cloudflare", "cloudflare-site"), R.string.ip_lookup_cloudflare, R.string.ip_lookup_own_desc),
-        Triple(setOf("deno"), R.string.ip_lookup_deno, R.string.ip_lookup_own_desc),
-        Triple(setOf("vercel"), R.string.ip_lookup_vercel, R.string.ip_lookup_own_desc),
-        Triple(setOf("event"), R.string.ip_lookup_event, R.string.ip_lookup_event_desc),
-        Triple(setOf("api.myip.com"), R.string.ip_lookup_myip, R.string.ip_lookup_public_desc),
-        Triple(setOf("freeipapi"), R.string.ip_lookup_freeipapi, R.string.ip_lookup_public_desc),
-    )
+    val services by viewModel.catalogue.collectAsStateWithLifecycle()
     Scaffold(
         modifier = modifier.fillMaxSize(), containerColor = colors.backgroundNorm,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
@@ -59,14 +53,31 @@ fun IpLookupSettingsScreen(
                         color = colors.textWeak, style = MaterialTheme.typography.bodyMedium,
                         modifier = content.padding(horizontal = 24.dp))
                 }
+                if (updateFailed) {
+                    item {
+                        Text(stringResource(R.string.ip_lookup_update_failed),
+                            color = colors.notificationWarning, modifier = content.padding(horizontal = 24.dp))
+                    }
+                }
                 item {
                     SettingsCategory(stringResource(R.string.ip_lookup_services), content.padding(horizontal = 16.dp)) {
-                        services.forEach { (ids, title, description) ->
-                            SettingToggleRow(
-                                icon = ProtonIcons.Earth, title = stringResource(title),
-                                subtitle = stringResource(description), checked = ids.any { it in enabled },
-                                onCheckedChange = { viewModel.setEnabled(ids, it) },
-                            )
+                        services.forEach { service ->
+                            key(service.id) {
+                                val title = if (service.kind == IpEchoSources.Kind.EVENT)
+                                    stringResource(R.string.ip_lookup_event_named, service.name)
+                                else stringResource(service.titleRes)
+                                val description = when (service.kind) {
+                                    IpEchoSources.Kind.PROTON -> R.string.ip_lookup_proton_desc
+                                    IpEchoSources.Kind.EVENT -> R.string.ip_lookup_dynamic_event_desc
+                                    IpEchoSources.Kind.PUBLIC -> R.string.ip_lookup_public_desc
+                                    IpEchoSources.Kind.BUILT_IN -> R.string.ip_lookup_own_desc
+                                }
+                                SettingToggleRow(
+                                    icon = ProtonIcons.Earth, title = title,
+                                    subtitle = stringResource(description), checked = service.id in enabled,
+                                    onCheckedChange = { viewModel.setEnabled(setOf(service.id), it) },
+                                )
+                            }
                         }
                     }
                 }

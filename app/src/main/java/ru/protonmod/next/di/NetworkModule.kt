@@ -55,6 +55,8 @@ import ru.protonmod.next.data.network.ProtonVpnApi
 import ru.protonmod.next.data.network.SessionManager
 import ru.protonmod.next.data.network.TokenAuthenticator
 import ru.protonmod.next.data.network.eventbypass.EventBypassApi
+import ru.protonmod.next.data.network.ProxyEndpoints
+import ru.protonmod.next.data.model.eventbypass.EventBypassCache
 import ru.protonmod.next.data.network.ota.UpdateApi
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.NetworkMonitor
@@ -78,13 +80,15 @@ import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 
+private data class OriginalProtonUrl(val url: okhttp3.HttpUrl)
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val PROTON_PROXY_NETLIFY_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
-    private const val PROTON_PROXY_CLOUDFLARE_URL = "https://protonvpn-next-web.smh01.workers.dev/api"
-    private const val PROTON_PROXY_DENO_URL = "https://protonvpn-next-web--main.smh01-mirrors.deno.net/api/"
+    private const val PROTON_PROXY_NETLIFY_URL = ProxyEndpoints.NETLIFY_URL
+    private const val PROTON_PROXY_CLOUDFLARE_URL = ProxyEndpoints.CLOUDFLARE_URL
+    private const val PROTON_PROXY_DENO_URL = ProxyEndpoints.DENO_URL
     private const val PROTON_DIRECT_URL = "https://vpn-api.proton.me/"
 
     @Provides
@@ -142,13 +146,7 @@ object NetworkModule {
      */
     private fun eventProxyBaseUrl(settings: SettingsManager): String {
         val stored = settings.getEventBypassUrlSync()
-        if (stored.isEmpty()) return PROTON_DIRECT_URL
-        return try {
-            stored.toHttpUrl().toString()
-        } catch (e: Exception) {
-            ProtonLogger.w("NetworkModule", "Stored event bypass URL is invalid, using direct API")
-            PROTON_DIRECT_URL
-        }
+        return ProxyEndpoints.httpsBase(stored)?.toString() ?: PROTON_DIRECT_URL
     }
 
     @Provides
@@ -200,7 +198,7 @@ object NetworkModule {
         // Interceptor to dynamically swap the base URL depending on bypass rules
         val dynamicBaseUrlInterceptor = Interceptor { chain ->
             val request = chain.request()
-            val originalUrl = request.url
+            val originalUrl = request.tag(OriginalProtonUrl::class.java)?.url ?: request.url
             val userAgent = DeviceInfoProvider.getSpoofedUserAgent()
             
             // Only rewrite if it's a Proton API request (direct or through one of the proxies)
@@ -247,6 +245,7 @@ object NetworkModule {
             // Event host. OkHttp's authenticator receives the rewritten request.
             val protonRequest = request.newBuilder()
                 .tag(ProtonApiRequestTag::class.java, ProtonApiRequestTag)
+                .tag(OriginalProtonUrl::class.java, OriginalProtonUrl(originalUrl))
                 .build()
 
             val spoofedVersion = DeviceInfoProvider.SPOOFED_APP_VERSION
@@ -290,38 +289,11 @@ object NetworkModule {
 
             val newBaseUrl = if (useProxy) proxyBaseUrl.toHttpUrl() else PROTON_DIRECT_URL.toHttpUrl()
 
-            val newUrl = originalUrl.newBuilder()
-                .scheme(newBaseUrl.scheme)
-                .host(newBaseUrl.host)
-                .port(newBaseUrl.port)
-                .apply {
-                    if (useProxy && (strategy == SettingsManager.STRATEGY_CLOUDFLARE || 
-                                    strategy == SettingsManager.STRATEGY_DENO ||
-                                    strategy == SettingsManager.STRATEGY_NETLIFY ||
-                                    strategy == SettingsManager.STRATEGY_EVENT)) {
-                        // A proxy may live under a path prefix rather than at the root:
-                        // the Deno deployment serves the website itself and mounts the
-                        // API under /api, and an event platform usually does the same.
-                        // newBuilder() only replaces the authority, so that prefix has to
-                        // be re-applied by hand. Without it a request for /auth/v4/refresh
-                        // reaches the website instead of the proxy and comes back as
-                        // 405 Method Not Allowed.
-                        val basePathSegments = newBaseUrl.pathSegments.filter { it.isNotEmpty() }
-                        val hostPrefix = when (originalUrl.host) {
-                            "verify-api.proton.me" -> "verify-api"
-                            "verify.proton.me" -> "verify"
-                            else -> null
-                        }
-                        if (basePathSegments.isNotEmpty() || hostPrefix != null) {
-                            val originalSegments = originalUrl.pathSegments
-                            encodedPath("/")
-                            basePathSegments.forEach { addPathSegment(it) }
-                            if (hostPrefix != null) addPathSegment(hostPrefix)
-                            originalSegments.forEach { addPathSegment(it) }
-                        }
-                    }
-                }
-                .build()
+            val eventRouting = if (strategy == SettingsManager.STRATEGY_EVENT) {
+                EventBypassCache.decode(settings.getEventBypassEventsSync())
+                    .firstOrNull { ProxyEndpoints.httpsBase(it.normalizedUrl()) == newBaseUrl }?.routing ?: "auto"
+            } else "path"
+            val newUrl = if (useProxy) ProxyEndpoints.apiUrl(originalUrl, newBaseUrl, eventRouting) else originalUrl
 
             val newRequest = protonRequest.newBuilder()
                 .url(newUrl)

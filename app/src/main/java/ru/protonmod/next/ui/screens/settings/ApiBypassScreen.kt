@@ -80,6 +80,7 @@ fun ApiBypassScreen(
 ) {
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val eventActionFailed by viewModel.eventActionFailed.collectAsStateWithLifecycle()
     val isTablet = isTablet()
     val context = LocalContext.current
 
@@ -254,6 +255,12 @@ fun ApiBypassScreen(
                                     style = MaterialTheme.typography.bodyMedium,
                                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                                 )
+
+                                if (eventActionFailed) {
+                                    Text(stringResource(R.string.event_selection_failed),
+                                        color = colors.notificationWarning,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                                }
 
                                 // Strategy 1: Netlify
                                 StrategySelectionRow(

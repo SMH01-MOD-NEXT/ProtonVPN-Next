@@ -826,15 +826,12 @@
     <string name="ip_lookup_title">Сервисы определения IP</string>
     <string name="ip_lookup_subtitle">Выберите, кто может видеть ваш адрес</string>
     <string name="ip_lookup_services">Разрешённые сервисы</string>
-    <string name="ip_lookup_explanation">Каждый выбранный сервис видит исходный IP своего HTTPS-запроса. Эти запросы не содержат логин Proton, токены или конфигурацию VPN. Используется текущий маршрут без принудительного обхода VPN. Для определения IP и страны используются только выбранные сервисы. По умолчанию: Proton, MyIP и FreeIPAPI; зеркала проекта включаются отдельно. Эти настройки не управляют обходом API, обновлениями, проверкой соединения или телеметрией.</string>
+    <string name="ip_lookup_explanation">Выбранные сервисы видят исходный IP HTTPS-запроса, но не получают учётные данные Proton или конфигурацию VPN. Список собирается из встроенных обходов и доступных записей кэша event. Для IP и страны используются только выбранные сервисы без принудительного обхода VPN. Сервисы проекта включаются отдельно. Это не управляет обходом API, обновлениями, проверкой соединения или телеметрией.</string>
     <string name="ip_lookup_proton">Proton (прямой API)</string>
     <string name="ip_lookup_proton_desc">Прямой HTTPS без зеркал проекта. Может не определять местоположение при подключённом VPN.</string>
     <string name="ip_lookup_cloudflare">Cloudflare (зеркала проекта)</string>
     <string name="ip_lookup_deno">Deno (зеркало проекта)</string>
-    <string name="ip_lookup_vercel">Vercel (зеркало проекта)</string>
     <string name="ip_lookup_own_desc">Сервис проекта на стороннем хостинге. Оператор и хостинг могут видеть IP запроса.</string>
-    <string name="ip_lookup_event">Временное зеркало проекта</string>
-    <string name="ip_lookup_event_desc">Использует HTTPS-хост, выбранный в обходе API. Адрес может меняться через удалённую конфигурацию.</string>
     <string name="ip_lookup_myip">MyIP (api.myip.com)</string>
     <string name="ip_lookup_freeipapi">FreeIPAPI</string>
     <string name="ip_lookup_public_desc">Независимый сторонний IP-сервис. Его оператор видит IP запроса.</string>
@@ -842,4 +839,9 @@
     <string name="ip_lookup_disable_desc">Не запрашивать IP и страну; удалить сохранённый реальный адрес. VPN продолжит работать.</string>
     <string name="ip_lookup_disabled">Отключено. IP-адрес и местоположение по IP недоступны.</string>
     <string name="api_bypass_privacy_warning">HTTP-прокси проекта (Netlify, Cloudflare, Deno и временные зеркала) завершают TLS и могут читать запросы API Proton: SRP-обмен, коды 2FA и токены сессии. VPN-трафик через них не проходит. По возможности выбирайте зеркала Proton или локальный ByeDPI.</string>
+
+    <string name="ip_lookup_event_named">Event: %1$s</string>
+    <string name="ip_lookup_dynamic_event_desc">Опубликован в конфигурации event. Разрешение относится только к этому адресу; новый адрес нужно выбрать заново.</string>
+    <string name="event_selection_failed">Не удалось выбрать Event. Проверьте конфигурацию или обновите список обходов.</string>
+    <string name="ip_lookup_update_failed">Не удалось сохранить выбор. Попробуйте ещё раз.</string>
 </resources>

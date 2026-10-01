@@ -20,6 +20,7 @@ package ru.protonmod.next.data.model.eventbypass
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import ru.protonmod.next.data.network.ProxyEndpoints
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -62,7 +63,9 @@ data class EventBypassEntry(
      * `dd-MM-yyyy`, or "forever" when it does not run on a trial. Empty means
      * nobody knows, which is different from "forever" and is shown as neither.
      */
-    val expiresAt: String = ""
+    val expiresAt: String = "",
+    /** Optional transport contract, path/query/auto; old config stays compatible. */
+    val routing: String = "auto"
 ) {
     /**
      * Identifies the entry across refreshes so the user's choice survives them.
@@ -78,10 +81,11 @@ data class EventBypassEntry(
      * downstream assume HTTPS.
      */
     fun normalizedUrl(): String {
-        if (!enabled) return ""
-        val trimmed = url.trim()
-        if (!trimmed.startsWith("https://", ignoreCase = true)) return ""
-        return if (trimmed.endsWith("/")) trimmed else "$trimmed/"
+        if (!enabled || routing !in setOf("auto", "path", "query")) return ""
+        val parsed = ProxyEndpoints.httpsBase(url) ?: return ""
+        return parsed.newBuilder().apply {
+            if (!parsed.encodedPath.endsWith("/")) addPathSegment("")
+        }.build().toString()
     }
 
     /** True when the config says this platform is not running on a trial. */
