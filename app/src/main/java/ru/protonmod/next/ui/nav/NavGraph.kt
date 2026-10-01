@@ -45,6 +45,7 @@ sealed class Screen(val route: String) {
     data object Settings : Screen("settings")
     data object AiSettings : Screen("ai_settings")
     data object NetShield : Screen("netshield")
+    data object IpLookup : Screen("ip_lookup")
     data object ConnectionVerification : Screen("connection_verification")
     data object IpRotation : Screen("ip_rotation")
     data object Profiles : Screen("profiles")
@@ -151,6 +152,7 @@ fun NavGraphBuilder.appNavGraph(
             onNavigateToAiSettings = {
                 navController.navigate(Screen.AiSettings.route)
             },
+            onNavigateToIpLookup = { navController.navigate(Screen.IpLookup.route) },
             onNavigateToConnectionVerification = {
                 navController.navigate(Screen.ConnectionVerification.route)
             },
@@ -169,6 +171,10 @@ fun NavGraphBuilder.appNavGraph(
             onBack = { navController.popBackStack() },
             onNavigateToApiBypass = { navController.navigate(Screen.ApiBypass.route) }
         )
+    }
+
+    composable(Screen.IpLookup.route) {
+        IpLookupSettingsScreen(onBack = { navController.popBackStack() })
     }
 
     composable(Screen.ConnectionVerification.route) {

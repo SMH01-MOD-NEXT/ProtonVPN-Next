@@ -80,6 +80,7 @@ fun SettingsScreen(
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     onNavigateToCertSettings: (() -> Unit)? = null,
     onNavigateToNetShield: (() -> Unit)? = null,
+    onNavigateToIpLookup: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null,
     onNavigateToIpRotation: (() -> Unit)? = null,
     onNavigateToAiSettings: (() -> Unit)? = null,
@@ -138,6 +139,7 @@ fun SettingsScreen(
                 onNavigateToPortSelection = onNavigateToPortSelection,
                 onNavigateToCertSettings = onNavigateToCertSettings,
                 onNavigateToNetShield = onNavigateToNetShield,
+                onNavigateToIpLookup = onNavigateToIpLookup,
                 onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                 onNavigateToAiSettings = onNavigateToAiSettings,
                 onNavigateToIpRotation = onNavigateToIpRotation,
@@ -178,6 +180,7 @@ fun SettingsContent(
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     onNavigateToCertSettings: (() -> Unit)? = null,
     onNavigateToNetShield: (() -> Unit)? = null,
+    onNavigateToIpLookup: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null,
     onNavigateToAiSettings: (() -> Unit)? = null,
     onNavigateToIpRotation: (() -> Unit)? = null
@@ -254,6 +257,7 @@ fun SettingsContent(
                             onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                             onNavigateToKillSwitch = onNavigateToKillSwitch,
                             onNavigateToErrorReporting = onNavigateToErrorReporting,
+                            onNavigateToIpLookup = onNavigateToIpLookup,
                             onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                             onAllowLanChange = onAllowLanChange,
                             onNotificationsChange = onNotificationsChange
@@ -329,6 +333,7 @@ fun SettingsContent(
                     onNavigateToCountrySpoofing = onNavigateToCountrySpoofing,
                     onNavigateToKillSwitch = onNavigateToKillSwitch,
                     onNavigateToErrorReporting = onNavigateToErrorReporting,
+                    onNavigateToIpLookup = onNavigateToIpLookup,
                     onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                     onAllowLanChange = onAllowLanChange
                 )
@@ -599,9 +604,17 @@ private fun PrivacySettingsSection(
     onNavigateToCountrySpoofing: (() -> Unit)? = null,
     onNavigateToKillSwitch: (() -> Unit)? = null,
     onNavigateToErrorReporting: (() -> Unit)? = null,
+    onNavigateToIpLookup: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_privacy)) {
+        SettingRowWithIcon(
+            icon = ProtonIcons.Earth,
+            title = stringResource(R.string.ip_lookup_title),
+            subtitle = stringResource(R.string.ip_lookup_subtitle),
+            onClick = onNavigateToIpLookup
+        )
+
         val currentDnsSubtitle = state.customDns.ifBlank {
             stringResource(R.string.settings_custom_dns_default)
         }

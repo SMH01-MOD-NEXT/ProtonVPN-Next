@@ -248,6 +248,13 @@ fun ApiBypassScreen(
                                     modifier = Modifier.padding(start = 24.dp, top = 16.dp, bottom = 8.dp)
                                 )
 
+                                Text(
+                                    text = stringResource(R.string.api_bypass_privacy_warning),
+                                    color = colors.textWeak,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                                )
+
                                 // Strategy 1: Netlify
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_netlify),

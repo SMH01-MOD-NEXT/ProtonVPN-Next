@@ -39,6 +39,7 @@ import androidx.datastore.core.MultiProcessDataStoreFactory
 import java.io.File
 import ru.protonmod.next.utils.ProtonLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -78,6 +79,8 @@ class SettingsManager @Inject constructor(
                     }
                 ).also { dataStoreInstance = it }
             }
+
+        private val IP_LOOKUP_SERVICES = stringSetPreferencesKey("ip_lookup_services")
 
         const val STRATEGY_NETLIFY = "netlify"
         const val STRATEGY_CLOUDFLARE = "cloudflare"
@@ -339,8 +342,29 @@ class SettingsManager @Inject constructor(
     /** Whether DoT on port 853 may be tried once DoH on 443 has failed. */
     val dnsOverTlsFallbackEnabled: Flow<Boolean> = dataStore.data.map { it[DNS_DOT_FALLBACK] ?: true }
 
+    val ipLookupServices: Flow<Set<String>> = dataStore.data.map {
+        it[IP_LOOKUP_SERVICES] ?: ru.protonmod.next.data.network.ip.IpEchoSources.DEFAULT_ENABLED_IDS
+    }.distinctUntilChanged()
+
+    suspend fun setIpLookupService(ids: Set<String>, enabled: Boolean) {
+        dataStore.edit { values ->
+            val current = values[IP_LOOKUP_SERVICES] ?: ru.protonmod.next.data.network.ip.IpEchoSources.DEFAULT_ENABLED_IDS
+            values[IP_LOOKUP_SERVICES] = (if (enabled) current + ids else current - ids)
+                .intersect(ru.protonmod.next.data.network.ip.IpEchoSources.ALL_IDS)
+        }
+    }
+
+    suspend fun disableIpLookup() {
+        dataStore.edit {
+            it[IP_LOOKUP_SERVICES] = emptySet()
+            it.remove(REAL_IP)
+            it.remove(REAL_IP_COUNTRY)
+            prefs.edit { remove("real_ip"); remove("real_ip_country") }
+        }
+    }
+
     val apiBypassEnabled: Flow<Boolean> = dataStore.data.map { it[API_BYPASS_ENABLED] ?: false }
-    val apiBypassStrategy: Flow<String> = dataStore.data.map { it[API_BYPASS_STRATEGY] ?: "netlify" }
+    val apiBypassStrategy: Flow<String> = dataStore.data.map { it[API_BYPASS_STRATEGY] ?: STRATEGY_PROTON_MIRRORS }
 
     val byeDpiFlags: Flow<String> = dataStore.data.map { it[BYEDPI_FLAGS] ?: "-s1 -d1" }
     val byeDpiSni: Flow<String> = dataStore.data.map { it[BYEDPI_SNI] ?: "google.com" }
@@ -429,7 +453,7 @@ class SettingsManager @Inject constructor(
 
     fun isApiBypassEnabledSync(): Boolean = prefs.getBoolean("api_bypass_enabled", false)
     fun getApiBypassStrategySync(): String {
-        return prefs.getString("api_bypass_strategy", "netlify") ?: "netlify"
+        return prefs.getString("api_bypass_strategy", STRATEGY_PROTON_MIRRORS) ?: STRATEGY_PROTON_MIRRORS
     }
 
     fun getByeDpiFlagsSync(): String = prefs.getString("byedpi_flags", "-s1 -d1") ?: "-s1 -d1"
@@ -819,13 +843,16 @@ class SettingsManager @Inject constructor(
      * merely confirms the known address touches no storage.
      */
     suspend fun setCachedRealLocation(ip: String, countryCode: String?) {
-        prefs.edit {
-            putString("real_ip", ip)
-            putString("real_ip_country", countryCode ?: "")
-        }
         dataStore.edit {
+            // Serialize cache writes with disabling lookups: an in-flight response cannot
+            // restore a real address after the user explicitly deleted it.
+            if (it[IP_LOOKUP_SERVICES]?.isEmpty() == true) return@edit
             it[REAL_IP] = ip
             it[REAL_IP_COUNTRY] = countryCode ?: ""
+            prefs.edit {
+                putString("real_ip", ip)
+                putString("real_ip_country", countryCode ?: "")
+            }
         }
     }
 

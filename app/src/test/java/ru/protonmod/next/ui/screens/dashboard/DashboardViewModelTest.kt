@@ -204,6 +204,7 @@ class DashboardViewModelTest {
             whenever(sessionDao.getSession()).thenReturn(testSession)
         }
 
+        whenever(settingsManager.ipLookupServices).thenReturn(flowOf(emptySet()))
         viewModel = DashboardViewModel(
             context,
             vpnRepository,

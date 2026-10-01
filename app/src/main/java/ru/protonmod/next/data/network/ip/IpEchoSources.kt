@@ -36,6 +36,19 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
  */
 object IpEchoSources {
 
+    // Existing installs also move to these defaults; author-operated hosts require explicit choice.
+    val DEFAULT_ENABLED_IDS: Set<String> = setOf("proton", "api.myip.com", "freeipapi")
+    val ALL_IDS: Set<String> = setOf("proton", "cloudflare", "cloudflare-site", "deno", "vercel", "event", "api.myip.com", "freeipapi")
+
+    fun allowed(source: Source, enabledIds: Set<String>): Boolean = source.id in enabledIds
+
+    fun selected(isRussianRegion: Boolean, eventBypassUrl: String, enabledIds: Set<String>): List<Source> =
+        (listOf(Source("proton", "https://api.protonvpn.ch/vpn/v1/location", false)) +
+            ordered(isRussianRegion, eventBypassUrl)).filter { allowed(it, enabledIds) }
+
+    fun selectedCountryProbes(isRussianRegion: Boolean, enabledIds: Set<String>): List<Source> =
+        countryProbeSources(isRussianRegion).filter { allowed(it, enabledIds) }
+
     /** The path every deployment of the proxy answers with the caller's address. */
     const val WHOAMI_PATH = "/__proxy/whoami"
 

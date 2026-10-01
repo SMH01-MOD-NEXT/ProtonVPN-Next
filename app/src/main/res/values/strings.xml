@@ -943,4 +943,24 @@
     <string name="netshield_category_adult">Adult content</string>
     <string name="netshield_save">Save</string>
     <string name="netshield_cancel">Cancel</string>
+
+    <string name="ip_lookup_title">IP address services</string>
+    <string name="ip_lookup_subtitle">Choose who can see your address</string>
+    <string name="ip_lookup_services">Allowed services</string>
+    <string name="ip_lookup_explanation">Each selected service sees the source IP of its HTTPS request. No Proton login, tokens or VPN configuration are sent by these lookups. Requests use the current route, never deliberately bypass the VPN, and only selected services are tried, including country lookups. By default: Proton, MyIP and FreeIPAPI; project-operated mirrors are opt-in. This does not control API bypass, updates, connection verification or telemetry.</string>
+    <string name="ip_lookup_proton">Proton (direct API)</string>
+    <string name="ip_lookup_proton_desc">Direct HTTPS, without project mirrors. May not return a location from a VPN exit.</string>
+    <string name="ip_lookup_cloudflare">Cloudflare (project mirrors)</string>
+    <string name="ip_lookup_deno">Deno (project mirror)</string>
+    <string name="ip_lookup_vercel">Vercel (project mirror)</string>
+    <string name="ip_lookup_own_desc">Operated by this project on third-party infrastructure. The operator and hosting provider can see the request IP.</string>
+    <string name="ip_lookup_event">Temporary project mirror</string>
+    <string name="ip_lookup_event_desc">Uses the HTTPS host selected in API bypass; its address can change via remote configuration.</string>
+    <string name="ip_lookup_myip">MyIP (api.myip.com)</string>
+    <string name="ip_lookup_freeipapi">FreeIPAPI</string>
+    <string name="ip_lookup_public_desc">Independent third-party IP service. Its operator can see the request IP.</string>
+    <string name="ip_lookup_disable_all">Disable all IP lookups</string>
+    <string name="ip_lookup_disable_desc">Do not request an IP or country; remove the remembered real address. VPN still works.</string>
+    <string name="ip_lookup_disabled">Disabled. Address and IP-based location are unavailable.</string>
+    <string name="api_bypass_privacy_warning">Project HTTP reverse proxies (Netlify, Cloudflare, Deno and temporary mirrors) terminate TLS and can read Proton API requests, including SRP exchanges, 2FA codes and session tokens. They do not carry VPN tunnel traffic. Prefer Proton mirrors or local ByeDPI when possible.</string>
 </resources>

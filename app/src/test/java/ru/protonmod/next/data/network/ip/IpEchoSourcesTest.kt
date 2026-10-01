@@ -167,4 +167,25 @@ class IpEchoSourcesTest {
         assertTrue(vercel.url, vercel.url.startsWith(IpEchoSources.VERCEL_ORIGIN + "/api?"))
         assertTrue(vercel.url, vercel.url.endsWith(IpEchoSources.WHOAMI_PATH))
     }
+
+    @Test fun `empty selection never permits fallbacks or country probes`() {
+        for (russian in listOf(true, false)) {
+            assertTrue(IpEchoSources.selected(russian, "https://event.invalid", emptySet()).isEmpty())
+            assertTrue(IpEchoSources.selectedCountryProbes(russian, emptySet()).isEmpty())
+        }
+    }
+    @Test fun `selection is an allowlist for every provider`() {
+        for (russian in listOf(true, false)) {
+            for (id in IpEchoSources.ALL_IDS) {
+                val selected = IpEchoSources.selected(russian, "https://event.invalid", setOf(id))
+                assertEquals(listOf(id), selected.map { it.id })
+                assertTrue(IpEchoSources.selectedCountryProbes(russian, setOf(id)).all { it.id == id })
+            }
+        }
+    }
+    @Test fun `defaults never contact project infrastructure`() {
+        val sources = IpEchoSources.selected(true, "https://event.invalid", IpEchoSources.DEFAULT_ENABLED_IDS)
+        assertEquals(listOf("proton", "api.myip.com", "freeipapi"), sources.map { it.id })
+        assertTrue(sources.none { it.isOwn })
+    }
 }

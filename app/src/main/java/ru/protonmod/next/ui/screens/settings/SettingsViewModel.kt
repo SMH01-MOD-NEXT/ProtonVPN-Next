@@ -83,7 +83,7 @@ data class SettingsUiState(
 
     // API Bypass Feature
     val apiBypassEnabled: Boolean = false,
-    val apiBypassStrategy: String = "netlify",
+    val apiBypassStrategy: String = SettingsManager.STRATEGY_PROTON_MIRRORS,
     val apiProxyHost: String = "",
     val apiProxyPort: Int = 1080,
     val apiProxyType: String = SettingsManager.PROXY_TYPE_SOCKS,

@@ -18,8 +18,6 @@
 package ru.protonmod.next.ui.screens.dashboard
 
 import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import ru.protonmod.next.utils.ProtonLogger
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -64,7 +62,6 @@ import ru.protonmod.next.ui.utils.CountryUtils
 import ru.protonmod.next.vpn.AmneziaVpnManager
 import ru.protonmod.next.vpn.VpnAutomationManager
 import ru.protonmod.next.utils.system.SystemUtils
-import java.net.Proxy
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -117,14 +114,6 @@ class DashboardViewModel @Inject constructor(
     private val trafficStatsDao: TrafficStatsDao,
     private val localNetShield: LocalNetShield
 ) : ViewModel() {
-
-    // Shared OkHttpClient instances — created once, reused for every IP fetch, shut down in onCleared().
-    // noProxyClient forces requests outside any system proxy so we always see the device's real IP.
-    private val noProxyClient: OkHttpClient = OkHttpClient.Builder()
-        .proxy(Proxy.NO_PROXY)
-        .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-        .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-        .build()
 
     // defaultClient lets requests travel through whatever route is active (i.e. the VPN tunnel).
     private val defaultClient: OkHttpClient = OkHttpClient.Builder()
@@ -247,7 +236,21 @@ class DashboardViewModel @Inject constructor(
 
     init {
         loadServers()
-        refreshOriginalLocation()
+        viewModelScope.launch {
+            settingsManager.ipLookupServices.collect { enabled ->
+                defaultClient.dispatcher.cancelAll()
+                defaultClient.connectionPool.evictAll()
+                realIpConfirmedThisSession = false
+                _originalLocationText.value = null
+                _vpnLocationText.value = null
+                if (enabled.isNotEmpty()) {
+                    refreshOriginalLocation()
+                    connectedServerState.connectedServer.value?.let { server ->
+                        if (amneziaVpnManager.tunnelState.value == VpnTunnelState.UP) fetchVpnLocation(server.exitCountry)
+                    }
+                }
+            }
+        }
 
         viewModelScope.launch {
             val autoConnect = settingsManager.autoConnectEnabled.first()
@@ -460,50 +463,28 @@ class DashboardViewModel @Inject constructor(
     }
 
     /**
-     * Fetches the user's real location based on IP.
-     *
-     * @param bypassVpn If true, attempts to bypass the VPN tunnel (used for original IP).
-     * @return [LocationData] object containing location info, or null in case of an error.
-     */
-    /**
-     * The address this device is seen at, and the country it belongs to.
-     *
-     * Asks this project's own deployments first; see [IpEchoSources] for the
-     * order and for why the two public services are last.
-     *
-     * @param bypassVpn when true the request is bound to a physical interface,
-     *   so the answer is the device's real address rather than the tunnel's.
-     * @return null only when every source failed.
+     * Reads an address from explicitly allowed services using the current system route.
+     * Real-address queries run only while disconnected; no socket bypasses an active VPN.
+     * A disabled source is also excluded from country probes and automatic fallback.
      */
     private suspend fun fetchRealLocation(bypassVpn: Boolean = true): LocationData? = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
 
-        // CRITICAL FIX: To truly bypass the VPN tunnel on Android, we must bind the socket
-        // to a physical network interface (WiFi or Cellular). Proxy.NO_PROXY only affects
-        // HTTP proxies, not the routing table / TUN interface.
-        val client = if (bypassVpn) {
-            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            val network = cm.activeNetwork?.takeIf { activeNetwork ->
-                val caps = cm.getNetworkCapabilities(activeNetwork)
-                caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
-                        caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) == true
-            }
-
-            if (network != null) {
-                noProxyClient.newBuilder()
-                    .socketFactory(network.socketFactory)
-                    .build()
-            } else {
-                noProxyClient
-            }
-        } else {
-            defaultClient
+        // Never bind IP lookups to a physical interface: no deliberate VPN bypass.
+        if (bypassVpn && amneziaVpnManager.vpnState.value != AmneziaVpnManager.VpnState.DISCONNECTED) {
+            return@withContext null
         }
+        val enabledIds = settingsManager.ipLookupServices.first()
+        if (enabledIds.isEmpty()) return@withContext null
+        // No credentials, cookies, API interceptors or redirects to unselected destinations.
+        val client = defaultClient.newBuilder().followRedirects(false).followSslRedirects(false)
+            .callTimeout(8, java.util.concurrent.TimeUnit.SECONDS).build()
 
         val russian = RegionUtils.isRussianRegion()
-        val sources = IpEchoSources.ordered(
+        val sources = IpEchoSources.selected(
             isRussianRegion = russian,
             eventBypassUrl = settingsManager.getEventBypassUrlSync(),
+            enabledIds = enabledIds,
         )
 
         for (source in sources) {
@@ -514,6 +495,8 @@ class DashboardViewModel @Inject constructor(
             val attempts = if (source.isOwn) 2 else 1
 
             for (attempt in 1..attempts) {
+                if (settingsManager.ipLookupServices.first() != enabledIds) return@withContext null
+                if (bypassVpn && amneziaVpnManager.vpnState.value != AmneziaVpnManager.VpnState.DISCONNECTED) return@withContext null
                 try {
                     val request = Request.Builder().url(source.url).build()
                     val found = client.newCall(request).execute().use { response ->
@@ -524,12 +507,14 @@ class DashboardViewModel @Inject constructor(
                     }
 
                     if (found != null) {
-                        val located = ensureCountry(found, client, source, russian)
+                        val located = ensureCountry(found, client, source, russian, enabledIds)
                         val duration = System.currentTimeMillis() - startTime
                         ProtonLogger.recordDistribution("location_fetch_latency", duration.toDouble())
                         ProtonLogger.recordCount("location_fetch_success", 1.0)
                         ProtonLogger.d("DashboardVM", "Location resolved by ${source.id}")
 
+                        if (settingsManager.ipLookupServices.first() != enabledIds) return@withContext null
+                        if (bypassVpn && amneziaVpnManager.vpnState.value != AmneziaVpnManager.VpnState.DISCONNECTED) return@withContext null
                         return@withContext located
                     }
                 } catch (e: Exception) {
@@ -563,13 +548,14 @@ class DashboardViewModel @Inject constructor(
         val json = JSONObject(body)
 
         val ip = IpEchoSources.normaliseAddress(
-            json.optString("ip")
+            json.optString("IP").ifBlank { json.optString("ip") }
                 .ifBlank { json.optString("ipAddress") }
                 .ifBlank { json.optString("query") }
         )
         if (ip.isBlank()) return null
 
         val code = listOf(
+            json.optString("Country"),
             json.optString("country"),
             json.optString("cc"),
             json.optString("countryCode"),
@@ -600,11 +586,12 @@ class DashboardViewModel @Inject constructor(
      * the same route the address was read from. An unanswered probe leaves the
      * country unknown rather than discarding an address the user asked for.
      */
-    private fun ensureCountry(
+    private suspend fun ensureCountry(
         found: LocationData,
         client: OkHttpClient,
         source: IpEchoSources.Source,
-        isRussianRegion: Boolean
+        isRussianRegion: Boolean,
+        enabledIds: Set<String>,
     ): LocationData {
         if (found.countryCode.isNotBlank() || !source.isOwn) return found
 
@@ -615,11 +602,12 @@ class DashboardViewModel @Inject constructor(
             .callTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
             .build()
 
-        for (probe in IpEchoSources.countryProbeSources(isRussianRegion)) {
+        for (probe in IpEchoSources.selectedCountryProbes(isRussianRegion, enabledIds)) {
             // The deployment that just answered has already said it knows no
             // country; asking it again only costs another round trip.
             if (probe.url == source.url) continue
 
+            if (settingsManager.ipLookupServices.first() != enabledIds) return found
             try {
                 val request = Request.Builder().url(probe.url).build()
                 val probed = probeClient.newCall(request).execute().use { response ->
@@ -648,8 +636,6 @@ class DashboardViewModel @Inject constructor(
         // viewModelScope is already cancelled at this point, so a standalone CoroutineScope is used
         // to ensure the cleanup coroutine actually executes on the IO dispatcher.
         CoroutineScope(Dispatchers.IO).launch {
-            noProxyClient.dispatcher.executorService.shutdown()
-            noProxyClient.connectionPool.evictAll()
             defaultClient.dispatcher.executorService.shutdown()
             defaultClient.connectionPool.evictAll()
         }
