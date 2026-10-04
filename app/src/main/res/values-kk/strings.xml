@@ -759,4 +759,22 @@
     <string name="verification_handshake_timeout_title">Reconnect timeout</string>
     <string name="verification_handshake_timeout_desc">Wait this long for the handshake response before reconnecting to the same server.</string>
     <string name="verification_handshake_timeout_value">%1$d s</string>
+
+    <string name="ip_lookup_title">IP анықтау қызметтері</string>
+    <string name="ip_lookup_subtitle">Мекенжайыңызды кім көре алатынын таңдаңыз</string>
+    <string name="ip_lookup_services">Рұқсат етілген қызметтер</string>
+    <string name="ip_lookup_explanation">Таңдалған қызметтер HTTPS сұрауының бастапқы IP мекенжайын көреді, бірақ Proton тіркелгі деректерін немесе VPN конфигурациясын алмайды. Тізім кірістірілген айналып өту жолдарынан және event кэшіндегі қолжетімді жазбалардан құралады. IP мен елді анықтау үшін VPN-ді әдейі айналып өтпей, тек таңдалған қызметтер пайдаланылады. Жоба қызметтері бөлек қосылады. Бұл API айналып өтуін, жаңартуларды, қосылымды тексеруді немесе телеметрияны басқармайды.</string>
+    <string name="ip_lookup_proton">Proton (тікелей API)</string>
+    <string name="ip_lookup_proton_desc">Жоба айналарынсыз тікелей HTTPS. VPN қосулы кезде орналасқан жерді анықтамауы мүмкін.</string>
+    <string name="ip_lookup_cloudflare">Cloudflare (жоба айналары)</string>
+    <string name="ip_lookup_deno">Deno (жоба айнасы)</string>
+    <string name="ip_lookup_own_desc">Үшінші тарап хостингіндегі жоба қызметі. Оператор мен хостинг провайдері сұраудың IP мекенжайын көре алады.</string>
+    <string name="ip_lookup_myip">MyIP (api.myip.com)</string>
+    <string name="ip_lookup_freeipapi">FreeIPAPI</string>
+    <string name="ip_lookup_public_desc">Тәуелсіз үшінші тарап IP қызметі. Оның операторы сұраудың IP мекенжайын көреді.</string>
+    <string name="api_bypass_privacy_warning">Жобаның HTTP проксилері (Netlify, Cloudflare, Deno және уақытша айналар) TLS шифрын ашады және Proton API сұрауларын, соның ішінде SRP алмасуын, 2FA кодтарын және сеанс токендерін оқи алады. VPN туннелінің трафигі олар арқылы өтпейді. Мүмкіндігінше Proton айналарын немесе жергілікті ByeDPI пайдаланыңыз.</string>
+    <string name="ip_lookup_event_named">Event: %1$s</string>
+    <string name="ip_lookup_dynamic_event_desc">Event конфигурациясында жарияланған. Рұқсат тек осы мекенжайға қатысты; жаңа мекенжайды қайта таңдау қажет.</string>
+    <string name="event_selection_failed">Event таңдалмады. Оның конфигурациясын тексеріңіз немесе қолжетімді айналып өту жолдарын жаңартыңыз.</string>
+    <string name="ip_lookup_update_failed">Таңдауды сақтау мүмкін болмады. Қайталап көріңіз.</string>
 </resources>

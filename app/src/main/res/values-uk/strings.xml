@@ -765,4 +765,22 @@
     <string name="verification_handshake_timeout_title">Reconnect timeout</string>
     <string name="verification_handshake_timeout_desc">Wait this long for the handshake response before reconnecting to the same server.</string>
     <string name="verification_handshake_timeout_value">%1$d s</string>
+
+    <string name="ip_lookup_title">Сервіси визначення IP</string>
+    <string name="ip_lookup_subtitle">Оберіть, хто може бачити вашу адресу</string>
+    <string name="ip_lookup_services">Дозволені сервіси</string>
+    <string name="ip_lookup_explanation">Обрані сервіси бачать вихідний IP HTTPS-запиту, але не отримують облікові дані Proton чи конфігурацію VPN. Список формується з вбудованих обходів і доступних записів кешу event. Для IP і країни використовуються лише обрані сервіси без примусового обходу VPN. Сервіси проєкту вмикаються окремо. Це не керує обходом API, оновленнями, перевіркою з’єднання чи телеметрією.</string>
+    <string name="ip_lookup_proton">Proton (прямий API)</string>
+    <string name="ip_lookup_proton_desc">Прямий HTTPS без дзеркал проєкту. Може не визначати місцезнаходження при підключеному VPN.</string>
+    <string name="ip_lookup_cloudflare">Cloudflare (дзеркала проєкту)</string>
+    <string name="ip_lookup_deno">Deno (дзеркало проєкту)</string>
+    <string name="ip_lookup_own_desc">Сервіс проєкту на сторонньому хостингу. Оператор і хостинг можуть бачити IP запиту.</string>
+    <string name="ip_lookup_myip">MyIP (api.myip.com)</string>
+    <string name="ip_lookup_freeipapi">FreeIPAPI</string>
+    <string name="ip_lookup_public_desc">Незалежний сторонній IP-сервіс. Його оператор бачить IP запиту.</string>
+    <string name="api_bypass_privacy_warning">HTTP-проксі проєкту (Netlify, Cloudflare, Deno і тимчасові дзеркала) розшифровують TLS і можуть читати запити до Proton API, зокрема обмін SRP, коди 2FA і токени сесії. Трафік VPN-тунелю через них не проходить. За можливості використовуйте дзеркала Proton або локальний ByeDPI.</string>
+    <string name="ip_lookup_event_named">Event: %1$s</string>
+    <string name="ip_lookup_dynamic_event_desc">Опубліковано в конфігурації event. Дозвіл стосується лише цієї адреси; нову адресу потрібно обрати знову.</string>
+    <string name="event_selection_failed">Не вдалося вибрати Event. Перевірте його конфігурацію або оновіть доступні обходи.</string>
+    <string name="ip_lookup_update_failed">Не вдалося зберегти вибір. Спробуйте ще раз.</string>
 </resources>

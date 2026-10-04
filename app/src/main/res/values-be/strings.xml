@@ -766,4 +766,22 @@
     <string name="verification_handshake_timeout_title">Reconnect timeout</string>
     <string name="verification_handshake_timeout_desc">Wait this long for the handshake response before reconnecting to the same server.</string>
     <string name="verification_handshake_timeout_value">%1$d s</string>
+
+    <string name="ip_lookup_title">Сэрвісы вызначэння IP</string>
+    <string name="ip_lookup_subtitle">Абярыце, хто можа бачыць ваш адрас</string>
+    <string name="ip_lookup_services">Дазволеныя сэрвісы</string>
+    <string name="ip_lookup_explanation">Абраныя сэрвісы бачаць зыходны IP HTTPS-запыту, але не атрымліваюць уліковыя даныя Proton або канфігурацыю VPN. Спіс фармуецца з убудаваных абыходаў і даступных запісаў кэша event. Для IP і краіны выкарыстоўваюцца толькі абраныя сэрвісы без прымусовага абыходу VPN. Сэрвісы праекта ўключаюцца асобна. Гэта не кіруе абыходам API, абнаўленнямі, праверкай злучэння або тэлеметрыяй.</string>
+    <string name="ip_lookup_proton">Proton (прамы API)</string>
+    <string name="ip_lookup_proton_desc">Прамы HTTPS без люстэркаў праекта. Можа не вызначаць месцазнаходжанне пры падключаным VPN.</string>
+    <string name="ip_lookup_cloudflare">Cloudflare (люстэркі праекта)</string>
+    <string name="ip_lookup_deno">Deno (люстэрка праекта)</string>
+    <string name="ip_lookup_own_desc">Сэрвіс праекта на старонім хостынгу. Аператар і хостынг могуць бачыць IP запыту.</string>
+    <string name="ip_lookup_myip">MyIP (api.myip.com)</string>
+    <string name="ip_lookup_freeipapi">FreeIPAPI</string>
+    <string name="ip_lookup_public_desc">Незалежны староні IP-сэрвіс. Яго аператар бачыць IP запыту.</string>
+    <string name="api_bypass_privacy_warning">HTTP-проксі праекта (Netlify, Cloudflare, Deno і часовыя люстэркі) расшыфроўваюць TLS і могуць чытаць запыты да Proton API, у тым ліку абмен SRP, коды 2FA і токены сесіі. Трафік VPN-тунэля праз іх не праходзіць. Па магчымасці выкарыстоўвайце люстэркі Proton або лакальны ByeDPI.</string>
+    <string name="ip_lookup_event_named">Event: %1$s</string>
+    <string name="ip_lookup_dynamic_event_desc">Апублікавана ў канфігурацыі event. Дазвол адносіцца толькі да гэтага адраса; новы адрас трэба абраць зноў.</string>
+    <string name="event_selection_failed">Не ўдалося выбраць Event. Праверце яго канфігурацыю або абнавіце даступныя абыходы.</string>
+    <string name="ip_lookup_update_failed">Не ўдалося захаваць выбар. Паспрабуйце яшчэ раз.</string>
 </resources>

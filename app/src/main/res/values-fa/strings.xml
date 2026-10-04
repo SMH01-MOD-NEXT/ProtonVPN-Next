@@ -759,4 +759,22 @@
     <string name="verification_handshake_timeout_title">Reconnect timeout</string>
     <string name="verification_handshake_timeout_desc">Wait this long for the handshake response before reconnecting to the same server.</string>
     <string name="verification_handshake_timeout_value">%1$d s</string>
+
+    <string name="ip_lookup_title">سرویس‌های تشخیص IP</string>
+    <string name="ip_lookup_subtitle">انتخاب کنید چه کسی بتواند نشانی شما را ببیند</string>
+    <string name="ip_lookup_services">سرویس‌های مجاز</string>
+    <string name="ip_lookup_explanation">سرویس‌های انتخاب‌شده IP مبدأ درخواست‌های HTTPS را می‌بینند، اما هیچ اطلاعات ورود Proton یا پیکربندی VPN دریافت نمی‌کنند. فهرست از دورزدن‌های داخلی و ورودی‌های موجود در حافظهٔ پنهان event ساخته می‌شود. برای تشخیص IP و کشور فقط سرویس‌های انتخاب‌شده استفاده می‌شوند و درخواست‌ها هرگز عمداً VPN را دور نمی‌زنند. سرویس‌های پروژه جداگانه فعال می‌شوند. این گزینه دورزدن API، به‌روزرسانی‌ها، بررسی اتصال یا تله‌متری را کنترل نمی‌کند.</string>
+    <string name="ip_lookup_proton">Proton (API مستقیم)</string>
+    <string name="ip_lookup_proton_desc">HTTPS مستقیم، بدون آینه‌های پروژه. ممکن است هنگام اتصال VPN موقعیت را برنگرداند.</string>
+    <string name="ip_lookup_cloudflare">Cloudflare (آینه‌های پروژه)</string>
+    <string name="ip_lookup_deno">Deno (آینهٔ پروژه)</string>
+    <string name="ip_lookup_own_desc">سرویس پروژه روی زیرساخت شخص ثالث. اپراتور و ارائه‌دهندهٔ میزبانی می‌توانند IP درخواست را ببینند.</string>
+    <string name="ip_lookup_myip">MyIP (api.myip.com)</string>
+    <string name="ip_lookup_freeipapi">FreeIPAPI</string>
+    <string name="ip_lookup_public_desc">سرویس IP مستقل شخص ثالث. اپراتور آن IP درخواست را می‌بیند.</string>
+    <string name="api_bypass_privacy_warning">پراکسی‌های معکوس HTTP پروژه (Netlify، Cloudflare، Deno و آینه‌های موقت) TLS را باز می‌کنند و می‌توانند درخواست‌های API پروتون، از جمله تبادل SRP، کدهای 2FA و توکن‌های نشست را بخوانند. ترافیک تونل VPN از آن‌ها عبور نمی‌کند. در صورت امکان از آینه‌های Proton یا ByeDPI محلی استفاده کنید.</string>
+    <string name="ip_lookup_event_named">Event: %1$s</string>
+    <string name="ip_lookup_dynamic_event_desc">در پیکربندی event منتشر شده است. مجوز فقط برای همین نشانی است؛ نشانی جدید نیازمند انتخاب دوباره است.</string>
+    <string name="event_selection_failed">انتخاب Event ممکن نشد. پیکربندی آن را بررسی کنید یا دورزدن‌های موجود را تازه‌سازی کنید.</string>
+    <string name="ip_lookup_update_failed">ذخیرهٔ انتخاب ممکن نشد. دوباره تلاش کنید.</string>
 </resources>

@@ -756,4 +756,22 @@
     <string name="verification_handshake_timeout_title">Reconnect timeout</string>
     <string name="verification_handshake_timeout_desc">Wait this long for the handshake response before reconnecting to the same server.</string>
     <string name="verification_handshake_timeout_value">%1$d s</string>
+
+    <string name="ip_lookup_title">IP 地址服务</string>
+    <string name="ip_lookup_subtitle">选择谁可以看到您的地址</string>
+    <string name="ip_lookup_services">允许的服务</string>
+    <string name="ip_lookup_explanation">所选服务可以看到其 HTTPS 请求的来源 IP，但不会获得 Proton 凭据或 VPN 配置。列表由内置绕过和可用的 event 缓存条目生成。只有所选服务参与地址和国家检测；请求从不故意绕过 VPN。项目服务需单独启用。此设置不控制 API 绕过、更新、连接验证或遥测。</string>
+    <string name="ip_lookup_proton">Proton（直连 API）</string>
+    <string name="ip_lookup_proton_desc">直接 HTTPS，不经过项目镜像。连接 VPN 时可能无法返回位置。</string>
+    <string name="ip_lookup_cloudflare">Cloudflare（项目镜像）</string>
+    <string name="ip_lookup_deno">Deno（项目镜像）</string>
+    <string name="ip_lookup_own_desc">由本项目在第三方基础设施上运营。运营者和托管商可以看到请求 IP。</string>
+    <string name="ip_lookup_myip">MyIP (api.myip.com)</string>
+    <string name="ip_lookup_freeipapi">FreeIPAPI</string>
+    <string name="ip_lookup_public_desc">独立的第三方 IP 服务。其运营者可以看到请求 IP。</string>
+    <string name="api_bypass_privacy_warning">项目的 HTTP 反向代理（Netlify、Cloudflare、Deno 和临时镜像）会解密 TLS，并可读取 Proton API 请求，包括 SRP 交换、2FA 验证码和会话令牌。它们不承载 VPN 隧道流量。请尽量使用 Proton 镜像或本地 ByeDPI。</string>
+    <string name="ip_lookup_event_named">Event：%1$s</string>
+    <string name="ip_lookup_dynamic_event_desc">发布于缓存的 event 配置中。权限仅适用于此端点；新地址需要重新选择。</string>
+    <string name="event_selection_failed">无法选择 Event。请检查其配置或刷新可用的绕过。</string>
+    <string name="ip_lookup_update_failed">无法保存选择。请重试。</string>
 </resources>
