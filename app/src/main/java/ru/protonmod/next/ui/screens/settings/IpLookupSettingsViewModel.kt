@@ -36,5 +36,4 @@ class IpLookupSettingsViewModel @Inject constructor(private val settings: Settin
         }
     }
     fun setEnabled(ids: Set<String>, enabled: Boolean) = update { settings.setIpLookupService(ids, enabled) }
-    fun disableAll() = update { settings.disableIpLookup() }
 }

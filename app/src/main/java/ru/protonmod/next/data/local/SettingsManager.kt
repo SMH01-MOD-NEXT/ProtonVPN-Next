@@ -360,16 +360,15 @@ class SettingsManager @Inject constructor(
                 ipCatalogue(values),
             )
             val available = ipCatalogue(values).map { it.id }.toSet()
-            values[IP_LOOKUP_SERVICES] = (if (enabled) current + ids else current - ids).intersect(available)
-        }
-    }
-
-    suspend fun disableIpLookup() {
-        dataStore.edit {
-            it[IP_LOOKUP_SERVICES] = emptySet()
-            it.remove(REAL_IP)
-            it.remove(REAL_IP_COUNTRY)
-            prefs.edit { remove("real_ip"); remove("real_ip_country") }
+            val updated = (if (enabled) current + ids else current - ids).intersect(available)
+            values[IP_LOOKUP_SERVICES] = updated
+            // Turning off the last provider disables lookups entirely, so the remembered
+            // real address must not outlive that choice.
+            if (updated.isEmpty()) {
+                values.remove(REAL_IP)
+                values.remove(REAL_IP_COUNTRY)
+                prefs.edit { remove("real_ip"); remove("real_ip_country") }
+            }
         }
     }
 

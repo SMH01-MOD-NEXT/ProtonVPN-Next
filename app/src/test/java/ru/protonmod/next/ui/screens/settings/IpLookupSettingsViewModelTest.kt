@@ -32,9 +32,9 @@ class IpLookupSettingsViewModelTest {
         advanceUntilIdle()
         assertTrue(vm.updateFailed.value)
         reset(settings)
-        vm.disableAll()
+        vm.setEnabled(setOf(IpEchoSources.DEFAULT_ENABLED_IDS.first()), false)
         advanceUntilIdle()
         assertFalse(vm.updateFailed.value)
-        verify(settings).disableIpLookup()
+        verify(settings).setIpLookupService(setOf(IpEchoSources.DEFAULT_ENABLED_IDS.first()), false)
     }
 }

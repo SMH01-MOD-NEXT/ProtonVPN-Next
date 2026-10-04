@@ -81,16 +81,6 @@ fun IpLookupSettingsScreen(
                         }
                     }
                 }
-                item {
-                    SettingsCategory("", content.padding(horizontal = 16.dp)) {
-                        SettingRowWithIcon(
-                            icon = ProtonIcons.ShieldFilled,
-                            title = stringResource(R.string.ip_lookup_disable_all),
-                            subtitle = stringResource(if (enabled.isEmpty()) R.string.ip_lookup_disabled else R.string.ip_lookup_disable_desc),
-                            onClick = viewModel::disableAll,
-                        )
-                    }
-                }
             }
         }
     }

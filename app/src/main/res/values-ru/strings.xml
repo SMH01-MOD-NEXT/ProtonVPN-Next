@@ -835,9 +835,6 @@
     <string name="ip_lookup_myip">MyIP (api.myip.com)</string>
     <string name="ip_lookup_freeipapi">FreeIPAPI</string>
     <string name="ip_lookup_public_desc">Независимый сторонний IP-сервис. Его оператор видит IP запроса.</string>
-    <string name="ip_lookup_disable_all">Отключить определение IP</string>
-    <string name="ip_lookup_disable_desc">Не запрашивать IP и страну; удалить сохранённый реальный адрес. VPN продолжит работать.</string>
-    <string name="ip_lookup_disabled">Отключено. IP-адрес и местоположение по IP недоступны.</string>
     <string name="api_bypass_privacy_warning">HTTP-прокси проекта (Netlify, Cloudflare, Deno и временные зеркала) завершают TLS и могут читать запросы API Proton: SRP-обмен, коды 2FA и токены сессии. VPN-трафик через них не проходит. По возможности выбирайте зеркала Proton или локальный ByeDPI.</string>
 
     <string name="ip_lookup_event_named">Event: %1$s</string>

@@ -238,8 +238,12 @@ class DashboardViewModel @Inject constructor(
         loadServers()
         viewModelScope.launch {
             settingsManager.ipLookupServices.collect { enabled ->
-                defaultClient.dispatcher.cancelAll()
-                defaultClient.connectionPool.evictAll()
+                // Closing pooled TLS sockets writes close_notify, which is network I/O and
+                // throws NetworkOnMainThreadException on the main dispatcher.
+                withContext(Dispatchers.IO) {
+                    defaultClient.dispatcher.cancelAll()
+                    defaultClient.connectionPool.evictAll()
+                }
                 realIpConfirmedThisSession = false
                 _originalLocationText.value = null
                 _vpnLocationText.value = null

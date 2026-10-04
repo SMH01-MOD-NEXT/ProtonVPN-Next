@@ -956,9 +956,6 @@
     <string name="ip_lookup_myip">MyIP (api.myip.com)</string>
     <string name="ip_lookup_freeipapi">FreeIPAPI</string>
     <string name="ip_lookup_public_desc">Independent third-party IP service. Its operator can see the request IP.</string>
-    <string name="ip_lookup_disable_all">Disable all IP lookups</string>
-    <string name="ip_lookup_disable_desc">Do not request an IP or country; remove the remembered real address. VPN still works.</string>
-    <string name="ip_lookup_disabled">Disabled. Address and IP-based location are unavailable.</string>
     <string name="api_bypass_privacy_warning">Project HTTP reverse proxies (Netlify, Cloudflare, Deno and temporary mirrors) terminate TLS and can read Proton API requests, including SRP exchanges, 2FA codes and session tokens. They do not carry VPN tunnel traffic. Prefer Proton mirrors or local ByeDPI when possible.</string>
 
     <string name="ip_lookup_event_named">Event: %1$s</string>
