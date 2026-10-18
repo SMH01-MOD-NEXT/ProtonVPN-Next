@@ -1,26 +1,16 @@
 diff --git a/protocol/tor/outbound.go b/protocol/tor/outbound.go
-index 3220f8c..db0cb42 100644
+index 00156e2..0c96a78 100644
 --- a/protocol/tor/outbound.go
 +++ b/protocol/tor/outbound.go
-@@ -6,6 +6,7 @@ import (
- 	"os"
- 	"path/filepath"
+@@ -8,2 +8,3 @@ import (
  	"strings"
 +	"time"
  
- 	"github.com/sagernet/sing-box/adapter"
- 	"github.com/sagernet/sing-box/adapter/outbound"
-@@ -42,6 +43,7 @@ type Outbound struct {
- 	events      chan control.Event
- 	instance    *tor.Tor
+@@ -43,2 +44,3 @@ type Outbound struct {
  	socksClient *socks.Client
 +	socksPath   string
  }
- 
- func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextLogger, tag string, options option.TorOutboundOptions) (adapter.Outbound, error) {
-@@ -77,6 +79,13 @@ func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextL
- 		startConf.TorrcFile = torrcFile
- 	}
+@@ -78,2 +80,9 @@ func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextL
  	startConf.ExtraArgs = options.ExtraArgs
 +	var socksPath string
 +	if startConf.DataDir != "" {
@@ -30,21 +20,13 @@ index 3220f8c..db0cb42 100644
 +		startConf.ExtraArgs = append(startConf.ExtraArgs, "--SocksPort", "unix:"+socksPath)
 +	}
  	if options.ExecutablePath != "" {
- 		startConf.ExePath = options.ExecutablePath
- 		startConf.ProcessCreator = nil
-@@ -93,6 +102,7 @@ func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextL
- 		dialer:    outboundDialer,
- 		startConf: &startConf,
+@@ -94,2 +103,3 @@ func NewOutbound(ctx context.Context, router adapter.Router, logger log.ContextL
  		options:   options.Options,
 +		socksPath: socksPath,
  	}, nil
- }
- 
-@@ -189,6 +199,14 @@ func (t *Outbound) start() error {
- 	if err != nil {
- 		return err
+@@ -191,2 +201,10 @@ func (t *Outbound) start(scope *adapter.Scope) error {
  	}
-+	if err = t.waitBootstrap(); err != nil {
++	if err = t.waitBootstrap(torInstance); err != nil {
 +		return err
 +	}
 +	if t.socksPath != "" {
@@ -53,20 +35,16 @@ index 3220f8c..db0cb42 100644
 +		return nil
 +	}
  	info, err := torInstance.Control.GetInfo("net/listeners/socks")
- 	if err != nil {
- 		return err
-@@ -202,6 +220,45 @@ func (t *Outbound) start() error {
- 	return nil
- }
+@@ -204,2 +222,41 @@ func (t *Outbound) start(scope *adapter.Scope) error {
  
-+func (t *Outbound) waitBootstrap() error {
++func (t *Outbound) waitBootstrap(instance *tor.Tor) error {
 +	ctx, cancel := context.WithTimeout(t.ctx, 90*time.Second)
 +	defer cancel()
 +	ticker := time.NewTicker(250 * time.Millisecond)
 +	defer ticker.Stop()
 +	lastProgress := ""
 +	for {
-+		info, err := t.instance.Control.GetInfo("status/bootstrap-phase")
++		info, err := instance.Control.GetInfo("status/bootstrap-phase")
 +		if err == nil && len(info) == 1 {
 +			status := info[0].Val
 +			if strings.Contains(status, "PROGRESS=100") {
@@ -99,5 +77,3 @@ index 3220f8c..db0cb42 100644
 +}
 +
  func (t *Outbound) recvLoop() {
- 	for rawEvent := range t.events {
- 		switch event := rawEvent.(type) {

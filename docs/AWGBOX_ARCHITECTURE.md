@@ -8,7 +8,7 @@ possible without replacing Android's VPN lifecycle again.
 
 ## Selected core
 
-The integration uses `hoaxisr/amnezia-box` `1.15.0-alpha.8-awgm.29` because it:
+The integration uses `hoaxisr/amnezia-box` `1.15.0-alpha.12-awgm.33` because it:
 
 - tracks the sing-box 1.15 development line;
 - embeds `amneziawg-go`;
@@ -47,6 +47,21 @@ integration-visible changes came with sing-box 1.15:
 The AWG endpoint schema is unchanged for the fields the client emits; AWG 3.1
 adds optional `random_trailers` and `disable_cookies` device flags, which the
 client does not set yet (both require 3.1 on the server side too).
+
+The Android integration was updated to `1.15.0-alpha.12-awgm.33` on
+2026-10-18, pinned to `2015b9b2e64ab0cf3321a1e5dfddb3bca732f82f`.
+Go remains pinned to 1.25.5. The Android platform interface and generated AWG
+configuration fields remain compatible. Tor now uses upstream's scoped cleanup;
+the Android bootstrap patch takes the scoped Tor instance explicitly rather than
+retaining the removed instance field. The app-private Unix SOCKS socket and
+reduced Tor event logging remain enabled. The build also normalizes upstream
+release tags with an optional `v` prefix so `Libbox.version()` retains the
+leading `1` in amnezia-box tags.
+
+Cached AARs require a build fingerprint (source, Go version, build script and both
+Tor patches) and matching binary SHA-256 in a generated `.build-info` sidecar.
+Old or modified artifacts are rebuilt; an existing AAR is preserved until its
+replacement passes archive and native-symbol validation.
 
 ## Runtime layers
 

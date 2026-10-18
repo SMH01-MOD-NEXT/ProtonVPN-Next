@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REF="${AWGBOX_REF:-1.15.0-alpha.8-awgm.29}"
-EXPECTED_COMMIT="${AWGBOX_COMMIT:-e93bd650172bbcc6c4116b9aff1ab1d72cb80210}"
+REF="${AWGBOX_REF:-1.15.0-alpha.12-awgm.33}"
+EXPECTED_COMMIT="${AWGBOX_COMMIT:-2015b9b2e64ab0cf3321a1e5dfddb3bca732f82f}"
 GO_TOOLCHAIN="${AWGBOX_GO_TOOLCHAIN:-go1.25.5}"
 REPO="${AWGBOX_REPO:-https://github.com/hoaxisr/amnezia-box.git}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -71,18 +71,28 @@ PY_SO
   fi
 }
 
+# Bind cached binaries to the exact source, toolchain and local Android patches.
+# A structurally valid AAR from an older release must never skip an upgrade.
+build_fingerprint() {
+  {
+    printf '%s\n' "$REPO" "$REF" "$EXPECTED_COMMIT" "$GO_TOOLCHAIN"
+    sha256sum "$ROOT/scripts/build-awgbox-lib.sh" \
+      "$ROOT/scripts/patches/awgbox-tor-android.patch" \
+      "$ROOT/scripts/patches/awgbox-tor-log-noise.patch" | awk '{ print $1 }'
+  } | sha256sum | awk '{ print $1 }'
+}
+
 artifact_is_valid() {
-  output_is_valid && native_output_is_valid
+  output_is_valid && native_output_is_valid || return 1
+  [[ -f "$OUTPUT.build-info" ]] || return 1
+  local expected_info
+  expected_info="$(build_fingerprint) $(sha256sum "$OUTPUT" | awk '{ print $1 }')"
+  [[ "$(cat "$OUTPUT.build-info")" == "$expected_info" ]]
 }
 
 if [[ "$FORCE_REBUILD" != "1" ]] && artifact_is_valid; then
   echo "AWGBox AAR is already available and verified: $OUTPUT"
   exit 0
-fi
-
-if [[ -d "$(dirname "$OUTPUT")" ]]; then
-  echo "Cleaning up old AWGBox AAR files: $(dirname "$OUTPUT")/libbox-awgbox*.aar"
-  find "$(dirname "$OUTPUT")" -name "libbox-awgbox*.aar" -delete
 fi
 
 : "${ANDROID_HOME:=${ANDROID_SDK_ROOT:-}}"
@@ -92,7 +102,7 @@ command -v git >/dev/null || { echo "git is required to build AWGBox" >&2; exit 
 command -v go >/dev/null || { echo "Go is required to build AWGBox" >&2; exit 1; }
 command -v python3 >/dev/null || { echo "python3 is required to build AWGBox" >&2; exit 1; }
 
-# AWGBox 1.14 is developed and tested with Go 1.25.5. Newer Go linkers can
+# AWGBox 1.15 is developed and tested with Go 1.25.5. Newer Go linkers can
 # accept its private x/net/http2 linkname but leave that target undefined in the
 # Android shared object, producing an UnsatisfiedLinkError during dlopen.
 export GOTOOLCHAIN="$GO_TOOLCHAIN"
@@ -106,7 +116,7 @@ echo "Building AWGBox with $actual_go_toolchain"
 mkdir -p "$ROOT/.artifacts" "$(dirname "$OUTPUT")"
 LOCK_DIR="$ROOT/.artifacts/awgbox-build.lock"
 while ! mkdir "$LOCK_DIR" 2>/dev/null; do
-  if artifact_is_valid; then
+  if [[ "$FORCE_REBUILD" != "1" ]] && artifact_is_valid; then
     echo "AWGBox AAR was prepared by another Gradle process: $OUTPUT"
     exit 0
   fi
@@ -186,7 +196,23 @@ text = text.replace("\tcheckJavaVersion()", "\t// checkJavaVersion()")
 path.write_text(text)
 PY
 
-gofmt -w "$WORK/cmd/internal/build_libbox/main.go"
+# Upstream assumes tags start with "v", but amnezia-box release tags do not.
+# Preserve the first digit in Libbox.version() and the embedded core version.
+python3 - "$WORK/cmd/internal/build_shared/tag.go" <<'PY_TAG'
+from pathlib import Path
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text()
+if 'currentTag[1:]' not in text or 'currentTagRev[1:]' not in text:
+    raise SystemExit("Unable to locate upstream version tag normalization")
+text = text.replace('import (', 'import (\n\t"strings"', 1)
+text = text.replace('currentTag[1:]', 'strings.TrimPrefix(currentTag, "v")')
+text = text.replace('currentTagRev[1:]', 'strings.TrimPrefix(currentTagRev, "v")')
+path.write_text(text)
+PY_TAG
+
+gofmt -w "$WORK/cmd/internal/build_libbox/main.go" "$WORK/cmd/internal/build_shared/tag.go"
 
 # The generator locates gomobile through GOPATH/bin. Keep this cache outside
 # the disposable source checkout so forced rebuilds do not redownload Go modules.
@@ -205,12 +231,14 @@ cp "$GOBIN_DIR/gobind" "$GOPATH_DIR/bin/"
 
 TEMP_OUTPUT="$OUTPUT.tmp"
 cp "$WORK/libbox.aar" "$TEMP_OUTPUT"
-if ! OUTPUT="$TEMP_OUTPUT" artifact_is_valid; then
+if ! OUTPUT="$TEMP_OUTPUT" output_is_valid || ! OUTPUT="$TEMP_OUTPUT" native_output_is_valid; then
   rm -f "$TEMP_OUTPUT"
   echo "Generated AWGBox AAR is corrupt or missing required arm64 contents" >&2
   exit 1
 fi
 actual_sha256="$(sha256sum "$TEMP_OUTPUT" | awk '{ print $1 }')"
+printf '%s %s\n' "$(build_fingerprint)" "$actual_sha256" > "$TEMP_OUTPUT.build-info"
 mv "$TEMP_OUTPUT" "$OUTPUT"
+mv "$TEMP_OUTPUT.build-info" "$OUTPUT.build-info"
 echo "AWGBox AAR built from pinned commit $EXPECTED_COMMIT"
 echo "$actual_sha256  ${OUTPUT#$ROOT/}"
