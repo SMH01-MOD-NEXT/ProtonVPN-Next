@@ -19,6 +19,7 @@ package ru.protonmod.next.vpn
 
 import android.content.Intent
 import android.net.VpnService
+import android.os.IBinder
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import androidx.core.service.quicksettings.PendingIntentActivityWrapper
@@ -32,19 +33,14 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.MainActivity
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ProfileDao
-import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
-import ru.protonmod.next.data.local.VpnProfileEntity
-import ru.protonmod.next.data.model.ObfuscationProfile
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.di.ApplicationScope
-import ru.protonmod.next.utils.ProtonLogger
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -57,7 +53,7 @@ class VpnTileService : TileService() {
     lateinit var vpnRepository: VpnRepository
 
     @Inject
-    lateinit var sessionDao: SessionDao
+    lateinit var quickConnect: VpnQuickConnect
 
     @Inject
     lateinit var settingsManager: SettingsManager
@@ -72,15 +68,18 @@ class VpnTileService : TileService() {
     @ApplicationScope
     lateinit var applicationScope: CoroutineScope
 
-    /**
-     * Service-scoped coroutine scope. Cancelled in [onDestroy] to prevent the
-     * destroyed service instance from being retained by running coroutines
-     * (the framework's internal IPC binder holds `this` as a JNI global ref
-     * and won't release it until all work referencing the service is done).
-     */
+    /** Cancel tile observations when this service is destroyed. */
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     private var observationJob: Job? = null
+
+    // Keep every binding alive until destruction, including bindings created on rebind.
+    private val tileBinders = mutableListOf<ReleasableTileServiceBinder>()
+
+    override fun onBind(intent: Intent): IBinder? {
+        val delegate = super.onBind(intent) ?: return null
+        return ReleasableTileServiceBinder(delegate).also { tileBinders += it }
+    }
 
     override fun onStartListening() {
         super.onStartListening()
@@ -115,7 +114,14 @@ class VpnTileService : TileService() {
     override fun onDestroy() {
         serviceScope.cancel()
         observationJob = null
-        super.onDestroy()
+        try {
+            super.onDestroy()
+        } finally {
+            // SystemUI/native Binder may keep the exported binder after Service destruction.
+            // Only the detached wrapper may survive, not TileService's inner stub and service.
+            tileBinders.forEach { it.release() }
+            tileBinders.clear()
+        }
     }
 
     override fun onClick() {
@@ -142,94 +148,12 @@ class VpnTileService : TileService() {
             } else {
                 // Launch on applicationScope: the VPN connection must proceed
                 // even if this TileService instance is destroyed mid-connect.
+                val connector = quickConnect
                 applicationScope.launch {
-                    performQuickConnect()
+                    connector.connect()
                 }
             }
         }
-    }
-
-    private suspend fun performQuickConnect() {
-        val session = sessionDao.getSession() ?: return
-        val strategy = settingsManager.quickConnectStrategy.first()
-        val targetId = settingsManager.quickConnectTargetId.first()
-        
-        val servers = vpnRepository.getCachedServers()
-        if (servers.isEmpty()) return
-
-        when (strategy) {
-            "recent" -> {
-                // Connect to the very first available server
-                val bestServer = servers.minByOrNull { it.averageLoad }
-                if (bestServer != null) initiateConnection(bestServer)
-            }
-            "server" -> {
-                val target = servers.find { it.id == targetId }
-                if (target != null) {
-                    initiateConnection(target)
-                } else {
-                    val bestServer = servers.minByOrNull { it.averageLoad }
-                    if (bestServer != null) initiateConnection(bestServer)
-                }
-            }
-            "profile" -> {
-                val profile = profileDao.getAllProfilesFlow().first().find { it.id == targetId }
-                if (profile != null) {
-                    val targetServer = findBestServerForProfile(profile, servers)
-                    if (targetServer != null) {
-                        val physicalServer = targetServer.servers.filter { it.status == 1 }.minByOrNull { it.load }
-                            ?: targetServer.servers.minByOrNull { it.load }
-                        
-                        if (physicalServer != null) {
-                            var obfuscationParams: AmneziaVpnManager.ObfuscationParams? = null
-                            if (profile.isObfuscationEnabled && profile.obfuscationProfileId != null) {
-                                val customProfiles = settingsManager.customProfiles.first()
-                                val selectedConfig = customProfiles.find { it.id == profile.obfuscationProfileId }
-                                    ?: if (profile.obfuscationProfileId == "standard_1") {
-                                        ObfuscationProfile.getStandardProfile()
-                                    } else null
-
-                                selectedConfig?.let {
-                                    obfuscationParams = AmneziaVpnManager.ObfuscationParams(
-                                        jc = it.jc, jmin = it.jmin, jmax = it.jmax,
-                                        s1 = it.s1, s2 = it.s2, s3 = it.s3, s4 = it.s4,
-                                        h1 = it.h1, h2 = it.h2, h3 = it.h3, h4 = it.h4,
-                                        i1 = it.i1, i2 = it.i2, i3 = it.i3, i4 = it.i4, i5 = it.i5
-                                    )
-                                }
-                            }
-
-                            amneziaVpnManager.connect(
-                                targetServer.id, physicalServer, session,
-                                overridePort = profile.port,
-                                overrideObfuscation = profile.isObfuscationEnabled,
-                                obfuscationParams = obfuscationParams,
-                                logicalServer = targetServer
-                            )
-                        }
-                    }
-                } else {
-                    val bestServer = servers.minByOrNull { it.averageLoad }
-                    if (bestServer != null) initiateConnection(bestServer)
-                }
-            }
-            else -> {
-                val bestServer = servers.minByOrNull { it.averageLoad }
-                if (bestServer != null) initiateConnection(bestServer)
-            }
-        }
-    }
-
-    private fun findBestServerForProfile(profile: VpnProfileEntity, allServers: List<LogicalServer>): LogicalServer? {
-        return vpnRepository.findBestServerForProfile(profile, allServers)
-    }
-
-    private suspend fun initiateConnection(server: LogicalServer) {
-        val session = sessionDao.getSession() ?: return
-        val physicalServer = server.servers.filter { it.status == 1 }.minByOrNull { it.load }
-            ?: server.servers.minByOrNull { it.load } ?: return
-
-        amneziaVpnManager.connect(server.id, physicalServer, session, logicalServer = server)
     }
 
     private suspend fun updateTile(
