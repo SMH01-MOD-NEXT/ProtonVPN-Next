@@ -70,7 +70,7 @@ class AwgBoxConfigGeneratorTest {
         val peer = awg.getValue("peers").jsonArray.single().jsonObject
 
         assertEquals("tun", tun.getValue("type").jsonPrimitive.content)
-        assertEquals("system", tun.getValue("stack").jsonPrimitive.content)
+        assertEquals("go", tun.getValue("stack").jsonPrimitive.content)
         assertTrue(tun.getValue("strict_route").jsonPrimitive.content.toBoolean())
         assertEquals("awg", awg.getValue("type").jsonPrimitive.content)
         assertEquals("10.2.0.2/32", awg.getValue("address").jsonArray.single().jsonPrimitive.content)
@@ -87,6 +87,42 @@ class AwgBoxConfigGeneratorTest {
         assertFalse(root.getValue("dns").jsonObject.getValue("servers").jsonArray
             .map { it.jsonObject }
             .any { it.getValue("tag").jsonPrimitive.content == "tor-dns" })
+    }
+
+    @Test
+    fun `userspace TCP stack is retained for direct split proxy and Tor routing`() {
+        val modes = listOf("default", "include", "exclude", "proxy", "tor")
+        for (mode in modes) {
+            val config = generator.buildConfig(
+                serverPublicKey = "PUBLIC_KEY",
+                privateKey = "PRIVATE_KEY",
+                localIp = "10.2.0.2",
+                dnsServer = "10.2.0.1",
+                targetIp = "192.0.2.10",
+                isIncludeMode = mode == "include",
+                selectedDomains = if (mode in setOf("include", "exclude")) {
+                    setOf("*.example.com")
+                } else emptySet(),
+                proxyChainConfig = if (mode == "proxy") {
+                    "vless://123e4567-e89b-12d3-a456-426614174000@192.0.2.20:443?encryption=none"
+                } else null,
+                torModeEnabled = mode == "tor",
+                torDataDirectory = if (mode == "tor") "/tmp/test-tor" else null,
+                torExecutablePath = if (mode == "tor") "/tmp/libtor.so" else null,
+                obfuscationParams = AmneziaVpnManager.ObfuscationParams(
+                    jc = 0, jmin = 0, jmax = 0, s1 = 0, s2 = 0,
+                    h1 = "", h2 = "", h3 = "", h4 = "", i1 = ""
+                )
+            )
+            val root = Json.parseToJsonElement(config).jsonObject
+            val tun = root.getValue("inbounds").jsonArray.single().jsonObject
+            assertEquals(mode, "go", tun.getValue("stack").jsonPrimitive.content)
+            assertTrue(mode, tun.getValue("strict_route").jsonPrimitive.content.toBoolean())
+            val rules = root.getValue("route").jsonObject.getValue("rules").jsonArray
+            assertTrue(mode, rules.any {
+                it.jsonObject["action"]?.jsonPrimitive?.content == "hijack-dns"
+            })
+        }
     }
 
     @Test

@@ -133,7 +133,10 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             "mtu" to JsonPrimitive(1400),
             "auto_route" to JsonPrimitive(true),
             "strict_route" to JsonPrimitive(true),
-            "stack" to JsonPrimitive("system"),
+            // Keep TCP termination inside the core instead of reinjecting TCP into
+            // Android's kernel listener. The latter can stall while AWG/DNS still work.
+            // This stack is built into our pinned core and does not require gVisor.
+            "stack" to JsonPrimitive("go"),
             "route_address" to strings(routeAddresses)
         ).apply {
             if (routeExcludes.isNotEmpty()) put("route_exclude_address", strings(routeExcludes))

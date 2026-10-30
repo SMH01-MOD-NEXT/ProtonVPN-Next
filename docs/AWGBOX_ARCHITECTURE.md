@@ -80,7 +80,7 @@ replacement passes archive and native-symbol validation.
 
 ```text
 Android apps
-    -> sing-box TUN inbound (mixed stack, strict route)
+    -> sing-box TUN inbound (go stack, strict route)
     -> sing-box router and DNS hijack
     -> AWG endpoint (amneziawg-go)
     -> Proton VPN server
@@ -95,7 +95,7 @@ extensibility.
 The embedded core is compiled only with `with_awg` and `with_utls` optional
 features, plus `with_clash_api` because libbox CommandServer requires its internal connection tracker. VLESS, VMess, SOCKS/HTTP and proxy chaining are part of the base core.
 QUIC protocols (Hysteria2/TUIC), gVisor, standard WireGuard, Tailscale, Naive
-outbound, USB/IP, OpenVPN and OpenConnect are omitted. No external Clash controller is configured. Android's system TUN stack replaces gVisor.
+outbound, USB/IP, OpenVPN and OpenConnect are omitted. No external Clash controller is configured. The pinned core's built-in Go TCP/IP stack replaces gVisor.
 This keeps VLESS/Reality client compatibility while substantially reducing the
 native library size.
 
@@ -167,3 +167,17 @@ AWG handshakes reset the failure streak. Two consecutive relevant failures
 trigger an in-place engine restart with the same configuration, immediately
 returning the UI to the connecting state. A cooldown prevents restart storms
 while blocking persists.
+
+## Android 17 TCP compatibility
+
+The TUN inbound explicitly uses `stack: go` (the pinned core's default), not
+`system` or `mixed`. This terminates TCP inside the core instead of redirecting
+packets to a kernel TCP listener on the TUN address. It requires no extra build
+tag or native dependency and preserves DNS hijacking, domain split routing,
+AWG, proxy detours and Tor routing.
+
+An Android 17 report showed successful AWG handshakes and tunneled DNS replies
+but TCP flows stopped after router pre-match. Switching away from the system
+TCP path is a compatibility mitigation; an end-to-end device test is still
+required to confirm it resolves that report. Netlink SELinux warnings alone
+do not establish the root cause.
