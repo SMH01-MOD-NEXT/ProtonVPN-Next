@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REF="${AWGBOX_REF:-1.15.0-alpha.12-awgm.33}"
-EXPECTED_COMMIT="${AWGBOX_COMMIT:-2015b9b2e64ab0cf3321a1e5dfddb3bca732f82f}"
+REF="${AWGBOX_REF:-1.15.0-alpha.13-awgm.35}"
+EXPECTED_COMMIT="${AWGBOX_COMMIT:-ab29892ee9511775edb53918b8ec79eaa14be6fb}"
 GO_TOOLCHAIN="${AWGBOX_GO_TOOLCHAIN:-go1.25.5}"
 REPO="${AWGBOX_REPO:-https://github.com/hoaxisr/amnezia-box.git}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -160,8 +160,8 @@ git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-tor-log-noise.patch"
 
 GOBIN_DIR="$WORK/.bin"
 mkdir -p "$GOBIN_DIR"
-GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.12
-GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gobind@v0.1.12
+GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gomobile@v0.1.13
+GOBIN="$GOBIN_DIR" go install github.com/sagernet/gomobile/cmd/gobind@v0.1.13
 
 # Keep the mobile core intentionally small. VLESS, VMess, SOCKS/HTTP, Tor and
 # proxy chaining are part of the base build. AWG and uTLS are the only optional

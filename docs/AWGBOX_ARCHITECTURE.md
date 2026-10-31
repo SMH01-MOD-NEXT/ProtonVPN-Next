@@ -8,7 +8,7 @@ possible without replacing Android's VPN lifecycle again.
 
 ## Selected core
 
-The integration uses `hoaxisr/amnezia-box` `1.15.0-alpha.12-awgm.33` because it:
+The integration uses `hoaxisr/amnezia-box` `1.15.0-alpha.13-awgm.35` because it:
 
 - tracks the sing-box 1.15 development line;
 - embeds `amneziawg-go`;
@@ -57,6 +57,19 @@ retaining the removed instance field. The app-private Unix SOCKS socket and
 reduced Tor event logging remain enabled. The build also normalizes upstream
 release tags with an optional `v` prefix so `Libbox.version()` retains the
 leading `1` in amnezia-box tags.
+
+The Android integration was updated to `1.15.0-alpha.13-awgm.35` on
+2026-10-31, pinned to `ab29892ee9511775edb53918b8ec79eaa14be6fb`.
+Go remains pinned to 1.25.5 per upstream `go.mod`; gomobile/gobind now use
+`v0.1.13`, matching upstream's `Makefile`. Both Tor patches and the
+minimal-build rewrite apply unchanged. libbox removed
+`PlatformInterface.useProcFS()` and moved procfs owner lookup to the standalone
+`Libbox.findConnectionOwner()` helper. `AwgBoxPlatform` drops the override and
+still resolves connection owners through
+`ConnectivityManager.getConnectionOwnerUid()`, so behavior is unchanged.
+Upstream also removed the `direct` route rule action, which the generated
+configuration does not use. The new `fallback` outbound group and xhttp session
+isolation are not used by the client yet.
 
 Cached AARs require a build fingerprint (source, Go version, build script and both
 Tor patches) and matching binary SHA-256 in a generated `.build-info` sidecar.

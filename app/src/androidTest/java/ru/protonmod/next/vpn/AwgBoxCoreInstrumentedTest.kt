@@ -34,7 +34,7 @@ class AwgBoxCoreInstrumentedTest {
 
     @Test
     fun pinnedCoreLoadsOnAndroid() {
-        assertEquals("1.15.0-alpha.12-awgm.33", Libbox.version())
+        assertEquals("1.15.0-alpha.13-awgm.35", Libbox.version())
     }
 
     @Test

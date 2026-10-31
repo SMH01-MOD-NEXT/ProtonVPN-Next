@@ -96,7 +96,6 @@ class AwgBoxPlatform(
 
     override fun usePlatformAutoDetectInterfaceControl() = true
     override fun autoDetectInterfaceControl(fd: Int) { service.protect(fd) }
-    override fun useProcFS() = false
     override fun underNetworkExtension() = false
     override fun includeAllNetworks() = false
     override fun localDNSTransport(): LocalDNSTransport? = null
