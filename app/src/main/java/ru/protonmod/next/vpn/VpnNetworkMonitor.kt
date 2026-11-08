@@ -215,6 +215,9 @@ class VpnNetworkMonitor @Inject constructor(
         false
     } ?: false
 
+    /** Physical (non-VPN) network with internet access, preferring a validated one. */
+    suspend fun underlyingNetwork(): Network? = awaitUnderlyingNetwork()
+
     private suspend fun awaitUnderlyingNetwork(): Network? = withTimeoutOrNull(UNDERLYING_TIMEOUT) {
         while (true) {
             val candidates = getTrackedNetworks().mapNotNull { tracked ->

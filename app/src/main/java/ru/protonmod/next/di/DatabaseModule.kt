@@ -28,6 +28,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import ru.protonmod.next.data.local.AppDatabase
+import ru.protonmod.next.data.local.ServerProbeResultDao
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.ServersCacheDao
 import ru.protonmod.next.data.local.ServerDao
@@ -242,6 +243,18 @@ object DatabaseModule {
         }
     }
 
+    val MIGRATION_20_21 = object : Migration(20, 21) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS server_probe_results (" +
+                    "physicalServerId TEXT NOT NULL, logicalServerId TEXT NOT NULL, " +
+                    "status TEXT NOT NULL, detail TEXT NOT NULL, endpoint TEXT, " +
+                    "ports TEXT NOT NULL, latencyMs INTEGER, checkedAt INTEGER NOT NULL, " +
+                    "PRIMARY KEY(physicalServerId))"
+            )
+        }
+    }
+
     /**
      * Room writes are owned by the main process; WAL keeps readers unblocked and this timeout is a
      * final safeguard for OS/database maintenance contention. The dedicated `:vpn` process must not
@@ -293,6 +306,7 @@ object DatabaseModule {
         .addMigrations(MIGRATION_17_18)
         .addMigrations(MIGRATION_18_19)
         .addMigrations(MIGRATION_19_20)
+        .addMigrations(MIGRATION_20_21)
         .build()
     }
 
@@ -336,5 +350,11 @@ object DatabaseModule {
     @Singleton
     fun provideTrafficStatsDao(database: AppDatabase): TrafficStatsDao {
         return database.trafficStatsDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideServerProbeResultDao(database: AppDatabase): ServerProbeResultDao {
+        return database.serverProbeResultDao()
     }
 }

@@ -50,6 +50,9 @@ interface AwgBoxConfigGenerator {
     ): String
 }
 
+/** MTU of the AmneziaWG endpoint; server scan probes cap their transport padding to it too. */
+internal const val AWG_ENDPOINT_MTU = 1408
+
 @Singleton
 class AwgBoxConfigGeneratorImpl @Inject constructor(
     private val ipSubnetCalculator: IpSubnetCalculator
@@ -148,7 +151,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             "useIntegratedTun" to JsonPrimitive(false),
             "address" to strings(listOf(localPrefix)),
             "private_key" to JsonPrimitive(privateKey),
-            "mtu" to JsonPrimitive(1408),
+            "mtu" to JsonPrimitive(AWG_ENDPOINT_MTU),
             "peers" to JsonArray(listOf(JsonObject(mapOf(
                 "address" to JsonPrimitive(targetIp),
                 "port" to JsonPrimitive(port),

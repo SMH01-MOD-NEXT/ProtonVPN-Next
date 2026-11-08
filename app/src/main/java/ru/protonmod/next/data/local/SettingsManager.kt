@@ -37,6 +37,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.core.MultiProcessDataStoreFactory
 import java.io.File
+import ru.protonmod.next.data.network.probe.ServerScanObfuscationMode
+import ru.protonmod.next.data.network.probe.ServerScanPortMode
+import ru.protonmod.next.data.network.probe.ServerScanPreferences
 import ru.protonmod.next.utils.ProtonLogger
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -173,6 +176,14 @@ class SettingsManager @Inject constructor(
         private val IP_ROTATION_ENABLED = booleanPreferencesKey("ip_rotation_enabled")
         private val IP_ROTATION_INTERVAL_MINUTES = intPreferencesKey("ip_rotation_interval_minutes")
         private val IP_ROTATION_KEEP_COUNTRY = booleanPreferencesKey("ip_rotation_keep_country")
+        private val SERVER_SCAN_THREADS = intPreferencesKey("server_scan_threads")
+        private val SERVER_SCAN_TIMEOUT_MS = intPreferencesKey("server_scan_timeout_ms")
+        private val SERVER_SCAN_ATTEMPTS = intPreferencesKey("server_scan_attempts")
+        private val SERVER_SCAN_PORT_MODE = stringPreferencesKey("server_scan_port_mode")
+        private val SERVER_SCAN_CUSTOM_PORT = intPreferencesKey("server_scan_custom_port")
+        private val SERVER_SCAN_OBFUSCATION_MODE = stringPreferencesKey("server_scan_obfuscation_mode")
+        private val SERVER_SCAN_TCP_CHECK = booleanPreferencesKey("server_scan_tcp_check")
+        private val SERVER_SCAN_DATA_CHECK = booleanPreferencesKey("server_scan_data_check")
         private val SELECTED_PROFILE_ID = stringPreferencesKey("selected_profile_id")
         private val CUSTOM_PROFILES = stringPreferencesKey("custom_profiles")
 
@@ -405,6 +416,8 @@ class SettingsManager @Inject constructor(
         (it[IP_ROTATION_INTERVAL_MINUTES] ?: DEFAULT_IP_ROTATION_INTERVAL_MINUTES).coerceIn(5, 60)
     }
     val ipRotationKeepCountry: Flow<Boolean> = dataStore.data.map { it[IP_ROTATION_KEEP_COUNTRY] ?: true }
+
+    val serverScanPreferences: Flow<ServerScanPreferences> = dataStore.data.map { readServerScanPreferences(it) }
     val selectedProfileId: Flow<String> = dataStore.data.map { it[SELECTED_PROFILE_ID] ?: "standard_1" }
 
     val setupStep: Flow<SetupStep> = dataStore.data.map { preferences ->
@@ -922,6 +935,33 @@ class SettingsManager @Inject constructor(
         dataStore.edit { it[IP_ROTATION_KEEP_COUNTRY] = keepCountry }
     }
 
+    suspend fun updateServerScanPreferences(transform: (ServerScanPreferences) -> ServerScanPreferences) {
+        dataStore.edit { store ->
+            val updated = transform(readServerScanPreferences(store)).normalized()
+            store[SERVER_SCAN_THREADS] = updated.threads
+            store[SERVER_SCAN_TIMEOUT_MS] = updated.timeoutMs
+            store[SERVER_SCAN_ATTEMPTS] = updated.attempts
+            store[SERVER_SCAN_PORT_MODE] = updated.portMode.name
+            store[SERVER_SCAN_CUSTOM_PORT] = updated.customPort
+            store[SERVER_SCAN_OBFUSCATION_MODE] = updated.obfuscationMode.name
+            store[SERVER_SCAN_TCP_CHECK] = updated.tcpCheck
+            store[SERVER_SCAN_DATA_CHECK] = updated.dataCheck
+        }
+    }
+
+    private fun readServerScanPreferences(snapshot: Preferences): ServerScanPreferences = ServerScanPreferences(
+        threads = snapshot[SERVER_SCAN_THREADS] ?: ServerScanPreferences.DEFAULT_THREADS,
+        timeoutMs = snapshot[SERVER_SCAN_TIMEOUT_MS] ?: ServerScanPreferences.DEFAULT_TIMEOUT_MS,
+        attempts = snapshot[SERVER_SCAN_ATTEMPTS] ?: ServerScanPreferences.DEFAULT_ATTEMPTS,
+        portMode = ServerScanPortMode.entries.firstOrNull { it.name == snapshot[SERVER_SCAN_PORT_MODE] }
+            ?: ServerScanPortMode.CONNECTION,
+        customPort = snapshot[SERVER_SCAN_CUSTOM_PORT] ?: ServerScanPreferences.DEFAULT_CUSTOM_PORT,
+        obfuscationMode = ServerScanObfuscationMode.entries.firstOrNull { it.name == snapshot[SERVER_SCAN_OBFUSCATION_MODE] }
+            ?: ServerScanObfuscationMode.CONNECTION,
+        tcpCheck = snapshot[SERVER_SCAN_TCP_CHECK] ?: true,
+        dataCheck = snapshot[SERVER_SCAN_DATA_CHECK] ?: false,
+    ).normalized()
+
     suspend fun setAllowLanEnabled(enabled: Boolean) {
         editConnectionSetting(ALLOW_LAN_CONNECTIONS, false, enabled)
     }
@@ -1201,7 +1241,9 @@ class SettingsManager @Inject constructor(
                     SENTRY_ANR_ENABLED.name, SENTRY_METRICS_ENABLED.name,
                     SENTRY_LOGS_ENABLED.name, RECONNECT_HINT_ENABLED.name,
                     AI_ENABLED.name, IP_HIDDEN.name, IP_ROTATION_ENABLED.name,
-                    IP_ROTATION_KEEP_COUNTRY.name -> {
+                    IP_ROTATION_KEEP_COUNTRY.name,
+                    SERVER_SCAN_TCP_CHECK.name,
+                    SERVER_SCAN_DATA_CHECK.name -> {
                         val boolValue = value.toBoolean()
                         @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<Boolean>] = boolValue
@@ -1211,7 +1253,11 @@ class SettingsManager @Inject constructor(
                     VPN_PORT.name, API_PROXY_PORT.name, POLICY_ACCEPTED_VERSION.name,
                     AWG_JC.name, AWG_JMIN.name, AWG_JMAX.name, AWG_S1.name, AWG_S2.name,
                     AWG_S3.name, AWG_S4.name, AWG_JUNK_LEVEL.name,
-                    IP_ROTATION_INTERVAL_MINUTES.name -> {
+                    IP_ROTATION_INTERVAL_MINUTES.name,
+                    SERVER_SCAN_THREADS.name,
+                    SERVER_SCAN_TIMEOUT_MS.name,
+                    SERVER_SCAN_ATTEMPTS.name,
+                    SERVER_SCAN_CUSTOM_PORT.name -> {
                         val intValue = value.toIntOrNull() ?: return@forEach
                         @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<Int>] = intValue
@@ -1239,7 +1285,9 @@ class SettingsManager @Inject constructor(
                     AWG_CONTENT_PADDING_ADDITION.name, AWG_REKEY_AFTER_TIME.name,
                     AWG_REKEY_TIMEOUT.name, AWG_REJECT_AFTER_TIME.name,
                     AWG_KEEPALIVE_TIMEOUT.name, AWG_MAX_HANDSHAKE_ATTEMPTS.name,
-                    AWG_PERSISTENT_KEEPALIVE.name -> {
+                    AWG_PERSISTENT_KEEPALIVE.name,
+                    SERVER_SCAN_PORT_MODE.name,
+                    SERVER_SCAN_OBFUSCATION_MODE.name -> {
                         @Suppress("UNCHECKED_CAST")
                         settings[key as Preferences.Key<String>] = value
                         prefs.edit { putString(keyName, value) }
@@ -1293,6 +1341,14 @@ class SettingsManager @Inject constructor(
             IP_ROTATION_ENABLED.name -> IP_ROTATION_ENABLED
             IP_ROTATION_INTERVAL_MINUTES.name -> IP_ROTATION_INTERVAL_MINUTES
             IP_ROTATION_KEEP_COUNTRY.name -> IP_ROTATION_KEEP_COUNTRY
+            SERVER_SCAN_THREADS.name -> SERVER_SCAN_THREADS
+            SERVER_SCAN_TIMEOUT_MS.name -> SERVER_SCAN_TIMEOUT_MS
+            SERVER_SCAN_ATTEMPTS.name -> SERVER_SCAN_ATTEMPTS
+            SERVER_SCAN_PORT_MODE.name -> SERVER_SCAN_PORT_MODE
+            SERVER_SCAN_CUSTOM_PORT.name -> SERVER_SCAN_CUSTOM_PORT
+            SERVER_SCAN_OBFUSCATION_MODE.name -> SERVER_SCAN_OBFUSCATION_MODE
+            SERVER_SCAN_TCP_CHECK.name -> SERVER_SCAN_TCP_CHECK
+            SERVER_SCAN_DATA_CHECK.name -> SERVER_SCAN_DATA_CHECK
             SELECTED_PROFILE_ID.name -> SELECTED_PROFILE_ID
             CUSTOM_PROFILES.name -> CUSTOM_PROFILES
             NETSHIELD_LEVEL.name -> NETSHIELD_LEVEL

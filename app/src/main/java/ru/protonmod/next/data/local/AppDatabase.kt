@@ -23,6 +23,7 @@ import androidx.room.withTransaction
 
 @Database(
     entities = [
+        ServerProbeResultEntity::class,
         SessionEntity::class,
         ServersCacheEntity::class,
         ServerEntity::class,
@@ -32,7 +33,7 @@ import androidx.room.withTransaction
         CityCacheEntity::class,
         TrafficStatsEntity::class
     ],
-    version = 20,
+    version = 21,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -43,4 +44,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun profileDao(): ProfileDao
     abstract fun cityTranslationDao(): CityTranslationDao
     abstract fun trafficStatsDao(): TrafficStatsDao
+    abstract fun serverProbeResultDao(): ServerProbeResultDao
 }
