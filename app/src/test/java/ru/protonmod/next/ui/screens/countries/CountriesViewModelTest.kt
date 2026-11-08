@@ -17,10 +17,12 @@
 
 package ru.protonmod.next.ui.screens.countries
 
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -39,9 +41,15 @@ import ru.protonmod.next.data.local.SessionEntity
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.network.LogicalServer
 import ru.protonmod.next.data.network.PhysicalServer
+import ru.protonmod.next.data.network.probe.AvailabilityBadge
+import ru.protonmod.next.data.network.probe.ServerAvailability
+import ru.protonmod.next.data.network.probe.ServerProbeDetail
+import ru.protonmod.next.data.network.probe.ServerProbeResult
+import ru.protonmod.next.data.repository.ServerProbeRepository
 import ru.protonmod.next.data.repository.VpnRepository
 import ru.protonmod.next.data.state.ConnectedServerState
 import ru.protonmod.next.ui.screens.MainDispatcherRule
+import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.vpn.AmneziaVpnManager
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -65,8 +73,17 @@ class CountriesViewModelTest {
     @Mock
     private lateinit var settingsManager: SettingsManager
 
+    @Mock
+    private lateinit var serverProbeRepository: ServerProbeRepository
+
     private lateinit var connectedServerState: ConnectedServerState
     private lateinit var viewModel: CountriesViewModel
+    private val probeResults = MutableStateFlow<Map<String, ServerProbeResult>>(emptyMap())
+    private val testDispatcherProvider = object : DispatcherProvider {
+        override fun main(): CoroutineDispatcher = mainDispatcherRule.testDispatcher
+        override fun io(): CoroutineDispatcher = mainDispatcherRule.testDispatcher
+        override fun default(): CoroutineDispatcher = mainDispatcherRule.testDispatcher
+    }
 
     private val testServers = listOf(
         LogicalServer(
@@ -104,7 +121,9 @@ class CountriesViewModelTest {
         whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
         whenever(settingsManager.torModeEnabled).thenReturn(flowOf(false))
 
-        viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager, kotlinx.coroutines.CoroutineScope(Dispatchers.Main))
+        whenever(sessionDao.getSessionFlow()).thenReturn(flowOf(null))
+        whenever(serverProbeRepository.results).thenReturn(probeResults)
+        viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager, kotlinx.coroutines.CoroutineScope(Dispatchers.Main), serverProbeRepository, testDispatcherProvider)
     }
 
     @Test
@@ -189,4 +208,37 @@ class CountriesViewModelTest {
         advanceUntilIdle()
         verify(amneziaVpnManager).connect(eq("us_1"), any(), any(), anyOrNull(), anyOrNull(), anyOrNull(), anyOrNull(), any())
     }
+
+    @Test
+    fun scannerResultsProduceAvailabilityBadges() = runTest {
+        val collectJob = launch(UnconfinedTestDispatcher()) { viewModel.uiState.collect() }
+        probeResults.value = mapOf(
+            "p1" to probeResult("p1", "us_1", ServerAvailability.AVAILABLE),
+            "p2" to probeResult("p2", "us_2", ServerAvailability.BLOCKED),
+            "p3" to probeResult("p3", "de_1", ServerAvailability.AVAILABLE),
+        )
+
+        val state = viewModel.uiState.first {
+            (it as? CountriesUiState.Success)?.availability?.servers?.size == 3
+        } as CountriesUiState.Success
+
+        assertEquals(AvailabilityBadge.ALL_AVAILABLE, state.availability.server("us_1"))
+        assertEquals(AvailabilityBadge.ALL_BLOCKED, state.availability.server("us_2"))
+        assertEquals(AvailabilityBadge.PARTIAL, state.availability.country("US"))
+        assertEquals(AvailabilityBadge.ALL_AVAILABLE, state.availability.country("DE"))
+        assertEquals(AvailabilityBadge.ALL_AVAILABLE, state.availability.city("US", "New York"))
+        assertEquals(AvailabilityBadge.ALL_BLOCKED, state.availability.city("US", "Los Angeles"))
+        collectJob.cancel()
+    }
+
+    private fun probeResult(physicalId: String, logicalId: String, availability: ServerAvailability) = ServerProbeResult(
+        physicalServerId = physicalId,
+        logicalServerId = logicalId,
+        availability = availability,
+        detail = if (availability == ServerAvailability.AVAILABLE) ServerProbeDetail.HANDSHAKE_VERIFIED else ServerProbeDetail.PROTOCOL_BLOCKED,
+        endpoint = null,
+        ports = listOf(443),
+        latencyMs = null,
+        checkedAt = 0L,
+    )
 }

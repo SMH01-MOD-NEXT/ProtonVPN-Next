@@ -83,6 +83,7 @@ fun SettingsScreen(
     onNavigateToIpLookup: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null,
     onNavigateToIpRotation: (() -> Unit)? = null,
+    onNavigateToServerScan: (() -> Unit)? = null,
     onNavigateToAiSettings: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
@@ -143,6 +144,7 @@ fun SettingsScreen(
                 onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                 onNavigateToAiSettings = onNavigateToAiSettings,
                 onNavigateToIpRotation = onNavigateToIpRotation,
+                onNavigateToServerScan = onNavigateToServerScan,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
                 onCheckForUpdates = viewModel::checkForUpdates,
                 modifier = Modifier
@@ -183,7 +185,8 @@ fun SettingsContent(
     onNavigateToIpLookup: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null,
     onNavigateToAiSettings: (() -> Unit)? = null,
-    onNavigateToIpRotation: (() -> Unit)? = null
+    onNavigateToIpRotation: (() -> Unit)? = null,
+    onNavigateToServerScan: (() -> Unit)? = null
 ) {
     LazyColumn(
         modifier = modifier,
@@ -239,7 +242,8 @@ fun SettingsContent(
                             onNavigateToApiBypass = onNavigateToApiBypass,
                             onNavigateToPortSelection = onNavigateToPortSelection,
                             onNavigateToCertSettings = onNavigateToCertSettings,
-                onNavigateToIpRotation = onNavigateToIpRotation
+                onNavigateToIpRotation = onNavigateToIpRotation,
+                onNavigateToServerScan = onNavigateToServerScan
                         )
 
                         CustomizationSettingsSection(
@@ -311,7 +315,8 @@ fun SettingsContent(
                     onNavigateToApiBypass = onNavigateToApiBypass,
                     onNavigateToPortSelection = onNavigateToPortSelection,
                     onNavigateToCertSettings = onNavigateToCertSettings,
-                    onNavigateToIpRotation = onNavigateToIpRotation
+                    onNavigateToIpRotation = onNavigateToIpRotation,
+                    onNavigateToServerScan = onNavigateToServerScan
                 )
             }
 
@@ -490,6 +495,7 @@ private fun ConnectionSettingsSection(
     onNavigateToPortSelection: ((Int) -> Unit)? = null,
     onNavigateToCertSettings: (() -> Unit)? = null,
     onNavigateToIpRotation: (() -> Unit)? = null,
+    onNavigateToServerScan: (() -> Unit)? = null,
     onNavigateToProtocol: (() -> Unit)? = null
 ) {
     SettingsCategory(modifier = modifier, title = stringResource(R.string.settings_connection)) {
@@ -521,6 +527,13 @@ private fun ConnectionSettingsSection(
             title = stringResource(R.string.ip_rotation_title),
             subtitle = stringResource(R.string.ip_rotation_settings_subtitle),
             onClick = onNavigateToIpRotation
+        )
+
+        SettingRowWithIcon(
+            icon = ProtonIcons.Magnifier,
+            title = stringResource(R.string.server_scan_title),
+            subtitle = stringResource(R.string.server_scan_settings_subtitle),
+            onClick = onNavigateToServerScan
         )
 
         SettingRowWithIcon(

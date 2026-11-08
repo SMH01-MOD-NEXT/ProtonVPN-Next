@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
@@ -36,6 +37,8 @@ import kotlinx.coroutines.withContext
 import ru.protonmod.next.vpn.VpnTunnelState
 import ru.protonmod.next.R
 import ru.protonmod.next.data.repository.VpnRepository
+import ru.protonmod.next.data.repository.ServerProbeRepository
+import ru.protonmod.next.utils.coroutines.DispatcherProvider
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.local.SessionDao
 import ru.protonmod.next.data.local.SettingsManager
@@ -70,7 +73,8 @@ sealed class CountriesUiState {
         val bottomSheetContent: BottomSheetContent? = null,
         val loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
         val isBottomSheetOpen: Boolean = false,
-        val connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD
+        val connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD,
+        val availability: AvailabilityBadges = AvailabilityBadges.EMPTY
     ) : CountriesUiState()
     data class Error(val message: String) : CountriesUiState()
 }
@@ -89,7 +93,9 @@ class CountriesViewModel @Inject constructor(
     private val amneziaVpnManager: AmneziaVpnManager,
     private val connectedServerState: ConnectedServerState,
     private val settingsManager: SettingsManager,
-    @ApplicationScope private val applicationScope: CoroutineScope
+    @ApplicationScope private val applicationScope: CoroutineScope,
+    private val serverProbeRepository: ServerProbeRepository,
+    private val dispatcherProvider: DispatcherProvider,
 ) : ViewModel() {
 
     companion object {
@@ -112,13 +118,26 @@ class CountriesViewModel @Inject constructor(
         }
         .distinctUntilChanged()
 
+    // Server scanner verdicts for the badges. They are built off the main thread because
+    // a running scan publishes new results twice per second.
+    private val availabilityBadges = combine(
+        vpnRepository.getServersFlow(),
+        serverProbeRepository.results,
+        sessionDao.getSessionFlow().map { it?.userTier ?: 0 }.distinctUntilChanged(),
+    ) { servers, results, userTier ->
+        AvailabilityBadges.build(servers, results, userTier)
+    }
+        .distinctUntilChanged()
+        .flowOn(dispatcherProvider.default())
+
     val uiState: StateFlow<CountriesUiState> = combine(
         combine(_countries, vpnRepository.getServersFlow(), _navState) { c, s, n -> Triple(c, s, n) },
         vpnRepository.isUpdating,
         combine(settingsManager.serverLoadDisplayMode, settingsManager.torModeEnabled, _error) { loadMode, torEnabled, error ->
             Triple(loadMode, torEnabled, error)
-        }
-    ) { (countries, servers, nav), isUpdating, modeState ->
+        },
+        availabilityBadges,
+    ) { (countries, servers, nav), isUpdating, modeState, availability ->
         val (loadMode, torEnabled, error) = modeState
         if (isUpdating && servers.isEmpty()) {
             return@combine CountriesUiState.Loading
@@ -154,6 +173,7 @@ class CountriesViewModel @Inject constructor(
             loadDisplayMode = loadMode,
             isBottomSheetOpen = nav != NavigationState.Countries,
             connectionMode = if (torEnabled) CountryConnectionMode.TOR else CountryConnectionMode.STANDARD,
+            availability = availability,
         )
     }
         .distinctUntilChanged()

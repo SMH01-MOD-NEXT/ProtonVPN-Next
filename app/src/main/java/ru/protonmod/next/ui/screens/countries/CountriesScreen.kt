@@ -58,6 +58,7 @@ import kotlinx.collections.immutable.toImmutableList
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.ServerLoadDisplayMode
 import ru.protonmod.next.data.network.LogicalServer
+import ru.protonmod.next.data.network.probe.AvailabilityBadge
 import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LoadIndicator
@@ -196,6 +197,7 @@ fun CountriesScreen(
                                 loadDisplayMode = state.loadDisplayMode,
                                 connectionMode = state.connectionMode,
                                 onModeSelect = viewModel::setConnectionMode,
+                                availability = state.availability,
                             )
                         }
                     }
@@ -226,7 +228,8 @@ fun CountriesScreen(
                             }
                         },
                         onBack = { viewModel.backToCities() },
-                        loadDisplayMode = successState?.loadDisplayMode ?: ServerLoadDisplayMode.ALL
+                        loadDisplayMode = successState?.loadDisplayMode ?: ServerLoadDisplayMode.ALL,
+                        availability = successState?.availability ?: AvailabilityBadges.EMPTY
                     )
                 }
             }
@@ -245,6 +248,7 @@ fun CountriesListContent(
     loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD,
     onModeSelect: (CountryConnectionMode) -> Unit = {},
+    availability: AvailabilityBadges = AvailabilityBadges.EMPTY,
 ) {
     val colors = ProtonNextTheme.colors
 
@@ -277,6 +281,7 @@ fun CountriesListContent(
                         onMoreClick = { onCountryMore(country) },
                         displayMode = loadDisplayMode,
                         showTorBadge = connectionMode == CountryConnectionMode.TOR,
+                        availability = availability.country(country.code),
                     )
                 }
             }
@@ -306,6 +311,7 @@ fun CountriesListContent(
                         onMoreClick = { onCountryMore(country) },
                         displayMode = loadDisplayMode,
                         showTorBadge = connectionMode == CountryConnectionMode.TOR,
+                        availability = availability.country(country.code),
                     )
                 }
             }
@@ -360,6 +366,7 @@ fun CountryCard(
     isConnected: Boolean = false,
     displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     showTorBadge: Boolean = false,
+    availability: AvailabilityBadge? = null,
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -451,6 +458,8 @@ fun CountryCard(
                     modifier = Modifier.weight(1f)
                 )
 
+                AvailabilityBadgeIcon(availability, Modifier.padding(end = 8.dp))
+
                 LoadIndicator(load = country.averageLoad, displayMode = displayMode)
 
                 IconButton(
@@ -477,7 +486,8 @@ fun CityCard(
     onMoreClick: () -> Unit,
     modifier: Modifier = Modifier,
     isConnected: Boolean = false,
-    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
+    availability: AvailabilityBadge? = null
 ) {
     val colors = ProtonNextTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
@@ -543,6 +553,8 @@ fun CityCard(
                     modifier = Modifier.weight(1f)
                 )
 
+                AvailabilityBadgeIcon(availability, Modifier.padding(end = 8.dp))
+
                 LoadIndicator(load = city.averageLoad, displayMode = displayMode)
 
                 IconButton(
@@ -568,7 +580,8 @@ fun ServerItemCard(
     isConnected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+    displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
+    availability: AvailabilityBadge? = null
 ) {
     val colors = ProtonNextTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
@@ -605,6 +618,10 @@ fun ServerItemCard(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (availability != null) {
+                        AvailabilityBadgeIcon(availability)
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
                     LoadIndicator(load = server.averageLoad, displayMode = displayMode)
                     if (isConnected) {
                         Spacer(modifier = Modifier.width(12.dp))

@@ -48,6 +48,7 @@ sealed class Screen(val route: String) {
     data object IpLookup : Screen("ip_lookup")
     data object ConnectionVerification : Screen("connection_verification")
     data object IpRotation : Screen("ip_rotation")
+    data object ServerScan : Screen("server_scan")
     data object Profiles : Screen("profiles")
     data object EditProfile : Screen("edit_profile?profileId={profileId}") {
         fun createRoute(profileId: String? = null) = if (profileId != null) "edit_profile?profileId=$profileId" else "edit_profile"
@@ -158,6 +159,9 @@ fun NavGraphBuilder.appNavGraph(
             },
             onNavigateToIpRotation = {
                 navController.navigate(Screen.IpRotation.route)
+            },
+            onNavigateToServerScan = {
+                navController.navigate(Screen.ServerScan.route)
             }
         )
     }
@@ -183,6 +187,10 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.IpRotation.route) {
         IpRotationSettingsScreen(onBack = { navController.popBackStack() })
+    }
+
+    composable(Screen.ServerScan.route) {
+        ServerScanScreen(onBack = { navController.popBackStack() })
     }
 
     composable(Screen.CertSettings.route) {

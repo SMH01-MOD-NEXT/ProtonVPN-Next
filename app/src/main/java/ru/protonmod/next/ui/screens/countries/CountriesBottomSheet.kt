@@ -45,7 +45,8 @@ fun CountriesBottomSheet(
     onServerClick: (LogicalServer) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL
+    loadDisplayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
+    availability: AvailabilityBadges = AvailabilityBadges.EMPTY
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -101,7 +102,8 @@ fun CountriesBottomSheet(
                                     isConnected = (connectedServer?.city == city.name && connectedServer.exitCountry == targetContent.countryCode),
                                     onClick = { onCityClick(city) },
                                     onMoreClick = { onCityMore(city) },
-                                    displayMode = loadDisplayMode
+                                    displayMode = loadDisplayMode,
+                                    availability = availability.city(targetContent.countryCode, city.name)
                                 )
                             }
                         }
@@ -126,7 +128,8 @@ fun CountriesBottomSheet(
                                     server = server,
                                     isConnected = connectedServer?.id == server.id,
                                     onClick = { onServerClick(server) },
-                                    displayMode = loadDisplayMode
+                                    displayMode = loadDisplayMode,
+                                    availability = availability.server(server.id)
                                 )
                             }
                         }
