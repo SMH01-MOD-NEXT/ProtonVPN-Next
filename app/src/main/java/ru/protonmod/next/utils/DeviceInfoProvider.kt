@@ -39,7 +39,7 @@ class DeviceInfoProvider @Inject constructor(
 
     companion object {
         // The official ProtonVPN client version we are spoofing
-        const val SPOOFED_APP_VERSION = "5.19.43.0"
+        const val SPOOFED_APP_VERSION = "5.21.57.0"
 
         /**
          * Generates a User-Agent string identical to the official Proton client.
