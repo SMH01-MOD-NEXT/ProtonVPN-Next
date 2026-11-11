@@ -17,4 +17,12 @@
     <string name="custom_save">Сохранить</string>
     <string name="custom_error">Не удалось обработать конфигурацию. Проверьте формат, соединение и версию зеркала API.</string>
     <string name="custom_hop_added">Добавлено в цепочку обхода VPN</string>
+    <string name="warp_endpoint">IPv4 узла (необязательно)</string>
+    <string name="warp_api_endpoint">Из ответа регистрации</string>
+    <string name="warp_port">UDP-порт</string>
+    <string name="warp_official_candidate">Выбрать IP из официального диапазона</string>
+    <string name="warp_experimental_candidate">Выбрать экспериментальный IP</string>
+    <string name="warp_awg2">AWG 2.0 / QUIC — экспериментально</string>
+    <string name="warp_ports_notice">Официальные UDP: 2408, 500, 1701, 4500. Полный опубликованный список кандидатов:</string>
+    <string name="warp_candidates_notice">Кандидаты не проверены зарегистрированным WireGuard handshake. AWG2 повторяет формат генератора: стандартные заголовки WG, без Reserved. Нужна проверка в вашей сети. MASQUE и узлы с регистрацией в боте исключены.</string>
 </resources>

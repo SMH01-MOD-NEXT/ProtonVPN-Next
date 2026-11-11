@@ -233,8 +233,8 @@ class CountriesViewModel @Inject constructor(
         } catch (e: kotlinx.coroutines.CancellationException) { throw e }
         catch (_: Exception) { "" to "" }
     }
-    fun generateWarp() { viewModelScope.launch { customAction {
-        val text = warpRepository.generate()
+    fun generateWarp(endpoint: String? = null, port: Int? = null, awg2: Boolean = false) { viewModelScope.launch { customAction {
+        val text = warpRepository.generate(endpoint, port, awg2)
         val link = customRepository.normalize(text)
         val location = locateCustom(link)
         customRepository.save(ru.protonmod.next.data.repository.CustomConfig(name = "WARP", link = link, country = location.first, city = location.second))

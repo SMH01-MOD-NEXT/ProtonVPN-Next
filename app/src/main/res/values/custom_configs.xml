@@ -17,4 +17,12 @@
     <string name="custom_save">Save</string>
     <string name="custom_error">Could not process configuration. Check the format, connection and API mirror version.</string>
     <string name="custom_hop_added">Added to the VPN proxy chain</string>
+    <string name="warp_endpoint">Endpoint IPv4 (optional)</string>
+    <string name="warp_api_endpoint">From registration response</string>
+    <string name="warp_port">UDP port</string>
+    <string name="warp_official_candidate">Pick official-range IP candidate</string>
+    <string name="warp_experimental_candidate">Pick experimental IP candidate</string>
+    <string name="warp_awg2">AWG 2.0 / QUIC — experimental</string>
+    <string name="warp_ports_notice">Official UDP: 2408, 500, 1701, 4500. Full published candidate list:</string>
+    <string name="warp_candidates_notice">Candidates have not passed a registered WireGuard handshake. AWG2 matches the reference generator: standard WG headers, no Reserved. Test it on your network. MASQUE and bot-only endpoints are excluded.</string>
 </resources>

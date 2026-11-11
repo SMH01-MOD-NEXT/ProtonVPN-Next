@@ -23,7 +23,7 @@ import ru.protonmod.next.ui.theme.ProtonNextTheme
 @Composable
 fun CustomConfigsPanel(configs: List<CustomConfig>, busy: Boolean,
     onSave: (String?, String, String, String, String) -> Unit,
-    onDelete: (String) -> Unit, onGenerate: () -> Unit,
+    onDelete: (String) -> Unit, onGenerate: (String?, Int?, Boolean) -> Unit,
     onHop: (CustomConfig) -> Unit, onConnect: (CustomConfig) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf(false) }
@@ -46,12 +46,9 @@ fun CustomConfigsPanel(configs: List<CustomConfig>, busy: Boolean,
             }
         }
     }
-    if (confirmWarp) AlertDialog(onDismissRequest = { confirmWarp = false },
-        title = { Text(stringResource(R.string.custom_warp)) },
-        text = { Text(stringResource(R.string.custom_warp_notice)) },
-        confirmButton = { TextButton(onClick = { confirmWarp = false; onGenerate() }) { Text(stringResource(R.string.custom_generate)) } },
-        dismissButton = { TextButton(onClick = { confirmWarp = false }) { Text(stringResource(R.string.custom_cancel)) } },
-        containerColor = ProtonNextTheme.colors.backgroundNorm)
+    if (confirmWarp) WarpOptionsDialog(onDismiss = { confirmWarp = false }, onGenerate = { endpoint, port, awg ->
+        confirmWarp = false; onGenerate(endpoint, port, awg)
+    })
     if (editing) CustomConfigDialog(selected, onDismiss = { editing = false },
         onSave = { name, raw, country, city -> onSave(selected?.id, name, raw, country, city); editing = false },
         onDelete = { selected?.let { onDelete(it.id) }; editing = false },
@@ -106,6 +103,31 @@ private fun CustomConfigDialog(config: CustomConfig?, onDismiss: () -> Unit,
             }
         } },
         confirmButton = { TextButton(onClick = { onSave(name, raw, country, city) }, enabled = valid) { Text(stringResource(R.string.custom_save)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.custom_cancel)) } },
+        containerColor = ProtonNextTheme.colors.backgroundNorm)
+}
+
+@Composable
+private fun WarpOptionsDialog(onDismiss: () -> Unit, onGenerate: (String?, Int?, Boolean) -> Unit) {
+    var endpoint by remember { mutableStateOf("") }
+    var port by remember { mutableStateOf("2408") }
+    var awg2 by remember { mutableStateOf(false) }
+    val valid = remember(endpoint, port) { runCatching { ru.protonmod.next.data.network.WarpEndpoints.validate(endpoint.trim(), port.toInt()) }.isSuccess }
+    AlertDialog(onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.custom_warp)) },
+        text = { Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(stringResource(R.string.custom_warp_notice))
+            OutlinedTextField(endpoint, { endpoint = it }, label = { Text(stringResource(R.string.warp_endpoint)) },
+                placeholder = { Text(stringResource(R.string.warp_api_endpoint)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            TextButton(onClick = { endpoint = ru.protonmod.next.data.network.WarpEndpoints.officialIps.random() }) { Text(stringResource(R.string.warp_official_candidate)) }
+            TextButton(onClick = { endpoint = ru.protonmod.next.data.network.WarpEndpoints.communityIps.random() }) { Text(stringResource(R.string.warp_experimental_candidate)) }
+            OutlinedTextField(port, { port = it }, label = { Text(stringResource(R.string.warp_port)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            Text(stringResource(R.string.warp_ports_notice), style = MaterialTheme.typography.bodySmall)
+            Text(ru.protonmod.next.data.network.WarpEndpoints.ports.joinToString(", "), style = MaterialTheme.typography.bodySmall)
+            Row { Checkbox(checked = awg2, onCheckedChange = { awg2 = it }); Text(stringResource(R.string.warp_awg2)) }
+            Text(stringResource(R.string.warp_candidates_notice), style = MaterialTheme.typography.bodySmall)
+        } },
+        confirmButton = { TextButton(enabled = valid, onClick = { onGenerate(endpoint.trim().takeIf(String::isNotBlank), port.toInt(), awg2) }) { Text(stringResource(R.string.custom_generate)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.custom_cancel)) } },
         containerColor = ProtonNextTheme.colors.backgroundNorm)
 }

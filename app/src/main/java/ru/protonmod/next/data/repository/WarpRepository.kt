@@ -24,7 +24,8 @@ import javax.inject.Singleton
 class WarpRepository @Inject constructor(private val client: OkHttpClient, private val settings: SettingsManager) {
     /** No Proton authenticator/interceptors: WARP must never receive Proton credentials. Retain
      * DNS and socket/proxy transports for direct/ByeDPI/custom proxy modes with standard TLS. */
-    suspend fun generate(): String = withContext(Dispatchers.IO) {
+    suspend fun generate(endpoint: String? = null, port: Int? = null, awg2: Boolean = false): String = withContext(Dispatchers.IO) {
+        ru.protonmod.next.data.network.WarpEndpoints.validate(endpoint, port)
         val private = X25519PrivateKeyParameters(SecureRandom())
         val b64 = Base64.getEncoder()
         val body = buildJsonObject {
@@ -82,7 +83,7 @@ class WarpRepository @Inject constructor(private val client: OkHttpClient, priva
             Reserved = ${reserved.joinToString(", ") { (it.toInt() and 255).toString() }}
         """.trimIndent()
         ImportedWireGuard.encode(text) // Validate before exposing a generated configuration.
-        text
+        ru.protonmod.next.data.network.WarpEndpoints.apply(text, endpoint, port, awg2)
     }
     private val defaultSsl: Pair<javax.net.ssl.SSLSocketFactory, javax.net.ssl.X509TrustManager>
         get() {
