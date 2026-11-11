@@ -47,7 +47,8 @@ private const val MAX_PROXY_HOPS = 4
 fun ProxyChainEditor(
     config: String,
     onConfigChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    savedConfigs: List<ru.protonmod.next.data.repository.CustomConfig> = emptyList()
 ) {
     val colors = ProtonNextTheme.colors
     var links by remember(config) {
@@ -103,10 +104,11 @@ fun ProxyChainEditor(
             }
 
             links.forEachIndexed { index, link ->
-                val info = remember(link) { runCatching { ProxyLinkParser.inspectLink(link) }.getOrNull() }
+                val saved = savedConfigs.find { "custom://${it.id}" == link }
+                val info = remember(link, saved) { runCatching { ProxyLinkParser.inspectLink(saved?.link ?: link) }.getOrNull() }
                 ProxyTreeNode(
                     index = index,
-                    title = info?.name ?: stringResource(R.string.proxy_chain_invalid_node),
+                    title = saved?.name ?: info?.name ?: stringResource(R.string.proxy_chain_invalid_node),
                     subtitle = info?.let { "${it.protocol.uppercase()}  •  ${it.server}:${it.port}" }
                         ?: stringResource(R.string.proxy_chain_invalid),
                     isDragging = draggedIndex == index,

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="custom_title">Свои конфигурации</string>
+    <string name="custom_add">Импорт</string>
+    <string name="custom_warp">WARP</string>
+    <string name="custom_warp_notice">Регистрация означает принятие условий Cloudflare. Ключи создаются локально. Маршрутизация зависит от настройки обхода API: если он выключен, запрос пойдёт напрямую. IP узла используется для определения геолокации через freeipapi.com; она может отличаться от геолокации выхода.</string>
+    <string name="custom_generate">Создать</string>
+    <string name="custom_cancel">Отмена</string>
+    <string name="custom_hint">WireGuard/AmneziaWG .conf или ссылка VLESS/VMess. Пустые поля геолокации определяются по адресу сервера через freeipapi.com (это не гарантированная геолокация выхода VPN). Передаётся только IP узла. Заполните оба поля, чтобы пропустить определение.</string>
+    <string name="custom_name">Название</string>
+    <string name="custom_file">Выбрать файл</string>
+    <string name="custom_config_content">Конфигурация</string>
+    <string name="custom_country">Страна (ISO-код или автоматически)</string>
+    <string name="custom_city">Город (или автоматически)</string>
+    <string name="custom_hop">Добавить узел перед Proton</string>
+    <string name="custom_delete">Удалить</string>
+    <string name="custom_save">Сохранить</string>
+    <string name="custom_error">Не удалось обработать конфигурацию. Проверьте формат, соединение и версию зеркала API.</string>
+    <string name="custom_hop_added">Добавлено в цепочку обхода VPN</string>
+</resources>

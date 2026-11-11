@@ -105,9 +105,9 @@ extensibility.
 
 ## Minimal mobile build
 
-The embedded core is compiled only with `with_awg` and `with_utls` optional
+The embedded core is compiled with `with_awg`, `with_wireguard` (WARP reserved bytes) and `with_utls` optional
 features, plus `with_clash_api` because libbox CommandServer requires its internal connection tracker. VLESS, VMess, SOCKS/HTTP and proxy chaining are part of the base core.
-QUIC protocols (Hysteria2/TUIC), gVisor, standard WireGuard, Tailscale, Naive
+QUIC protocols (Hysteria2/TUIC), gVisor, Tailscale, Naive
 outbound, USB/IP, OpenVPN and OpenConnect are omitted. No external Clash controller is configured. The pinned core's built-in Go TCP/IP stack replaces gVisor.
 This keeps VLESS/Reality client compatibility while substantially reducing the
 native library size.

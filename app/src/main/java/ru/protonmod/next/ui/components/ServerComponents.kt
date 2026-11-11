@@ -135,7 +135,7 @@ fun ServerCard(
                     )
                 }
 
-                if (!isConnecting) {
+                if (!isConnecting && !server.id.startsWith("custom:")) {
                     LoadIndicator(
                         load = server.averageLoad,
                         displayMode = displayMode
@@ -143,7 +143,7 @@ fun ServerCard(
                 }
             }
 
-            LoadProgressBar(
+            if (!server.id.startsWith("custom:")) LoadProgressBar(
                 load = server.averageLoad,
                 displayMode = displayMode
             )

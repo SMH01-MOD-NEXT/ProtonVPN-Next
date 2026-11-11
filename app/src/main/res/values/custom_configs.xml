@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="custom_title">Custom configurations</string>
+    <string name="custom_add">Import</string>
+    <string name="custom_warp">WARP</string>
+    <string name="custom_warp_notice">Registration accepts Cloudflare terms. Keys are generated locally. The API bypass setting controls routing; disabled means direct registration. The endpoint IP is used for location lookup through freeipapi.com; this may not be the exit location.</string>
+    <string name="custom_generate">Generate</string>
+    <string name="custom_cancel">Cancel</string>
+    <string name="custom_hint">WireGuard/AmneziaWG .conf or VLESS/VMess link. Empty location fields are detected from the endpoint using freeipapi.com (not the guaranteed VPN exit location). Only the endpoint IP is shared. Enter both fields to skip detection.</string>
+    <string name="custom_name">Name</string>
+    <string name="custom_file">Choose file</string>
+    <string name="custom_config_content">Configuration</string>
+    <string name="custom_country">Country (ISO code, or automatic)</string>
+    <string name="custom_city">City (or automatic)</string>
+    <string name="custom_hop">Add as hop before Proton</string>
+    <string name="custom_delete">Delete</string>
+    <string name="custom_save">Save</string>
+    <string name="custom_error">Could not process configuration. Check the format, connection and API mirror version.</string>
+    <string name="custom_hop_added">Added to the VPN proxy chain</string>
+</resources>

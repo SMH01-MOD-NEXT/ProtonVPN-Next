@@ -123,7 +123,7 @@ class CountriesViewModelTest {
 
         whenever(sessionDao.getSessionFlow()).thenReturn(flowOf(null))
         whenever(serverProbeRepository.results).thenReturn(probeResults)
-        viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager, kotlinx.coroutines.CoroutineScope(Dispatchers.Main), serverProbeRepository, testDispatcherProvider)
+        viewModel = CountriesViewModel(context, vpnRepository, sessionDao, amneziaVpnManager, connectedServerState, settingsManager, kotlinx.coroutines.CoroutineScope(Dispatchers.Main), serverProbeRepository, testDispatcherProvider, mock<ru.protonmod.next.data.repository.CustomConfigRepository> { on { configs } doReturn MutableStateFlow(emptyList()) }, mock<ru.protonmod.next.data.repository.WarpRepository>())
     }
 
     @Test

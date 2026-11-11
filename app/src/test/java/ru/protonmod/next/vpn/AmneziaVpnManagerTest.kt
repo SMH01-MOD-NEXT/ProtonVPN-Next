@@ -206,6 +206,7 @@ class AmneziaVpnManagerTest {
                 { authRepository },
                 vpnNetworkMonitor,
                 trafficStatsRecorder,
+                mock<ru.protonmod.next.data.repository.CustomConfigRepository>(),
                 testDispatcherProvider,
                 testScope
             )

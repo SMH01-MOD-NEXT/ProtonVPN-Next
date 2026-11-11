@@ -86,6 +86,7 @@ class AmneziaVpnManager @Inject constructor(
     private val authRepositoryProvider: Provider<AuthRepository>,
     private val vpnNetworkMonitor: VpnNetworkMonitor,
     private val trafficStatsRecorder: TrafficStatsRecorder,
+    private val customConfigs: ru.protonmod.next.data.repository.CustomConfigRepository,
     private val dispatcherProvider: DispatcherProvider,
     @ApplicationScope private val applicationScope: CoroutineScope
 ) {
@@ -390,7 +391,8 @@ class AmneziaVpnManager @Inject constructor(
         }
 
         verificationJob = applicationScope.launch {
-            val mode = settingsManager.connectionVerificationMode.first()
+            val mode = if (currentServerId?.startsWith("custom:") == true && settingsManager.connectionVerificationMode.first().handshakeOnly)
+                ConnectionVerificationMode.BALANCED else settingsManager.connectionVerificationMode.first()
             val required = settingsManager.connectionVerificationRequired.first()
             if (mode == ConnectionVerificationMode.DISABLED) {
                 verificationCycle = null
@@ -621,7 +623,9 @@ class AmneziaVpnManager @Inject constructor(
             killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
             nonFatalEnabled = settingsManager.sentryNonFatalEnabled.first(),
             analyticsEnabled = settingsManager.analyticsEnabled.first(),
-            verificationMode = settingsManager.connectionVerificationMode.first(),
+            verificationMode = settingsManager.connectionVerificationMode.first().let {
+                if (currentServerId?.startsWith("custom:") == true && it.handshakeOnly) ConnectionVerificationMode.BALANCED else it
+            },
             verificationRequired = settingsManager.connectionVerificationRequired.first(),
             handshakeTimeoutSeconds = settingsManager.handshakeReconnectTimeoutSeconds.first(),
             failureDetectionEnabled = settingsManager.connectionFailureDetection.first(),
@@ -709,6 +713,11 @@ class AmneziaVpnManager @Inject constructor(
             ProtonLogger.addSentryBreadcrumb(TAG, "VPN Connection Step: Start ($serverLogInfo)", "INFO", "vpn.connect")
 
             _isConnecting.value = true
+            if (logicalServerId.startsWith("custom:")) {
+                customConfigs.load()
+                val custom = requireNotNull(customConfigs.configs.value.find { "custom:${it.id}" == logicalServerId })
+                return@withContext startCustomConfig(custom)
+            }
             var currentSession = session
 
             // Proactively refresh certificate if it's not valid (Expired or ExpiringSoon)
@@ -730,7 +739,11 @@ class AmneziaVpnManager @Inject constructor(
             }
             var targetIp: String? = null
             val proxyChainEnabled = settingsManager.proxyChainEnabled.first()
-            val proxyChainConfig = settingsManager.proxyChainConfig.first().trim()
+            val proxyChainConfig = if (proxyChainEnabled) try {
+                customConfigs.resolveChain(settingsManager.proxyChainConfig.first().trim())
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {
+                throw ExpectedConnectionException(ConnectionWarning.InvalidProxyConfiguration, "A saved proxy configuration is unavailable")
+            } else ""
             if (proxyChainEnabled && !ProxyLinkParser.isValid(proxyChainConfig)) {
                 throw ExpectedConnectionException(
                     ConnectionWarning.InvalidProxyConfiguration,
@@ -937,7 +950,9 @@ class AmneziaVpnManager @Inject constructor(
                 sessionId = sessionId,
                 notificationsEnabled = settingsManager.notificationsEnabled.first(),
                 killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
-                verificationMode = settingsManager.connectionVerificationMode.first(),
+                verificationMode = settingsManager.connectionVerificationMode.first().let {
+                if (currentServerId?.startsWith("custom:") == true && it.handshakeOnly) ConnectionVerificationMode.BALANCED else it
+            },
                 verificationRequired = settingsManager.connectionVerificationRequired.first(),
                 handshakeTimeoutSeconds = settingsManager.handshakeReconnectTimeoutSeconds.first(),
                 failureDetectionEnabled = settingsManager.connectionFailureDetection.first(),
@@ -981,6 +996,56 @@ class AmneziaVpnManager @Inject constructor(
             currentServerId = null
             Result.failure(e)
         }
+    }
+
+    private suspend fun startCustomConfig(custom: ru.protonmod.next.data.repository.CustomConfig): Result<Unit> {
+        val originalNode = ProxyLinkParser.parseChain(custom.link).single().outbound
+        val info = ProxyLinkParser.inspectLink(custom.link)
+        val resolvedIp = vpnNetworkMonitor.resolveIpv4OnUnderlying(info.server)
+            ?: error("Custom endpoint is not reachable over IPv4")
+        val node = kotlinx.serialization.json.JsonObject(originalNode - "domain_resolver" +
+            if (originalNode.containsKey("server")) mapOf("server" to kotlinx.serialization.json.JsonPrimitive(resolvedIp)) else emptyMap())
+        val isAwg = node["type"] in setOf(kotlinx.serialization.json.JsonPrimitive("awg"), kotlinx.serialization.json.JsonPrimitive("wireguard"))
+        val parsed = if (isAwg) ImportedWireGuard.parse(ImportedWireGuard.decode(custom.link), "proton-awg") else null
+        val split = settingsManager.splitTunnelingEnabled.first()
+        val mode = settingsManager.splitTunnelingMode.first()
+        val apps = if (split) settingsManager.excludedApps.first() else emptySet()
+        val ips = if (split) settingsManager.excludedIps.first() else emptySet()
+        val domains = if (split) settingsManager.excludedDomains.first() else emptySet()
+        val zero = ObfuscationParams(0, 0, 0, 0, 0, h1 = "", h2 = "", h3 = "", h4 = "", i1 = "")
+        val base = kotlinx.serialization.json.Json.parseToJsonElement(awgBoxConfigGenerator.buildConfig(
+            serverPublicKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            privateKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=", localIp = "10.0.0.2",
+            dnsServer = parsed?.name ?: "1.1.1.1", targetIp = "192.0.2.1",
+            isIncludeMode = split && mode == "include", allowLan = settingsManager.allowLanEnabled.first(),
+            selectedApps = apps, selectedIps = ips, selectedDomains = domains, obfuscationParams = zero,
+            netShieldRuleSets = localNetShield.activeRuleSets(settingsManager.netShieldLevel.first())
+        )).let { it as kotlinx.serialization.json.JsonObject }
+        val targetFields = (parsed?.outbound ?: node).toMutableMap()
+        targetFields["tag"] = kotlinx.serialization.json.JsonPrimitive("proton-awg")
+        (targetFields["peers"] as? kotlinx.serialization.json.JsonArray)?.let { peers ->
+            targetFields["peers"] = kotlinx.serialization.json.JsonArray(peers.map { peer ->
+                kotlinx.serialization.json.JsonObject((peer as kotlinx.serialization.json.JsonObject) +
+                    ("address" to kotlinx.serialization.json.JsonPrimitive(resolvedIp)))
+            })
+        }
+        val target = kotlinx.serialization.json.JsonObject(targetFields)
+        val outbounds = (base.getValue("outbounds") as kotlinx.serialization.json.JsonArray).toList()
+        val config = kotlinx.serialization.json.JsonObject(base + mapOf(
+            "endpoints" to kotlinx.serialization.json.JsonArray(if (isAwg) listOf(target) else emptyList()),
+            "outbounds" to kotlinx.serialization.json.JsonArray(outbounds + if (isAwg) emptyList() else listOf(target))
+        )).toString()
+        val verification = if (!isAwg && settingsManager.connectionVerificationMode.first().handshakeOnly)
+            ConnectionVerificationMode.BALANCED else settingsManager.connectionVerificationMode.first()
+        systemContextWrapper.startVpnService(
+            configStr = config, logicalServerId = "custom:${custom.id}", sessionId = System.currentTimeMillis(),
+            notificationsEnabled = settingsManager.notificationsEnabled.first(), killSwitchEnabled = settingsManager.killSwitchEnabled.first(),
+            verificationMode = verification, verificationRequired = settingsManager.connectionVerificationRequired.first(),
+            handshakeTimeoutSeconds = settingsManager.handshakeReconnectTimeoutSeconds.first(),
+            failureDetectionEnabled = settingsManager.connectionFailureDetection.first(), autoReconnectEnabled = settingsManager.connectionAutoReconnect.first(),
+            splitTunnelingEnabled = split, splitTunnelingMode = mode, excludedApps = apps, excludedIps = ips
+        )
+        return Result.success(Unit)
     }
 
     fun reconnect(
@@ -1058,6 +1123,7 @@ class AmneziaVpnManager @Inject constructor(
      */
     private suspend fun rotateIp() {
         val current = connectedServerState.connectedServer.value ?: return
+        if (current.id.startsWith("custom:")) return
         val session = sessionDao.getSession() ?: return
         val candidate = IpRotationSelector.select(
             servers = vpnRepositoryProvider.get().getCachedServers(),
@@ -1092,7 +1158,8 @@ class AmneziaVpnManager @Inject constructor(
         }
 
         applicationScope.launch {
-            val session = sessionDao.getSession() ?: run {
+            val session = sessionDao.getSession() ?: if (request.logicalServerId.startsWith("custom:"))
+                SessionEntity(accessToken = "", refreshToken = "", sessionId = "", userId = "") else run {
                 ProtonLogger.w(TAG, "Reconnect requested without an active session")
                 return@launch
             }

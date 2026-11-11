@@ -45,6 +45,10 @@ object ProxyLinkParser {
             "Expected exactly one proxy link"
         }
         val parsed = parse(normalized, "preview")
+        if (parsed.outbound["type"]?.jsonPrimitive?.content in setOf("awg", "wireguard")) {
+            val peer = parsed.outbound.getValue("peers").let { it as JsonArray }.first().jsonObject
+            return ProxyLinkInfo("WireGuard", parsed.outbound.getValue("type").jsonPrimitive.content, peer.getValue("address").jsonPrimitive.content, peer.getValue("port").jsonPrimitive.content.toInt())
+        }
         return ProxyLinkInfo(
             name = parsed.name,
             protocol = parsed.outbound.getValue("type").jsonPrimitive.content,
@@ -72,6 +76,7 @@ object ProxyLinkParser {
     fun isValid(config: String): Boolean = runCatching { parseChain(config) }.isSuccess
 
     private fun parse(link: String, tag: String): ParsedProxy = when {
+        link.startsWith(ImportedWireGuard.SCHEME) -> ImportedWireGuard.parse(ImportedWireGuard.decode(link), tag)
         link.startsWith("vless://", ignoreCase = true) -> parseVless(link, tag)
         link.startsWith("vmess://", ignoreCase = true) -> parseVmess(link, tag)
         else -> throw IllegalArgumentException("Only vless:// and vmess:// links are supported")

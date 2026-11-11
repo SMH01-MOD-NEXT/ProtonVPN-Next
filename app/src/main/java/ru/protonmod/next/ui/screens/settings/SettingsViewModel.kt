@@ -204,8 +204,11 @@ class SettingsViewModel @Inject constructor(
     private val otaUpdateManager: OTAUpdateManager,
     private val eventBypassManager: EventBypassManager,
     private val byeDpiManager: ByeDpiManager,
-    private val byeDpiStrategyTester: ByeDpiStrategyTester
+    private val byeDpiStrategyTester: ByeDpiStrategyTester,
+    private val customRepository: ru.protonmod.next.data.repository.CustomConfigRepository
 ) : ViewModel() {
+
+    val savedCustomConfigs = customRepository.configs
 
     // Internal state tracking if any VPN is operating at the OS level
     private val _eventActionFailed = MutableStateFlow(false)
@@ -237,6 +240,7 @@ class SettingsViewModel @Inject constructor(
     )
 
     init {
+        viewModelScope.launch { try { customRepository.load() } catch (_: Exception) { _eventActionFailed.value = true } }
         viewModelScope.launch {
             otaUpdateManager.latestUpdate.collect { update ->
                 _isUpdateAvailable.value = update != null
@@ -446,7 +450,9 @@ class SettingsViewModel @Inject constructor(
             isUpdateAvailable = args[70] as Boolean,
             proxyChainEnabled = args[71] as Boolean,
             proxyChainConfig = args[72] as String,
-            isProxyChainConfigValid = ProxyLinkParser.isValid(args[72] as String),
+            isProxyChainConfigValid = (args[72] as String).lineSequence().map(String::trim).filter(String::isNotEmpty).toList().let { links ->
+                links.isNotEmpty() && links.size <= 4 && links.all { it.startsWith("custom://") || ProxyLinkParser.isValid(it) }
+            },
             torModeEnabled = args[73] as Boolean,
             reconnectHintEnabled = args[74] as Boolean,
             aiEnabled = args[75] as Boolean,

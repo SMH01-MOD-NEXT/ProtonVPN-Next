@@ -86,6 +86,13 @@ fun CountriesScreen(
     val context = LocalContext.current
     val isTablet = isTablet()
 
+    val customConfigs by viewModel.customConfigs.collectAsStateWithLifecycle()
+    val customBusy by viewModel.customBusy.collectAsStateWithLifecycle()
+    val customMessage by viewModel.customMessage.collectAsStateWithLifecycle()
+    LaunchedEffect(customMessage) { customMessage?.let {
+        Toast.makeText(context, context.getString(it), Toast.LENGTH_LONG).show()
+        viewModel.customMessage.value = null
+    } }
     var pendingAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
     val vpnPermissionLauncher = rememberLauncherForActivityResult(
@@ -148,6 +155,12 @@ fun CountriesScreen(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
+                CustomConfigsPanel(
+                    configs = customConfigs, busy = customBusy,
+                    onSave = viewModel::saveCustom, onDelete = viewModel::deleteCustom,
+                    onGenerate = viewModel::generateWarp, onHop = viewModel::useCustomAsHop,
+                    onConnect = { config -> checkVpnAndConnect { viewModel.connectCustom(config); onNavigateToHome() } },
+                )
                 AnimatedContent(
                     targetState = uiState,
                     contentKey = { state ->
@@ -367,6 +380,8 @@ fun CountryCard(
     displayMode: ServerLoadDisplayMode = ServerLoadDisplayMode.ALL,
     showTorBadge: Boolean = false,
     availability: AvailabilityBadge? = null,
+    customTitle: String? = null,
+    showLoad: Boolean = true,
 ) {
     val colors = ProtonNextTheme.colors
     val context = LocalContext.current
@@ -451,7 +466,7 @@ fun CountryCard(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 Text(
-                    text = localizedName,
+                    text = customTitle ?: localizedName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = colors.textNorm,
@@ -460,7 +475,7 @@ fun CountryCard(
 
                 AvailabilityBadgeIcon(availability, Modifier.padding(end = 8.dp))
 
-                LoadIndicator(load = country.averageLoad, displayMode = displayMode)
+                if (showLoad) LoadIndicator(load = country.averageLoad, displayMode = displayMode)
 
                 IconButton(
                     onClick = onMoreClick,
@@ -474,7 +489,7 @@ fun CountryCard(
                 }
             }
 
-            LoadProgressBar(load = country.averageLoad, displayMode = displayMode)
+            if (showLoad) LoadProgressBar(load = country.averageLoad, displayMode = displayMode)
         }
     }
 }

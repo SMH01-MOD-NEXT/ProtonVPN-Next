@@ -224,7 +224,9 @@ fun ObfuscationSettingsScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             CategoryHeader(title = stringResource(R.string.proxy_chain_setup_title))
                             InfoCard(text = stringResource(R.string.proxy_chain_info))
+                            val savedConfigs by viewModel.savedCustomConfigs.collectAsStateWithLifecycle()
                             ProxyChainEditor(
+                                savedConfigs = savedConfigs,
                                 config = uiState.proxyChainConfig,
                                 onConfigChange = viewModel::setProxyChainConfig,
                                 modifier = Modifier.fillMaxWidth()

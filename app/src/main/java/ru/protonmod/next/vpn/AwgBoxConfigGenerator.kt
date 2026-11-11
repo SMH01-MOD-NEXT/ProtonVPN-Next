@@ -100,13 +100,17 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             ?.let(ProxyLinkParser::parseChain)
             .orEmpty()
             .map { proxy ->
-                val server = proxy.outbound["server"] as? JsonPrimitive
-                val override = server?.content?.let(proxyServerOverrides::get)
-                if (override == null) proxy else proxy.copy(
-                    outbound = JsonObject(
-                        (proxy.outbound - "domain_resolver") + ("server" to JsonPrimitive(override))
-                    )
-                )
+                val values = proxy.outbound.toMutableMap()
+                val server = (values["server"] as? JsonPrimitive)?.content
+                proxyServerOverrides[server]?.let { values["server"] = JsonPrimitive(it); values.remove("domain_resolver") }
+                (values["peers"] as? JsonArray)?.let { peers ->
+                    values["peers"] = JsonArray(peers.map { peer ->
+                        val fields = (peer as JsonObject).toMutableMap()
+                        proxyServerOverrides[(fields["address"] as? JsonPrimitive)?.content]?.let { fields["address"] = JsonPrimitive(it) }
+                        JsonObject(fields)
+                    })
+                }
+                proxy.copy(outbound = JsonObject(values))
             }
         val exactDomains = SplitTunnelingDomainRule.exactDomains(selectedDomains)
         val domainSuffixes = SplitTunnelingDomainRule.domainSuffixes(selectedDomains)
@@ -252,7 +256,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
             }
         }
         val outbounds = buildList {
-            addAll(proxyChain.map(ProxyLinkParser.ParsedProxy::outbound))
+            addAll(proxyChain.map(ProxyLinkParser.ParsedProxy::outbound).filter { it["type"] !in setOf(JsonPrimitive("awg"), JsonPrimitive("wireguard")) })
             if (torModeEnabled) {
                 add(JsonObject(mapOf(
                     "type" to JsonPrimitive("tor"),
@@ -328,7 +332,7 @@ class AwgBoxConfigGeneratorImpl @Inject constructor(
                 put("strategy", JsonPrimitive("ipv4_only"))
             }),
             "inbounds" to JsonArray(listOf(JsonObject(tun))),
-            "endpoints" to JsonArray(listOf(JsonObject(awg))),
+            "endpoints" to JsonArray(listOf(JsonObject(awg)) + proxyChain.map(ProxyLinkParser.ParsedProxy::outbound).filter { it["type"] in setOf(JsonPrimitive("awg"), JsonPrimitive("wireguard")) }),
             "outbounds" to JsonArray(outbounds),
             "route" to JsonObject(buildMap {
                 put("auto_detect_interface", JsonPrimitive(true))

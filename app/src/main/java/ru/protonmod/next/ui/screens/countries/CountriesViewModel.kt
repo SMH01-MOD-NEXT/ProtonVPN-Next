@@ -24,6 +24,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
@@ -96,6 +97,9 @@ class CountriesViewModel @Inject constructor(
     @ApplicationScope private val applicationScope: CoroutineScope,
     private val serverProbeRepository: ServerProbeRepository,
     private val dispatcherProvider: DispatcherProvider,
+    private val customRepository: ru.protonmod.next.data.repository.CustomConfigRepository,
+    private val warpRepository: ru.protonmod.next.data.repository.WarpRepository,
+
 ) : ViewModel() {
 
     companion object {
@@ -181,8 +185,79 @@ class CountriesViewModel @Inject constructor(
 
     val connectedServer: StateFlow<LogicalServer?> = connectedServerState.connectedServer
 
+    val customConfigs = customRepository.configs
+    val customBusy = MutableStateFlow(false)
+    val customMessage = MutableStateFlow<Int?>(null)
     init {
+        viewModelScope.launch { customAction { customRepository.load() } }
         initialFetch()
+    }
+
+    private suspend fun customAction(block: suspend () -> Unit) {
+        if (customBusy.value) return
+        customBusy.value = true
+        try { block() } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+        catch (_: Exception) { customMessage.value = R.string.custom_error }
+        finally { customBusy.value = false }
+    }
+    fun saveCustom(id: String?, name: String, raw: String, country: String, city: String) {
+        viewModelScope.launch { customAction {
+            val link = withContext(dispatcherProvider.io()) { customRepository.normalize(raw) }
+            var resolvedCountry = country.trim().uppercase(java.util.Locale.ROOT)
+            var resolvedCity = city.trim()
+            if (resolvedCountry.isEmpty() || resolvedCity.isEmpty()) {
+                val location = locateCustom(link)
+                if (resolvedCountry.isEmpty()) resolvedCountry = location.first
+                if (resolvedCity.isEmpty()) resolvedCity = location.second
+            }
+            customRepository.save(ru.protonmod.next.data.repository.CustomConfig(
+                id = id ?: java.util.UUID.randomUUID().toString(), name = name.trim(), link = link,
+                country = resolvedCountry, city = resolvedCity))
+        } }
+    }
+    private suspend fun locateCustom(link: String): Pair<String, String> = withContext(dispatcherProvider.io()) {
+        try {
+            // Only the endpoint address is disclosed to the geolocation provider, never keys.
+            val host = ru.protonmod.next.vpn.ProxyLinkParser.inspectLink(link).server
+            val ip = java.net.InetAddress.getAllByName(host).firstOrNull { !it.isSiteLocalAddress && !it.isLoopbackAddress && !it.isLinkLocalAddress && !it.isAnyLocalAddress }
+                ?: return@withContext "" to ""
+            val url = okhttp3.HttpUrl.Builder().scheme("https").host("freeipapi.com").addPathSegments("api/json").addPathSegment(ip.hostAddress!!).build()
+            val client = okhttp3.OkHttpClient.Builder().callTimeout(10, java.util.concurrent.TimeUnit.SECONDS).build()
+            client.newCall(okhttp3.Request.Builder().url(url).build()).execute().use { response ->
+                if (!response.isSuccessful) return@withContext "" to ""
+                val data = kotlinx.serialization.json.Json.parseToJsonElement(response.body.string()) as kotlinx.serialization.json.JsonObject
+                fun text(key: String) = (data[key] as? kotlinx.serialization.json.JsonPrimitive)?.content.orEmpty()
+                val code = text("countryCode").uppercase(java.util.Locale.ROOT).takeIf { it in java.util.Locale.getISOCountries() }.orEmpty()
+                code to text("cityName").take(100)
+            }
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+        catch (_: Exception) { "" to "" }
+    }
+    fun generateWarp() { viewModelScope.launch { customAction {
+        val text = warpRepository.generate()
+        val link = customRepository.normalize(text)
+        val location = locateCustom(link)
+        customRepository.save(ru.protonmod.next.data.repository.CustomConfig(name = "WARP", link = link, country = location.first, city = location.second))
+    } } }
+    fun deleteCustom(id: String) { viewModelScope.launch { customAction { customRepository.delete(id) } } }
+    fun useCustomAsHop(config: ru.protonmod.next.data.repository.CustomConfig) { viewModelScope.launch { customAction {
+        val previous = settingsManager.proxyChainConfig.first().trim()
+        val links = previous.lineSequence().filter(String::isNotBlank).toList()
+        require(links.size < 4 && "custom://${config.id}" !in links)
+        settingsManager.setProxyChainConfig((links + "custom://${config.id}").joinToString("\n"))
+        settingsManager.setProxyChainEnabled(true)
+        customMessage.value = R.string.custom_hop_added
+    } } }
+    fun connectCustom(config: ru.protonmod.next.data.repository.CustomConfig) {
+        applicationScope.launch {
+            val info = ru.protonmod.next.vpn.ProxyLinkParser.inspectLink(config.link)
+            val physical = ru.protonmod.next.data.network.PhysicalServer(config.id, domain = info.server, status = 1)
+            val logical = LogicalServer("custom:${config.id}", config.name, 0, 0, config.country, config.country, config.city, listOf(physical))
+            val session = sessionDao.getSession() ?: ru.protonmod.next.data.local.SessionEntity(accessToken = "", refreshToken = "", sessionId = "", userId = "")
+            if (amneziaVpnManager.tunnelState.value == VpnTunnelState.UP || amneziaVpnManager.isConnecting.value)
+                amneziaVpnManager.reconnect(logical.id, physical, session, logicalServer = logical)
+            else amneziaVpnManager.connect(logical.id, physical, session, logicalServer = logical)
+        }
     }
 
     private fun initialFetch() {

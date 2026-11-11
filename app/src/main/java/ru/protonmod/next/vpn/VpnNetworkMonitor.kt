@@ -150,7 +150,7 @@ class VpnNetworkMonitor @Inject constructor(
         // outbound detours to the next one. Validate that TCP endpoint before starting VpnService.
         proxyInfo.lastOrNull()?.let { proxy ->
             val address = overrides[proxy.server] ?: proxy.server
-            check(probeTcp(network, address, proxy.port)) {
+            check(proxy.protocol in setOf("awg", "wireguard") || probeTcp(network, address, proxy.port)) {
                 "Proxy endpoint ${proxy.server}:${proxy.port} is unreachable"
             }
         }
