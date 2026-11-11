@@ -85,6 +85,7 @@ fun SettingsScreen(
     onNavigateToIpRotation: (() -> Unit)? = null,
     onNavigateToServerScan: (() -> Unit)? = null,
     onNavigateToAiSettings: (() -> Unit)? = null,
+    onNavigateToWarp: (() -> Unit)? = null,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val colors = ProtonNextTheme.colors
@@ -143,6 +144,7 @@ fun SettingsScreen(
                 onNavigateToIpLookup = onNavigateToIpLookup,
                 onNavigateToConnectionVerification = onNavigateToConnectionVerification,
                 onNavigateToAiSettings = onNavigateToAiSettings,
+                onNavigateToWarp = onNavigateToWarp,
                 onNavigateToIpRotation = onNavigateToIpRotation,
                 onNavigateToServerScan = onNavigateToServerScan,
                 onOtaFrequencyChange = viewModel::setOtaUpdateFrequency,
@@ -185,6 +187,7 @@ fun SettingsContent(
     onNavigateToIpLookup: (() -> Unit)? = null,
     onNavigateToConnectionVerification: (() -> Unit)? = null,
     onNavigateToAiSettings: (() -> Unit)? = null,
+    onNavigateToWarp: (() -> Unit)? = null,
     onNavigateToIpRotation: (() -> Unit)? = null,
     onNavigateToServerScan: (() -> Unit)? = null
 ) {
@@ -245,6 +248,8 @@ fun SettingsContent(
                 onNavigateToIpRotation = onNavigateToIpRotation,
                 onNavigateToServerScan = onNavigateToServerScan
                         )
+
+                        WarpSettingsCategory(onNavigateToWarp)
 
                         CustomizationSettingsSection(
                             state = state,
@@ -319,6 +324,8 @@ fun SettingsContent(
                     onNavigateToServerScan = onNavigateToServerScan
                 )
             }
+
+            item(contentType = "WarpSettings") { WarpSettingsCategory(onNavigateToWarp) }
 
             item(contentType = "CustomizationSettings") {
                 CustomizationSettingsSection(
@@ -952,5 +959,13 @@ fun FeatureTile(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun WarpSettingsCategory(onNavigate: (() -> Unit)?) {
+    SettingsCategory(title = stringResource(R.string.custom_warp)) {
+        SettingRowWithIcon(title = stringResource(R.string.custom_warp), icon = ProtonIcons.Cloudflare,
+            subtitle = stringResource(R.string.warp_category_desc), onClick = onNavigate)
     }
 }

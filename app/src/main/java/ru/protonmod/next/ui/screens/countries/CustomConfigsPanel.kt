@@ -20,43 +20,28 @@ import ru.protonmod.next.data.repository.CustomConfig
 import ru.protonmod.next.vpn.ImportedWireGuard
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 
+/** Side action beside the Countries title. No collapsible custom-config section. */
 @Composable
-fun CustomConfigsPanel(configs: List<CustomConfig>, busy: Boolean,
-    onSave: (String?, String, String, String, String) -> Unit,
-    onDelete: (String) -> Unit, onGenerate: (String?, Int?, Boolean) -> Unit,
-    onHop: (CustomConfig) -> Unit, onConnect: (CustomConfig) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    var editing by remember { mutableStateOf(false) }
-    var selected by remember { mutableStateOf<CustomConfig?>(null) }
-    var confirmWarp by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        TextButton(onClick = { expanded = !expanded }) { Text(stringResource(R.string.custom_title) + " (${configs.size})") }
-        if (expanded) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { selected = null; editing = true }, enabled = !busy) { Text(stringResource(R.string.custom_add)) }
-                OutlinedButton(onClick = { confirmWarp = true }, enabled = !busy) { Text(stringResource(R.string.custom_warp)) }
-            }
-            if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-            Column(Modifier.heightIn(max = 240.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                configs.forEach { config ->
-                    CountryCard(CountryDisplayItem(config.country, 0),
-                        onClick = { onConnect(config) }, onMoreClick = { selected = config; editing = true },
-                        customTitle = listOf(config.name, config.country, config.city).filter(String::isNotBlank).joinToString(" · "), showLoad = false)
-                }
-            }
+fun AddConfigButton(busy: Boolean, onWarp: () -> Unit, onImport: () -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }, enabled = !busy) {
+            Icon(ru.protonmod.next.ui.icons.ProtonIcons.Plus,
+                contentDescription = stringResource(R.string.custom_add_menu), tint = ProtonNextTheme.colors.iconNorm)
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(text = { Text(stringResource(R.string.custom_warp)) },
+                leadingIcon = { Icon(ru.protonmod.next.ui.icons.ProtonIcons.Cloudflare, null) },
+                onClick = { open = false; onWarp() })
+            DropdownMenuItem(text = { Text(stringResource(R.string.custom_add)) },
+                leadingIcon = { Icon(ru.protonmod.next.ui.icons.ProtonIcons.Plus, null) },
+                onClick = { open = false; onImport() })
         }
     }
-    if (confirmWarp) WarpOptionsDialog(onDismiss = { confirmWarp = false }, onGenerate = { endpoint, port, awg ->
-        confirmWarp = false; onGenerate(endpoint, port, awg)
-    })
-    if (editing) CustomConfigDialog(selected, onDismiss = { editing = false },
-        onSave = { name, raw, country, city -> onSave(selected?.id, name, raw, country, city); editing = false },
-        onDelete = { selected?.let { onDelete(it.id) }; editing = false },
-        onHop = { selected?.let(onHop); editing = false })
 }
 
 @Composable
-private fun CustomConfigDialog(config: CustomConfig?, onDismiss: () -> Unit,
+internal fun CustomConfigDialog(config: CustomConfig?, onDismiss: () -> Unit,
     onSave: (String, String, String, String) -> Unit, onDelete: () -> Unit, onHop: () -> Unit) {
     var name by remember { mutableStateOf(config?.name.orEmpty()) }
     var raw by remember { mutableStateOf(config?.link?.let { if (it.startsWith(ImportedWireGuard.SCHEME)) ImportedWireGuard.decode(it) else it }.orEmpty()) }
@@ -103,31 +88,6 @@ private fun CustomConfigDialog(config: CustomConfig?, onDismiss: () -> Unit,
             }
         } },
         confirmButton = { TextButton(onClick = { onSave(name, raw, country, city) }, enabled = valid) { Text(stringResource(R.string.custom_save)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.custom_cancel)) } },
-        containerColor = ProtonNextTheme.colors.backgroundNorm)
-}
-
-@Composable
-private fun WarpOptionsDialog(onDismiss: () -> Unit, onGenerate: (String?, Int?, Boolean) -> Unit) {
-    var endpoint by remember { mutableStateOf("") }
-    var port by remember { mutableStateOf("2408") }
-    var awg2 by remember { mutableStateOf(false) }
-    val valid = remember(endpoint, port) { runCatching { ru.protonmod.next.data.network.WarpEndpoints.validate(endpoint.trim(), port.toInt()) }.isSuccess }
-    AlertDialog(onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.custom_warp)) },
-        text = { Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(R.string.custom_warp_notice))
-            OutlinedTextField(endpoint, { endpoint = it }, label = { Text(stringResource(R.string.warp_endpoint)) },
-                placeholder = { Text(stringResource(R.string.warp_api_endpoint)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            TextButton(onClick = { endpoint = ru.protonmod.next.data.network.WarpEndpoints.officialIps.random() }) { Text(stringResource(R.string.warp_official_candidate)) }
-            TextButton(onClick = { endpoint = ru.protonmod.next.data.network.WarpEndpoints.communityIps.random() }) { Text(stringResource(R.string.warp_experimental_candidate)) }
-            OutlinedTextField(port, { port = it }, label = { Text(stringResource(R.string.warp_port)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
-            Text(stringResource(R.string.warp_ports_notice), style = MaterialTheme.typography.bodySmall)
-            Text(ru.protonmod.next.data.network.WarpEndpoints.ports.joinToString(", "), style = MaterialTheme.typography.bodySmall)
-            Row { Checkbox(checked = awg2, onCheckedChange = { awg2 = it }); Text(stringResource(R.string.warp_awg2)) }
-            Text(stringResource(R.string.warp_candidates_notice), style = MaterialTheme.typography.bodySmall)
-        } },
-        confirmButton = { TextButton(enabled = valid, onClick = { onGenerate(endpoint.trim().takeIf(String::isNotBlank), port.toInt(), awg2) }) { Text(stringResource(R.string.custom_generate)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.custom_cancel)) } },
         containerColor = ProtonNextTheme.colors.backgroundNorm)
 }

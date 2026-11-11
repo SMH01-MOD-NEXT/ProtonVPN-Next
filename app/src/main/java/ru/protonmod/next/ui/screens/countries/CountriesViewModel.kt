@@ -185,6 +185,8 @@ class CountriesViewModel @Inject constructor(
 
     val connectedServer: StateFlow<LogicalServer?> = connectedServerState.connectedServer
 
+    val warpPreferences = settingsManager.warpPreferences
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ru.protonmod.next.data.local.WarpPreferences())
     val customConfigs = customRepository.configs
     val customBusy = MutableStateFlow(false)
     val customMessage = MutableStateFlow<Int?>(null)
@@ -233,18 +235,13 @@ class CountriesViewModel @Inject constructor(
         } catch (e: kotlinx.coroutines.CancellationException) { throw e }
         catch (_: Exception) { "" to "" }
     }
-    fun generateWarp(endpoint: String? = null, port: Int? = null, awg2: Boolean = false) { viewModelScope.launch { customAction {
-        val text = warpRepository.generate(endpoint, port, awg2)
-        val link = customRepository.normalize(text)
-        val location = locateCustom(link)
-        customRepository.save(ru.protonmod.next.data.repository.CustomConfig(name = "WARP", link = link, country = location.first, city = location.second))
+    fun generateWarp(preferences: ru.protonmod.next.data.local.WarpPreferences) { viewModelScope.launch { customAction {
+        warpRepository.generateAndSave(preferences)
     } } }
     fun deleteCustom(id: String) { viewModelScope.launch { customAction { customRepository.delete(id) } } }
     fun useCustomAsHop(config: ru.protonmod.next.data.repository.CustomConfig) { viewModelScope.launch { customAction {
-        val previous = settingsManager.proxyChainConfig.first().trim()
-        val links = previous.lineSequence().filter(String::isNotBlank).toList()
-        require(links.size < 4 && "custom://${config.id}" !in links)
-        settingsManager.setProxyChainConfig((links + "custom://${config.id}").joinToString("\n"))
+        require(!config.isWarp || settingsManager.warpPreferences.first().enabled)
+        settingsManager.setProxyChainConfig(ru.protonmod.next.data.repository.CustomConfigRules.appendHop(settingsManager.proxyChainConfig.first(), config))
         settingsManager.setProxyChainEnabled(true)
         customMessage.value = R.string.custom_hop_added
     } } }

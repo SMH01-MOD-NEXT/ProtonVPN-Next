@@ -22,16 +22,11 @@ import android.net.VpnService
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,10 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -64,7 +56,6 @@ import ru.protonmod.next.ui.components.FlagIcon
 import ru.protonmod.next.ui.components.LoadIndicator
 import ru.protonmod.next.ui.components.LoadProgressBar
 import ru.protonmod.next.ui.components.MainHeader
-import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.icons.ProtonIcons
 import ru.protonmod.next.ui.theme.ProtonNextTheme
 import ru.protonmod.next.ui.theme.liquidGlass
@@ -77,6 +68,7 @@ import ru.protonmod.next.utils.ProtonLogger
 fun CountriesScreen(
     onNavigateToHome: () -> Unit,
     onBack: () -> Unit,
+    onNavigateToWarp: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: CountriesViewModel = hiltViewModel()
 ) {
@@ -87,6 +79,9 @@ fun CountriesScreen(
     val isTablet = isTablet()
 
     val customConfigs by viewModel.customConfigs.collectAsStateWithLifecycle()
+    val warpPreferences by viewModel.warpPreferences.collectAsStateWithLifecycle()
+    var editingCustom by remember { mutableStateOf(false) }
+    var selectedCustom by remember { mutableStateOf<ru.protonmod.next.data.repository.CustomConfig?>(null) }
     val customBusy by viewModel.customBusy.collectAsStateWithLifecycle()
     val customMessage by viewModel.customMessage.collectAsStateWithLifecycle()
     LaunchedEffect(customMessage) { customMessage?.let {
@@ -155,66 +150,34 @@ fun CountriesScreen(
                     .fillMaxSize()
                     .statusBarsPadding()
             ) {
-                CustomConfigsPanel(
-                    configs = customConfigs, busy = customBusy,
-                    onSave = viewModel::saveCustom, onDelete = viewModel::deleteCustom,
-                    onGenerate = viewModel::generateWarp, onHop = viewModel::useCustomAsHop,
-                    onConnect = { config -> checkVpnAndConnect { viewModel.connectCustom(config); onNavigateToHome() } },
+                val state = uiState as? CountriesUiState.Success
+                CountriesListContent(
+                    countries = state?.countries.orEmpty().toImmutableList(),
+                    connectedServer = connectedServer,
+                    onCountryClick = { country -> checkVpnAndConnect { viewModel.selectCountry(country.code); onNavigateToHome() } },
+                    onCountryMore = { viewModel.expandCitiesForCountry(it.code) },
+                    isTablet = isTablet,
+                    loadDisplayMode = state?.loadDisplayMode ?: ServerLoadDisplayMode.ALL,
+                    connectionMode = state?.connectionMode ?: CountryConnectionMode.STANDARD,
+                    onModeSelect = viewModel::setConnectionMode,
+                    availability = state?.availability ?: AvailabilityBadges.EMPTY,
+                    configs = customConfigs,
+                    warpEnabled = warpPreferences.enabled,
+                    onConfigConnect = { config -> checkVpnAndConnect { viewModel.connectCustom(config); onNavigateToHome() } },
+                    onConfigEdit = { config -> selectedCustom = config; editingCustom = true },
+                    onAddCustom = { selectedCustom = null; editingCustom = true },
+                    onWarp = onNavigateToWarp,
+                    busy = customBusy,
+                    loading = uiState is CountriesUiState.Loading,
+                    error = (uiState as? CountriesUiState.Error)?.message,
+                    onRetry = viewModel::loadServers,
+                    modifier = Modifier.weight(1f),
                 )
-                AnimatedContent(
-                    targetState = uiState,
-                    contentKey = { state ->
-                        // Use the class as key to avoid transition animations between different Success states
-                        // (e.g. when opening/closing the bottom sheet), but still animate between Loading/Success/Error.
-                        state::class
-                    },
-                    label = "countries_state_root",
-                    modifier = Modifier.weight(1f)
-                ) { state ->
-                    when (state) {
-                        is CountriesUiState.Loading -> {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                ExpressiveCircularProgressIndicator(color = colors.brandNorm)
-                            }
-                        }
-                        is CountriesUiState.Error -> {
-                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(state.message, color = colors.notificationError)
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Button(
-                                        onClick = { viewModel.loadServers() },
-                                        colors = ButtonDefaults.buttonColors(containerColor = colors.interactionNorm)
-                                    ) {
-                                        Text(stringResource(R.string.btn_retry), color = colors.textInverted)
-                                    }
-                                }
-                            }
-                        }
-                        is CountriesUiState.Success -> {
-                            val countries = remember(state.countries) { state.countries.toImmutableList() }
-                            
-                            CountriesListContent(
-                                countries = countries,
-                                connectedServer = connectedServer,
-                                onCountryClick = { country ->
-                                    checkVpnAndConnect {
-                                        viewModel.selectCountry(country.code)
-                                        onNavigateToHome()
-                                    }
-                                },
-                                onCountryMore = { country ->
-                                    viewModel.expandCitiesForCountry(country.code)
-                                },
-                                isTablet = isTablet,
-                                loadDisplayMode = state.loadDisplayMode,
-                                connectionMode = state.connectionMode,
-                                onModeSelect = viewModel::setConnectionMode,
-                                availability = state.availability,
-                            )
-                        }
-                    }
-                }
+                if (editingCustom) CustomConfigDialog(selectedCustom,
+                    onDismiss = { editingCustom = false },
+                    onSave = { name, raw, country, city -> viewModel.saveCustom(selectedCustom?.id, name, raw, country, city); editingCustom = false },
+                    onDelete = { selectedCustom?.let { viewModel.deleteCustom(it.id) }; editingCustom = false },
+                    onHop = { selectedCustom?.let(viewModel::useCustomAsHop); editingCustom = false })
 
                 val successState by remember {
                     derivedStateOf { uiState as? CountriesUiState.Success }
@@ -262,73 +225,67 @@ fun CountriesListContent(
     connectionMode: CountryConnectionMode = CountryConnectionMode.STANDARD,
     onModeSelect: (CountryConnectionMode) -> Unit = {},
     availability: AvailabilityBadges = AvailabilityBadges.EMPTY,
+    configs: List<ru.protonmod.next.data.repository.CustomConfig> = emptyList(),
+    warpEnabled: Boolean = false,
+    onConfigConnect: (ru.protonmod.next.data.repository.CustomConfig) -> Unit = {},
+    onConfigEdit: (ru.protonmod.next.data.repository.CustomConfig) -> Unit = {},
+    onAddCustom: () -> Unit = {},
+    onWarp: () -> Unit = {},
+    busy: Boolean = false,
+    loading: Boolean = false,
+    error: String? = null,
+    onRetry: () -> Unit = {},
 ) {
     val colors = ProtonNextTheme.colors
-
-    Box(modifier = modifier) {
-        if (isTablet) {
-            val windowInfo = LocalWindowInfo.current
-            val density = LocalDensity.current
-            val screenWidthDp = with(density) { windowInfo.containerSize.width.toDp() }.value
-            val columns = (screenWidthDp / 300).toInt().coerceAtLeast(2)
-            
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(columns),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 140.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item(span = { GridItemSpan(maxLineSpan) }, contentType = "Header") {
-                    Column {
-                        MainHeader(title = stringResource(R.string.countries_title))
-                        ConnectionModeSelector(connectionMode, onModeSelect)
-                    }
-                }
-
-                items(countries, key = { it.code }, contentType = { "Country" }) { country ->
-                    CountryCard(
-                        country = country,
-                        isConnected = connectedServer?.exitCountry == country.code,
-                        onClick = { onCountryClick(country) },
-                        onMoreClick = { onCountryMore(country) },
-                        displayMode = loadDisplayMode,
-                        showTorBadge = connectionMode == CountryConnectionMode.TOR,
-                        availability = availability.country(country.code),
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    top = 0.dp,
-                    end = 16.dp,
-                    bottom = 140.dp
-                ),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item(contentType = "Header") {
-                    Column {
-                        MainHeader(title = stringResource(R.string.countries_title))
-                        ConnectionModeSelector(connectionMode, onModeSelect)
-                    }
-                }
-
-                items(countries, key = { it.code }, contentType = { "Country" }) { country ->
-                    CountryCard(
-                        country = country,
-                        isConnected = connectedServer?.exitCountry == country.code,
-                        onClick = { onCountryClick(country) },
-                        onMoreClick = { onCountryMore(country) },
-                        displayMode = loadDisplayMode,
-                        showTorBadge = connectionMode == CountryConnectionMode.TOR,
-                        availability = availability.country(country.code),
-                    )
-                }
+    val warp = configs.firstOrNull { it.isWarp }
+    val custom = configs.filterNot { it.isWarp }
+    // One lazy list on both phones and tablets: no nested scrolling or hidden rows.
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 140.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item(key = "header", contentType = "Header") {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                MainHeader(stringResource(R.string.countries_title), Modifier.weight(1f))
+                AddConfigButton(busy, onWarp, onAddCustom)
             }
         }
+        if (warp != null) item(key = "warp", contentType = "Custom") {
+            CountryCard(CountryDisplayItem("", 0),
+                onClick = { if (warpEnabled) onConfigConnect(warp) else onWarp() },
+                onMoreClick = onWarp,
+                isConnected = connectedServer?.id == "custom:${warp.id}",
+                customTitle = if (warpEnabled) "WARP" else stringResource(R.string.warp_disabled_title),
+                customIcon = ProtonIcons.Cloudflare, showLoad = false)
+        }
+        item(key = "mode", contentType = "Mode") { ConnectionModeSelector(connectionMode, onModeSelect) }
+        items(countries, key = { "country:${it.code}" }, contentType = { "Country" }) { country ->
+            CountryCard(country,
+                isConnected = connectedServer?.id?.startsWith("custom:") != true && connectedServer?.exitCountry == country.code,
+                onClick = { onCountryClick(country) }, onMoreClick = { onCountryMore(country) },
+                displayMode = loadDisplayMode, showTorBadge = connectionMode == CountryConnectionMode.TOR,
+                availability = availability.country(country.code))
+        }
+        if (loading) item(key = "loading") {
+            Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                ExpressiveCircularProgressIndicator(color = colors.brandNorm)
+            }
+        }
+        if (error != null) item(key = "error") {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(error, color = colors.notificationError)
+                TextButton(onClick = onRetry) { Text(stringResource(R.string.btn_retry)) }
+            }
+        }
+        items(custom, key = { "custom:${it.id}" }, contentType = { "Custom" }) { config ->
+            CountryCard(CountryDisplayItem(config.country, 0),
+                onClick = { onConfigConnect(config) }, onMoreClick = { onConfigEdit(config) },
+                isConnected = connectedServer?.id == "custom:${config.id}",
+                customTitle = listOf(config.name, config.country, config.city).filter(String::isNotBlank).joinToString(" · "),
+                showLoad = false)
+        }
+        if (busy) item(key = "busy") { LinearProgressIndicator(Modifier.fillMaxWidth()) }
     }
 }
 
@@ -381,6 +338,7 @@ fun CountryCard(
     showTorBadge: Boolean = false,
     availability: AvailabilityBadge? = null,
     customTitle: String? = null,
+    customIcon: ImageVector? = null,
     showLoad: Boolean = true,
 ) {
     val colors = ProtonNextTheme.colors
@@ -412,7 +370,9 @@ fun CountryCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Box(contentAlignment = Alignment.BottomEnd) {
-                    if (flagResId != 0) {
+                    if (customIcon != null) {
+                        Icon(customIcon, null, tint = colors.iconNorm, modifier = Modifier.size(36.dp, 24.dp))
+                    } else if (flagResId != 0) {
                         FlagIcon(
                             countryFlag = flagResId,
                             size = DpSize(36.dp, 24.dp)

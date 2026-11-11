@@ -54,6 +54,16 @@ class AwgBoxCoreInstrumentedTest {
         Libbox.checkConfig(config(tor = true))
     }
 
+    @Test
+    fun nativeCoreAcceptsAllWarpProfilesAsIntermediateHops() {
+        val key = "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+        val raw = "[Interface]\nPrivateKey = $key\nAddress = 172.16.0.2/32\nDNS = 1.1.1.1\nMTU = 1280\n[Peer]\nPublicKey = $key\nEndpoint = 162.159.193.1:2408\nAllowedIPs = 0.0.0.0/0\nPersistentKeepalive = 25\nReserved = 1, 2, 3\n"
+        (0..3).forEach { profile ->
+            val masked = ru.protonmod.next.data.network.WarpEndpoints.apply(raw, profile = profile)
+            Libbox.checkConfig(config(proxyChain = ImportedWireGuard.encode(masked)))
+        }
+    }
+
     private fun config(proxyChain: String? = null, tor: Boolean = false): String {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         return generator.buildConfig(

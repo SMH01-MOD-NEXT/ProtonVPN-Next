@@ -11,19 +11,43 @@ object WarpEndpoints {
     val communityPrefixes = listOf("162.159.192.", "162.159.195.", "8.6.112.", "8.34.70.", "8.34.146.", "8.35.211.", "8.39.125.", "8.39.204.", "8.39.214.", "8.47.69.", "188.114.96.", "188.114.97.", "188.114.98.", "188.114.99.")
     val officialIps = (0..255).map { "162.159.193.$it" }
     val communityIps = communityPrefixes.flatMap { prefix -> (1..10).map { "$prefix$it" } }
-    fun validate(endpoint: String?, port: Int?) {
-        require(endpoint.isNullOrBlank() || endpoint in officialIps || endpoint in communityIps)
+    val allIps = (officialIps + communityIps).distinct()
+    val orderedPorts = officialPorts + ports.filterNot { it in officialPorts }
+    fun normalizeHost(value: String): String {
+        require(value.length <= 253 && value == value.trim() && value.none { it.isWhitespace() || it in "/@?#\\" })
+        if (value.isEmpty()) return ""
+        if (':' in value) {
+            require(value.startsWith('[') == value.endsWith(']'))
+            val raw = value.removePrefix("[").removeSuffix("]")
+            require('%' !in raw && raw.all { it in "0123456789abcdefABCDEF:." })
+            // Numeric-only IPv6: InetAddress cannot perform a hostname lookup here.
+            require(java.net.InetAddress.getByName(raw) is java.net.Inet6Address)
+            return "[$raw]"
+        }
+        if (value.all { it in '0'..'9' || it == '.' }) {
+            val parts = value.split('.')
+            require(parts.size == 4 && parts.all { it.isNotEmpty() && it.length <= 3 && it.toInt() in 0..255 && (it.length == 1 || !it.startsWith('0')) })
+        } else require(value.split('.').all { it.isNotEmpty() && it.length <= 63 && it.first().isLetterOrDigit() && it.last().isLetterOrDigit() && it.all { c -> c in 'a'..'z' || c in 'A'..'Z' || c in '0'..'9' || c == '-' } })
+        return value.lowercase(java.util.Locale.ROOT)
+    }
+    fun validate(endpoint: String?, port: Int?, customEndpoint: Boolean = false) {
+        require(endpoint.isNullOrBlank() || if (customEndpoint) normalizeHost(endpoint).isNotEmpty() else endpoint in allIps)
         require(port == null || port in ports)
     }
-    fun apply(text: String, endpoint: String? = null, port: Int? = null, awg2: Boolean = false): String {
-        validate(endpoint, port)
+    fun apply(text: String, endpoint: String? = null, port: Int? = null, awg2: Boolean = false, profile: Int = if (awg2) 2 else 0, customEndpoint: Boolean = false): String {
+        require(profile in 0..3)
+        validate(endpoint, port, customEndpoint)
         val regex = Regex("(?m)^Endpoint = (.+)$")
         val old = requireNotNull(regex.find(text)).groupValues[1]
-        var result = regex.replace(text, "Endpoint = ${endpoint?.takeIf(String::isNotBlank) ?: old.substringBeforeLast(':')}:${port ?: old.substringAfterLast(':')}")
-        if (awg2) {
+        var result = regex.replace(text, "Endpoint = ${endpoint?.takeIf(String::isNotBlank)?.let(::normalizeHost) ?: old.substringBeforeLast(':')}:${port ?: old.substringAfterLast(':')}")
+        if (profile != 0) {
             // Match the public reference profile: no Reserved, fixed standard WG headers.
-            val i1 = QuicI1Generator.generateI1("www.cloudflare.com")
-            val params = "S1 = 0\nS2 = 0\nS3 = 0\nS4 = 0\nJc = 4\nJmin = 40\nJmax = 70\nH1 = 1\nH2 = 2\nH3 = 3\nH4 = 4\nI1 = $i1\n\n"
+            val packets = when (profile) {
+                1 -> WarpPackets.QUIC
+                3 -> WarpPackets.SIP
+                else -> "I1 = ${QuicI1Generator.generateI1("www.cloudflare.com")}"
+            }
+            val params = "S1 = 0\nS2 = 0\nS3 = 0\nS4 = 0\nJc = 4\nJmin = 40\nJmax = 70\nH1 = 1\nH2 = 2\nH3 = 3\nH4 = 4\n${packets}\n\n"
             result = result.replace(Regex("(?m)^Reserved = .*\n?"), "").replace("[Peer]", params + "[Peer]")
         }
         ImportedWireGuard.encode(result)

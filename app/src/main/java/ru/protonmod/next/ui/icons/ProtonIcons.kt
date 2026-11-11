@@ -15,6 +15,9 @@ import ru.protonmod.next.R
  * Android client, so the UI stays consistent with it.
  */
 object ProtonIcons {
+    val Cloudflare: ImageVector
+        @Composable get() = ImageVector.vectorResource(R.drawable.ic_cloudflare)
+
     val ArrowDownCircle: ImageVector
         @Composable get() = ImageVector.vectorResource(R.drawable.ic_proton_arrow_down_circle)
 

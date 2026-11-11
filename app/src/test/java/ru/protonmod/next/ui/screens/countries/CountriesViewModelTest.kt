@@ -120,6 +120,7 @@ class CountriesViewModelTest {
         whenever(amneziaVpnManager.isConnecting).thenReturn(MutableStateFlow(false))
         whenever(settingsManager.serverLoadDisplayMode).thenReturn(flowOf(ServerLoadDisplayMode.ALL))
         whenever(settingsManager.torModeEnabled).thenReturn(flowOf(false))
+        whenever(settingsManager.warpPreferences).thenReturn(flowOf(ru.protonmod.next.data.local.WarpPreferences()))
 
         whenever(sessionDao.getSessionFlow()).thenReturn(flowOf(null))
         whenever(serverProbeRepository.results).thenReturn(probeResults)

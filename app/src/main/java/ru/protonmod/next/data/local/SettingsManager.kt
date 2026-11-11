@@ -68,6 +68,17 @@ class SettingsManager @Inject constructor(
     private val dataStore: DataStore<Preferences> = getOrCreateDataStore(context)
     private val prefs = context.getSharedPreferences("boot_settings", Context.MODE_PRIVATE)
 
+    private val warpKey = stringPreferencesKey("warp_preferences")
+    val warpPreferences: Flow<WarpPreferences> = dataStore.data.map { prefs ->
+        prefs[warpKey]?.let { Json.decodeFromString<WarpPreferences>(it) } ?: WarpPreferences()
+    }.distinctUntilChanged()
+
+    suspend fun setWarpPreferences(value: WarpPreferences) {
+        value.validateShape()
+        dataStore.edit { it[warpKey] = Json.encodeToString(value) }
+    }
+
+
     companion object {
         @Volatile
         private var dataStoreInstance: DataStore<Preferences>? = null

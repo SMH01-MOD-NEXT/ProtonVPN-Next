@@ -225,7 +225,9 @@ fun ObfuscationSettingsScreen(
                             CategoryHeader(title = stringResource(R.string.proxy_chain_setup_title))
                             InfoCard(text = stringResource(R.string.proxy_chain_info))
                             val savedConfigs by viewModel.savedCustomConfigs.collectAsStateWithLifecycle()
+                            val warpPreferences by viewModel.warpPreferences.collectAsStateWithLifecycle(ru.protonmod.next.data.local.WarpPreferences())
                             ProxyChainEditor(
+                                warpEnabled = warpPreferences.enabled,
                                 savedConfigs = savedConfigs,
                                 config = uiState.proxyChainConfig,
                                 onConfigChange = viewModel::setProxyChainConfig,

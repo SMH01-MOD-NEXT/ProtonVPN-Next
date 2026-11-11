@@ -715,7 +715,9 @@ class AmneziaVpnManager @Inject constructor(
             _isConnecting.value = true
             if (logicalServerId.startsWith("custom:")) {
                 customConfigs.load()
-                val custom = requireNotNull(customConfigs.configs.value.find { "custom:${it.id}" == logicalServerId })
+                val custom = requireNotNull(ru.protonmod.next.data.repository.CustomConfigRules.find(customConfigs.configs.value, logicalServerId.removePrefix("custom:")))
+                if (custom.isWarp && !settingsManager.warpPreferences.first().enabled)
+                    throw ExpectedConnectionException(ConnectionWarning.InvalidProxyConfiguration, "WARP is disabled")
                 return@withContext startCustomConfig(custom)
             }
             var currentSession = session
@@ -740,7 +742,7 @@ class AmneziaVpnManager @Inject constructor(
             var targetIp: String? = null
             val proxyChainEnabled = settingsManager.proxyChainEnabled.first()
             val proxyChainConfig = if (proxyChainEnabled) try {
-                customConfigs.resolveChain(settingsManager.proxyChainConfig.first().trim())
+                customConfigs.resolveChain(settingsManager.proxyChainConfig.first().trim(), settingsManager.warpPreferences.first().enabled)
             } catch (e: CancellationException) { throw e } catch (_: Exception) {
                 throw ExpectedConnectionException(ConnectionWarning.InvalidProxyConfiguration, "A saved proxy configuration is unavailable")
             } else ""

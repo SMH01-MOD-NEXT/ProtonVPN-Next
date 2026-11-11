@@ -48,6 +48,7 @@ sealed class Screen(val route: String) {
     data object IpLookup : Screen("ip_lookup")
     data object ConnectionVerification : Screen("connection_verification")
     data object IpRotation : Screen("ip_rotation")
+    data object Warp : Screen("warp")
     data object ServerScan : Screen("server_scan")
     data object Profiles : Screen("profiles")
     data object EditProfile : Screen("edit_profile?profileId={profileId}") {
@@ -104,6 +105,7 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.Settings.route) {
         SettingsScreen(
+            onNavigateToWarp = { navController.navigate(Screen.Warp.route) },
             onBack = { navController.popBackStack() },
             onNavigateToSplitTunnelingMain = {
                 navController.navigate(Screen.SplitTunnelingMain.route)
@@ -187,6 +189,10 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.IpRotation.route) {
         IpRotationSettingsScreen(onBack = { navController.popBackStack() })
+    }
+
+    composable(Screen.Warp.route) {
+        WarpSettingsScreen(onBack = { navController.popBackStack() })
     }
 
     composable(Screen.ServerScan.route) {
@@ -383,6 +389,7 @@ fun NavGraphBuilder.appNavGraph(
 
     composable(Screen.Countries.route) {
         CountriesScreen(
+            onNavigateToWarp = { navController.navigate(Screen.Warp.route) },
             onNavigateToHome = {
                 navController.navigate(Screen.Home.route) {
                     popUpTo(Screen.Home.route) { inclusive = false }

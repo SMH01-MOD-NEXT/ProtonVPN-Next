@@ -17,6 +17,7 @@
 
 package ru.protonmod.next.ui.screens.settings
 
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -48,6 +49,7 @@ fun ProxyChainEditor(
     config: String,
     onConfigChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    warpEnabled: Boolean = false,
     savedConfigs: List<ru.protonmod.next.data.repository.CustomConfig> = emptyList()
 ) {
     val colors = ProtonNextTheme.colors
@@ -104,7 +106,7 @@ fun ProxyChainEditor(
             }
 
             links.forEachIndexed { index, link ->
-                val saved = savedConfigs.find { "custom://${it.id}" == link }
+                val saved = ru.protonmod.next.data.repository.CustomConfigRules.find(savedConfigs, link.removePrefix("custom://"))
                 val info = remember(link, saved) { runCatching { ProxyLinkParser.inspectLink(saved?.link ?: link) }.getOrNull() }
                 ProxyTreeNode(
                     index = index,
@@ -167,6 +169,17 @@ fun ProxyChainEditor(
                         style = MaterialTheme.typography.bodySmall,
                         color = colors.textWeak
                     )
+                    Column(Modifier.heightIn(max = 220.dp).verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                        savedConfigs.sortedBy { !it.isWarp }.forEach { saved ->
+                            val duplicate = links.any { it == "custom://${saved.id}" || it.removePrefix("custom://") in saved.previousIds }
+                            TextButton(enabled = !duplicate && links.size < MAX_PROXY_HOPS && (!saved.isWarp || warpEnabled),
+                                onClick = { persist(ru.protonmod.next.data.repository.CustomConfigRules.appendHop(links.joinToString("\n"), saved).lines()); showAddDialog = false }) {
+                                if (saved.isWarp) { Icon(ProtonIcons.Cloudflare, null); Spacer(Modifier.width(8.dp)) }
+                                Text(saved.name)
+                            }
+                        }
+                        if (savedConfigs.any { it.isWarp } && !warpEnabled) Text(stringResource(R.string.warp_chain_disabled), color = colors.textWeak)
+                    }
                     OutlinedTextField(
                         value = input,
                         onValueChange = { input = it },

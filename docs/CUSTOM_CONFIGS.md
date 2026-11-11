@@ -1,25 +1,43 @@
 # WARP and custom configurations
 
-Countries → Custom configurations supports one-peer WireGuard/AmneziaWG `.conf` files and existing VLESS/VMess links. Import, editing, deletion and WARP generation use the existing app cards, buttons and dialogs; no Proton load or availability metrics are fabricated.
+## Android UI
 
-Config payloads are encrypted with Android Keystore AES-GCM in `noBackupFilesDir`. Saved-config chain entries use opaque `custom://` references; deleting a referenced entry causes a connection error rather than a silent direct fallback. Existing manually entered VLESS/VMess chain entries are unchanged.
+The Countries screen has a single lazy list on phones and tablets: saved **WARP first**, Proton countries in the middle, imported configurations last. Custom rows remain accessible during Proton loading/errors and without a Proton account. No load or availability metric is invented for WARP/custom rows. The side **+** menu opens WARP settings or the import dialog; there is no collapsible custom section or nested list.
 
-Blank country/city fields are best-effort endpoint geolocation through `https://freeipapi.com/api/json/<endpoint-IP>`. The user is informed before saving; filling both fields skips the lookup. An endpoint location is not a verified VPN exit location, particularly for WARP/anycast. Failure leaves missing fields editable.
+**Settings → WARP → WARP** opens independent WARP settings with a same-named switch. Parameters are stored locally in a dedicated DataStore record, separate from Proton AWG settings. IP and port fields are read-only dropdowns with official values first and no official/experimental groups or random selection. “Custom endpoint” exposes an IPv4/DNS field. Current tunnel endpoint resolution is IPv4-only; IPv6-only custom endpoints are rejected before registration.
 
-WARP generates X25519 keys on the device and submits only the public key. Disabling API bypass forces direct registration without inheriting a proxy/socket bypass. Netlify, Cloudflare, Deno and event mirrors require the new fixed `/warp/reg` endpoint from ProtonVPN-Next-WEB; they must be deployed separately. ByeDPI/custom proxy use the selected client transport to the WARP API. Proton-only mirrors cannot relay WARP; registration fails rather than silently falling back to a direct request. Select a supported bypass or explicitly disable API bypass.
+Profiles match ProtonVPN-Next-WEB:
 
-Standard WireGuard is now included in the pinned native build because WARP requires its `reserved` peer bytes. AWG uses its own endpoint schema and rejects reserved bytes instead of silently discarding them. Imported configs reject shell hooks, arbitrary keys/sections, multiple peers and malformed keys, endpoints or CIDRs. The app retains its existing IPv4-only routing policy; IPv6-only endpoints are not supported. WG/AWG hops need UDP support through any preceding transport.
+| Profile | Native mode | Masking |
+| --- | --- | --- |
+| WireGuard | WireGuard | No AWG masking; Reserved retained |
+| WARP #1 | AmneziaWG | Fixed reference QUIC I1 |
+| WARP #2 | AmneziaWG | Fresh locally generated QUIC I1, SNI www.cloudflare.com |
+| WARP #3 | AmneziaWG | Reference SIP I1 + I2 |
 
-For a Proton connection, add a saved config using its edit dialog → Add as hop before Proton. The last entry is the physical-network-facing hop. Resolve saved references before validation/preflight; resolve peer hostnames on the underlying network, not through a tunnel that has not started.
+AWG profiles use Jc=4, Jmin=40, Jmax=70, S1–S4=0, H1–H4=1/2/3/4 and omit Reserved because the native AWG schema does not support it. No RandomTrailers or modified peer header numbers. Public packet presets come from https://warp-generation.github.io/script.js (2026-11-11); no credentials are imported. MASQUE, Xray, Clash and WireSock exports are WEB client formats, not additional native Android tunnel protocols.
 
-Verification: stableStandardDebug and nightlyPrivacyDebug builds/unit tests; parser tests cover WARP reserved bytes, AWG preshared keys, unsafe import rejection and mixed chains. Real registration/tunnel/device UI must also be checked on an Android device before release. No device was connected during implementation.
+The actual Cloudflare brand icon is Tabler `brand-cloudflare`, bundled as a 24dp monochrome vector with 1.5dp strokes matching the existing icon set. Source and full MIT attribution are in `docs/licenses/tabler-cloudflare.txt`.
 
-## Endpoint and AWG2 catalog (2026-11-11)
+## Singleton, secrets and proxy chains
 
-`docs/warp-endpoints.json` records source URLs and the source script SHA-256. Cloudflare officially documents WireGuard IPv4 `162.159.193.0/24`, IPv6 `2606:4700:100::/48` and UDP 2408 / 500 / 1701 / 4500. Before login, `162.159.192.0/24` can also appear. The public reference generator lists 54 ports and 14 IPv4 prefixes, but picks only last octets 1–10, not every address in each /24. This yields 140 community candidates plus the 256-address official range (396 IPv4 suggestions). None is labelled handshake-tested. The Android app remains IPv4-only.
+Exactly one generated WARP entry is stored with stable identity `warp`. Successful generation atomically replaces its encrypted config; generation failure leaves the old config intact. Previously generated entries are conservatively recognized by their old name and configuration signature and collapsed; their old IDs remain aliases so saved proxy-chain references keep resolving. Other imported configurations are not renamed or collapsed. Regenerated parameters take effect on the next connection.
 
-Generation now accepts an IPv4 candidate, any of the 54 published ports, and an optional experimental AWG2/QUIC profile. A blank IP preserves the endpoint returned by registration. Unknown candidate IPs/ports fail before registration; arbitrary custom endpoints can still be imported in a custom config. MASQUE ports and bot-gated/nonstandard service endpoints are not treated as public WireGuard endpoints.
+Private configurations are AES-GCM encrypted using a non-exportable Android Keystore key in `noBackupFilesDir/custom-configs.enc`. Plain local settings contain no keys. Import supports one-peer WireGuard/AmneziaWG `.conf` files and existing VLESS/VMess links. Parsing rejects shell hooks, unknown directives, duplicate fields, multiple peers and malformed keys/addresses/ports.
 
-AWG2 profile: Jc=4, Jmin=40, Jmax=70, S1=S2=S3=S4=0, H1=1/H2=2/H3=3/H4=4. I1 is generated locally with the existing QUIC Initial generator and SNI `www.cloudflare.com`, with fresh randomness per generation. This is not MASQUE. Like the reference AWG2 export, this format omits Reserved (the embedded AWG schema does not support it). Standard WG mode preserves Reserved. This difference is disclosed in the generation UI and needs a real registered handshake on the target network; no compatibility guarantee is made. Do not arbitrarily enable RandomTrailers or change WireGuard header numbers against a standard Cloudflare peer.
+The **Proxy chain** add dialog lists WARP first and other saved configs below it. WARP settings also provide **Add as hop before Proton**. Entries store opaque `custom://warp`/`custom://<id>` references, never private config text. Regeneration preserves the WARP reference; deleted, unavailable or disabled WARP fails closed, not direct. Turning WARP off stops an active WARP connection or a Proton chain using it. Choosing WARP as the final VPN uses its own tunnel and does not apply the Proton chain to itself. Existing manually entered VLESS/VMess chain entries remain supported; max four hops and duplicate prevention remain in force. The last saved entry is the physical-network-facing hop in this application's chain model. WG/AWG hops need UDP support from any transport carrying them.
 
-A UDP send, TCP connect or ICMP response does not prove a working WARP tunnel. No live account/registered handshake was created during these tests.
+Import retains edit/delete/location overrides. Empty country/city fields trigger best-effort endpoint lookup through `https://freeipapi.com/api/json/<endpoint-IP>`; the import dialog discloses this. Fill both fields to skip detection. An endpoint location is not a verified VPN exit location. WARP uses its brand row rather than claiming a geographic exit.
+
+## Registration and endpoints
+
+X25519 private keys are created locally; only the public key is submitted to the fixed Cloudflare registration endpoint. The selected endpoint is configuration data, never an HTTP request URL. API bypass disabled means direct registration without inherited proxy/socket bypass. Netlify, Cloudflare, Deno and event mirrors require the fixed `/warp/reg` route from ProtonVPN-Next-WEB, deployed separately. ByeDPI/custom proxy retain their transport. Proton-only mirrors cannot relay WARP; unsupported bypass fails instead of silently switching to direct. Proton authenticators/interceptors are stripped, standard TLS validation is used, and response bodies are bounded before decoding.
+
+`docs/warp-endpoints.json` records sources and their SHA-256. There are 396 public IPv4 suggestions (256 from official `162.159.193.0/24`, 140 community candidates) and 54 published ports. The four official UDP ports come first: 2408, 500, 1701, 4500. Blank/default IP preserves the registration response's endpoint. MASQUE ports and bot-only services are not mixed into WireGuard options. These are candidates, not 21,384 handshake-verified IP/port combinations or a claim of all possible ports.
+
+## Verification
+
+- Unit tests: endpoint ordering/validation, all three packet profiles, local preferences serialization, singleton replacement, legacy aliases, limits and fail-closed references, plus the existing suites.
+- Android instrumented tests use fixtures only, with **no live registration or VPN sockets**. Native Libbox checks all WARP profiles as intermediate hops. Compose checks dropdown selection, custom-endpoint input, visible unified rows, side + menu and WARP selection in the chain editor.
+- A disposable encrypted file verifies concurrent replacement, reload, secret-at-rest protection and disabled-hop rejection on a real Android Keystore. Settings persistence is restored to its prior value after the test.
+- Tests run in the separate nightlyStandard debug application, not the user's installed nightlyPrivacy application. Device UI/native checks are not a registered WARP handshake. Real connectivity still needs testing on the target network. No push, mirror deployment or live WARP account creation is part of this change.

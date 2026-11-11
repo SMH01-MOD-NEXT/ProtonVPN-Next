@@ -29,7 +29,10 @@ import ru.protonmod.next.vpn.ProxyLinkParser
 
 @Serializable
 data class CustomConfig(val id: String = UUID.randomUUID().toString(), val name: String,
-    val link: String, val country: String = "", val city: String = "")
+    val link: String, val country: String = "", val city: String = "",
+    val kind: String = "custom", val previousIds: List<String> = emptyList()) {
+    val isWarp: Boolean get() = kind == "warp"
+}
 
 /** Secret config bytes are AES-GCM encrypted with a non-exportable Android Keystore key.
  * noBackupFilesDir prevents a restored ciphertext from becoming detached from its device key. */
@@ -54,7 +57,7 @@ class CustomConfigRepository @Inject constructor(@ApplicationContext context: Co
             val data = file.readFully(); require(data.size > 28)
             val cipher = Cipher.getInstance("AES/GCM/NoPadding")
             cipher.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, data.copyOfRange(0, 12)))
-            _configs.value = Json.decodeFromString(cipher.doFinal(data.copyOfRange(12, data.size)).decodeToString())
+            _configs.value = CustomConfigRules.migrate(Json.decodeFromString(cipher.doFinal(data.copyOfRange(12, data.size)).decodeToString()))
         }
         loaded = true
     }
@@ -63,7 +66,12 @@ class CustomConfigRepository @Inject constructor(@ApplicationContext context: Co
         require(config.country.isEmpty() || config.country in java.util.Locale.getISOCountries())
         require(config.city.length <= 100 && ProxyLinkParser.isValid(config.link))
         require(existing.size < 100 || existing.any { it.id == config.id })
+        require(!config.isWarp && config.id != CustomConfigRules.WARP_ID)
         existing.filterNot { it.id == config.id } + config
+    }
+    suspend fun saveWarp(link: String) = mutate { existing ->
+        require(ProxyLinkParser.isValid(link))
+        CustomConfigRules.replaceWarp(existing, link)
     }
     suspend fun delete(id: String) = mutate { list -> list.filterNot { it.id == id } }
     private suspend fun mutate(transform: (List<CustomConfig>) -> List<CustomConfig>) = withContext(Dispatchers.IO) {
@@ -77,11 +85,9 @@ class CustomConfigRepository @Inject constructor(@ApplicationContext context: Co
             _configs.value = next
         }
     }
-    suspend fun resolveChain(raw: String): String {
+    suspend fun resolveChain(raw: String, warpEnabled: Boolean = true): String {
         load()
-        return raw.lineSequence().map(String::trim).filter(String::isNotEmpty).joinToString("\n") { link ->
-            if (link.startsWith("custom://")) requireNotNull(configs.value.find { it.id == link.removePrefix("custom://") }).link else link
-        }
+        return CustomConfigRules.resolveChain(configs.value, raw, warpEnabled)
     }
     fun normalize(raw: String): String = if (raw.trimStart().startsWith("[Interface]")) ImportedWireGuard.encode(raw.trim())
         else raw.trim().also { require(ProxyLinkParser.isValid(it) && '\n' !in it) }

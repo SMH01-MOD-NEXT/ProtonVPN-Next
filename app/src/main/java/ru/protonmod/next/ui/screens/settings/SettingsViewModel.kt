@@ -208,6 +208,7 @@ class SettingsViewModel @Inject constructor(
     private val customRepository: ru.protonmod.next.data.repository.CustomConfigRepository
 ) : ViewModel() {
 
+    val warpPreferences = settingsManager.warpPreferences
     val savedCustomConfigs = customRepository.configs
 
     // Internal state tracking if any VPN is operating at the OS level

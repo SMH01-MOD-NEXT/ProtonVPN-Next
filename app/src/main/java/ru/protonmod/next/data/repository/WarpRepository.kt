@@ -21,11 +21,26 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class WarpRepository @Inject constructor(private val client: OkHttpClient, private val settings: SettingsManager) {
+class WarpRepository @Inject constructor(private val client: OkHttpClient, private val settings: SettingsManager, private val customConfigs: CustomConfigRepository) {
+    private val generationMutex = kotlinx.coroutines.sync.Mutex()
+
+    suspend fun generateAndSave(preferences: ru.protonmod.next.data.local.WarpPreferences) {
+        generationMutex.lock()
+        try {
+            preferences.validate()
+            settings.setWarpPreferences(preferences)
+            val text = generate(preferences.resolvedEndpoint(), preferences.port,
+                profile = preferences.profile, customEndpoint = preferences.customEndpoint)
+            customConfigs.saveWarp(customConfigs.normalize(text))
+            settings.setWarpPreferences(preferences.copy(enabled = true))
+        } finally { generationMutex.unlock() }
+    }
+
     /** No Proton authenticator/interceptors: WARP must never receive Proton credentials. Retain
      * DNS and socket/proxy transports for direct/ByeDPI/custom proxy modes with standard TLS. */
-    suspend fun generate(endpoint: String? = null, port: Int? = null, awg2: Boolean = false): String = withContext(Dispatchers.IO) {
-        ru.protonmod.next.data.network.WarpEndpoints.validate(endpoint, port)
+    suspend fun generate(endpoint: String? = null, port: Int? = null, awg2: Boolean = false, profile: Int = if (awg2) 2 else 0, customEndpoint: Boolean = false): String = withContext(Dispatchers.IO) {
+        ru.protonmod.next.data.network.WarpEndpoints.validate(endpoint, port, customEndpoint)
+        require(profile in 0..3)
         val private = X25519PrivateKeyParameters(SecureRandom())
         val b64 = Base64.getEncoder()
         val body = buildJsonObject {
@@ -62,7 +77,11 @@ class WarpRepository @Inject constructor(private val client: OkHttpClient, priva
             .post(body.toString().toRequestBody("application/json".toMediaType())).build()
         val payload = builder.build().newCall(request).execute().use { response ->
             check(response.isSuccessful) { "WARP registration failed (${response.code})" }
-            val raw = response.body.string(); require(raw.length <= 65536)
+            val raw = response.body.byteStream().use { input ->
+                val bytes = ByteArray(65537); var count = 0
+                while (count < bytes.size) { val n = input.read(bytes, count, bytes.size - count); if (n < 0) break; count += n }
+                require(count <= 65536); bytes.decodeToString(endIndex = count)
+            }
             Json.parseToJsonElement(raw).jsonObject.getValue("config").jsonObject
         }
         val peer = payload.getValue("peers").jsonArray.first().jsonObject
@@ -83,7 +102,7 @@ class WarpRepository @Inject constructor(private val client: OkHttpClient, priva
             Reserved = ${reserved.joinToString(", ") { (it.toInt() and 255).toString() }}
         """.trimIndent()
         ImportedWireGuard.encode(text) // Validate before exposing a generated configuration.
-        ru.protonmod.next.data.network.WarpEndpoints.apply(text, endpoint, port, awg2)
+        ru.protonmod.next.data.network.WarpEndpoints.apply(text, endpoint, port, awg2, profile, customEndpoint)
     }
     private val defaultSsl: Pair<javax.net.ssl.SSLSocketFactory, javax.net.ssl.X509TrustManager>
         get() {
