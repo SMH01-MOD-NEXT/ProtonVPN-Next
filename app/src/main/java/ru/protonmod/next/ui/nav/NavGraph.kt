@@ -208,7 +208,8 @@ fun NavGraphBuilder.appNavGraph(
     composable(Screen.ApiBypass.route) {
         ApiBypassScreen(
             onBack = { navController.popBackStack() },
-            onNavigateToByeDpiTest = { navController.navigate(Screen.ByeDpiTest.route) }
+            onNavigateToByeDpiTest = { navController.navigate(Screen.ByeDpiTest.route) },
+            onNavigateToWarp = { navController.navigate(Screen.Warp.route) }
         )
     }
 

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="api_warp_description">Local WARP proxy. Proton API requests wait for a confirmed handshake; retry after 5 seconds.</string>
+<string name="api_warp_bootstrap_notice">Enable WARP in its settings. The saved encrypted config is reused. First registration uses the built-in HTTPS mirror; API requests never fall back to a direct connection.</string>
+<string name="api_warp_ready">WARP is ready for API requests</string>
+<string name="api_warp_starting">Connecting WARP: waiting for handshake</string>
+<string name="api_warp_retrying">No handshake: reconnecting WARP</string>
+<string name="api_warp_failed">Check WARP settings and registration</string>
+<string name="api_warp_stopped">WARP proxy is stopped or waiting for a network</string>
+</resources>

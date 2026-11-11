@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+<string name="api_warp_description">Локальный прокси WARP. Запросы к API Proton ждут подтверждённого хендшейка; повторная попытка через 5 секунд.</string>
+<string name="api_warp_bootstrap_notice">Включите WARP в его настройках. Сохранённый зашифрованный конфиг используется повторно. Первая регистрация идёт через встроенное HTTPS-зеркало; запросы API не переключаются на прямое подключение.</string>
+<string name="api_warp_ready">WARP готов для запросов API</string>
+<string name="api_warp_starting">Подключение WARP: ждём хендшейк</string>
+<string name="api_warp_retrying">Нет хендшейка: переподключение WARP</string>
+<string name="api_warp_failed">Проверьте настройки WARP и регистрацию</string>
+<string name="api_warp_stopped">Прокси WARP остановлен или ждёт сеть</string>
+</resources>

@@ -52,3 +52,28 @@ bind. Missing/fatal hops still fail closed; no direct fallback is added.
 `WarpChainStartupInstrumentedTest` starts the real service with all four native
 profiles using loopback fixture peers and no TUN. A new APK containing the
 rebuilt core is needed; simply regenerating a WARP config is not the fix.
+
+
+## WARP as an API bypass
+
+Select **WARP** under API bypass and enable/configure WARP in its existing
+settings screen. The shared client waits for a confirmed WG/AWG handshake;
+requests do not fall back to direct connectivity. A SOCKS proxy runs on an
+OS-selected loopback port with fresh per-process authentication. No OS VPN/TUN
+is used for this API-only mode. An already active system VPN retains the
+existing API-bypass policy (bypass is unnecessary/disabled).
+
+The saved encrypted WARP config and ready proxy are reused across calls. Each
+new process startup begins background prewarming; no handshake in five seconds
+causes a native restart. Network or parameter changes cancel the old generation.
+Calls wait up to 30 seconds and remain cancellable while background retry
+continues. Status is shown in API bypass: stopped/waiting, connecting, retrying,
+ready, or settings/registration failure. A default registration peer hostname
+uses the official IPv4 `162.159.193.1` for fast DNS-free bootstrap; choose another
+IP/custom endpoint in WARP settings if that candidate is blocked locally.
+
+Registration, when needed, bootstraps through the existing fixed HTTPS mirror,
+not through a nonexistent WARP tunnel. It has no Proton credentials. This is the
+only registration/bootstrap exception to the API gate; public handshake/probe
+traffic necessarily precedes API traffic. Unrelated SDKs/WebView networking is
+not a whole-device VPN and is not covered by the shared-client transport.

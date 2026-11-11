@@ -72,7 +72,7 @@ configuration does not use. The new `fallback` outbound group and xhttp session
 isolation are not used by the client yet.
 
 Cached AARs require a build fingerprint (source, Go version, build script, both Tor
-patches and the IPv4-detour patch) and matching binary SHA-256 in a generated `.build-info` sidecar.
+patches, the IPv4-detour patch and the API-WARP proxy patch) and matching binary SHA-256 in a generated `.build-info` sidecar.
 Old or modified artifacts are rebuilt; an existing AAR is preserved until its
 replacement passes archive and native-symbol validation.
 
@@ -229,3 +229,52 @@ The new patch is part of the AAR fingerprint; old cached binaries are rejected.
 A rebuilt APK is required, but existing WARP configs do not need regeneration
 for this startup correction. Go remains pinned to 1.25.5 and the upstream source
 revision is unchanged.
+
+
+## API-only WARP proxy (2026-11-11)
+
+The `warp` API bypass strategy starts a separate in-process native instance in
+the main process. It has only an authenticated `127.0.0.1` SOCKS inbound and a
+single userspace WG/AWG endpoint. It does not create a TUN, change Android
+routes, request VPN consent, expose a Clash controller or start the libbox
+command/RPC server. `awgbox-api-warp-proxy.patch` adds this small lifecycle bridge
+and a boolean handshake query backed by actual device UAPI timestamps, for both
+standard WG and AWG. Keys and UAPI text are never exposed to Kotlin through the
+query, and the bridge does not save plaintext configuration snapshots.
+
+Application startup begins prewarming off the main thread. One atomic startup
+guard and one latest-settings/network coroutine serialize the lifecycle. The
+first usable handshake releases waiting calls immediately (50 ms poll ceiling);
+a missing handshake closes/recreates the instance after five seconds. Failed
+starts are throttled to the same interval. A ready instance and its authenticated
+HTTP connection pool are reused, without repeated account registration, until
+settings, default network/address or VPN state changes. Losing/changing the
+physical default route invalidates readiness; shutdown closes the probe socket,
+native endpoint, interface monitor and listener before replacement.
+
+`WarpApiInterceptor` gates the shared client before DNS/connecting and delegates
+to a distinct SOCKS transport/pool. Even a warm direct TLS connection cannot
+bypass the gate. Hostnames, SNI, TLS verification and Proton pins are preserved;
+SOCKS forwards target domains for resolution through the WARP DNS endpoint.
+The mirror/DoH fallback interceptor is disabled in this mode. Calls can cancel
+while waiting; the maximum request wait is 30 seconds, while background retries
+continue. User settings/global WARP disablement or missing config is never
+silently translated into a direct API request.
+
+No bootstrap can register WARP through a WARP account that does not exist yet.
+If generation is required, only the fixed HTTPS registration mirror and secure
+DNS bootstrap run outside the not-yet-ready instance. The registration client
+has no Proton interceptor/authenticator, sends only the generated public key,
+uses standard TLS, does not follow redirects and is coroutine-cancellable.
+Its independent dispatcher prevents waiting API calls from starving registration.
+Existing encrypted legacy configs are adopted once; newly generated configs
+store a non-secret settings marker so later parameter changes regenerate once,
+not on every reconnect. Cached credentials remain AES-GCM encrypted in the
+existing no-backup repository.
+
+Validation includes virtual-time five-second retry/cancellation/reuse tests,
+pooled-direct-connection leak prevention, authenticated SOCKS remote-DNS
+transport, and device tests for all four native profiles. The device regression
+pairs real cryptographic loopback WG peers and observes successful handshakes
+through the new bridge; this is not a claim that public Cloudflare endpoints
+are reachable on every user's network.

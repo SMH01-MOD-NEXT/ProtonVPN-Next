@@ -1,6 +1,7 @@
 /* Copyright (C) 2026 SMH01 — GPL-3.0-or-later */
 package ru.protonmod.next.data.repository
 
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -23,6 +24,8 @@ import javax.inject.Singleton
 @Singleton
 class WarpRepository @Inject constructor(private val client: OkHttpClient, private val settings: SettingsManager, private val customConfigs: CustomConfigRepository) {
     private val generationMutex = kotlinx.coroutines.sync.Mutex()
+    // A full queue of API calls waiting on WARP must not starve its bootstrap.
+    private val registrationDispatcher = okhttp3.Dispatcher()
 
     suspend fun generateAndSave(preferences: ru.protonmod.next.data.local.WarpPreferences) {
         generationMutex.lock()
@@ -31,7 +34,7 @@ class WarpRepository @Inject constructor(private val client: OkHttpClient, priva
             settings.setWarpPreferences(preferences)
             val text = generate(preferences.resolvedEndpoint(), preferences.port,
                 profile = preferences.profile, customEndpoint = preferences.customEndpoint)
-            customConfigs.saveWarp(customConfigs.normalize(text))
+            customConfigs.saveWarp(customConfigs.normalize(text), preferences.copy(enabled = false).toString())
             settings.setWarpPreferences(preferences.copy(enabled = true))
         } finally { generationMutex.unlock() }
     }
@@ -50,7 +53,7 @@ class WarpRepository @Inject constructor(private val client: OkHttpClient, priva
         }
         val strategy = settings.getApiBypassStrategySync()
         val base = if (!settings.isApiBypassEnabledSync()) null else when (strategy) {
-            SettingsManager.STRATEGY_NETLIFY -> ProxyEndpoints.NETLIFY_URL
+            SettingsManager.STRATEGY_WARP, SettingsManager.STRATEGY_NETLIFY -> ProxyEndpoints.NETLIFY_URL
             SettingsManager.STRATEGY_CLOUDFLARE -> ProxyEndpoints.CLOUDFLARE_URL
             SettingsManager.STRATEGY_DENO -> ProxyEndpoints.DENO_URL
             SettingsManager.STRATEGY_EVENT -> settings.getEventBypassUrlSync().also { require(ProxyEndpoints.httpsBase(it) != null) }
@@ -64,18 +67,31 @@ class WarpRepository @Inject constructor(private val client: OkHttpClient, priva
         val url = if (base == null) "https://api.cloudflareclient.com/v0a2158/reg" else
             ProxyEndpoints.apiUrl("https://api.cloudflareclient.com/warp/reg".toHttpUrl(), requireNotNull(ProxyEndpoints.httpsBase(base)), routing).toString()
         val ssl = defaultSsl
-        val builder = client.newBuilder().apply { interceptors().clear(); networkInterceptors().clear() }
+        val builder = client.newBuilder().dispatcher(registrationDispatcher).apply { interceptors().clear(); networkInterceptors().clear() }
             .authenticator(okhttp3.Authenticator.NONE)
             .certificatePinner(okhttp3.CertificatePinner.DEFAULT)
             .sslSocketFactory(ssl.first, ssl.second)
             .hostnameVerifier(javax.net.ssl.HttpsURLConnection.getDefaultHostnameVerifier())
             .followRedirects(false).callTimeout(30, TimeUnit.SECONDS)
-        // With bypass disabled, do not inherit a system proxy or a bypass socket factory.
-        if (!settings.isApiBypassEnabledSync()) builder.proxy(java.net.Proxy.NO_PROXY).socketFactory(javax.net.SocketFactory.getDefault())
+        // Bootstrap must not recursively wait for the WARP instance it is creating.
+        // Keep the existing secure DNS resolver, but never inherit a proxy socket or Proton credentials.
+        if (!settings.isApiBypassEnabledSync() || strategy == SettingsManager.STRATEGY_WARP) builder.proxy(java.net.Proxy.NO_PROXY).socketFactory(javax.net.SocketFactory.getDefault())
         val request = Request.Builder().url(url).header("User-Agent", "okhttp/4.12.0")
             .header("CF-Client-Version", "a-6.30-3596")
             .post(body.toString().toRequestBody("application/json".toMediaType())).build()
-        val payload = builder.build().newCall(request).execute().use { response ->
+        val response = suspendCancellableCoroutine<okhttp3.Response> { continuation ->
+            val call = builder.build().newCall(request)
+            continuation.invokeOnCancellation { call.cancel() }
+            call.enqueue(object : okhttp3.Callback {
+                override fun onFailure(call: okhttp3.Call, error: java.io.IOException) {
+                    if (continuation.isActive) continuation.resumeWith(Result.failure(error))
+                }
+                override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                    continuation.resume(response) { _, value, _ -> value.close() }
+                }
+            })
+        }
+        val payload = response.use { response ->
             check(response.isSuccessful) { "WARP registration failed (${response.code})" }
             val raw = response.body.byteStream().use { input ->
                 val bytes = ByteArray(65537); var count = 0

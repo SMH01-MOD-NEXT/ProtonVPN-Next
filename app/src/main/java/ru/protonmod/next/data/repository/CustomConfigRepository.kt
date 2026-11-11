@@ -30,7 +30,7 @@ import ru.protonmod.next.vpn.ProxyLinkParser
 @Serializable
 data class CustomConfig(val id: String = UUID.randomUUID().toString(), val name: String,
     val link: String, val country: String = "", val city: String = "",
-    val kind: String = "custom", val previousIds: List<String> = emptyList()) {
+    val kind: String = "custom", val previousIds: List<String> = emptyList(), val warpSettingsKey: String = "") {
     val isWarp: Boolean get() = kind == "warp"
 }
 
@@ -69,9 +69,9 @@ class CustomConfigRepository @Inject constructor(@ApplicationContext context: Co
         require(!config.isWarp && config.id != CustomConfigRules.WARP_ID)
         existing.filterNot { it.id == config.id } + config
     }
-    suspend fun saveWarp(link: String) = mutate { existing ->
+    suspend fun saveWarp(link: String, settingsKey: String = "") = mutate { existing ->
         require(ProxyLinkParser.isValid(link))
-        CustomConfigRules.replaceWarp(existing, link)
+        CustomConfigRules.replaceWarp(existing, link).map { if (it.isWarp) it.copy(warpSettingsKey = settingsKey) else it }
     }
     suspend fun delete(id: String) = mutate { list -> list.filterNot { it.id == id } }
     private suspend fun mutate(transform: (List<CustomConfig>) -> List<CustomConfig>) = withContext(Dispatchers.IO) {

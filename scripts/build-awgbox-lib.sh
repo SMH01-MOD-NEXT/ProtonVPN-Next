@@ -79,7 +79,8 @@ build_fingerprint() {
     sha256sum "$ROOT/scripts/build-awgbox-lib.sh" \
       "$ROOT/scripts/patches/awgbox-tor-android.patch" \
       "$ROOT/scripts/patches/awgbox-tor-log-noise.patch" \
-      "$ROOT/scripts/patches/awgbox-ipv4-detour.patch" | awk '{ print $1 }'
+      "$ROOT/scripts/patches/awgbox-ipv4-detour.patch" \
+      "$ROOT/scripts/patches/awgbox-api-warp-proxy.patch" | awk '{ print $1 }'
   } | sha256sum | awk '{ print $1 }'
 }
 
@@ -161,6 +162,7 @@ git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-tor-log-noise.patch"
 # Single-family WG/AWG detours must not require an IPv6 local address. This
 # also exposes numeric WireGuard peers at the dependency-start lifecycle phase.
 git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-ipv4-detour.patch"
+git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-api-warp-proxy.patch"
 
 GOBIN_DIR="$WORK/.bin"
 mkdir -p "$GOBIN_DIR"

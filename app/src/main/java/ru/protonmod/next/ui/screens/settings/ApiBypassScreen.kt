@@ -76,8 +76,11 @@ fun ApiBypassScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onNavigateToByeDpiTest: () -> Unit = {},
-    viewModel: SettingsViewModel = hiltViewModel()
+    onNavigateToWarp: () -> Unit = {},
+    viewModel: SettingsViewModel = hiltViewModel(),
+    warpViewModel: WarpApiStatusViewModel = hiltViewModel()
 ) {
+    val warpStatus by warpViewModel.status.collectAsStateWithLifecycle()
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventActionFailed by viewModel.eventActionFailed.collectAsStateWithLifecycle()
@@ -508,7 +511,30 @@ fun ApiBypassScreen(
                                     color = colors.separatorNorm.copy(alpha = 0.2f)
                                 )
 
-                                // Strategy 5: Custom Proxy (SOCKS5/HTTPS)
+                                StrategySelectionRow(
+                    title = stringResource(R.string.custom_warp),
+                    description = stringResource(R.string.api_warp_description),
+                    icon = ProtonIcons.Cloudflare,
+                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_WARP,
+                    onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_WARP) }
+                )
+                if (uiState.apiBypassStrategy == SettingsManager.STRATEGY_WARP) {
+                    Column(Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
+                        Text(stringResource(when (warpStatus) {
+                            ru.protonmod.next.data.network.warp.WarpApiStatus.READY -> R.string.api_warp_ready
+                            ru.protonmod.next.data.network.warp.WarpApiStatus.STARTING -> R.string.api_warp_starting
+                            ru.protonmod.next.data.network.warp.WarpApiStatus.RETRYING -> R.string.api_warp_retrying
+                            ru.protonmod.next.data.network.warp.WarpApiStatus.FAILED -> R.string.api_warp_failed
+                            else -> R.string.api_warp_stopped
+                        }), style = MaterialTheme.typography.bodyMedium, color = colors.textNorm)
+                        Text(stringResource(R.string.api_warp_bootstrap_notice), style = MaterialTheme.typography.bodySmall,
+                            color = colors.textWeak)
+                        OutlinedButton(onClick = onNavigateToWarp) { Text(stringResource(R.string.warp_parameters)) }
+                    }
+                }
+                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), color = colors.separatorNorm.copy(alpha = 0.2f))
+
+                // Strategy 5: Custom Proxy (SOCKS5/HTTPS)
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_custom),
                                     description = stringResource(R.string.api_bypass_strategy_custom_desc),

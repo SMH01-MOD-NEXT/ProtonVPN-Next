@@ -60,8 +60,8 @@ class WarpSettingsViewModel @Inject constructor(
     }
     fun delete() = action {
         stopWarpIfInUse()
-        configs.delete(CustomConfigRules.WARP_ID)
         settings.setWarpPreferences(settings.warpPreferences.first().copy(enabled = false))
+        configs.delete(CustomConfigRules.WARP_ID)
     }
     fun addHop() = action {
         val config = requireNotNull(configs.configs.value.firstOrNull { it.isWarp })

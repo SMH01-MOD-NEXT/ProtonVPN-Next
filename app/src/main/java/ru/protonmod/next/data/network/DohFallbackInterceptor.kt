@@ -37,6 +37,10 @@ class DohFallbackInterceptor @Inject constructor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
+        // WARP keeps original SNI/hostname and resolves inside the encrypted hop.
+        // Do not issue discovery requests or rewrite to stale mirror IPs on failure.
+        if (settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_WARP && settingsManager.isApiBypassEnabledSync())
+            return chain.proceed(request)
         val originalUrl = request.url
         val originalHost = originalUrl.host
 

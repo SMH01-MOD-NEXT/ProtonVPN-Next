@@ -102,6 +102,7 @@ class SettingsManager @Inject constructor(
         const val STRATEGY_PROTON_MIRRORS = "proton_mirrors"
         const val STRATEGY_BYEDPI = "byedpi"
         const val STRATEGY_CUSTOM_PROXY = "custom_proxy"
+        const val STRATEGY_WARP = "warp"
 
         /**
          * Temporary ("event") bypass. Unlike the other strategies its endpoint is not

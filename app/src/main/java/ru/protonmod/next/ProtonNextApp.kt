@@ -66,6 +66,9 @@ class ProtonNextApp : Application(), Configuration.Provider {
     @Inject
     lateinit var vpnAutomationManager: Lazy<VpnAutomationManager>
 
+    @Inject
+    lateinit var warpApi: Lazy<ru.protonmod.next.data.network.warp.WarpApiManager>
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -135,6 +138,7 @@ class ProtonNextApp : Application(), Configuration.Provider {
 
             // Instantiate main-process-only graphs here. Keeping them Lazy prevents the
             // dedicated :vpn process from opening Room during Application injection.
+            warpApi.get().start()
             vpnAutomationManager.get()
             vpnRepository.get().startAutoUpdate()
             SessionRefreshWorker.schedule(this@ProtonNextApp)

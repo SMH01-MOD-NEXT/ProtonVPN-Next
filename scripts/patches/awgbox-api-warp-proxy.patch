@@ -1,0 +1,137 @@
+diff --git a/transport/wireguard/endpoint.go b/transport/wireguard/endpoint.go
+--- a/transport/wireguard/endpoint.go
++++ b/transport/wireguard/endpoint.go
+@@ -425,3 +425,12 @@
+ 	}
+ 	return ipcLines.String()
+ }
++
++// IpcGet exposes peer state to the in-process mobile handshake gate only.
++func (e *Endpoint) IpcGet() (string, error) {
++	d := e.device.Load()
++	if d == nil {
++		return "", E.New("device not started")
++	}
++	return d.IpcGet()
++}
+diff --git a/protocol/wireguard/endpoint.go b/protocol/wireguard/endpoint.go
+--- a/protocol/wireguard/endpoint.go
++++ b/protocol/wireguard/endpoint.go
+@@ -367,3 +367,5 @@
+ 	}
+ 	return w.endpoint.Lookup(address) != nil
+ }
++
++func (w *Endpoint) IpcGet() (string, error) { return w.endpoint.IpcGet() }
+diff --git a/experimental/libbox/api_warp_proxy.go b/experimental/libbox/api_warp_proxy.go
+new file mode 100644
+index 0000000..d9639c5
+--- /dev/null
++++ b/experimental/libbox/api_warp_proxy.go
+@@ -0,0 +1,86 @@
++package libbox
++
++import (
++	"context"
++	"strconv"
++	"strings"
++	"sync"
++
++	box "github.com/sagernet/sing-box"
++	"github.com/sagernet/sing-box/adapter"
++	"github.com/sagernet/sing/service"
++)
++
++// ApiWarpProxy is a small in-process instance: no command socket, RPC server,
++// config snapshot, TUN or persistent secrets. Android supplies loopback SOCKS
++// config and binds the physical transport via its platform bridge.
++type ApiWarpProxy struct {
++	access   sync.Mutex
++	instance *box.Box
++	cancel   context.CancelFunc
++}
++
++func NewApiWarpProxy(config string, platform PlatformInterface) (*ApiWarpProxy, error) {
++	ctx, cancel := context.WithCancel(baseContext(platform))
++	service.MustRegister[adapter.PlatformInterface](ctx, &platformInterfaceWrapper{iif: platform})
++	options, err := parseConfig(ctx, config)
++	if err != nil {
++		cancel()
++		return nil, err
++	}
++	instance, err := box.New(box.Options{Context: ctx, Options: options})
++	if err != nil {
++		cancel()
++		return nil, err
++	}
++	if err = instance.Start(); err != nil {
++		cancel()
++		instance.Close()
++		return nil, err
++	}
++	return &ApiWarpProxy{instance: instance, cancel: cancel}, nil
++}
++
++// HandshakeConfirmed reports actual device UAPI state, never listener readiness
++// or an optimistic log message. No private/public keys cross this bridge.
++func (p *ApiWarpProxy) HandshakeConfirmed() bool {
++	p.access.Lock()
++	defer p.access.Unlock()
++	if p.instance == nil {
++		return false
++	}
++	endpoint, ok := p.instance.Endpoint().Get("warp-api")
++	if !ok {
++		return false
++	}
++	getter, ok := endpoint.(interface{ IpcGet() (string, error) })
++	if !ok {
++		return false
++	}
++	text, err := getter.IpcGet()
++	return err == nil && hasWarpHandshake(text)
++}
++
++func hasWarpHandshake(text string) bool {
++	for _, line := range strings.Split(text, "\n") {
++		if value, ok := strings.CutPrefix(line, "last_handshake_time_sec="); ok {
++			seconds, err := strconv.ParseInt(value, 10, 64)
++			if err == nil && seconds > 0 {
++				return true
++			}
++		}
++	}
++	return false
++}
++
++func (p *ApiWarpProxy) Close() error {
++	p.access.Lock()
++	defer p.access.Unlock()
++	if p.instance == nil {
++		return nil
++	}
++	instance := p.instance
++	p.instance = nil
++	p.cancel()
++	return instance.Close()
++}
+diff --git a/experimental/libbox/api_warp_proxy_test.go b/experimental/libbox/api_warp_proxy_test.go
+new file mode 100644
+index 0000000..e85570a
+--- /dev/null
++++ b/experimental/libbox/api_warp_proxy_test.go
+@@ -0,0 +1,14 @@
++package libbox
++
++import "testing"
++
++func TestWarpHandshakeGate(t *testing.T) {
++	for _, text := range []string{"", "last_handshake_time_sec=0\n", "last_handshake_time_sec=-1\n", "last_handshake_time_sec=no\n", "tx_bytes=999\nrx_bytes=999\n", "last_handshake_time_nsec=123\n"} {
++		if hasWarpHandshake(text) {
++			t.Fatalf("unconfirmed handshake: %q", text)
++		}
++	}
++	if !hasWarpHandshake("public_key=ignored\nlast_handshake_time_sec=123\n") {
++		t.Fatal("confirmed handshake missing")
++	}
++}

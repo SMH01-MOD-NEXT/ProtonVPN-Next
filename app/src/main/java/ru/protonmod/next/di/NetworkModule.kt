@@ -159,7 +159,8 @@ object NetworkModule {
         dohFallbackInterceptor: DohFallbackInterceptor,
         dohFallbackStore: DohFallbackStore,
         secureDnsResolver: SecureDnsResolver,
-        networkMonitor: NetworkMonitor
+        networkMonitor: NetworkMonitor,
+        warpApi: Provider<ru.protonmod.next.data.network.warp.WarpApiManager>
     ): OkHttpClient {
         try {
             OkHttp.initialize(context)
@@ -256,7 +257,8 @@ object NetworkModule {
             
             if (useProxy && (strategy == SettingsManager.STRATEGY_PROTON_MIRRORS || 
                             strategy == SettingsManager.STRATEGY_BYEDPI ||
-                            strategy == SettingsManager.STRATEGY_CUSTOM_PROXY)) {
+                            strategy == SettingsManager.STRATEGY_CUSTOM_PROXY ||
+                            strategy == SettingsManager.STRATEGY_WARP)) {
                 // For Proton Mirrors strategy, we rely on DohFallbackInterceptor and dynamicDns
                 // For Custom Proxy strategy, we rely on ProxySelector and use original Host.
                 // No URL rewriting needed here, just proceed with original Host.
@@ -481,7 +483,13 @@ object NetworkModule {
             ::shouldUseApiBypass
         )
 
-        return OkHttpClient.Builder()
+        lateinit var client: OkHttpClient
+        client = OkHttpClient.Builder()
+            .addInterceptor(ru.protonmod.next.data.network.warp.WarpApiInterceptor({ cancelled -> warpApi.get().awaitReady(cancelled) }, {
+                val settings = settingsManagerProvider.get()
+                settings.getApiBypassStrategySync() == SettingsManager.STRATEGY_WARP &&
+                    shouldUseApiBypass(context, vpnManagerProvider, settingsManagerProvider)
+            }, { client }))
             .addInterceptor(dynamicBaseUrlInterceptor)
             .addInterceptor(dohFallbackInterceptor)
             .addInterceptor(AuthLoggingInterceptor())
@@ -498,6 +506,7 @@ object NetworkModule {
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .build()
+        return client
     }
 
     @Provides

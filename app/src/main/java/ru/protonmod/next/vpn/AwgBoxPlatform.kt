@@ -78,9 +78,9 @@ internal fun splitTunnelingAppPolicy(
 }
 
 class AwgBoxPlatform(
-    private val service: VpnService,
-    private val vpnNetworkMonitor: VpnNetworkMonitor,
-    private val onTunOpened: (ParcelFileDescriptor) -> Unit
+    private val service: Context,
+    private val vpnNetworkMonitor: VpnNetworkMonitor? = null,
+    private val onTunOpened: (ParcelFileDescriptor) -> Unit = {}
 ) : PlatformInterface {
     private val connectivity = service.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
@@ -95,7 +95,16 @@ class AwgBoxPlatform(
     }
 
     override fun usePlatformAutoDetectInterfaceControl() = true
-    override fun autoDetectInterfaceControl(fd: Int) { service.protect(fd) }
+    override fun autoDetectInterfaceControl(fd: Int) {
+        if (service is VpnService) { check(service.protect(fd)); return }
+        // API-only instance: bind to a physical network, never recurse through a VPN.
+        val network = (listOfNotNull(connectivity.activeNetwork) + connectivity.allNetworks).distinct().firstOrNull { network ->
+            connectivity.getNetworkCapabilities(network)?.let {
+                it.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && !it.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+            } == true
+        } ?: error("No physical network for WARP")
+        ParcelFileDescriptor.fromFd(fd).use { network.bindSocket(it.fileDescriptor) }
+    }
     override fun underNetworkExtension() = false
     override fun includeAllNetworks() = false
     override fun localDNSTransport(): LocalDNSTransport? = null
@@ -109,6 +118,7 @@ class AwgBoxPlatform(
     override fun cancelNotification(identifier: String, typeID: Int) = Unit
 
     override fun openTun(options: TunOptions): Int {
+        val service = service as? VpnService ?: error("API proxy cannot open a TUN")
         // VpnService.prepare() throws SecurityException ("<package> does not belong to uid ...")
         // when the consent record belongs to another Android user/profile or was invalidated by
         // a reinstall. Translate it into the ordinary "permission revoked" failure so the
@@ -224,7 +234,10 @@ class AwgBoxPlatform(
 
     override fun getInterfaces(): NetworkInterfaceIterator {
         val result = mutableListOf<BoxNetworkInterface>()
-        for (tracked in vpnNetworkMonitor.getTrackedNetworks()) {
+        val trackedNetworks = vpnNetworkMonitor?.getTrackedNetworks()?.takeIf { it.isNotEmpty() }
+            ?: connectivity.allNetworks.map { network -> VpnNetworkMonitor.TrackedNetwork(network,
+                connectivity.getNetworkCapabilities(network), connectivity.getLinkProperties(network)) }
+        for (tracked in trackedNetworks) {
             val properties = tracked.linkProperties ?: continue
             val capabilities = tracked.capabilities ?: continue
             val name = properties.interfaceName ?: continue

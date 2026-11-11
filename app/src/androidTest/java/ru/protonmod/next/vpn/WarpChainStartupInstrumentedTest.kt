@@ -64,6 +64,80 @@ class WarpChainStartupInstrumentedTest {
         }
     }
 
+    @Test fun apiProxyDoesNotMistakeListeningForHandshake() {
+        val key = "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+        val raw = "[Interface]\nPrivateKey = $key\nAddress = 172.16.0.2/32\nDNS = 1.1.1.1\n[Peer]\nPublicKey = $key\nEndpoint = 127.0.0.1:9\nAllowedIPs = 0.0.0.0/0\nPersistentKeepalive = 0\nReserved = 1, 2, 3\n"
+        (0..3).forEach { profile ->
+            val port = java.net.ServerSocket(0, 1, java.net.InetAddress.getByName("127.0.0.1")).use { it.localPort }
+            val link = ImportedWireGuard.encode(WarpEndpoints.apply(raw, profile = profile))
+            val config = ru.protonmod.next.data.network.warp.WarpApiConfig.build(link, port, "fixture", "fixture-secret")
+            val proxy = Libbox.newApiWarpProxy(config, platform())
+            try {
+                org.junit.Assert.assertFalse(proxy.handshakeConfirmed())
+                java.net.Socket("127.0.0.1", port).use { socket ->
+                    socket.soTimeout = 1000
+                    socket.getOutputStream().write(byteArrayOf(5, 1, 0))
+                    org.junit.Assert.assertEquals(5, socket.getInputStream().read())
+                    org.junit.Assert.assertEquals(255, socket.getInputStream().read()) // auth required
+                }
+                org.junit.Assert.assertFalse(proxy.handshakeConfirmed())
+            } finally { proxy.close() }
+            org.junit.Assert.assertFalse(proxy.handshakeConfirmed())
+        }
+    }
+
+    @Test fun apiProxyReportsRealLoopbackCryptographicHandshakesForAllProfiles() {
+        val serverKey = org.bouncycastle.crypto.params.X25519PrivateKeyParameters(ByteArray(32) { 2 }, 0)
+        val clientKey = org.bouncycastle.crypto.params.X25519PrivateKeyParameters(ByteArray(32) { 1 }, 0)
+        fun b64(bytes: ByteArray) = java.util.Base64.getEncoder().encodeToString(bytes)
+        fun raw(private: ByteArray, public: ByteArray, address: String, port: Int, keepalive: Int) =
+            "[Interface]\nPrivateKey = ${b64(private)}\nAddress = $address/32\nDNS = 1.1.1.1\n[Peer]\nPublicKey = ${b64(public)}\nEndpoint = 127.0.0.1:$port\nAllowedIPs = 0.0.0.0/0\nPersistentKeepalive = $keepalive\n"
+        fun fixture(json: String, serverPort: Int? = null): String {
+            val config = Json.parseToJsonElement(json).jsonObject
+            val route = JsonObject(config.getValue("route").jsonObject + ("auto_detect_interface" to JsonPrimitive(false)))
+            if (serverPort == null) return JsonObject(config + ("route" to route)).toString()
+            val endpoint = config.getValue("endpoints").jsonArray.single().jsonObject
+            val peer = endpoint.getValue("peers").jsonArray.single().jsonObject
+            val passive = JsonObject(endpoint + mapOf("listen_port" to JsonPrimitive(serverPort),
+                "peers" to JsonArray(listOf(JsonObject(peer - "address" - "port")))))
+            return JsonObject(config + mapOf("route" to route, "inbounds" to JsonArray(emptyList()),
+                "endpoints" to JsonArray(listOf(passive)))).toString()
+        }
+        fun config(text: String, port: Int) = ru.protonmod.next.data.network.warp.WarpApiConfig.build(
+            ImportedWireGuard.encode(text), port, "fixture", "fixture-secret")
+        (0..3).forEach { profile ->
+            val udp = java.net.DatagramSocket(0).use { it.localPort }
+            val tcp = java.net.ServerSocket(0).use { it.localPort }
+            val serverRaw = raw(serverKey.encoded, clientKey.generatePublicKey().encoded, "172.16.0.1", 9, 0)
+            val server = Libbox.newApiWarpProxy(fixture(config(serverRaw, tcp), udp), platform())
+            try {
+                val clientRaw = WarpEndpoints.apply(raw(clientKey.encoded, serverKey.generatePublicKey().encoded,
+                    "172.16.0.2", udp, 1), profile = profile)
+                val client = Libbox.newApiWarpProxy(fixture(config(clientRaw, tcp)), platform())
+                try {
+                    val deadline = android.os.SystemClock.elapsedRealtime() + 5_000
+                    while (!client.handshakeConfirmed() && android.os.SystemClock.elapsedRealtime() < deadline) Thread.sleep(25)
+                    org.junit.Assert.assertTrue("Actual handshake not observed for profile $profile", client.handshakeConfirmed())
+                } finally { client.close() }
+            } finally { server.close() }
+        }
+    }
+
+    @Test fun apiProxyUsesProductionPhysicalBridgeWithoutCreatingVpn() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val connectivity = context.getSystemService(android.net.ConnectivityManager::class.java)
+        org.junit.Assume.assumeTrue(connectivity.allNetworks.any { n -> connectivity.getNetworkCapabilities(n)?.let {
+            it.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                !it.hasTransport(android.net.NetworkCapabilities.TRANSPORT_VPN)
+        } == true })
+        val key = "AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE="
+        val raw = "[Interface]\nPrivateKey = $key\nAddress = 172.16.0.2/32\nDNS = 1.1.1.1\n[Peer]\nPublicKey = $key\nEndpoint = 127.0.0.1:9\nAllowedIPs = 0.0.0.0/0\nPersistentKeepalive = 0\n"
+        val port = java.net.ServerSocket(0).use { it.localPort }
+        val config = ru.protonmod.next.data.network.warp.WarpApiConfig.build(ImportedWireGuard.encode(raw), port, "fixture", "secret")
+        val proxy = Libbox.newApiWarpProxy(config, AwgBoxPlatform(context))
+        try { org.junit.Assert.assertFalse(proxy.handshakeConfirmed()) } finally { proxy.close() }
+    }
+
     private fun handler(): CommandServerHandler = Proxy.newProxyInstance(
         CommandServerHandler::class.java.classLoader, arrayOf(CommandServerHandler::class.java)) { _, method, _ ->
         when (method.name) {
