@@ -78,7 +78,8 @@ build_fingerprint() {
     printf '%s\n' "$REPO" "$REF" "$EXPECTED_COMMIT" "$GO_TOOLCHAIN"
     sha256sum "$ROOT/scripts/build-awgbox-lib.sh" \
       "$ROOT/scripts/patches/awgbox-tor-android.patch" \
-      "$ROOT/scripts/patches/awgbox-tor-log-noise.patch" | awk '{ print $1 }'
+      "$ROOT/scripts/patches/awgbox-tor-log-noise.patch" \
+      "$ROOT/scripts/patches/awgbox-ipv4-detour.patch" | awk '{ print $1 }'
   } | sha256sum | awk '{ print $1 }'
 }
 
@@ -157,6 +158,9 @@ git -C "$WORK" submodule update --init --depth 1
 # the Guardian Project Android package.
 git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-tor-android.patch"
 git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-tor-log-noise.patch"
+# Single-family WG/AWG detours must not require an IPv6 local address. This
+# also exposes numeric WireGuard peers at the dependency-start lifecycle phase.
+git -C "$WORK" apply "$ROOT/scripts/patches/awgbox-ipv4-detour.patch"
 
 GOBIN_DIR="$WORK/.bin"
 mkdir -p "$GOBIN_DIR"

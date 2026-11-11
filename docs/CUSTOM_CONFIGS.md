@@ -41,3 +41,14 @@ X25519 private keys are created locally; only the public key is submitted to the
 - Android instrumented tests use fixtures only, with **no live registration or VPN sockets**. Native Libbox checks all WARP profiles as intermediate hops. Compose checks dropdown selection, custom-endpoint input, visible unified rows, side + menu and WARP selection in the chain editor.
 - A disposable encrypted file verifies concurrent replacement, reload, secret-at-rest protection and disabled-hop rejection on a real Android Keystore. Settings persistence is restored to its prior value after the test.
 - Tests run in the separate nightlyStandard debug application, not the user's installed nightlyPrivacy application. Device UI/native checks are not a registered WARP handshake. Real connectivity still needs testing on the target network. No push, mirror deployment or live WARP account creation is part of this change.
+
+
+### IPv4-only chain startup regression
+
+The 2026-11-11 native patch preserves IPv6-disabled operation. AWG's optional
+IPv6 bind no longer makes IPv4-only WARP hops fail with “missing IPv6 local
+address”. Numeric standard-WG hops are also ready before AWG opens its detour
+bind. Missing/fatal hops still fail closed; no direct fallback is added.
+`WarpChainStartupInstrumentedTest` starts the real service with all four native
+profiles using loopback fixture peers and no TUN. A new APK containing the
+rebuilt core is needed; simply regenerating a WARP config is not the fix.

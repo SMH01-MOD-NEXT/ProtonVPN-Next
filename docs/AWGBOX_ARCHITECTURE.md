@@ -71,8 +71,8 @@ Upstream also removed the `direct` route rule action, which the generated
 configuration does not use. The new `fallback` outbound group and xhttp session
 isolation are not used by the client yet.
 
-Cached AARs require a build fingerprint (source, Go version, build script and both
-Tor patches) and matching binary SHA-256 in a generated `.build-info` sidecar.
+Cached AARs require a build fingerprint (source, Go version, build script, both Tor
+patches and the IPv4-detour patch) and matching binary SHA-256 in a generated `.build-info` sidecar.
 Old or modified artifacts are rebuilt; an existing AAR is preserved until its
 replacement passes archive and native-symbol validation.
 
@@ -194,3 +194,38 @@ but TCP flows stopped after router pre-match. Switching away from the system
 TCP path is a compatibility mitigation; an end-to-end device test is still
 required to confirm it resolves that report. Netlink SELinux warnings alone
 do not establish the root cause.
+
+
+## IPv4-only WG/AWG detour startup fix (2026-11-11)
+
+`scripts/patches/awgbox-ipv4-detour.patch` is applied to the pinned upstream
+revision by the normal native build. It does not enable IPv6 or add synthetic
+IPv6 addresses to Proton/WARP configs.
+
+The AWG bind opens IPv4 and IPv6 UDP packet connections through its selected
+detour. IPv4-only WG/AWG stacks previously returned an untyped “missing IPv6
+local address” error, aborting an otherwise usable IPv4 chain. Stacks now wrap
+`EAFNOSUPPORT` for an absent/blocked family, allowing the bind to retain the
+working family. Fatal detour errors still propagate; a detour supporting neither
+family fails closed. The bind closes a partially opened IPv4 socket when an
+IPv6 open fails for a non-family reason. It never substitutes a direct socket.
+
+Real startup also exposed a separate standard-WireGuard lifecycle issue:
+numeric peers were initialized in the start phase, but the protocol wrapper
+reported them ready only at post-start. An AWG dependant opens its packet bind
+in the earlier phase. Numeric WG endpoints now become ready immediately after
+their device is created; domain peers remain deferred. Cleanup resets readiness
+on partial-start failure as well as normal shutdown.
+
+The patch includes Go regression tests that start and close actual native
+instances through IPv4-only WG and AWG detours, plus family/error/cleanup tests.
+The Android `WarpChainStartupInstrumentedTest` uses the generated Proton/WARP
+endpoint topology with all four profiles and calls `startOrReloadService`, not
+only `checkConfig`. It removes OS TUN plumbing and uses loopback physical peers,
+so it does not touch the device VPN, real accounts or the public WARP service.
+These regressions establish native startup, not a live registered handshake.
+
+The new patch is part of the AAR fingerprint; old cached binaries are rejected.
+A rebuilt APK is required, but existing WARP configs do not need regeneration
+for this startup correction. Go remains pinned to 1.25.5 and the upstream source
+revision is unchanged.

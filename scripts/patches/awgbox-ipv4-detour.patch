@@ -1,0 +1,404 @@
+diff --git a/ipv4_detour_test.go b/ipv4_detour_test.go
+new file mode 100644
+index 0000000..a335e05
+--- /dev/null
++++ b/ipv4_detour_test.go
+@@ -0,0 +1,47 @@
++package box_test
++
++import (
++	"context"
++	"fmt"
++	"testing"
++
++	box "github.com/sagernet/sing-box"
++	"github.com/sagernet/sing-box/include"
++	"github.com/sagernet/sing-box/option"
++	"github.com/sagernet/sing/common/json"
++)
++
++// Startup, not just config parsing. No TUN, routes, DNS, registration or external
++// peers: the physical endpoint is loopback and persistent keepalives are off.
++func TestIPv4OnlyDetourStartsAwg(t *testing.T) {
++	for _, kind := range []string{"wireguard", "awg"} {
++		t.Run(kind, func(t *testing.T) {
++			ctx, cancel := context.WithCancel(include.Context(context.Background()))
++			defer cancel()
++			raw := fmt.Sprintf(`{
++    "log":{"disabled":true},
++    "endpoints":[
++     {"type":"awg","tag":"proton-awg","useIntegratedTun":false,
++      "address":["10.2.0.2/32"],"private_key":"AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=",
++      "detour":"warp","peers":[{"address":"192.0.2.10","port":2408,
++       "public_key":"AgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgI=","allowed_ips":["0.0.0.0/0"]}]},
++     {"type":"%s","tag":"warp","address":["172.16.0.2/32"],
++      "private_key":"AwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwM=",
++      "peers":[{"address":"127.0.0.1","port":9,
++       "public_key":"BAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQ=","allowed_ips":["0.0.0.0/0"]}]}],
++    "route":{"final":"proton-awg"}}`, kind)
++			opts, err := json.UnmarshalExtendedContext[option.Options](ctx, []byte(raw))
++			if err != nil {
++				t.Fatal(err)
++			}
++			instance, err := box.New(box.Options{Context: ctx, Options: opts})
++			if err != nil {
++				t.Fatal(err)
++			}
++			defer instance.Close()
++			if err = instance.Start(); err != nil {
++				t.Fatalf("IPv4-only %s detour must start AWG without IPv6: %v", kind, err)
++			}
++		})
++	}
++}
+diff --git a/protocol/wireguard/endpoint.go b/protocol/wireguard/endpoint.go
+index 70db411..df2557b 100644
+--- a/protocol/wireguard/endpoint.go
++++ b/protocol/wireguard/endpoint.go
+@@ -146,20 +146,26 @@ func (w *Endpoint) Start(stage adapter.StartStage, scope *adapter.Scope) error {
+ 			return err
+ 		}
+ 		scope.Add(w.endpoint.Close)
+-	case adapter.StartStateStart:
+-		return w.endpoint.Start(false)
+-	case adapter.StartStatePostStart:
+-		err := w.endpoint.Start(true)
+-		if err != nil {
+-			return err
+-		}
+-		w.started.Store(true)
+ 		scope.Add(func() error {
+ 			w.bindAccess.Lock()
+ 			w.started.Store(false)
+ 			w.bindAccess.Unlock()
+ 			return nil
+ 		})
++	case adapter.StartStateStart:
++		if err := w.endpoint.Start(false); err != nil {
++			return err
++		}
++		// AWG dependants open UDP binds during this phase, before PostStart.
++		// Numeric peers are already usable; do not report a ready device as
++		// unavailable merely because the next lifecycle phase has not run.
++		w.started.Store(w.endpoint.Ready())
++	case adapter.StartStatePostStart:
++		err := w.endpoint.Start(true)
++		if err != nil {
++			return err
++		}
++		w.started.Store(w.endpoint.Ready())
+ 	}
+ 	return nil
+ }
+diff --git a/transport/awg/bind.go b/transport/awg/bind.go
+index c397950..c56b85a 100644
+--- a/transport/awg/bind.go
++++ b/transport/awg/bind.go
+@@ -86,12 +86,20 @@ func (b *bind_adapter) Open(port uint16) (fns []conn.ReceiveFunc, actualPort uin
+ 
+ 	conn6, err := b.connect(netip.IPv6Unspecified(), port)
+ 	if err != nil && !errors.Is(err, syscall.EAFNOSUPPORT) {
++		if conn4 != nil {
++			conn4.Close()
++		}
+ 		return nil, 0, E.Cause(err, "create ipv6 connection")
+ 	}
+ 	if conn6 != nil {
+ 		fns = append(fns, b.receive(conn6))
+ 	}
+ 
++	// A single-family detour is valid, but no families must fail closed.
++	// Never substitute a direct/system socket for an unavailable detour.
++	if conn4 == nil && conn6 == nil {
++		return nil, 0, E.Cause(syscall.EAFNOSUPPORT, "no UDP address family available through detour")
++	}
+ 	b.conn4 = conn4
+ 	b.conn6 = conn6
+ 
+diff --git a/transport/awg/bind_detour_test.go b/transport/awg/bind_detour_test.go
+new file mode 100644
+index 0000000..69c0ce6
+--- /dev/null
++++ b/transport/awg/bind_detour_test.go
+@@ -0,0 +1,92 @@
++package awg
++
++import (
++	"context"
++	"errors"
++	M "github.com/sagernet/sing/common/metadata"
++	"net"
++	"syscall"
++	"testing"
++	"time"
++)
++
++type detourTestPacket struct{ closed bool }
++
++func (c *detourTestPacket) ReadFrom([]byte) (int, net.Addr, error)    { return 0, nil, net.ErrClosed }
++func (c *detourTestPacket) WriteTo(p []byte, _ net.Addr) (int, error) { return len(p), nil }
++func (c *detourTestPacket) Close() error                              { c.closed = true; return nil }
++func (c *detourTestPacket) LocalAddr() net.Addr                       { return &net.UDPAddr{IP: net.IPv4zero} }
++func (c *detourTestPacket) SetDeadline(time.Time) error               { return nil }
++func (c *detourTestPacket) SetReadDeadline(time.Time) error           { return nil }
++func (c *detourTestPacket) SetWriteDeadline(time.Time) error          { return nil }
++
++type detourTestDialer struct {
++	v4, v6 *detourTestPacket
++	e4, e6 error
++}
++
++func (d *detourTestDialer) DialContext(context.Context, string, M.Socksaddr) (net.Conn, error) {
++	panic("unexpected direct dial")
++}
++func (d *detourTestDialer) ListenPacket(_ context.Context, dst M.Socksaddr) (net.PacketConn, error) {
++	if dst.IsIPv4() {
++		if d.e4 != nil {
++			return nil, d.e4
++		}
++		return d.v4, nil
++	}
++	if d.e6 != nil {
++		return nil, d.e6
++	}
++	return d.v6, nil
++}
++func TestDetourBindSingleFamilyAndClose(t *testing.T) {
++	for _, ipv6 := range []bool{false, true} {
++		t.Run(map[bool]string{false: "ipv4", true: "ipv6"}[ipv6], func(t *testing.T) {
++			p := &detourTestPacket{}
++			d := &detourTestDialer{v4: p, e6: syscall.EAFNOSUPPORT}
++			if ipv6 {
++				d = &detourTestDialer{v6: p, e4: syscall.EAFNOSUPPORT}
++			}
++			b := newBind(context.Background(), d)
++			fns, _, err := b.Open(0)
++			if err != nil || len(fns) != 1 {
++				t.Fatalf("single-family bind: %v, %d", err, len(fns))
++			}
++			addr := "192.0.2.1:2408"
++			if ipv6 {
++				addr = "[2001:db8::1]:2408"
++			}
++			ep, err := b.ParseEndpoint(addr)
++			if err != nil {
++				t.Fatal(err)
++			}
++			if err = b.Send([][]byte{{1, 2, 3}}, ep); err != nil {
++				t.Fatal(err)
++			}
++			if err = b.Close(); err != nil {
++				t.Fatal(err)
++			}
++			if !p.closed {
++				t.Fatal("bind leaked its packet connection")
++			}
++		})
++	}
++}
++func TestDetourBindFatalErrorClosesPartialConnection(t *testing.T) {
++	p := &detourTestPacket{}
++	fatal := errors.New("detour denied")
++	b := newBind(context.Background(), &detourTestDialer{v4: p, e6: fatal})
++	if _, _, err := b.Open(0); !errors.Is(err, fatal) {
++		t.Fatalf("must propagate fatal detour errors: %v", err)
++	}
++	if !p.closed {
++		t.Fatal("IPv4 socket leaked after IPv6 open failure")
++	}
++}
++func TestDetourBindNoFamiliesFailsClosed(t *testing.T) {
++	b := newBind(context.Background(), &detourTestDialer{e4: syscall.EAFNOSUPPORT, e6: syscall.EAFNOSUPPORT})
++	if _, _, err := b.Open(0); !errors.Is(err, syscall.EAFNOSUPPORT) {
++		t.Fatalf("must reject a detour with no supported family: %v", err)
++	}
++}
+diff --git a/transport/awg/ipv4_detour_test.go b/transport/awg/ipv4_detour_test.go
+new file mode 100644
+index 0000000..d89af46
+--- /dev/null
++++ b/transport/awg/ipv4_detour_test.go
+@@ -0,0 +1,23 @@
++package awg
++
++import (
++	"errors"
++	M "github.com/sagernet/sing/common/metadata"
++	"net/netip"
++	"syscall"
++	"testing"
++)
++
++func TestAbsentAddressFamilyIsUnsupported(t *testing.T) {
++	stack := &stackTun{inet4Address: netip.MustParseAddr("172.16.0.2")}
++	if _, err := stack.bindAddress(M.Socksaddr{Addr: netip.IPv6Unspecified()}); !errors.Is(err, syscall.EAFNOSUPPORT) {
++		t.Fatalf("IPv4-only stack must report EAFNOSUPPORT, got %v", err)
++	}
++	if addr, err := stack.bindAddress(M.Socksaddr{Addr: netip.IPv4Unspecified()}); err != nil || addr != stack.inet4Address {
++		t.Fatalf("IPv4 must remain available: %v, %v", addr, err)
++	}
++	stack = &stackTun{inet6Address: netip.MustParseAddr("2001:db8::1")}
++	if _, err := stack.bindAddress(M.Socksaddr{Addr: netip.IPv4Unspecified()}); !errors.Is(err, syscall.EAFNOSUPPORT) {
++		t.Fatalf("IPv6-only stack must report EAFNOSUPPORT, got %v", err)
++	}
++}
+diff --git a/transport/awg/tun_network_stack.go b/transport/awg/tun_network_stack.go
+index 949a966..a030065 100644
+--- a/transport/awg/tun_network_stack.go
++++ b/transport/awg/tun_network_stack.go
+@@ -6,6 +6,7 @@ import (
+ 	"net/netip"
+ 	"os"
+ 	"sync"
++	"syscall"
+ 	"time"
+ 
+ 	"github.com/amnezia-vpn/amneziawg-go/v3/device"
+@@ -103,12 +104,12 @@ func (t *stackTun) ListenPacket(ctx context.Context, destination M.Socksaddr) (n
+ func (t *stackTun) bindAddress(destination M.Socksaddr) (netip.Addr, error) {
+ 	if destination.IsIPv4() {
+ 		if !t.inet4Address.IsValid() {
+-			return netip.Addr{}, E.New("missing IPv4 local address")
++			return netip.Addr{}, E.Cause(syscall.EAFNOSUPPORT, "missing IPv4 local address")
+ 		}
+ 		return t.inet4Address, nil
+ 	}
+ 	if !t.inet6Address.IsValid() {
+-		return netip.Addr{}, E.New("missing IPv6 local address")
++		return netip.Addr{}, E.Cause(syscall.EAFNOSUPPORT, "missing IPv6 local address")
+ 	}
+ 	return t.inet6Address, nil
+ }
+diff --git a/transport/device/ipv4_detour_test.go b/transport/device/ipv4_detour_test.go
+new file mode 100644
+index 0000000..8d9fc18
+--- /dev/null
++++ b/transport/device/ipv4_detour_test.go
+@@ -0,0 +1,23 @@
++package device
++
++import (
++	"errors"
++	M "github.com/sagernet/sing/common/metadata"
++	"net/netip"
++	"syscall"
++	"testing"
++)
++
++func TestAbsentAddressFamilyIsUnsupported(t *testing.T) {
++	stack := &stackDevice{inet4Address: netip.MustParseAddr("172.16.0.2")}
++	if _, err := stack.bindAddress(M.Socksaddr{Addr: netip.IPv6Unspecified()}); !errors.Is(err, syscall.EAFNOSUPPORT) {
++		t.Fatalf("IPv4-only stack must report EAFNOSUPPORT, got %v", err)
++	}
++	if addr, err := stack.bindAddress(M.Socksaddr{Addr: netip.IPv4Unspecified()}); err != nil || addr != stack.inet4Address {
++		t.Fatalf("IPv4 must remain available: %v, %v", addr, err)
++	}
++	stack = &stackDevice{inet6Address: netip.MustParseAddr("2001:db8::1")}
++	if _, err := stack.bindAddress(M.Socksaddr{Addr: netip.IPv4Unspecified()}); !errors.Is(err, syscall.EAFNOSUPPORT) {
++		t.Fatalf("IPv6-only stack must report EAFNOSUPPORT, got %v", err)
++	}
++}
+diff --git a/transport/device/stack.go b/transport/device/stack.go
+index 2c3cc6d..45e3bd1 100644
+--- a/transport/device/stack.go
++++ b/transport/device/stack.go
+@@ -5,6 +5,7 @@ import (
+ 	"net"
+ 	"net/netip"
+ 	"sync"
++	"syscall"
+ 
+ 	"github.com/sagernet/sing-tun"
+ 	"github.com/sagernet/sing/common"
+@@ -128,15 +129,15 @@ func (d *stackDevice) bindAddress(destination M.Socksaddr) (netip.Addr, error) {
+ 	defer d.stateAccess.RUnlock()
+ 	if destination.IsIPv4() {
+ 		if !d.inet4Address.IsValid() {
+-			return netip.Addr{}, E.New("missing IPv4 local address")
++			return netip.Addr{}, E.Cause(syscall.EAFNOSUPPORT, "missing IPv4 local address")
+ 		}
+ 		return d.inet4Address, nil
+ 	}
+ 	if d.options.Configuration.BlockIPv6 {
+-		return netip.Addr{}, E.New("IPv6 is blocked")
++		return netip.Addr{}, E.Cause(syscall.EAFNOSUPPORT, "IPv6 is blocked")
+ 	}
+ 	if !d.inet6Address.IsValid() {
+-		return netip.Addr{}, E.New("missing IPv6 local address")
++		return netip.Addr{}, E.Cause(syscall.EAFNOSUPPORT, "missing IPv6 local address")
+ 	}
+ 	return d.inet6Address, nil
+ }
+diff --git a/transport/wireguard/device_stack.go b/transport/wireguard/device_stack.go
+index 620a178..0ccfad3 100644
+--- a/transport/wireguard/device_stack.go
++++ b/transport/wireguard/device_stack.go
+@@ -6,6 +6,7 @@ import (
+ 	"net/netip"
+ 	"os"
+ 	"sync"
++	"syscall"
+ 	"time"
+ 
+ 	"github.com/sagernet/sing-tun"
+@@ -89,12 +90,12 @@ func (w *stackDevice) ListenPacket(ctx context.Context, destination M.Socksaddr)
+ func (w *stackDevice) bindAddress(destination M.Socksaddr) (netip.Addr, error) {
+ 	if destination.IsIPv4() {
+ 		if !w.inet4Address.IsValid() {
+-			return netip.Addr{}, E.New("missing IPv4 local address")
++			return netip.Addr{}, E.Cause(syscall.EAFNOSUPPORT, "missing IPv4 local address")
+ 		}
+ 		return w.inet4Address, nil
+ 	}
+ 	if !w.inet6Address.IsValid() {
+-		return netip.Addr{}, E.New("missing IPv6 local address")
++		return netip.Addr{}, E.Cause(syscall.EAFNOSUPPORT, "missing IPv6 local address")
+ 	}
+ 	return w.inet6Address, nil
+ }
+diff --git a/transport/wireguard/endpoint.go b/transport/wireguard/endpoint.go
+index c6b3c70..36d3a52 100644
+--- a/transport/wireguard/endpoint.go
++++ b/transport/wireguard/endpoint.go
+@@ -276,6 +276,12 @@ func (e *Endpoint) Start(postStart bool) error {
+ 	return nil
+ }
+ 
++// Ready reports whether the numeric-peer start phase created the device.
++// Domain peers are intentionally deferred until the post-start phase.
++func (e *Endpoint) Ready() bool {
++	return e.device.Load() != nil
++}
++
+ func (e *Endpoint) DialContext(ctx context.Context, network string, destination M.Socksaddr) (net.Conn, error) {
+ 	if !destination.Addr.IsValid() {
+ 		return nil, E.Cause(os.ErrInvalid, "invalid non-IP destination")
+diff --git a/transport/wireguard/ipv4_detour_test.go b/transport/wireguard/ipv4_detour_test.go
+new file mode 100644
+index 0000000..10b4a64
+--- /dev/null
++++ b/transport/wireguard/ipv4_detour_test.go
+@@ -0,0 +1,23 @@
++package wireguard
++
++import (
++	"errors"
++	M "github.com/sagernet/sing/common/metadata"
++	"net/netip"
++	"syscall"
++	"testing"
++)
++
++func TestAbsentAddressFamilyIsUnsupported(t *testing.T) {
++	stack := &stackDevice{inet4Address: netip.MustParseAddr("172.16.0.2")}
++	if _, err := stack.bindAddress(M.Socksaddr{Addr: netip.IPv6Unspecified()}); !errors.Is(err, syscall.EAFNOSUPPORT) {
++		t.Fatalf("IPv4-only stack must report EAFNOSUPPORT, got %v", err)
++	}
++	if addr, err := stack.bindAddress(M.Socksaddr{Addr: netip.IPv4Unspecified()}); err != nil || addr != stack.inet4Address {
++		t.Fatalf("IPv4 must remain available: %v, %v", addr, err)
++	}
++	stack = &stackDevice{inet6Address: netip.MustParseAddr("2001:db8::1")}
++	if _, err := stack.bindAddress(M.Socksaddr{Addr: netip.IPv4Unspecified()}); !errors.Is(err, syscall.EAFNOSUPPORT) {
++		t.Fatalf("IPv6-only stack must report EAFNOSUPPORT, got %v", err)
++	}
++}

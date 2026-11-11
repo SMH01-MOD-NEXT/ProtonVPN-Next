@@ -19,7 +19,7 @@ class AwgBoxBuildCacheTest(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.recipe_root = Path(self.temp.name) / "recipe"
         for name in ("scripts/build-awgbox-lib.sh", "scripts/patches/awgbox-tor-android.patch",
-                     "scripts/patches/awgbox-tor-log-noise.patch"):
+                     "scripts/patches/awgbox-tor-log-noise.patch", "scripts/patches/awgbox-ipv4-detour.patch"):
             target = self.recipe_root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / name, target)
@@ -51,6 +51,9 @@ class AwgBoxBuildCacheTest(unittest.TestCase):
 
     def test_changed_log_patch_is_rejected(self):
         self.assert_cache(self.STAMP + 'printf changed >> "$ROOT/scripts/patches/awgbox-tor-log-noise.patch"', False)
+
+    def test_changed_ipv4_detour_patch_is_rejected(self):
+        self.assert_cache(self.STAMP + 'printf changed >> "$ROOT/scripts/patches/awgbox-ipv4-detour.patch"', False)
 
     def test_changed_build_script_is_rejected(self):
         self.assert_cache(self.STAMP + 'printf changed >> "$ROOT/scripts/build-awgbox-lib.sh"', False)
