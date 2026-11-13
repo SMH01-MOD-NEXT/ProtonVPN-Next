@@ -371,7 +371,7 @@
     <string name="url_crowdin" translatable="false">https://crowdin.com/project/protonvpn-next</string>
 
     <string name="url_ota_mirror_1" translatable="false">https://kvn.protonnext.qzz.io/update.json</string>
-    <string name="url_ota_mirror_2" translatable="false">https://home.protonnext.qzz.io/update.json</string>
+    <string name="url_ota_mirror_2" translatable="false">https://home.smh01.net.eu.org/update.json</string>
 
     <!-- Event bypass config mirrors, tried in this order. The git forges come first:
          they hold the source of truth and stay reachable while a hosting platform
@@ -380,7 +380,7 @@
     <string name="url_event_bypass_2" translatable="false">https://raw.githubusercontent.com/SMH01-MOD-NEXT/ProtonVPN-Next-WEB/main/public/event-bypass.json</string>
     <string name="url_event_bypass_3" translatable="false">https://protonvpn-next-web--main.smh01-mirrors.deno.net/event-bypass.json</string>
     <string name="url_event_bypass_4" translatable="false">https://kvn.protonnext.qzz.io/event-bypass.json</string>
-    <string name="url_event_bypass_5" translatable="false">https://home.protonnext.qzz.io/event-bypass.json</string>
+    <string name="url_event_bypass_5" translatable="false">https://home.smh01.net.eu.org/event-bypass.json</string>
     <string name="url_event_bypass_6" translatable="false">https://shimmering-stroopwafel-51675e.netlify.app/event-bypass.json</string>
 
     <!-- Licenses Screen -->
