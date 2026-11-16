@@ -181,6 +181,11 @@ object EventBypassDates {
 fun List<EventBypassEntry>.selectedOrFirst(selectedId: String): EventBypassEntry? =
     firstOrNull { it.stableId() == selectedId } ?: firstOrNull()
 
+/** Preserve an existing Deno choice only when the published replacement is usable. */
+fun List<EventBypassEntry>.selectionForRefresh(selectedId: String, legacyDeno: Boolean): EventBypassEntry? =
+    if (legacyDeno) firstOrNull { it.stableId() == "deno" && it.normalizedUrl().isNotEmpty() }
+    else selectedOrFirst(selectedId)
+
 /** Supported config versions. Anything newer is ignored rather than guessed at. */
 const val EVENT_BYPASS_SUPPORTED_VERSION = 2
 

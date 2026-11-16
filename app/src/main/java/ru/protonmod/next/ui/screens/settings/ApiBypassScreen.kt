@@ -293,19 +293,22 @@ fun ApiBypassScreen(
                                     color = colors.separatorNorm.copy(alpha = 0.2f)
                                 )
 
-                                // Strategy: Deno
-                                StrategySelectionRow(
-                                    title = stringResource(R.string.api_bypass_strategy_deno),
-                                    description = stringResource(R.string.api_bypass_strategy_deno_desc),
-                                    icon = ProtonIcons.Globe,
-                                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_DENO,
-                                    onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_DENO) }
-                                )
+                                // Keep the old selection visible until a config refresh can migrate it.
+                                if (uiState.apiBypassStrategy == SettingsManager.STRATEGY_DENO) {
+                                    // Strategy: Deno
+                                    StrategySelectionRow(
+                                        title = stringResource(R.string.api_bypass_strategy_deno),
+                                        description = stringResource(R.string.api_bypass_strategy_deno_desc),
+                                        icon = ProtonIcons.Globe,
+                                        isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_DENO,
+                                        onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_DENO) }
+                                    )
 
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 24.dp),
-                                    color = colors.separatorNorm.copy(alpha = 0.2f)
-                                )
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(horizontal = 24.dp),
+                                        color = colors.separatorNorm.copy(alpha = 0.2f)
+                                    )
+                                }
 
                                 // Strategy: Event (temporary; its address is published in
                                 // event-bypass.json instead of being compiled into the app)
@@ -323,6 +326,36 @@ fun ApiBypassScreen(
                                     isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_EVENT,
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_EVENT) }
                                 )
+
+                                // Event cannot be selected without a valid cached endpoint.
+                                // Offer refresh before selection too, including privacy builds
+                                // which intentionally do not refresh in the background.
+                                if (uiState.apiBypassStrategy != SettingsManager.STRATEGY_EVENT) {
+                                    Button(
+                                        onClick = { viewModel.refreshEventBypass() },
+                                        enabled = !uiState.isEventBypassRefreshing,
+                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
+                                    ) {
+                                        Text(stringResource(if (uiState.isEventBypassRefreshing) R.string.api_bypass_event_refreshing else R.string.api_bypass_event_refresh))
+                                    }
+                                    val refreshStatus = when (uiState.eventBypassLastResult) {
+                                        EventBypassResult.UPDATED -> R.string.api_bypass_event_updated
+                                        EventBypassResult.NOT_CONFIGURED -> R.string.api_bypass_event_not_configured
+                                        EventBypassResult.BLOCKED_OFFLINE -> R.string.api_bypass_event_offline
+                                        EventBypassResult.BLOCKED_VPN -> R.string.api_bypass_event_blocked_vpn
+                                        EventBypassResult.UNREACHABLE -> R.string.api_bypass_event_unreachable
+                                        null -> null
+                                    }
+                                    if (!uiState.isEventBypassRefreshing && refreshStatus != null) {
+                                        Text(
+                                            text = stringResource(refreshStatus),
+                                            color = colors.textWeak,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            modifier = Modifier.padding(horizontal = 24.dp)
+                                        )
+                                    }
+                                }
 
                                 // Configuration for the Event bypass
                                 AnimatedVisibility(

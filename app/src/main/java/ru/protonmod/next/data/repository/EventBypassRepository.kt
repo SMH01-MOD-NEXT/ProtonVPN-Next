@@ -28,7 +28,7 @@ import ru.protonmod.next.data.model.eventbypass.EVENT_BYPASS_SUPPORTED_VERSION
 import ru.protonmod.next.data.model.eventbypass.EventBypassCache
 import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
 import ru.protonmod.next.data.model.eventbypass.EventBypassResponse
-import ru.protonmod.next.data.model.eventbypass.selectedOrFirst
+import ru.protonmod.next.data.model.eventbypass.selectionForRefresh
 import ru.protonmod.next.data.network.eventbypass.EventBypassApi
 import ru.protonmod.next.utils.NetworkMonitor
 import ru.protonmod.next.utils.ProtonLogger
@@ -170,8 +170,14 @@ class EventBypassRepository @Inject constructor(
 
             // Keep the user on the bypass they picked. It only moves when that entry
             // disappears from the config, in which case the first published one wins.
-            val selected = usable.selectedOrFirst(settingsManager.getEventBypassSelectedIdSync())
-            applySelection(selected)
+            val legacyDeno = settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_DENO
+            val selected = usable.selectionForRefresh(settingsManager.getEventBypassSelectedIdSync(), legacyDeno)
+            if (!legacyDeno || selected != null) {
+                applySelection(selected)
+                if (legacyDeno && settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_DENO) {
+                    settingsManager.setApiBypassStrategy(SettingsManager.STRATEGY_EVENT)
+                }
+            }
             settingsManager.setEventBypassLastSync(System.currentTimeMillis())
 
             ProtonLogger.i(

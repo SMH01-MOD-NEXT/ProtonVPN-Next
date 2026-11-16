@@ -10,9 +10,20 @@ import ru.protonmod.next.data.model.eventbypass.EventBypassCache
 import ru.protonmod.next.data.model.eventbypass.EventBypassDates
 import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
 import ru.protonmod.next.data.model.eventbypass.EventBypassResponse
+import ru.protonmod.next.data.model.eventbypass.selectionForRefresh
 import ru.protonmod.next.data.model.eventbypass.selectedOrFirst
 
 class EventBypassConfigTest {
+    @Test
+    fun `legacy Deno selection migrates only when a usable Deno event exists`() {
+        val vercel = EventBypassEntry(id = "vercel", name = "Vercel", url = "https://v.example/api/", enabled = true)
+        val deno = EventBypassEntry(id = "deno", name = "Deno", url = "https://d.example/api/", enabled = true, expiresAt = "01-04-2027")
+        assertEquals(deno, listOf(vercel, deno).selectionForRefresh("vercel", true))
+        assertNull(listOf(vercel).selectionForRefresh("vercel", true))
+        assertNull(listOf(deno.copy(enabled = false)).selectionForRefresh("", true))
+        assertEquals(vercel, listOf(vercel, deno).selectionForRefresh("vercel", false))
+    }
+
 
     private val json = Json { ignoreUnknownKeys = true }
 
