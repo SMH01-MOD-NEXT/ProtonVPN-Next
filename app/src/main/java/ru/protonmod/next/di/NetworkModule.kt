@@ -86,7 +86,6 @@ private data class OriginalProtonUrl(val url: okhttp3.HttpUrl)
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val PROTON_PROXY_NETLIFY_URL = ProxyEndpoints.NETLIFY_URL
     private const val PROTON_PROXY_CLOUDFLARE_URL = ProxyEndpoints.CLOUDFLARE_URL
     private const val PROTON_PROXY_DENO_URL = ProxyEndpoints.DENO_URL
     private const val PROTON_DIRECT_URL = "https://vpn-api.proton.me/"
@@ -167,7 +166,6 @@ object NetworkModule {
         } catch (e: Throwable) {}
 
         val protonDirectHost = PROTON_DIRECT_URL.toHttpUrl().host
-        val protonNetlifyHost = PROTON_PROXY_NETLIFY_URL.toHttpUrl().host
         val protonCloudflareHost = PROTON_PROXY_CLOUDFLARE_URL.toHttpUrl().host
         val protonDenoHost = PROTON_PROXY_DENO_URL.toHttpUrl().host
 
@@ -223,7 +221,6 @@ object NetworkModule {
                               host == "protonvpn.ch" ||
                               host == "protonvpn.com" ||
                               host == "protonmail.com" ||
-                              host == protonNetlifyHost ||
                               host == protonCloudflareHost ||
                               host == protonDenoHost ||
                               (eventProxyHost != null && host == eventProxyHost))
@@ -286,7 +283,7 @@ object NetworkModule {
                 SettingsManager.STRATEGY_CLOUDFLARE -> PROTON_PROXY_CLOUDFLARE_URL
                 SettingsManager.STRATEGY_DENO -> PROTON_PROXY_DENO_URL
                 SettingsManager.STRATEGY_EVENT -> eventProxyBaseUrl(settings)
-                else -> PROTON_PROXY_NETLIFY_URL
+                else -> PROTON_PROXY_CLOUDFLARE_URL
             }
 
             val newBaseUrl = if (useProxy) proxyBaseUrl.toHttpUrl() else PROTON_DIRECT_URL.toHttpUrl()

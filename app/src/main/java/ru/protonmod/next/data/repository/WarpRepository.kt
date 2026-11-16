@@ -53,7 +53,7 @@ class WarpRepository @Inject constructor(private val client: OkHttpClient, priva
         }
         val strategy = settings.getApiBypassStrategySync()
         val base = if (!settings.isApiBypassEnabledSync()) null else when (strategy) {
-            SettingsManager.STRATEGY_WARP, SettingsManager.STRATEGY_NETLIFY -> ProxyEndpoints.NETLIFY_URL
+            SettingsManager.STRATEGY_WARP, SettingsManager.STRATEGY_NETLIFY,
             SettingsManager.STRATEGY_CLOUDFLARE -> ProxyEndpoints.CLOUDFLARE_URL
             SettingsManager.STRATEGY_DENO -> ProxyEndpoints.DENO_URL
             SettingsManager.STRATEGY_EVENT -> settings.getEventBypassUrlSync().also { require(ProxyEndpoints.httpsBase(it) != null) }

@@ -124,7 +124,7 @@ class LoginViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     val apiBypassStrategy = settingsManager.apiBypassStrategy
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsManager.STRATEGY_NETLIFY)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SettingsManager.STRATEGY_PROTON_MIRRORS)
 
     val setupStep = settingsManager.setupStep
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), SetupStep.WELCOME)

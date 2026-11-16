@@ -7,13 +7,11 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /** Single authoritative registry used by API routing and the IP-service catalogue. */
 object ProxyEndpoints {
-    const val NETLIFY_URL = "https://shimmering-stroopwafel-51675e.netlify.app/"
     const val CLOUDFLARE_URL = "https://protonvpn-next-web.smh01.workers.dev/api"
     const val CLOUDFLARE_SITE_URL = "https://home.smh01.net.eu.org/"
     const val DENO_URL = "https://protonvpn-next-web--main.smh01-mirrors.deno.net/api/"
     data class BuiltIn(val id: String, val titleRes: Int, val bases: List<String>, val locationApi: Boolean = false)
     val builtIn = listOf(
-        BuiltIn("netlify", R.string.api_bypass_strategy_netlify, listOf(NETLIFY_URL), locationApi = true),
         BuiltIn("cloudflare", R.string.ip_lookup_cloudflare, listOf(CLOUDFLARE_SITE_URL, CLOUDFLARE_URL)),
         BuiltIn("deno", R.string.ip_lookup_deno, listOf(DENO_URL)),
     )

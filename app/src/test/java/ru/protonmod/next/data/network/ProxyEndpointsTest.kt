@@ -2,9 +2,17 @@
 package ru.protonmod.next.data.network
 import org.junit.Assert.*
 import org.junit.Test
+import ru.protonmod.next.data.local.SettingsManager
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 class ProxyEndpointsTest {
+    @Test fun `retired Netlify selection uses Cloudflare and preserves other strategies`() {
+        assertEquals(SettingsManager.STRATEGY_CLOUDFLARE, SettingsManager.effectiveApiBypassStrategy(SettingsManager.STRATEGY_NETLIFY))
+        for (strategy in listOf(SettingsManager.STRATEGY_EVENT, SettingsManager.STRATEGY_DENO, SettingsManager.STRATEGY_WARP, SettingsManager.STRATEGY_PROTON_MIRRORS)) {
+            assertEquals(strategy, SettingsManager.effectiveApiBypassStrategy(strategy))
+        }
+        assertTrue(ProxyEndpoints.builtIn.none { it.id == "netlify" })
+    }
     @Test fun `event Vercel API path is carried in query and original query survives`() {
         val original = "https://api.protonvpn.ch/auth/v4?mode=a%20b".toHttpUrl()
         val result = ProxyEndpoints.apiUrl(original, "https://dynamic.vercel.app/api/".toHttpUrl())

@@ -82,8 +82,7 @@ class EventBypassRepository @Inject constructor(
         context.getString(R.string.url_event_bypass_2),
         context.getString(R.string.url_event_bypass_3),
         context.getString(R.string.url_event_bypass_4),
-        context.getString(R.string.url_event_bypass_5),
-        context.getString(R.string.url_event_bypass_6)
+        context.getString(R.string.url_event_bypass_5)
     )
 
     /**

@@ -381,7 +381,6 @@
     <string name="url_event_bypass_3" translatable="false">https://protonvpn-next-web--main.smh01-mirrors.deno.net/event-bypass.json</string>
     <string name="url_event_bypass_4" translatable="false">https://kvn.protonnext.qzz.io/event-bypass.json</string>
     <string name="url_event_bypass_5" translatable="false">https://home.smh01.net.eu.org/event-bypass.json</string>
-    <string name="url_event_bypass_6" translatable="false">https://shimmering-stroopwafel-51675e.netlify.app/event-bypass.json</string>
 
     <!-- Licenses Screen -->
     <string name="licenses_title">Licenses</string>

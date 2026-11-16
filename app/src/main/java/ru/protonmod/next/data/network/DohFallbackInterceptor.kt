@@ -50,7 +50,6 @@ class DohFallbackInterceptor @Inject constructor(
                           originalHost == "api.protonvpn.ch" ||
                           originalHost == "api.protonmail.com" ||
                           originalHost == "mail.proton.me" ||
-                          originalHost == "shimmering-stroopwafel-51675e.netlify.app" ||
                           originalHost == "protonvpn-next-web.smh01.workers.dev")
 
         if (!isProtonApi) {

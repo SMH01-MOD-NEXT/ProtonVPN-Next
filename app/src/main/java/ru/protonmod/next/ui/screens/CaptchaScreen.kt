@@ -222,7 +222,7 @@ fun CaptchaScreen(
                 val proxyBaseUrl = when (apiBypassStrategy) {
                     SettingsManager.STRATEGY_CLOUDFLARE -> "https://protonvpn-next-web.smh01.workers.dev/api"
                     SettingsManager.STRATEGY_DENO -> "https://protonvpn-next-web--main.smh01-mirrors.deno.net/api"
-                    else -> "https://shimmering-stroopwafel-51675e.netlify.app"
+                    else -> "https://protonvpn-next-web.smh01.workers.dev/api"
                 }
 
                 LaunchedEffect(webUrl, sessionId, webView) {
@@ -398,7 +398,6 @@ fun CaptchaScreen(
                                                 // If bypass is active, we still inject JS to help with POST requests 
                                                 // by rewriting their URLs to resolvable proxy endpoints.
                                                 val jsInject = if (isApiBypassEnabled && (
-                                                    apiBypassStrategy == SettingsManager.STRATEGY_NETLIFY ||
                                                     apiBypassStrategy == SettingsManager.STRATEGY_CLOUDFLARE
                                                 )) {
                                                     """

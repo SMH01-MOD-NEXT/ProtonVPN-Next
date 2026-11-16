@@ -265,20 +265,6 @@ fun ApiBypassScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
                                 }
 
-                                // Strategy 1: Netlify
-                                StrategySelectionRow(
-                                    title = stringResource(R.string.api_bypass_strategy_netlify),
-                                    description = stringResource(R.string.api_bypass_strategy_netlify_desc),
-                                    icon = ProtonIcons.Globe,
-                                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_NETLIFY,
-                                    onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_NETLIFY) }
-                                )
-
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 24.dp),
-                                    color = colors.separatorNorm.copy(alpha = 0.2f)
-                                )
-
                                 // Strategy 2: Cloudflare
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_cloudflare),

@@ -111,6 +111,10 @@ class SettingsManager @Inject constructor(
          */
         const val STRATEGY_EVENT = "event"
 
+        /** Netlify was retired; keep existing selections usable through Cloudflare. */
+        fun effectiveApiBypassStrategy(strategy: String): String =
+            if (strategy == STRATEGY_NETLIFY) STRATEGY_CLOUDFLARE else strategy
+
         const val PROXY_TYPE_HTTP = "http"
         const val PROXY_TYPE_SOCKS = "socks"
 
@@ -396,7 +400,7 @@ class SettingsManager @Inject constructor(
     }
 
     val apiBypassEnabled: Flow<Boolean> = dataStore.data.map { it[API_BYPASS_ENABLED] ?: false }
-    val apiBypassStrategy: Flow<String> = dataStore.data.map { it[API_BYPASS_STRATEGY] ?: STRATEGY_PROTON_MIRRORS }
+    val apiBypassStrategy: Flow<String> = dataStore.data.map { effectiveApiBypassStrategy(it[API_BYPASS_STRATEGY] ?: STRATEGY_PROTON_MIRRORS) }
 
     val byeDpiFlags: Flow<String> = dataStore.data.map { it[BYEDPI_FLAGS] ?: "-s1 -d1" }
     val byeDpiSni: Flow<String> = dataStore.data.map { it[BYEDPI_SNI] ?: "google.com" }
@@ -487,7 +491,7 @@ class SettingsManager @Inject constructor(
 
     fun isApiBypassEnabledSync(): Boolean = prefs.getBoolean("api_bypass_enabled", false)
     fun getApiBypassStrategySync(): String {
-        return prefs.getString("api_bypass_strategy", STRATEGY_PROTON_MIRRORS) ?: STRATEGY_PROTON_MIRRORS
+        return effectiveApiBypassStrategy(prefs.getString("api_bypass_strategy", STRATEGY_PROTON_MIRRORS) ?: STRATEGY_PROTON_MIRRORS)
     }
 
     fun getByeDpiFlagsSync(): String = prefs.getString("byedpi_flags", "-s1 -d1") ?: "-s1 -d1"
@@ -793,8 +797,9 @@ class SettingsManager @Inject constructor(
 
     suspend fun setApiBypassStrategy(strategy: String) {
         ProtonLogger.d("SettingsManager", "Setting strategy to: $strategy")
-        prefs.edit { putString("api_bypass_strategy", strategy) }
-        dataStore.edit { it[API_BYPASS_STRATEGY] = strategy }
+        val effective = effectiveApiBypassStrategy(strategy)
+        prefs.edit { putString("api_bypass_strategy", effective) }
+        dataStore.edit { it[API_BYPASS_STRATEGY] = effective }
     }
 
     suspend fun setByeDpiFlags(flags: String) {

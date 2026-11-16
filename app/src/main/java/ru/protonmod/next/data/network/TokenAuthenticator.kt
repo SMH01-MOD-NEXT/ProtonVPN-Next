@@ -51,7 +51,6 @@ class TokenAuthenticator @Inject constructor(
             requestHost.endsWith(".protonvpn.ch") ||
             requestHost.endsWith(".protonvpn.com") ||
             requestHost.endsWith(".protonmail.com") ||
-            requestHost == "shimmering-stroopwafel-51675e.netlify.app" ||
             requestHost == "protonvpn-next-web.smh01.workers.dev" ||
             requestHost == "protonvpn-next-web--main.smh01-mirrors.deno.net"
         
