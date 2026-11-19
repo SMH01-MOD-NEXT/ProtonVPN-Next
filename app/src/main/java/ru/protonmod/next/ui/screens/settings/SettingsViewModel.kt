@@ -538,7 +538,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _eventActionFailed.value = false
             try {
-                eventBypassManager.selectEvent(id)
+                _eventActionFailed.value = !eventBypassManager.selectEvent(id)
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
@@ -554,6 +554,7 @@ class SettingsViewModel @Inject constructor(
      */
     fun refreshEventBypass() {
         viewModelScope.launch {
+            _eventActionFailed.value = false
             eventBypassManager.refreshNow()
         }
     }
@@ -616,11 +617,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             _eventActionFailed.value = false
             try {
-                if (strategy == SettingsManager.STRATEGY_EVENT &&
-                    ru.protonmod.next.data.network.ProxyEndpoints.httpsBase(settingsManager.getEventBypassUrlSync()) == null) {
-                    _eventActionFailed.value = true
-                    return@launch
-                }
                 settingsManager.setApiBypassStrategy(strategy)
             } catch (cancelled: kotlinx.coroutines.CancellationException) {
                 throw cancelled

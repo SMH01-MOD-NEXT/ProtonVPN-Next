@@ -19,6 +19,9 @@ package ru.protonmod.next.data.repository
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
@@ -28,6 +31,7 @@ import ru.protonmod.next.data.model.eventbypass.EVENT_BYPASS_SUPPORTED_VERSION
 import ru.protonmod.next.data.model.eventbypass.EventBypassCache
 import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
 import ru.protonmod.next.data.model.eventbypass.EventBypassResponse
+import ru.protonmod.next.data.model.eventbypass.activeUrl
 import ru.protonmod.next.data.model.eventbypass.selectionForRefresh
 import ru.protonmod.next.data.network.eventbypass.EventBypassApi
 import ru.protonmod.next.utils.NetworkMonitor
@@ -77,6 +81,7 @@ class EventBypassRepository @Inject constructor(
     private val vpnManagerProvider: Provider<AmneziaVpnManager>,
     @ApplicationContext private val context: Context
 ) {
+    private val selectionMutex = Mutex()
     private val mirrorUrls = listOf(
         context.getString(R.string.url_event_bypass_1),
         context.getString(R.string.url_event_bypass_2),
@@ -148,6 +153,8 @@ class EventBypassRepository @Inject constructor(
                     }
                     fetchConfig(urlWithCacheBuster)
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: HttpException) {
                 ProtonLogger.w("EventBypassRepository", "HTTP ${e.code()} from $url")
                 null
@@ -165,17 +172,22 @@ class EventBypassRepository @Inject constructor(
             }
 
             val usable = config.usableEvents()
-            settingsManager.setEventBypassConfig(EventBypassCache.encode(usable), config.updatedAt)
-
-            // Keep the user on the bypass they picked. It only moves when that entry
-            // disappears from the config, in which case the first published one wins.
-            val legacyDeno = settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_DENO
-            val selected = usable.selectionForRefresh(settingsManager.getEventBypassSelectedIdSync(), legacyDeno)
-            if (!legacyDeno || selected != null) {
-                applySelection(selected)
-                if (legacyDeno && settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_DENO) {
-                    settingsManager.setApiBypassStrategy(SettingsManager.STRATEGY_EVENT)
+            val selected = selectionMutex.withLock {
+                val oldId = settingsManager.getEventBypassSelectedIdSync()
+                val legacyDeno = settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_DENO
+                val entry = usable.selectionForRefresh(oldId, legacyDeno)
+                settingsManager.setEventBypassConfig(EventBypassCache.encode(usable), config.updatedAt)
+                if (entry != null) {
+                    applySelection(entry)
+                    if (legacyDeno && settingsManager.getApiBypassStrategySync() == SettingsManager.STRATEGY_DENO) {
+                        settingsManager.setApiBypassStrategy(SettingsManager.STRATEGY_EVENT)
+                    }
+                } else if (!legacyDeno) {
+                    // Clearing the endpoint must not clear the user's choice. If the
+                    // same id is published again, a refresh can restore its route.
+                    settingsManager.setEventBypassSelection(oldId, settingsManager.getEventBypassNameSync(), "")
                 }
+                entry
             }
             settingsManager.setEventBypassLastSync(System.currentTimeMillis())
 
@@ -184,7 +196,7 @@ class EventBypassRepository @Inject constructor(
                 "Event bypass config loaded from $url (${usable.size} available, selected='${selected?.name.orEmpty()}')"
             )
 
-            return if (usable.isEmpty()) EventBypassResult.NOT_CONFIGURED else EventBypassResult.UPDATED
+            return if (usable.none { it.activeUrl() != null }) EventBypassResult.NOT_CONFIGURED else EventBypassResult.UPDATED
         }
 
         return EventBypassResult.UNREACHABLE
@@ -194,17 +206,14 @@ class EventBypassRepository @Inject constructor(
      * Switches to another already published bypass. No network access: the whole
      * list is cached, so switching works offline and while a VPN is up.
      */
-    suspend fun selectEvent(id: String): Boolean {
-        val entry = cachedEvents().firstOrNull { it.stableId() == id } ?: return false
+    suspend fun selectEvent(id: String): Boolean = selectionMutex.withLock {
+        val entry = cachedEvents().firstOrNull { it.stableId() == id && it.activeUrl() != null }
+            ?: return@withLock false
         applySelection(entry)
-        return true
+        true
     }
 
-    private suspend fun applySelection(entry: EventBypassEntry?) {
-        settingsManager.setEventBypassSelection(
-            id = entry?.stableId().orEmpty(),
-            name = entry?.name.orEmpty(),
-            url = entry?.normalizedUrl().orEmpty()
-        )
+    private suspend fun applySelection(entry: EventBypassEntry) {
+        settingsManager.setEventBypassSelection(entry.stableId(), entry.name, entry.normalizedUrl())
     }
 }

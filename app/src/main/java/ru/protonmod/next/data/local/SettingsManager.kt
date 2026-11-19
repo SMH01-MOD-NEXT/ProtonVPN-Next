@@ -51,6 +51,9 @@ import kotlinx.serialization.json.Json
 import org.json.JSONArray
 import org.json.JSONObject
 import ru.protonmod.next.data.model.ObfuscationProfile
+import ru.protonmod.next.data.model.eventbypass.EventBypassCache
+import ru.protonmod.next.data.model.eventbypass.EventBypassRoute
+import ru.protonmod.next.data.model.eventbypass.routeForSelection
 import ru.protonmod.next.data.network.dns.DnsProviders
 import ru.protonmod.next.netshield.NetShieldLevel
 import ru.protonmod.next.netshield.NetShieldStats
@@ -111,9 +114,11 @@ class SettingsManager @Inject constructor(
          */
         const val STRATEGY_EVENT = "event"
 
-        /** Netlify was retired; keep existing selections usable through Cloudflare. */
-        fun effectiveApiBypassStrategy(strategy: String): String =
-            if (strategy == STRATEGY_NETLIFY) STRATEGY_CLOUDFLARE else strategy
+        /** Netlify is retired and WARP API bypass is temporarily hidden. */
+        fun effectiveApiBypassStrategy(strategy: String): String = when (strategy) {
+            STRATEGY_NETLIFY, STRATEGY_WARP -> STRATEGY_CLOUDFLARE
+            else -> strategy
+        }
 
         const val PROXY_TYPE_HTTP = "http"
         const val PROXY_TYPE_SOCKS = "socks"
@@ -177,8 +182,7 @@ class SettingsManager @Inject constructor(
         // The whole published list, JSON-encoded, plus the entry the user picked.
         private val EVENT_BYPASS_EVENTS = stringPreferencesKey("event_bypass_events")
         private val EVENT_BYPASS_SELECTED_ID = stringPreferencesKey("event_bypass_selected_id")
-        // Name and URL of the selected entry, kept flat so the OkHttp interceptor
-        // can read the routing target without parsing JSON on every request.
+        // Name and URL of the selected entry for display and legacy consumers.
         private val EVENT_BYPASS_NAME = stringPreferencesKey("event_bypass_name")
         private val EVENT_BYPASS_URL = stringPreferencesKey("event_bypass_url")
         private val EVENT_BYPASS_UPDATED_AT = stringPreferencesKey("event_bypass_updated_at")
@@ -508,6 +512,9 @@ class SettingsManager @Inject constructor(
     fun getEventBypassNameSync(): String = prefs.getString("event_bypass_name", "") ?: ""
     fun getEventBypassEventsSync(): String = prefs.getString("event_bypass_events", "") ?: ""
     fun getEventBypassSelectedIdSync(): String = prefs.getString("event_bypass_selected_id", "") ?: ""
+
+    fun getEventBypassRouteSync(): EventBypassRoute =
+        EventBypassCache.decode(getEventBypassEventsSync()).routeForSelection(getEventBypassSelectedIdSync())
 
     /**
      * The address this device was last seen at with no tunnel up.
@@ -853,9 +860,8 @@ class SettingsManager @Inject constructor(
     }
 
     /**
-     * Stores which published bypass is in use. The name and URL are flattened out
-     * of the list so the interceptor can read the routing target synchronously.
-     * An empty [url] means no usable bypass is selected.
+     * Stores the Event choice, independently of whether it can route API requests.
+     * A missing entry keeps its id and name, with an empty [url].
      */
     suspend fun setEventBypassSelection(id: String, name: String, url: String) {
         prefs.edit {

@@ -96,9 +96,8 @@ data class EventBypassEntry(
     fun expiryMillis(): Long? = EventBypassDates.parseExpiryDay(expiresAt)
 
     /**
-     * Whether the announced date has passed. The date is informational: it is typed
-     * by hand and read against a clock the user can change, so an expired entry is
-     * still offered and still routable — it is only labelled as expired.
+     * Whether the announced date has passed according to the device clock.
+     * Expired entries can still be displayed, but must not carry API traffic.
      */
     fun isExpired(nowMillis: Long = System.currentTimeMillis()): Boolean {
         val expiry = expiryMillis() ?: return false
@@ -174,17 +173,32 @@ object EventBypassDates {
     }
 }
 
-/**
- * Picks the entry the user selected, falling back to the first published one when
- * that bypass disappeared from the config (or nothing was ever selected).
- */
-fun List<EventBypassEntry>.selectedOrFirst(selectedId: String): EventBypassEntry? =
-    firstOrNull { it.stableId() == selectedId } ?: firstOrNull()
+/** Do not silently replace the user's Event if it disappeared from the list. */
+fun List<EventBypassEntry>.selectionForRefresh(
+    selectedId: String,
+    legacyDeno: Boolean,
+    nowMillis: Long = System.currentTimeMillis()
+): EventBypassEntry? = when {
+    legacyDeno -> firstOrNull { it.stableId() == "deno" && it.activeUrl(nowMillis) != null }
+    selectedId.isNotEmpty() -> firstOrNull { it.stableId() == selectedId }
+    else -> firstOrNull { it.activeUrl(nowMillis) != null }
+}
 
-/** Preserve an existing Deno choice only when the published replacement is usable. */
-fun List<EventBypassEntry>.selectionForRefresh(selectedId: String, legacyDeno: Boolean): EventBypassEntry? =
-    if (legacyDeno) firstOrNull { it.stableId() == "deno" && it.normalizedUrl().isNotEmpty() }
-    else selectedOrFirst(selectedId)
+fun EventBypassEntry.activeUrl(nowMillis: Long = System.currentTimeMillis()): String? =
+    if (isExpired(nowMillis)) null else normalizedUrl().ifEmpty { null }
+
+data class EventBypassRoute(val url: String, val routing: String)
+
+/** Resolve on every request so an open app stops using Event at the expiry boundary. */
+fun List<EventBypassEntry>.routeForSelection(
+    selectedId: String,
+    nowMillis: Long = System.currentTimeMillis()
+): EventBypassRoute {
+    val selected = firstOrNull { it.stableId() == selectedId }
+    val url = selected?.activeUrl(nowMillis)
+    return if (selected != null && url != null) EventBypassRoute(url, selected.routing)
+    else EventBypassRoute(ProxyEndpoints.CLOUDFLARE_URL, "path")
+}
 
 /** Supported config versions. Anything newer is ignored rather than guessed at. */
 const val EVENT_BYPASS_SUPPORTED_VERSION = 2
