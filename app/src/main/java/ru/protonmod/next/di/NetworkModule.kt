@@ -56,7 +56,6 @@ import ru.protonmod.next.data.network.SessionManager
 import ru.protonmod.next.data.network.TokenAuthenticator
 import ru.protonmod.next.data.network.eventbypass.EventBypassApi
 import ru.protonmod.next.data.network.ProxyEndpoints
-import ru.protonmod.next.data.model.eventbypass.EventBypassCache
 import ru.protonmod.next.data.network.ota.UpdateApi
 import ru.protonmod.next.utils.DeviceInfoProvider
 import ru.protonmod.next.utils.NetworkMonitor
@@ -137,17 +136,6 @@ object NetworkModule {
         return settingsManager.isApiBypassEnabledSync()
     }
 
-    /**
-     * Base URL of the temporary ("event") bypass. It is fetched at runtime from
-     * event-bypass.json, so it can be missing or, if the cache was tampered with,
-     * unparseable; both cases fall back to talking to Proton directly rather than
-     * throwing inside an interceptor.
-     */
-    private fun eventProxyBaseUrl(settings: SettingsManager): String {
-        val stored = settings.getEventBypassUrlSync()
-        return ProxyEndpoints.httpsBase(stored)?.toString() ?: PROTON_DIRECT_URL
-    }
-
     @Provides
     @Singleton
     fun provideOkHttpClient(
@@ -206,7 +194,7 @@ object NetworkModule {
             // changes whenever the temporary platform moves. A retried or re-authenticated
             // request already carries it, so it has to be recognised as a Proton API call.
             val eventProxyHost = try {
-                eventProxyBaseUrl(settingsManagerProvider.get()).toHttpUrl().host
+                ProxyEndpoints.httpsBase(settingsManagerProvider.get().getEventBypassUrlSync())?.host
             } catch (e: Exception) {
                 null
             }
@@ -279,20 +267,14 @@ object NetworkModule {
                 return@Interceptor chain.proceed(builder.build())
             }
 
-            val proxyBaseUrl = when (strategy) {
-                SettingsManager.STRATEGY_CLOUDFLARE -> PROTON_PROXY_CLOUDFLARE_URL
-                SettingsManager.STRATEGY_DENO -> PROTON_PROXY_DENO_URL
-                SettingsManager.STRATEGY_EVENT -> eventProxyBaseUrl(settings)
-                else -> PROTON_PROXY_CLOUDFLARE_URL
+            val newUrl = if (!useProxy) originalUrl else {
+                val eventRoute = if (strategy == SettingsManager.STRATEGY_EVENT) settings.getEventBypassRouteSync() else null
+                val proxyBaseUrl = eventRoute?.url ?: when (strategy) {
+                    SettingsManager.STRATEGY_DENO -> PROTON_PROXY_DENO_URL
+                    else -> PROTON_PROXY_CLOUDFLARE_URL
+                }
+                ProxyEndpoints.apiUrl(originalUrl, proxyBaseUrl.toHttpUrl(), eventRoute?.routing ?: "path")
             }
-
-            val newBaseUrl = if (useProxy) proxyBaseUrl.toHttpUrl() else PROTON_DIRECT_URL.toHttpUrl()
-
-            val eventRouting = if (strategy == SettingsManager.STRATEGY_EVENT) {
-                EventBypassCache.decode(settings.getEventBypassEventsSync())
-                    .firstOrNull { ProxyEndpoints.httpsBase(it.normalizedUrl()) == newBaseUrl }?.routing ?: "auto"
-            } else "path"
-            val newUrl = if (useProxy) ProxyEndpoints.apiUrl(originalUrl, newBaseUrl, eventRouting) else originalUrl
 
             val newRequest = protonRequest.newBuilder()
                 .url(newUrl)

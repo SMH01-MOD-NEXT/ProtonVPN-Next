@@ -52,18 +52,17 @@ class WarpRepository @Inject constructor(private val client: OkHttpClient, priva
             put("type", "Android"); put("locale", "en_US"); put("warp_enabled", true)
         }
         val strategy = settings.getApiBypassStrategySync()
-        val base = if (!settings.isApiBypassEnabledSync()) null else when (strategy) {
+        val bypassEnabled = settings.isApiBypassEnabledSync()
+        val eventRoute = if (bypassEnabled && strategy == SettingsManager.STRATEGY_EVENT) settings.getEventBypassRouteSync() else null
+        val base = if (!bypassEnabled) null else when (strategy) {
             SettingsManager.STRATEGY_WARP, SettingsManager.STRATEGY_NETLIFY,
             SettingsManager.STRATEGY_CLOUDFLARE -> ProxyEndpoints.CLOUDFLARE_URL
             SettingsManager.STRATEGY_DENO -> ProxyEndpoints.DENO_URL
-            SettingsManager.STRATEGY_EVENT -> settings.getEventBypassUrlSync().also { require(ProxyEndpoints.httpsBase(it) != null) }
+            SettingsManager.STRATEGY_EVENT -> eventRoute?.url
             SettingsManager.STRATEGY_BYEDPI, SettingsManager.STRATEGY_CUSTOM_PROXY -> null
             else -> error("Selected API bypass does not support WARP registration")
         }
-        val routing = if (strategy == SettingsManager.STRATEGY_EVENT) {
-            ru.protonmod.next.data.model.eventbypass.EventBypassCache.decode(settings.getEventBypassEventsSync())
-                .firstOrNull { ProxyEndpoints.httpsBase(it.normalizedUrl()) == base?.let(ProxyEndpoints::httpsBase) }?.routing ?: "auto"
-        } else "path"
+        val routing = eventRoute?.routing ?: "path"
         val url = if (base == null) "https://api.cloudflareclient.com/v0a2158/reg" else
             ProxyEndpoints.apiUrl("https://api.cloudflareclient.com/warp/reg".toHttpUrl(), requireNotNull(ProxyEndpoints.httpsBase(base)), routing).toString()
         val ssl = defaultSsl
