@@ -17,11 +17,6 @@
 
 package ru.protonmod.next.ui.screens.settings
 
-import android.app.Activity
-import android.content.Context
-import android.net.VpnService
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -44,21 +39,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
 import ru.protonmod.next.R
 import ru.protonmod.next.data.local.SettingsManager
 import ru.protonmod.next.data.model.eventbypass.EventBypassDates
 import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
 import ru.protonmod.next.data.repository.EventBypassResult
-import ru.protonmod.next.ui.components.ExpressiveCircularProgressIndicator
 import ru.protonmod.next.ui.components.NavigationHeader
 import ru.protonmod.next.ui.components.SmoothOutlinedTextField
 import ru.protonmod.next.ui.icons.ProtonIcons
@@ -76,16 +69,33 @@ fun ApiBypassScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit = {},
     onNavigateToByeDpiTest: () -> Unit = {},
-    onNavigateToWarp: () -> Unit = {},
-    viewModel: SettingsViewModel = hiltViewModel(),
-    warpViewModel: WarpApiStatusViewModel = hiltViewModel()
+    viewModel: SettingsViewModel = hiltViewModel()
 ) {
-    val warpStatus by warpViewModel.status.collectAsStateWithLifecycle()
     val colors = ProtonNextTheme.colors
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val eventActionFailed by viewModel.eventActionFailed.collectAsStateWithLifecycle()
     val isTablet = isTablet()
-    val context = LocalContext.current
+    val eventSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_EVENT
+    val selectedEntry = uiState.eventBypassOptions.firstOrNull { it.stableId() == uiState.eventBypassSelectedId }
+    val eventClock = remember(eventSelected, uiState.eventBypassOptions) {
+        flow {
+            while (eventSelected) {
+                val now = System.currentTimeMillis()
+                emit(now)
+                val nextExpiry = uiState.eventBypassOptions.mapNotNull { it.expiryMillis() }
+                    .filter { it >= now }.minOrNull()
+                // Update on the exact expiry tick; periodically recheck wall-clock changes.
+                delay(nextExpiry?.let { (it - now + 1).coerceAtMost(60_000L) } ?: 60_000L)
+            }
+        }
+    }
+    val now by eventClock.collectAsStateWithLifecycle(initialValue = System.currentTimeMillis())
+    val eventFallbackMessage = when {
+        !eventSelected -> null
+        selectedEntry?.isExpired(now) == true -> R.string.api_bypass_event_expired_fallback
+        selectedEntry == null -> R.string.api_bypass_event_unavailable_fallback
+        else -> null
+    }
 
     // Assuming the ViewModel exposes whether ANY VPN (ours or third-party) is active
     val isAnyVpnActive = uiState.isAnyVpnActive
@@ -309,43 +319,14 @@ fun ApiBypassScreen(
                                     },
                                     description = stringResource(R.string.api_bypass_strategy_event_desc),
                                     icon = ProtonIcons.Globe,
-                                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_EVENT,
+                                    isSelected = eventSelected,
+                                    warning = eventFallbackMessage?.let { stringResource(it) },
                                     onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_EVENT) }
                                 )
 
-                                // Event cannot be selected without a valid cached endpoint.
-                                // Offer refresh before selection too, including privacy builds
-                                // which intentionally do not refresh in the background.
-                                if (uiState.apiBypassStrategy != SettingsManager.STRATEGY_EVENT) {
-                                    Button(
-                                        onClick = { viewModel.refreshEventBypass() },
-                                        enabled = !uiState.isEventBypassRefreshing,
-                                        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
-                                    ) {
-                                        Text(stringResource(if (uiState.isEventBypassRefreshing) R.string.api_bypass_event_refreshing else R.string.api_bypass_event_refresh))
-                                    }
-                                    val refreshStatus = when (uiState.eventBypassLastResult) {
-                                        EventBypassResult.UPDATED -> R.string.api_bypass_event_updated
-                                        EventBypassResult.NOT_CONFIGURED -> R.string.api_bypass_event_not_configured
-                                        EventBypassResult.BLOCKED_OFFLINE -> R.string.api_bypass_event_offline
-                                        EventBypassResult.BLOCKED_VPN -> R.string.api_bypass_event_blocked_vpn
-                                        EventBypassResult.UNREACHABLE -> R.string.api_bypass_event_unreachable
-                                        null -> null
-                                    }
-                                    if (!uiState.isEventBypassRefreshing && refreshStatus != null) {
-                                        Text(
-                                            text = stringResource(refreshStatus),
-                                            color = colors.textWeak,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            modifier = Modifier.padding(horizontal = 24.dp)
-                                        )
-                                    }
-                                }
-
                                 // Configuration for the Event bypass
                                 AnimatedVisibility(
-                                    visible = uiState.apiBypassStrategy == SettingsManager.STRATEGY_EVENT,
+                                    visible = eventSelected,
                                     enter = fadeIn() + expandVertically(),
                                     exit = fadeOut() + shrinkVertically()
                                 ) {
@@ -365,7 +346,8 @@ fun ApiBypassScreen(
 
                                         // The config can publish several bypasses at once; the
                                         // user picks which one carries the API traffic.
-                                        if (uiState.eventBypassOptions.size > 1) {
+                                        if (uiState.eventBypassOptions.size > 1 ||
+                                            (selectedEntry == null && uiState.eventBypassOptions.isNotEmpty())) {
                                             Text(
                                                 text = stringResource(R.string.api_bypass_event_choose),
                                                 color = colors.textWeak,
@@ -376,16 +358,18 @@ fun ApiBypassScreen(
 
                                             uiState.eventBypassOptions.forEach { option ->
                                                 val optionId = option.stableId()
+                                                val expired = option.isExpired(now)
                                                 Row(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
                                                         .clip(RoundedCornerShape(8.dp))
-                                                        .clickable { viewModel.selectEventBypass(optionId) },
+                                                        .clickable(enabled = !expired) { viewModel.selectEventBypass(optionId) },
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     RadioButton(
                                                         selected = optionId == uiState.eventBypassSelectedId,
-                                                        onClick = { viewModel.selectEventBypass(optionId) }
+                                                        onClick = { viewModel.selectEventBypass(optionId) },
+                                                        enabled = !expired
                                                     )
                                                     Column {
                                                         Text(
@@ -395,10 +379,10 @@ fun ApiBypassScreen(
                                                         )
                                                         // How long each bypass is expected to last is
                                                         // what the choice is actually about.
-                                                        eventExpiryText(option)?.let { expiry ->
+                                                        eventExpiryText(option, now)?.let { expiry ->
                                                             Text(
                                                                 text = expiry,
-                                                                color = if (option.isExpired()) {
+                                                                color = if (expired) {
                                                                     colors.notificationWarning
                                                                 } else {
                                                                     colors.textWeak
@@ -414,11 +398,9 @@ fun ApiBypassScreen(
                                         }
 
                                         Text(
-                                            text = if (uiState.eventBypassUrl.isNotEmpty() && uiState.eventBypassName.isNotEmpty()) {
-                                                stringResource(R.string.api_bypass_event_current, uiState.eventBypassName)
-                                            } else {
-                                                stringResource(R.string.api_bypass_event_none)
-                                            },
+                                            text = uiState.eventBypassName.takeIf { it.isNotEmpty() }?.let {
+                                                stringResource(R.string.api_bypass_event_selected, it)
+                                            } ?: stringResource(R.string.api_bypass_event_no_selection),
                                             color = colors.textNorm,
                                             style = MaterialTheme.typography.bodyMedium
                                         )
@@ -426,15 +408,13 @@ fun ApiBypassScreen(
                                         // Two separate questions: how long this platform is
                                         // expected to live, and how fresh the config the app is
                                         // holding actually is. "Last check" below answers neither.
-                                        val selectedEntry = uiState.eventBypassOptions
-                                            .firstOrNull { it.stableId() == uiState.eventBypassSelectedId }
-                                        val selectedExpiry = eventExpiryText(selectedEntry)
+                                        val selectedExpiry = eventExpiryText(selectedEntry, now)
 
                                         if (selectedExpiry != null) {
                                             Spacer(modifier = Modifier.height(4.dp))
                                             Text(
                                                 text = selectedExpiry,
-                                                color = if (selectedEntry?.isExpired() == true) {
+                                                color = if (selectedEntry?.isExpired(now) == true) {
                                                     colors.notificationWarning
                                                 } else {
                                                     colors.textWeak
@@ -476,9 +456,7 @@ fun ApiBypassScreen(
 
                                         // Why the last attempt failed matters here: offline and
                                         // "third-party VPN is up" are refusals, not network errors.
-                                        val statusText = if (uiState.isEventBypassRefreshing) {
-                                            stringResource(R.string.api_bypass_event_refreshing)
-                                        } else {
+                                        val statusText = if (uiState.isEventBypassRefreshing) null else {
                                             when (uiState.eventBypassLastResult) {
                                                 EventBypassResult.UPDATED -> stringResource(R.string.api_bypass_event_updated)
                                                 EventBypassResult.NOT_CONFIGURED -> stringResource(R.string.api_bypass_event_not_configured)
@@ -506,7 +484,7 @@ fun ApiBypassScreen(
                                             modifier = Modifier.fillMaxWidth(),
                                             colors = ButtonDefaults.buttonColors(containerColor = colors.brandNorm)
                                         ) {
-                                            Text(stringResource(R.string.api_bypass_event_refresh))
+                                            Text(stringResource(if (uiState.isEventBypassRefreshing) R.string.api_bypass_event_refreshing else R.string.api_bypass_event_refresh))
                                         }
                                     }
                                 }
@@ -530,30 +508,7 @@ fun ApiBypassScreen(
                                     color = colors.separatorNorm.copy(alpha = 0.2f)
                                 )
 
-                                StrategySelectionRow(
-                    title = stringResource(R.string.custom_warp),
-                    description = stringResource(R.string.api_warp_description),
-                    icon = ProtonIcons.Cloudflare,
-                    isSelected = uiState.apiBypassStrategy == SettingsManager.STRATEGY_WARP,
-                    onClick = { viewModel.setApiBypassStrategy(SettingsManager.STRATEGY_WARP) }
-                )
-                if (uiState.apiBypassStrategy == SettingsManager.STRATEGY_WARP) {
-                    Column(Modifier.padding(horizontal = 24.dp, vertical = 12.dp)) {
-                        Text(stringResource(when (warpStatus) {
-                            ru.protonmod.next.data.network.warp.WarpApiStatus.READY -> R.string.api_warp_ready
-                            ru.protonmod.next.data.network.warp.WarpApiStatus.STARTING -> R.string.api_warp_starting
-                            ru.protonmod.next.data.network.warp.WarpApiStatus.RETRYING -> R.string.api_warp_retrying
-                            ru.protonmod.next.data.network.warp.WarpApiStatus.FAILED -> R.string.api_warp_failed
-                            else -> R.string.api_warp_stopped
-                        }), style = MaterialTheme.typography.bodyMedium, color = colors.textNorm)
-                        Text(stringResource(R.string.api_warp_bootstrap_notice), style = MaterialTheme.typography.bodySmall,
-                            color = colors.textWeak)
-                        OutlinedButton(onClick = onNavigateToWarp) { Text(stringResource(R.string.warp_parameters)) }
-                    }
-                }
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp), color = colors.separatorNorm.copy(alpha = 0.2f))
-
-                // Strategy 5: Custom Proxy (SOCKS5/HTTPS)
+                                // Strategy 5: Custom Proxy (SOCKS5/HTTPS)
                                 StrategySelectionRow(
                                     title = stringResource(R.string.api_bypass_strategy_custom),
                                     description = stringResource(R.string.api_bypass_strategy_custom_desc),
@@ -751,19 +706,17 @@ private fun ProxyTypeDropdown(
 
 /**
  * Expiry line for one bypass: the announced date, "no expiry", or nothing at all
- * when the config does not say. An expired entry is still offered and still
- * routable — the date is typed by hand and compared against a clock the user
- * controls — so this labels it instead of hiding it.
+ * when the config does not say. Expired entries remain visible for context.
  */
 @Composable
-private fun eventExpiryText(entry: EventBypassEntry?): String? {
+private fun eventExpiryText(entry: EventBypassEntry?, nowMillis: Long): String? {
     if (entry == null) return null
     if (entry.neverExpires()) return stringResource(R.string.api_bypass_event_expires_forever)
     val expiry = entry.expiryMillis() ?: return null
     val formatted = java.text.DateFormat
         .getDateInstance(java.text.DateFormat.MEDIUM)
         .format(java.util.Date(expiry))
-    return if (entry.isExpired()) {
+    return if (entry.isExpired(nowMillis)) {
         stringResource(R.string.api_bypass_event_expired, formatted)
     } else {
         stringResource(R.string.api_bypass_event_expires, formatted)
@@ -832,7 +785,8 @@ private fun StrategySelectionRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    warning: String? = null
 ) {
     val colors = ProtonNextTheme.colors
 
@@ -870,22 +824,30 @@ private fun StrategySelectionRow(
                 color = colors.textNorm
             )
             Text(
-                text = description,
+                text = warning ?: description,
                 style = MaterialTheme.typography.bodySmall,
-                color = colors.textWeak
+                color = if (warning != null) colors.notificationWarning else colors.textWeak
             )
         }
 
         Spacer(modifier = Modifier.width(16.dp))
 
-        // Radio indicator
-        RadioButton(
-            selected = isSelected,
-            onClick = null, // Handled by the Row's clickable
-            colors = RadioButtonDefaults.colors(
-                selectedColor = colors.brandNorm,
-                unselectedColor = colors.iconWeak
+        if (warning != null) {
+            Icon(
+                imageVector = ProtonIcons.ExclamationTriangleFilled,
+                contentDescription = null, // The warning is already read as part of the row.
+                tint = colors.notificationWarning,
+                modifier = Modifier.size(24.dp)
             )
-        )
+        } else {
+            RadioButton(
+                selected = isSelected,
+                onClick = null, // Handled by the row.
+                colors = RadioButtonDefaults.colors(
+                    selectedColor = colors.brandNorm,
+                    unselectedColor = colors.iconWeak
+                )
+            )
+        }
     }
 }
