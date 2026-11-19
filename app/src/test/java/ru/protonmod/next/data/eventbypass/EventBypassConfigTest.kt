@@ -11,13 +11,16 @@ import ru.protonmod.next.data.model.eventbypass.EventBypassDates
 import ru.protonmod.next.data.model.eventbypass.EventBypassEntry
 import ru.protonmod.next.data.model.eventbypass.EventBypassResponse
 import ru.protonmod.next.data.model.eventbypass.selectionForRefresh
-import ru.protonmod.next.data.model.eventbypass.selectedOrFirst
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import ru.protonmod.next.data.model.eventbypass.EventBypassRoute
+import ru.protonmod.next.data.model.eventbypass.routeForSelection
+import ru.protonmod.next.data.network.ProxyEndpoints
 
 class EventBypassConfigTest {
     @Test
     fun `legacy Deno selection migrates only when a usable Deno event exists`() {
         val vercel = EventBypassEntry(id = "vercel", name = "Vercel", url = "https://v.example/api/", enabled = true)
-        val deno = EventBypassEntry(id = "deno", name = "Deno", url = "https://d.example/api/", enabled = true, expiresAt = "01-04-2027")
+        val deno = EventBypassEntry(id = "deno", name = "Deno", url = "https://d.example/api/", enabled = true, expiresAt = "forever")
         assertEquals(deno, listOf(vercel, deno).selectionForRefresh("vercel", true))
         assertNull(listOf(vercel).selectionForRefresh("vercel", true))
         assertNull(listOf(deno.copy(enabled = false)).selectionForRefresh("", true))
@@ -126,18 +129,43 @@ class EventBypassConfigTest {
     }
 
     @Test
-    fun `the selection survives a refresh and falls back when it disappears`() {
-        val entries = listOf(
-            EventBypassEntry(id = "choreo", name = "Choreo", url = "https://choreo.example/api/", enabled = true),
-            EventBypassEntry(id = "northflank", name = "Northflank", url = "https://nf.example/api/", enabled = true)
-        )
+    fun `refresh keeps expired selection or waits for user when selected id is missing`() {
+        val expired = EventBypassEntry(id = "trial", url = "https://trial.example/api/", enabled = true, expiresAt = "01-12-2026")
+        val live = EventBypassEntry(id = "live", url = "https://live.example/api/", enabled = true)
+        val now = requireNotNull(expired.expiryMillis()) + 1
+        assertEquals(expired, listOf(expired, live).selectionForRefresh("trial", false, now))
+        assertNull(listOf(live).selectionForRefresh("trial", false, now))
+        assertEquals(live, listOf(expired, live).selectionForRefresh("", false, now))
+        assertNull(listOf(expired.copy(id = "deno")).selectionForRefresh("", true, now))
+    }
 
-        assertEquals("northflank", entries.selectedOrFirst("northflank")?.id)
-        // The picked bypass was pulled from the config: fall back to the first one
-        // rather than leaving the strategy pointing at nothing.
-        assertEquals("choreo", entries.selectedOrFirst("retired")?.id)
-        assertEquals("choreo", entries.selectedOrFirst("")?.id)
-        assertNull(emptyList<EventBypassEntry>().selectedOrFirst("choreo"))
+    @Test
+    fun `expired Event routes through Cloudflare using its path contract`() {
+        val trial = EventBypassEntry(id = "trial", url = "https://trial.example/api/", enabled = true,
+            expiresAt = "01-12-2026", routing = "query")
+        val deadline = requireNotNull(trial.expiryMillis())
+        val live = trial.copy(id = "live", expiresAt = "forever", routing = "path")
+        val entries = listOf(trial, live)
+        assertEquals(EventBypassRoute(trial.normalizedUrl(), "query"), entries.routeForSelection("trial", deadline))
+        val fallback = entries.routeForSelection("trial", deadline + 1)
+        assertEquals(EventBypassRoute(ProxyEndpoints.CLOUDFLARE_URL, "path"), fallback)
+        val url = ProxyEndpoints.apiUrl("https://vpn-api.proton.me/auth/v4".toHttpUrl(), fallback.url.toHttpUrl(), fallback.routing)
+        assertEquals("/api/auth/v4", url.encodedPath)
+        assertNull(url.queryParameter("__path"))
+        assertEquals(EventBypassRoute(live.normalizedUrl(), "path"), entries.routeForSelection("live", deadline + 1))
+        val refreshed = listOf(trial.copy(expiresAt = "forever"), live)
+        assertEquals(EventBypassRoute(trial.normalizedUrl(), "query"), refreshed.routeForSelection("trial", deadline + 1))
+    }
+
+    @Test
+    fun `unavailable Event falls back without selecting another cached endpoint`() {
+        val fallback = EventBypassRoute(ProxyEndpoints.CLOUDFLARE_URL, "path")
+        val live = EventBypassEntry(id = "live", url = "https://live.example/api/", enabled = true)
+        assertEquals(fallback, emptyList<EventBypassEntry>().routeForSelection(""))
+        assertEquals(fallback, listOf(live).routeForSelection(""))
+        assertEquals(fallback, listOf(live).routeForSelection("removed"))
+        assertEquals(fallback, listOf(live.copy(enabled = false)).routeForSelection("live"))
+        assertEquals(fallback, listOf(live.copy(url = "http://live.example/api/")).routeForSelection("live"))
     }
 
     @Test

@@ -6,9 +6,10 @@ import ru.protonmod.next.data.local.SettingsManager
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
 class ProxyEndpointsTest {
-    @Test fun `retired Netlify selection uses Cloudflare and preserves other strategies`() {
+    @Test fun `retired Netlify and hidden WARP use Cloudflare and preserve other strategies`() {
         assertEquals(SettingsManager.STRATEGY_CLOUDFLARE, SettingsManager.effectiveApiBypassStrategy(SettingsManager.STRATEGY_NETLIFY))
-        for (strategy in listOf(SettingsManager.STRATEGY_EVENT, SettingsManager.STRATEGY_DENO, SettingsManager.STRATEGY_WARP, SettingsManager.STRATEGY_PROTON_MIRRORS)) {
+        assertEquals(SettingsManager.STRATEGY_CLOUDFLARE, SettingsManager.effectiveApiBypassStrategy(SettingsManager.STRATEGY_WARP))
+        for (strategy in listOf(SettingsManager.STRATEGY_EVENT, SettingsManager.STRATEGY_DENO, SettingsManager.STRATEGY_PROTON_MIRRORS)) {
             assertEquals(strategy, SettingsManager.effectiveApiBypassStrategy(strategy))
         }
         assertTrue(ProxyEndpoints.builtIn.none { it.id == "netlify" })
